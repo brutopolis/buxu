@@ -3,13 +3,11 @@
 
 ## Description
 
-
 specifications and reference implementation of brutelang.
 
 it has both dynamic and static typing.(currently only dynamic specifications are described)
 
 ## Table of Contents
-
 
 - [Types](#types)
 - [Usage](#usage)
@@ -26,9 +24,6 @@ it has both dynamic and static typing.(currently only dynamic specifications are
 - `string` = any other args
 
 ## Usage
-
-take a look at pixilang docs and src/ffi.pixi to get better understanding of the functions and usage
-
 
 - argless functions:
 

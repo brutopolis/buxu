@@ -4,6 +4,9 @@ _string.endsWith = function(str, ending)
     return ending == "" or str:sub(-#ending) == ending
 end
 
+_string.charAt = function(str, index)
+    return str.sub(str,index, index)
+end
 
 _string.split = function(str, separator)
     local parts = {}
