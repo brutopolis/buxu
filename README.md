@@ -3,13 +3,14 @@
 
 ## Description
 
+
 specifications and reference implementation of brutelang.
 
 it has both dynamic and static typing.(currently only dynamic specifications are described)
 
 ## Table of Contents
 
-- [Installation](#installation)
+
 - [Types](#types)
 - [Usage](#usage)
 - [Contributing](#contributing)
