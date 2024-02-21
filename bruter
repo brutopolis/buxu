@@ -1,0 +1,2 @@
+#!/bin/bash
+terra src/main.t $@

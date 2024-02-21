@@ -10,17 +10,22 @@ local c = terralib.includec("src/main.c");
 local source;
 local condensed_args = arg[0] .. " " .. table.concat(arg, " ")
 
-print("Condensed args: " .. condensed_args)
+--print("Condensed args: " .. condensed_args)
 
-if utils.array.includes(arg, "--help") then
+if utils.array.includes(arg, "--help") or utils.array.includes(arg,"-h") then
     print("Usage: terralib [options] <source file>")
     print("Options:")
     print("  --help  Display this information")
-    --os.exit(0)
+    os.exit(0)
 elseif utils.array.includes(arg, "-c") then
     local temp = utils.table.find(arg, "-c")
     temp = arg[source + 1]
     source = utils.file.load.text(temp)
+elseif arg[1] == nil then
+    print("No source file specified")
+    os.exit(1)
+else
+    source = utils.file.load.text(arg[1])
 end
 
 terra main()
@@ -28,4 +33,4 @@ terra main()
 end
 
 -- compile the executable
-terralib.saveobj("main",{main = main}, nil, nil, false);
+-- terralib.saveobj("main",{main = main}, nil, nil, false);
