@@ -163,19 +163,37 @@ function writeC()
     for k, v in pairs(vm.constants) do
         c = c .. "const " .. v.type .. " " .. k .. " = " .. v.value .. ";\n";
     end
+    
+    c = c .. "\nint main() \n{\n";-- opens main function
+    
     for k, v in pairs(vm.variables) do
         c = c .. v.type .. " " .. k .. " = " .. v.value .. ";\n";
     end
     for i = 1, #vm.rawtext do
         c = c .. vm.rawtext[i] .. "\n";
     end
+
+    c = c .. "  return 0;\n}\n";-- closes main function
+    
     return c;
 end
 
 bruteparse();
-local c = writeC();
-print(c);--print c file example
-utils.file.save.text("main.c", c);--saving c file example
+local ccode = writeC();
+print(ccode);--print c file example
+
+utils.file.save.text("temp.c", ccode);
+local loadedcode = terralib.includec("temp.c");
+os.execute("rm temp.c")
+
+if vm.outputPath ~= "" then
+    if utils.string.includes(vm.outputPath, ".c") then
+        utils.file.save.text(vm.outputPath, ccode);
+    else
+        --functions.table
+        terralib.saveobj(vm.outputPath,{main=loadedcode.main}, nil, nil, false);
+    end
+end
 
 --example: type$var:func arg type$arg arg;
 
