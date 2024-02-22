@@ -1,3 +1,6 @@
 main
 *.exe
 *.appimage
+*.br.c
+*.br.o
+*.br.so
