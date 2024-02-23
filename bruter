@@ -1,2 +1,4 @@
 #!/bin/bash
-terra src/main.t $@
+script_path=$0
+script_dir=$(dirname "$script_path")
+terra $script_dir/src/main.t $@

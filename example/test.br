@@ -1,3 +1,4 @@
-int$a:dummy 0;
-double$b:dummy 123;
+global int abc 0;
+define TESTE_TESTE 1;
 include stdio.h;
+include math.h;

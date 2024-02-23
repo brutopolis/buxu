@@ -1,13 +1,17 @@
-package.terrapath = package.terrapath .. ";lib/?.t;lib/?/?.t;lib/?/?/?.t;"
-package.terrapath = package.terrapath .. ";lib/?.lua;lib/?/?.lua;lib/?/?/?.lua;"
+local bruterPath = debug.getinfo(1).source:match("@?(.*/)");
+--remove the "src/"
+bruterPath = string.sub(bruterPath, 1, #bruterPath-4);
 
-local version = "0.0.1"
+package.terrapath = package.terrapath .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
+package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
+
+local version = "0.0.2"
 
 local utils = require 'luatils.init'
 --local tocstr = require('lib.tocstr')
 
 -- load the main.c
-local c = terralib.includec("src/main.c");
+local c = terralib.includec(bruterPath .. "src/main.c");
 
 local source;
 local outputPath;
@@ -23,7 +27,8 @@ local vm =
     types = {"int", "float", "double", "char", "string", "void", "byte"},
     variables = {},
     constants = {},
-    defines = {byte="unsigned char"},
+    defines = {},
+    typedefs = {byte="unsigned char"},
     includes = {},
     rawtext = {},
     hash = {}
@@ -40,17 +45,20 @@ vm.functions =
     define = function(name, ...)
         vm.defines[name] = table.concat({...}, " ")
     end,
+    typedef = function(name, ...)
+        vm.typedefs[name] = table.concat({...}, " ")
+    end,
     raw = function(...)
         table.insert(vm.rawtext, table.concat({...}, " "))
     end,
-    declare = function(type, name, value)
+    global = function(type, name, value)
         if vm.hash[name] then
             error("variable \"" .. name .. "\" already declared")
         end
         vm.variables[name] = {type = type, value = value}
         vm.hash[name] = {type = type}
     end,
-    constant = function(type, name, value)
+    globalconstant = function(type, name, value)
         if vm.hash[name] then
             error("constant \"" .. name .. "\" already declared")
         end
@@ -86,14 +94,24 @@ elseif utils.array.includes(arg, "--help") or utils.array.includes(arg,"-h") the
     print("  --compile Compile the source file")
     print("  -o        Output the compiled file to the specified path")
     print("  --output  Output the compiled file to the specified path")
+    print("  -p        Print the C code to the console")
+    print("  --print   Print the C code to the console")
     os.exit(0)
 elseif arg[1] == nil then
     print("No source file specified")
     os.exit(1)
 end
 
-if utils.array.includes(arg, "-c") or utils.array.includes(arg, "--compile") then
-    local temp = utils.table.find(arg, "-c") or utils.table.find(arg, "--compile")
+if  utils.array.includes(arg, "-c") or 
+    utils.array.includes(arg, "--compile") or 
+    utils.array.includes(arg, "-p") or
+    utils.array.includes(arg, "--print") then
+
+    local temp = utils.table.find(arg, "-c") or 
+                utils.table.find(arg, "--compile") or
+                utils.table.find(arg, "-p") or
+                utils.table.find(arg, "--print")
+
     temp = arg[temp + 1]
     vm.source = utils.file.load.text(temp)
 end
@@ -114,36 +132,34 @@ function cleanSource(source)
     return nstr
 end
 
+function argsFindout(args)
+    for i = 1, #args do
+        if utils.string.includes(args[i], "$") then
+            local temp = utils.string.split(args[i], "$");
+            local name = temp[1];
+            local type = temp[2];
+            if not vm.hash[name] then
+                error("variable \"" .. name .. "\" not declared")
+            end
+            args[i] = vm.variables[name].value;
+        elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or string.byte(args[i],1) == 45 then
+            args[i] = tonumber(args[i]);
+        end
+    end
+end
+
 vm.source = cleanSource(vm.source)
 function bruteparse()
     local splited = utils.string.split(vm.source, ";");
     local func = "";
-    print("splited: " .. #splited)
     for i = 1, #splited-1 do
         if(utils.string.includes(splited[i], ":")) then
-            if utils.string.includes(splited[i],"$") then
-                local temp = utils.string.split(splited[i], " ");
-                local temp2 = utils.string.split(temp[1], ":");
-                local temp3 = utils.string.split(temp2[1], "%$");
-                local type = temp3[1];
-                local varname = temp3[2];
-                print("type: " .. temp3[2])
-                vm.variables[varname] = vm.functions[temp2[2]](utils.array.slice(temp, 3, #temp));
-            else
-                local temp = utils.string.split(splited[i], " ");
-                local temp2 = utils.string.split(temp[1], ":");
-                if vm.hash(temp2[1]) == nil then 
-                    error("\"" .. temp2[1] .. "\" not declared, in line " .. i)
-                else
-                    local type = vm.hash(temp2[1]);
-                    local varname = temp2[1];
-                    vm[vm.contants[varname] or vm.variables[varname]] = vm.functions[temp2[2]](utils.array.slice(temp, 2, #temp));
-                end
-                func = temp2[2];
-                vm.functions[func](utils.array.slice(temp, 2, #temp));
-
-
-            end
+            local temp = utils.string.split(splited[i], ":");
+            local name = temp[1];
+            local temp2 = utils.string.split(temp[2], " ");
+            func = temp2[1];
+            local args = argsFindout(utils.array.slice(temp2, 2, #temp2));
+            vm.variables[name] = vm.functions[func](unpack(args or {}));
         else
             local temp = utils.string.split(splited[i], " ");
             local func = temp[1];
@@ -158,16 +174,20 @@ function writeC()
         c = c .. "#include " .. vm.includes[i] .. "\n";
     end
     for k, v in pairs(vm.defines) do
-        c = c .. "#define " .. v .. " " .. k .. ";\n";
+        c = c .. "#define " .. k .. " " .. v .. ";\n";
     end
     for k, v in pairs(vm.constants) do
         c = c .. "const " .. v.type .. " " .. k .. " = " .. v.value .. ";\n";
+    end
+
+    for k, v in pairs(vm.typedefs) do
+        c = c .. "typedef " .. v .. " " .. k .. ";\n";
     end
     
     c = c .. "\nint main() \n{\n";-- opens main function
     
     for k, v in pairs(vm.variables) do
-        c = c .. v.type .. " " .. k .. " = " .. v.value .. ";\n";
+        c = c .. v.type .. (v.value and (" " .. k .. " = " .. v.value) or 'nil') .. ";\n";
     end
     for i = 1, #vm.rawtext do
         c = c .. vm.rawtext[i] .. "\n";
@@ -180,14 +200,15 @@ end
 
 bruteparse();
 local ccode = writeC();
-print(ccode);--print c file example
 
 utils.file.save.text("temp.c", ccode);
 local loadedcode = terralib.includec("temp.c");
 os.execute("rm temp.c")
 
 if vm.outputPath ~= "" then
-    if utils.string.includes(vm.outputPath, ".c") then
+    if utils.array.includes(arg, "-p") or utils.array.includes(arg, "--print") then
+        print(ccode);
+    elseif utils.string.includes(vm.outputPath, ".c") then
         utils.file.save.text(vm.outputPath, ccode);
     else
         --functions.table

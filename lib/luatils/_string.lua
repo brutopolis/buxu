@@ -8,6 +8,10 @@ _string.charAt = function(str, index)
     return str.sub(str,index, index)
 end
 
+_string.byteAt = function(str, index)
+    return string.byte(str, index)
+end
+
 _string.split = function(str, separator)
     local parts = {}
     local start = 1
