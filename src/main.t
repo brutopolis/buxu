@@ -51,14 +51,14 @@ vm.functions =
     raw = function(...)
         table.insert(vm.rawtext, table.concat({...}, " "))
     end,
-    global = function(type, name, value)
+    declare = function(type, name, value)
         if vm.hash[name] then
             error("variable \"" .. name .. "\" already declared")
         end
         vm.variables[name] = {type = type, value = value}
         vm.hash[name] = {type = type}
     end,
-    globalconstant = function(type, name, value)
+    constant = function(type, name, value)
         if vm.hash[name] then
             error("constant \"" .. name .. "\" already declared")
         end
