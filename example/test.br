@@ -1,4 +1,1 @@
-declare int abc 0;
-define TESTE_TESTE 1;
-include stdio.h;
-include math.h;
+global int abc 0;
