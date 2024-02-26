@@ -1,5 +1,5 @@
 
-# brutemedia
+# brutelang
 
 ## Description
 
@@ -17,7 +17,7 @@ it has both dynamic and static typing.(currently only dynamic specifications are
 ## Types
 
 
-- `$variable` = args that starts with $, can be anything, variables are stored in "variables"
+- `$variable` = args that starts with $, can be anything
 
 - `number` = args that starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -
 
