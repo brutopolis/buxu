@@ -98,6 +98,35 @@ function init(types)
                 }
                 return &list->array[index];
             }
+
+            void list_]] .. v .. [[_set(List_]] .. v .. [[* list, size_t index, ]] .. v .. [[ element) {
+                if (index >= list->size) {
+                    fprintf(stderr, "Erro: Índice fora do alcance da lista.\n");
+                    exit(EXIT_FAILURE);
+                }
+                list->array[index] = element;
+            }
+
+            void list_]] .. v .. [[_resize(List_]] .. v .. [[* list, size_t size) {
+                list->array = (]] .. v .. [[*)realloc(list->array, size * sizeof(]] .. v .. [[));
+                if (list->array == NULL) {
+                    fprintf(stderr, "Erro: Falha na alocação de memória.\n");
+                    exit(EXIT_FAILURE);
+                }
+                list->size = size;
+            }
+
+            void list_]] .. v .. [[_concat(List_]] .. v .. [[* list1, List_]] .. v .. [[* list2) {
+                list1->array = (]] .. v .. [[*)realloc(list1->array, (list1->size + list2->size) * sizeof(]] .. v .. [[));
+                if (list1->array == NULL) {
+                    fprintf(stderr, "Erro: Falha na alocação de memória.\n");
+                    exit(EXIT_FAILURE);
+                }
+                for (size_t i = 0; i < list2->size; i++) {
+                    list1->array[list1->size + i] = list2->array[i];
+                }
+                list1->size += list2->size;
+            }
         ]]
     end
     
@@ -106,6 +135,7 @@ function init(types)
     local clist = {type={}}
     
     for k,v in ipairs(types) do
+        -- funções temporarias para cada tipo
         local tempFunctions = {}
         tempFunctions.initialize = C_clists["list_" .. v .. "_initialize"];
         tempFunctions.insert = C_clists["list_" .. v .. "_insert"];
@@ -113,7 +143,11 @@ function init(types)
         tempFunctions.size = C_clists["list_" .. v .. "_size"];
         tempFunctions.free = C_clists["list_" .. v .. "_free"];
         tempFunctions.get = C_clists["list_" .. v .. "_get"];
-        
+        tempFunctions.set = C_clists["list_" .. v .. "_set"];
+        tempFunctions.resize = C_clists["list_" .. v .. "_resize"];
+        tempFunctions.concat = C_clists["list_" .. v .. "_concat"];
+
+        -- etc
         local temptype = terralib.loadstring("return " .. v)();
         local ltype = &C_clists["List_" .. v]
         clist.type[v] = C_clists["List_" .. v]
@@ -123,6 +157,11 @@ function init(types)
             list: ltype
         }
 
+        -- funções para manipular a lista
+        terra __struct:new()
+            var result:__struct = [__struct]{list=tempFunctions.initialize()}
+            return result
+        end
         terra __struct:insert(element: temptype, index: int32)
             tempFunctions.insert(self.list, element, index)
         end
@@ -140,6 +179,15 @@ function init(types)
         end
         terra __struct:get(index: int)
             return @tempFunctions.get(self.list, index)
+        end
+        terra __struct:set(index: int, element: temptype)
+            tempFunctions.set(self.list, index, element)
+        end
+        terra __struct:resize(size: int)
+            tempFunctions.resize(self.list, size)
+        end
+        terra __struct:concat(list: __struct)
+            tempFunctions.concat(self.list, list.list)
         end
 
         clist[v] = {}
@@ -166,6 +214,16 @@ function init(types)
             var result:__struct = [__struct]{list=tempFunctions.initialize()}
             return result
         end
+        clist[v].set = terra(list:__struct, index: int, element: temptype)
+            tempFunctions.set(list.list, index, element)
+        end
+        clist[v].resize = terra(list:__struct, size: int)
+            tempFunctions.resize(list.list, size)
+        end
+        clist[v].concat = terra(list1:__struct, list2: __struct)
+            tempFunctions.concat(list1.list, list2.list)
+        end
+        
     end
     
     return clist

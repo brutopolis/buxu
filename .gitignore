@@ -4,3 +4,4 @@ main
 *.br.c
 *.br.o
 *.br.so
+example/test

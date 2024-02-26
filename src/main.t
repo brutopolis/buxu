@@ -140,11 +140,23 @@ parseSourceFile();
 
 terra main()
     var listaint = list.int.new();
+    var str = list.int8.new();
+    list.int8.push(str, ('a')[0]);
+    list.int8.push(str, 69);
+    list.int8.push(str, 75);
+    list.int8.push(str, 89);
+    list.int8.push(str, 69);
+    list.int8.push(str, 83);
+    list.int8.push(str, 32);
+    list.int8.push(str, 33);
     listaint:push(12312);
     listaint:push(2);
     listaint:insert(333321, 0);
+
     list.int.push(listaint, 4);
-    c.printf("listaint size = %d\n", listaint:get(0));
+
+    listaint:set(0, 123);
+    c.printf("listaint size = %s\n", str.list.array);
     c.printf("teste = %s\n", tocstr.tocstr128(condensed_args));
 end
 
