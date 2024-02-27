@@ -5,11 +5,11 @@ bruterPath = string.sub(bruterPath, 1, #bruterPath-4);
 package.terrapath = package.terrapath .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
 package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
 
-local version = "0.0.2"
+local version = "0.0.3"
 
 local utils = require 'luatils.init'
 local tocstr = require('lib.tocstr')
-
+local String = require('lib.string')
 -- load the main.c
 local c = terralib.includec(bruterPath .. "src/main.c");
 
@@ -140,15 +140,31 @@ parseSourceFile();
 
 terra main()
     var listaint = list.int.new();
-    var str = list.int8.new();
-    list.int8.push(str, ('a')[0]);
-    list.int8.push(str, 69);
-    list.int8.push(str, 75);
-    list.int8.push(str, 89);
-    list.int8.push(str, 69);
-    list.int8.push(str, 83);
-    list.int8.push(str, 32);
-    list.int8.push(str, 33);
+    var str = String.new();
+    var tobeReplaced = String.new();
+    var tobeReplaced2 = String.new();
+    tobeReplaced:push(('d')[0])
+    tobeReplaced:push(('e')[0])
+    tobeReplaced:push(('f')[0])
+    tobeReplaced2:push(('1')[0])
+    tobeReplaced2:push(('2')[0])
+    
+    str:push(('a')[0])
+    str:push(('b')[0])
+    str:push(('c')[0])
+    str:push(('d')[0])
+    str:push(('e')[0])
+    str:push(('f')[0])
+    str:push(('g')[0])
+    str:push(('h')[0])
+    str:push(('i')[0])
+    str:push(('d')[0])
+    str:push(('e')[0])
+    str:push(('f')[0])
+    str:push(('k')[0])
+    str:push(('l')[0])
+    str:push(('m')[0])
+    str:replace(tobeReplaced, tobeReplaced2)
     listaint:push(12312);
     listaint:push(2);
     listaint:insert(333321, 0);

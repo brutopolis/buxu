@@ -132,7 +132,7 @@ function init(types)
     
     local C_clists = terralib.includecstring(starter)
     
-    local clist = {type={}}
+    local clist = {}
     
     for k,v in ipairs(types) do
         -- funções temporarias para cada tipo
@@ -150,15 +150,15 @@ function init(types)
         -- etc
         local temptype = terralib.loadstring("return " .. v)();
         local ltype = &C_clists["List_" .. v]
-        clist.type[v] = C_clists["List_" .. v]
 
         --local __struct = terralib.loadstring("return(struct{list: @" .. v .. "})")();
         local struct __struct {
             list: ltype
         }
 
+
         -- funções para manipular a lista
-        terra __struct:new()
+        terra __struct.methods.new()
             var result:__struct = [__struct]{list=tempFunctions.initialize()}
             return result
         end
@@ -191,6 +191,9 @@ function init(types)
         end
 
         clist[v] = {}
+
+        clist[v].ctype = C_clists["List_" .. v]
+        clist[v].terratype = __struct
         
         clist[v].insert = terra(list:__struct, element: temptype, index: int32)
             tempFunctions.insert(list.list, element, index)
