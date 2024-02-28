@@ -9,7 +9,7 @@ local version = "0.0.3"
 
 local utils = require 'luatils.init'
 local tocstr = require('lib.tocstr')
-local String = require('lib.string')
+--local String = require('lib.string')
 -- load the main.c
 local c = terralib.includec(bruterPath .. "src/main.c");
 
@@ -26,7 +26,22 @@ local vm =
     globals = {},
     constants = {},
     compiledFunctions = {},
-    types = {'int', 'int8', 'int16', 'int32', 'int64', 'uint', 'uint8', 'uint16', 'uint32', 'uint64', 'bool', 'float', 'double'}
+    types = 
+    {
+        int = {ctype="int", terratype = int},
+        int8 = {ctype="char", terratype = int8},
+        int16 = {ctype="short", terratype = int16},
+        int32 = {ctype="int", terratype = int32},
+        int64 = {ctype="long", terratype = int64},
+        uint = {ctype="uint", terratype = uint},
+        uint8 = {ctype="unsigned char", terratype = uint8},
+        uint16 = {ctype="unsigned short", terratype = uint16},
+        uint32 = {ctype="unsigned int", terratype = uint32},
+        uint64 = {ctype="unsigned long", terratype = uint64},
+        bool = {ctype="bool", terratype = bool},
+        float = {ctype="float", terratype = float},
+        double = {ctype="double", terratype = double},
+    }
 };
 
 -- vm functions
@@ -49,7 +64,7 @@ vm.functions =
     end
 }
 
-local list = require('lib.clist')(vm.types);
+local list = require('lib.clist');
 
 -- parse the arguments
 
@@ -138,41 +153,31 @@ end
 
 parseSourceFile();
 
+intlist = list("int",int);
+intlistlist = list("intlist",intlist);
+
 terra main()
-    var listaint = list.int.new();
-    var str = String.new();
-    var tobeReplaced = String.new();
-    var tobeReplaced2 = String.new();
-    tobeReplaced:push(('d')[0])
-    tobeReplaced:push(('e')[0])
-    tobeReplaced:push(('f')[0])
-    tobeReplaced2:push(('1')[0])
-    tobeReplaced2:push(('2')[0])
-    
-    str:push(('a')[0])
-    str:push(('b')[0])
-    str:push(('c')[0])
-    str:push(('d')[0])
-    str:push(('e')[0])
-    str:push(('f')[0])
-    str:push(('g')[0])
-    str:push(('h')[0])
-    str:push(('i')[0])
-    str:push(('d')[0])
-    str:push(('e')[0])
-    str:push(('f')[0])
-    str:push(('k')[0])
-    str:push(('l')[0])
-    str:push(('m')[0])
-    str:replace(tobeReplaced, tobeReplaced2)
+
+    var listaint = intlist.new();
+    var listaint2 = intlist.new();
+
+    var listaintint = intlistlist.new();
+
+    listaintint:push(listaint);
+    listaintint:push(listaint2);
+
+    listaint2:push(1);
+    listaint2:push(2);
+    listaint2:push(3);
+
     listaint:push(12312);
     listaint:push(2);
     listaint:insert(333321, 0);
 
-    list.int.push(listaint, 4);
+    --list.int.push(listaint, 4);
 
-    listaint:set(0, 123);
-    c.printf("listaint size = %s\n", str.list.array);
+    --listaint:set(0, 123);
+    c.printf("[0][0] = %d\n", listaintint:get(1):get(2));
     c.printf("teste = %s\n", tocstr.tocstr128(condensed_args));
 end
 

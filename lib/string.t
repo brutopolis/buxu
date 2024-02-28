@@ -1,6 +1,18 @@
 char = int8
-local list = require("lib.clist")({"char"})
+local list = require("lib.clist")(
+    {
+        char =
+        {
+            ctype="char", terratype = int8
+        },
+        String =
+        {
+            ctype="struct{char* array;size_t size;}"
+        }
+    }
+)
 local String = list.char.terratype
+local StringList = list.String.terratype
 
 terra String:replace(target: String, replacement: String)
     var result:String = String.new();
@@ -26,6 +38,22 @@ terra String:replace(target: String, replacement: String)
     end
 
     self.list = result.list;
+end
+
+terra String:split(delimiter: char):StringList
+    var result:StringList = StringList.new();
+    var temp:String = String.new();
+    var size = self:size();
+    for i = 0, size - 1 do
+        if self:get(i) == delimiter then
+            result:push(temp);
+            temp = String.new();
+        else
+            temp:push(self:get(i));
+        end
+    end
+    result:push(temp);
+    return result;
 end
 
 return String
