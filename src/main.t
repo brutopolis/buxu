@@ -5,7 +5,7 @@ bruterPath = string.sub(bruterPath, 1, #bruterPath-4);
 package.terrapath = package.terrapath .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
 package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
 
-local version = "0.0.3"
+local version = "0.0.4"
 
 local utils = require 'luatils.init'
 local tocstr = require('lib.tocstr')
@@ -50,38 +50,24 @@ vm.functions =
     end
 }
 
-
-
 -- parse the arguments
 
 if utils.array.includes(arg, "-v") or utils.array.includes(arg, "--version") then
     print("bruter version " .. version)
     os.exit(0)
 elseif utils.array.includes(arg, "--help") or utils.array.includes(arg,"-h") then
-    print("Usage: bruter -c <source file> [-o <output file>] [-h] [-v] [--version] [--help]")
+    print("Usage: bruter <source file> [-o <output file>] [-h] [-v] [--version] [--help]")
     print("Options:")
     print("  --help    Display this information")
     print("  -h        Display this information")
     print("  -v        Display the version")
     print("  --version Display the version")
-    print("  -c        Compile the source file")
-    print("  --compile Compile the source file")
     print("  -o        Output the compiled file to the specified path")
     print("  --output  Output the compiled file to the specified path")
     os.exit(0)
 elseif arg[1] == nil then
     print("No source file specified")
     os.exit(1)
-end
-
-if  utils.array.includes(arg, "-c") or 
-    utils.array.includes(arg, "--compile") then
-
-    local temp = utils.table.find(arg, "-c") or 
-                utils.table.find(arg, "--compile")
-
-    temp = arg[temp + 1]
-    vm.source = utils.file.load.text(temp)
 end
 
 if utils.array.includes(arg, "-o") or utils.array.includes(arg, "--output") then

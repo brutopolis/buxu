@@ -7,7 +7,6 @@ local c = terralib.includecstring(starter)
 
 function init(type)
 
-
     local listType = struct{
         array:&type;
         size:int;
