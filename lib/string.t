@@ -1,6 +1,66 @@
-local list = require("lib.clist")
+local list = require("lib.list")
 
 local String = list(int8)
 local StringList = list(String)
+
+terra String:replace(target: String, replacement: String)
+    var result:String = String.new();
+    var targetSize = target:size();
+    var sourceSize = self:size();
+
+    var i = 0;
+    while i < sourceSize do
+        if self:get(i) == target:get(0) then
+            var match = true;
+            for j = 1, targetSize - 1 do
+                if self:get(i + j) ~= target:get(j) then
+                    match = false;
+                    break;
+                end
+            end
+            if match then
+                result:concat(replacement);
+                i = i + targetSize - 1;
+            else
+                result:push(self:get(i));
+            end
+        else
+            result:push(self:get(i));
+        end
+        i = i + 1;
+    end
+    self.array = result.array;
+end
+
+terra String:split(delimiter: String)
+    var result:StringList = StringList.new();
+    var sourceSize = self:size();
+    var delimiterSize = delimiter:size();
+    var current:String = String.new();
+    var i = 0;
+    while i < sourceSize do
+        if self:get(i) == delimiter:get(0) then
+            var match = true;
+            for j = 1, delimiterSize - 1 do
+                if self:get(i + j) ~= delimiter:get(j) then
+                    match = false;
+                    break;
+                end
+            end
+            if match then
+                result:push(current);
+                current = String.new();
+                i = i + delimiterSize - 1;
+            else
+                current:push(self:get(i));
+            end
+        else
+            current:push(self:get(i));
+        end
+        i = i + 1;
+    end
+    result:push(current);
+    return result;
+end
 
 return String

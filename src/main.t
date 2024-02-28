@@ -9,7 +9,7 @@ local version = "0.0.3"
 
 local utils = require 'luatils.init'
 local tocstr = require('lib.tocstr')
-local list = require('lib.clist');
+local list = require('lib.list');
 local String = require('lib.string')
 
 -- load the main.c
@@ -144,6 +144,7 @@ intlistlist = list(intlist);
 
 terra main()
 
+    -- int lists tests
     var listaint = intlist.new();
     var listaint2 = intlist.new();
 
@@ -159,11 +160,47 @@ terra main()
     listaint:push(12312);
     listaint:push(2);
     listaint:insert(333321, 0);
+    c.printf("[1][2] = %d\n", listaintint:get(1):get(2));
+    -- string tests
+    var str = String.new();
+    str:push(('a')[0]);
+    str:push(('b')[0]);
+    str:push(('c')[0]);
+    str:push(('d')[0]);
+    str:push(('e')[0]);
+    str:push(('f')[0]);
+    str:push(('g')[0]);
+    str:push(('h')[0]);
+    str:push(('i')[0]);
+    str:push(('j')[0]);
+    str:push(('d')[0]);
+    str:push(('e')[0]);
+    str:push(('f')[0]);
+    str:push(('g')[0]);
+    str:push(('h')[0]);
+    str:push(('i')[0]);
 
-    --list.int.push(listaint, 4);
+    var str2 = String.new();
+    str2:push(('d')[0]);
+    str2:push(('e')[0]);
+    str2:push(('f')[0]);
 
-    --listaint:set(0, 123);
-    c.printf("[0][0] = %d\n", listaintint:get(1):get(2));
+    var str3 = String.new();
+    str3:push(('x')[0]);
+    str3:push(('y')[0]);
+    str3:push(('z')[0]);
+
+    str:replace(str2, str3);
+
+    c.printf("str = %s\n", str.array);
+
+    var str4 = String.new();
+    str4:push(('y')[0]);
+    var strsplited = str:split(str4);
+
+    c.printf("strsplited[0] = %s\n", strsplited:get(0).array);
+    c.printf("strsplited[1] = %s\n", strsplited:get(1).array);
+
     c.printf("teste = %s\n", tocstr.tocstr128(condensed_args));
 end
 

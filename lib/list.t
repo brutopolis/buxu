@@ -53,15 +53,13 @@ function init(type)
     end
 
     terra listType:concat(other:listType)
-        self.size = self.size + other.size;
-        self.array = [&type](c.realloc(self.array, self.size * terralib.sizeof(type)));
-        for i = 0, other.size - 1 do
-            self.array[self.size - other.size + i] = other.array[i];
+        for i = 0, other.size do
+            self:push(other:get(i));
         end
     end
 
     terra listType:remove(index:int)
-        for i = index, self.size - 2 do
+        for i = index, self.size - 1 do
             self.array[i] = self.array[i + 1];
         end
         self.size = self.size - 1;
@@ -74,9 +72,5 @@ function init(type)
 
     return listType
 end
-
---the same in pure terra
-
-
 
 return init
