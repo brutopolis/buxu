@@ -9,7 +9,9 @@ local version = "0.0.3"
 
 local utils = require 'luatils.init'
 local tocstr = require('lib.tocstr')
---local String = require('lib.string')
+local list = require('lib.clist');
+local String = require('lib.string')
+
 -- load the main.c
 local c = terralib.includec(bruterPath .. "src/main.c");
 
@@ -26,22 +28,6 @@ local vm =
     globals = {},
     constants = {},
     compiledFunctions = {},
-    types = 
-    {
-        int = {ctype="int", terratype = int},
-        int8 = {ctype="char", terratype = int8},
-        int16 = {ctype="short", terratype = int16},
-        int32 = {ctype="int", terratype = int32},
-        int64 = {ctype="long", terratype = int64},
-        uint = {ctype="uint", terratype = uint},
-        uint8 = {ctype="unsigned char", terratype = uint8},
-        uint16 = {ctype="unsigned short", terratype = uint16},
-        uint32 = {ctype="unsigned int", terratype = uint32},
-        uint64 = {ctype="unsigned long", terratype = uint64},
-        bool = {ctype="bool", terratype = bool},
-        float = {ctype="float", terratype = float},
-        double = {ctype="double", terratype = double},
-    }
 };
 
 -- vm functions
@@ -64,7 +50,7 @@ vm.functions =
     end
 }
 
-local list = require('lib.clist');
+
 
 -- parse the arguments
 
@@ -153,8 +139,8 @@ end
 
 parseSourceFile();
 
-intlist = list("int",int);
-intlistlist = list("intlist",intlist);
+intlist = list(int);
+intlistlist = list(intlist);
 
 terra main()
 

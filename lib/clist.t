@@ -5,38 +5,30 @@ local starter = [[#include <stdio.h>
 
 local c = terralib.includecstring(starter)
 
-function init(typename,type)
+function init(type)
 
 
-    local listType = terralib.loadstring([[
-        
-        return(struct{
-            array:&]] .. typename .. [[;
-            size:int;
-        });
-        
-    ]])()
-
-    local ptrtype = terralib.loadstring([[
-        return(&]] .. typename .. [[);
-    ]])();
+    local listType = struct{
+        array:&type;
+        size:int;
+    }
 
     listType.methods.new = terra()
         var list:listType;
-        list.array = [ptrtype](c.malloc(0));
+        list.array = [&type](c.malloc(0));
         list.size = 0;
         return list;
     end
 
     terra listType:push(value:type)
         self.size = self.size + 1;
-        self.array = [ptrtype](c.realloc(self.array, self.size * terralib.sizeof(type)));
+        self.array = [&type](c.realloc(self.array, self.size * terralib.sizeof(type)));
         self.array[self.size - 1] = value;
     end
 
     terra listType:insert(value:type, index:int)
         self.size = self.size + 1;
-        self.array = [ptrtype](c.realloc(self.array, self.size * terralib.sizeof(type)));
+        self.array = [&type](c.realloc(self.array, self.size * terralib.sizeof(type)));
         for i = self.size - 1, index + 1, -1 do
             self.array[i] = self.array[i - 1];
         end
@@ -57,12 +49,12 @@ function init(typename,type)
 
     terra listType:pop()
         self.size = self.size - 1;
-        self.array = [ptrtype](c.realloc(self.array, self.size * terralib.sizeof(type)));
+        self.array = [&type](c.realloc(self.array, self.size * terralib.sizeof(type)));
     end
 
     terra listType:concat(other:listType)
         self.size = self.size + other.size;
-        self.array = [ptrtype](c.realloc(self.array, self.size * terralib.sizeof(type)));
+        self.array = [&type](c.realloc(self.array, self.size * terralib.sizeof(type)));
         for i = 0, other.size - 1 do
             self.array[self.size - other.size + i] = other.array[i];
         end
@@ -73,7 +65,7 @@ function init(typename,type)
             self.array[i] = self.array[i + 1];
         end
         self.size = self.size - 1;
-        self.array = [ptrtype](c.realloc(self.array, self.size * terralib.sizeof(type)));
+        self.array = [&type](c.realloc(self.array, self.size * terralib.sizeof(type)));
     end
 
     terra listType:free()
