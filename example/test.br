@@ -6,11 +6,18 @@ module std.math;
 module std.io;
 c:addint32 40 $v;
 
-d:? { a = 4};
-
-# -- for some reason a= 4 breaks the string;
-
-printint32 $d.a;
+d:{};
+d.a:{};
+d.a.b:{};
+d.a.b.c:{};
+d.a.b.c.d:{};
+d.a.b.c.d.e:{};
+d.a.b.c.d.e.f:{};
+d.a.b.c.d.e.f.g:{};
+d.a.b.c.d.e.f.g.h:{};
+d.a.b.c.d.e.f.g.h.i:? {a= 420};
+d.a.b.c.d.e.f.g.h.i.a:= 123;
+printint32 $d.a.b.c.d.e.f.g.h.i.a;
 
 fntest:? 
 terra(a:int32,b:int32,c:int32) 

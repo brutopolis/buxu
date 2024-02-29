@@ -90,6 +90,9 @@ vm.variables =
     loadfile = function(path)
         return(terralib.loadfile(path)());
     end,
+    emptyobject = function()
+        return {};
+    end,
     ["="] = function(value)
         return value;
     end,
@@ -137,6 +140,7 @@ vm.variables.eval = vm.variables.loadstring;
 vm.variables["?"] = vm.variables.loadstring;
 vm.variables["?file"] = vm.variables.loadfile;
 vm.variables["#"] = vm.variables.comment;
+vm.variables["{}"] = vm.variables.emptyobject;
 -- parse the arguments
 
 if utils.array.includes(arg, "-v") or utils.array.includes(arg, "--version") then
@@ -166,7 +170,11 @@ end
 
 function recursiveset(argname, value)
     if utils.string.includes(argname, ".") then
-        local result = terralib.loadstring("vm.variables." .. argname .. " = " .. value)();
+        if (type(value) == "table") then
+            terralib.loadstring("vm.variables." .. argname .. " = " .. utils.stringify(value))()
+        else
+            terralib.loadstring("vm.variables." .. argname .. " = " .. value)();
+        end
     else
         vm.variables[argname] = value;
     end
@@ -194,6 +202,7 @@ function cleanSource(source)
     nstr = utils.string.replace(nstr, "; ", ";")
     nstr = utils.string.replace(nstr, " ; ", ";")
     nstr = utils.string.replace(nstr, "}", " }")
+    nstr = utils.string.replace(nstr, "{%s+}", "{}")
     return nstr
 end
 
@@ -228,6 +237,7 @@ function parseSourceFile()
             local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
             local _function = recursiveget(func);
             if _function then
+                print(func, utils.stringify(args))
                 _function(unpack(args or {}));
             else
                 print(vm.source)
