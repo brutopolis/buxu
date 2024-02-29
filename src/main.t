@@ -5,7 +5,7 @@ bruterPath = string.sub(bruterPath, 1, #bruterPath-4);
 package.terrapath = package.terrapath .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
 package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
 
-local version = "0.0.4"
+local version = "0.0.5"
 
 local utils = require 'luatils.init'
 local tocstr = require('lib.tocstr')
@@ -166,26 +166,22 @@ terra main()
     str:push(('h')[0]);
     str:push(('i')[0]);
 
-    var str2 = String.new();
-    str2:push(('d')[0]);
-    str2:push(('e')[0]);
-    str2:push(('f')[0]);
+    var str2 = String.fromString("def");
 
-    var str3 = String.new();
-    str3:push(('x')[0]);
-    str3:push(('y')[0]);
-    str3:push(('z')[0]);
-
+    var str3:String = String.fromString("xyz");
+    
     str:replace(str2, str3);
+    
+    str:print("str = ");
+    str3:print("str3 = ");
 
-    c.printf("str = %s\n", str.array);
+    var str4 = String.fromString("y");
 
-    var str4 = String.new();
-    str4:push(('y')[0]);
     var strsplited = str:split(str4);
 
     c.printf("strsplited[0] = %s\n", strsplited:get(0).array);
     c.printf("strsplited[1] = %s\n", strsplited:get(1).array);
+    c.printf("strsplited[2] = %s\n", strsplited:get(2).array);
 
     c.printf("teste = %s\n", tocstr.tocstr128(condensed_args));
 end
