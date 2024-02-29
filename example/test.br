@@ -1,6 +1,6 @@
-global a 15;
-global b 10;
-global c 5;
+a:= 15;
+b:= 10;
+c:= 5;
 v:= 5;
 module std.math;
 module std.io;

@@ -64,9 +64,6 @@ vm.variables =
             end
         end
     end,
-    global = function(name, value)
-        vm.variables[name] = global(value);
-    end,
     set = function(name, value)
         vm.variables[name] = value;
     end,
