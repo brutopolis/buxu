@@ -5,49 +5,159 @@ bruterPath = string.sub(bruterPath, 1, #bruterPath-4);
 package.terrapath = package.terrapath .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
 package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
 
-local version = "0.0.5"
+local version = "0.0.6"
 
 local utils = require 'luatils.init'
 local tocstr = require('lib.tocstr')
 local list = require('lib.list');
-local String = require('lib.string')
-
+local String = require('lib.string');
 -- load the main.c
 local c = terralib.includec(bruterPath .. "src/main.c");
 
-local source;
-local outputPath;
 local condensed_args = arg[0] .. " " .. table.concat(arg, " ");
 
-local vm = 
+local ListInt8 = list(int8);
+local ListInt16 = list(int16);
+local ListInt32 = list(int32);
+local ListInt64 = list(int64);
+local ListUInt8 = list(uint8);
+local ListUInt16 = list(uint16);
+local ListUInt32 = list(uint32);
+local ListUInt64 = list(uint64);
+local ListDouble = list(double);
+local ListFloat = list(float);
+local ListString = list(String);
+local ListInt = ListInt32;
+local ListListInt8 = list(ListInt8);
+local ListListInt16 = list(ListInt16);
+local ListListInt32 = list(ListInt32);
+local ListListInt64 = list(ListInt64);
+local ListListUInt8 = list(ListUInt8);
+local ListListUInt16 = list(ListUInt16);
+local ListListUInt32 = list(ListUInt32);
+local ListListUInt64 = list(ListUInt64);
+local ListListDouble = list(ListDouble);
+local ListListFloat = list(ListFloat);
+local ListListInt = ListListInt32;
+
+struct Hash
 {
-    -- file
+    index: int,
+    type: rawstring,
+    value: rawstring
+}
+local ListHash = list(Hash);
+
+struct Managed
+{
+    int8: ListInt8,
+    int16: ListInt16,
+    int32: ListInt32,
+    int64: ListInt64,
+    uint8: ListUInt8,
+    uint16: ListUInt16,
+    uint32: ListUInt32,
+    uint64: ListUInt64,
+    double: ListDouble,
+    float: ListFloat,
+    int: ListInt,
+    ListInt8: ListListInt8,
+    ListInt16: ListListInt16,
+    ListInt32: ListListInt32,
+    ListInt64: ListListInt64,
+    ListUInt8: ListListUInt8,
+    ListUInt16: ListListUInt16,
+    ListUInt32: ListListUInt32,
+    ListUInt64: ListListUInt64,
+    ListDouble: ListListDouble,
+    ListFloat: ListListFloat,
+    ListInt: ListListInt,
+    String: ListString
+}
+
+struct VirtualMachine
+{
+    source: rawstring,
+    outputPath: rawstring,
+    managed: Managed,
+    hash: ListHash
+}
+
+terra VirtualMachine.methods.new(source: rawstring, outputPath: rawstring)
+    var result:VirtualMachine;
+    result.source = "";
+    result.outputPath = "";
+    result.managed.int8 = ListInt8.new();
+    result.managed.int16 = ListInt16.new();
+    result.managed.int32 = ListInt32.new();
+    result.managed.int64 = ListInt64.new();
+    result.managed.uint8 = ListUInt8.new();
+    result.managed.uint16 = ListUInt16.new();
+    result.managed.uint32 = ListUInt32.new();
+    result.managed.uint64 = ListUInt64.new();
+    result.managed.double = ListDouble.new();
+    result.managed.float = ListFloat.new();
+    result.managed.int = ListInt.new();
+    result.managed.ListInt8 = ListListInt8.new();
+    result.managed.ListInt16 = ListListInt16.new();
+    result.managed.ListInt32 = ListListInt32.new();
+    result.managed.ListInt64 = ListListInt64.new();
+    result.managed.ListUInt8 = ListListUInt8.new();
+    result.managed.ListUInt16 = ListListUInt16.new();
+    result.managed.ListUInt32 = ListListUInt32.new();
+    result.managed.ListUInt64 = ListListUInt64.new();
+    result.managed.ListDouble = ListListDouble.new();
+    result.managed.ListFloat = ListListFloat.new();
+    result.managed.ListInt = ListListInt.new();
+    result.managed.String = ListString.new();
+    result.hash = ListHash.new();
+    return result;
+end
+
+local compilervm = 
+{
     source = "",
-    output = "",
     outputPath = "",
+    compiledFunctions = {},
     globals = {},
     constants = {},
-    compiledFunctions = {},
-};
-
+    exports = {},
+    currentcmd = "",
+}
 -- vm functions
-vm.functions = 
+compilervm.functions = 
 {
     module = function(path)
         local temp = require(path);
         for k,v in pairs(temp) do
-            vm.compiledFunctions[k] = v;
-        end
-    end,
-    using = function(path)
-        local temp = require(path);
-        for k,v in pairs(temp) do
-            vm.functions[k] = v;
+            if k == "exports" then
+                for k,v in pairs(v) do
+                    compilervm.exports[k] = v;
+                end
+            else
+                compilervm.compiledFunctions[k] = v;
+            end
         end
     end,
     global = function(name, type, value)
-        vm.globals[name] = global(type, value, name);
-    end
+        print("global " .. name .. " " .. type .. " " .. value);
+        compilervm.globals[name] = global(value);
+    end,
+    auto = function(type, name, value)
+        compilervm.managed[type]:push(value);
+        local realtype = terralib.loadstring("return " .. type)();
+        compilervm.hash[name] = {link = compilervm.managed[type]:size() - 1, type = type, value = value};
+    end,
+    test = function()
+        c.printf("testdasdasdas\n\n");
+    end,
+    export = function(name, as)
+        if as then
+            compilervm.exports[as] = compilervm.compiledFunctions[name];
+        else
+            compilervm.exports[name] = compilervm.compiledFunctions[name];
+        end
+    end,
 }
 
 -- parse the arguments
@@ -70,9 +180,11 @@ elseif arg[1] == nil then
     os.exit(1)
 end
 
+compilervm.source = utils.file.load.text(arg[1]);
+
 if utils.array.includes(arg, "-o") or utils.array.includes(arg, "--output") then
     local temp = utils.table.find(arg, "-o") or utils.table.find(arg, "--output")
-    vm.outputPath = arg[temp + 1]
+    compilervm.outputPath = arg[temp + 1]
 end
 
 function cleanSource(source)
@@ -83,58 +195,64 @@ function cleanSource(source)
     nstr = utils.string.replace(nstr, ": ", ":")
     nstr = utils.string.replace(nstr, " ;", ";")
     nstr = utils.string.replace(nstr, "; ", ";")
+    while utils.string.includes(nstr, "  ") do
+        nstr = utils.string.replace(nstr, "  ", " ")
+    end
     return nstr
 end
 
 function parseArgs(args)
+    local newargs = utils.array.clone(args);
     for i = 1, #args do
-        if utils.string.includes(args[i], "$") then
-            local temp = utils.string.split(args[i], "$");
-            local name = temp[1];
-            local type = temp[2];
-            if not vm.hash[name] then
-                error("variable \"" .. name .. "\" not declared")
+        if string.byte(args[i],1) == 36 then
+            local name = utils.string.replace(args[i], "%$", '');
+            if compilervm.globals[name] == nil then
+                error("global " .. name .. " not found")
             end
-            args[i] = vm.variables[name].value;
+            newargs[i] = compilervm.globals[name];
         elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or string.byte(args[i],1) == 45 then
-            args[i] = tonumber(args[i]);
+            newargs[i] = tonumber(args[i]);
         end
     end
+    return newargs;
 end
 
-vm.source = cleanSource(vm.source)
+compilervm.source = cleanSource(compilervm.source)
 
 function parseSourceFile()
-    local splited = utils.string.split(vm.source, ";");
+    local splited = utils.string.split(compilervm.source, ";");
     local func = "";
-    for i = 1, #splited-1 do
-        if(utils.string.includes(splited[i], ":")) then
-            local temp = utils.string.split(splited[i], ":");
-            local name = temp[1];
-            local temp2 = utils.string.split(temp[2], " ");
-            func = temp2[1];
-            local args = parseArgs(utils.array.slice(temp2, 2, #temp2));
-            vm.variables[name] = vm.functions[func](unpack(args or {}));
+    for i = 1, #splited - 1 do
+        compilervm.currentcmd = splited[i];
+        local splited_args = utils.string.split(splited[i], " ");
+        if(utils.string.includes(splited_args[1], ":")) then
+            local name_and_func = utils.string.split(splited_args[1], ":");
+            local name, func = name_and_func[1], name_and_func[2];
+            local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
+            compilervm.globals[name] = (compilervm.functions[func] or compilervm.compiledFunctions[func])(unpack(args or {}));
         else
-            local temp = utils.string.split(splited[i], " ");
-            local func = temp[1];
-            vm.functions[func](unpack(utils.array.slice(temp, 2, #temp)));
+            
+            local func = splited_args[1];
+            local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
+            local _function = compilervm.functions[func] or compilervm.compiledFunctions[func]; 
+            if _function then
+                _function(unpack(args or {}));
+            else
+                error("function " .. func .. " not found")
+            end
         end
     end
 end
 
 parseSourceFile();
 
-intlist = list(int);
-intlistlist = list(intlist);
-
 terra main()
-
+    var vm = VirtualMachine.new(compilervm.source, compilervm.outputPath);
     -- int lists tests
-    var listaint = intlist.new();
-    var listaint2 = intlist.new();
+    var listaint = ListInt.new();
+    var listaint2 = ListInt.new();
 
-    var listaintint = intlistlist.new();
+    var listaintint = ListListInt.new();
 
     listaintint:push(listaint);
     listaintint:push(listaint2);
@@ -183,23 +301,12 @@ terra main()
     c.printf("strsplited[1] = %s\n", strsplited:get(1).array);
     c.printf("strsplited[2] = %s\n", strsplited:get(2).array);
 
-    c.printf("teste = %s\n", tocstr.tocstr128(condensed_args));
+    c.printf("teste = %s\n", condensed_args);
 end
 
-vm.compiledFunctions.main = main;
+compilervm.compiledFunctions.main = main;
+compilervm.exports.main = main;
 
-if vm.outputPath ~= "" then
-    local fns = {}
-    for k,v in pairs(vm.compiledFunctions) do
-        fns[k] = v;
-    end
-    terralib.saveobj(vm.outputPath,fns, nil, nil, false);
+if compilervm.outputPath ~= "" then
+    terralib.saveobj(compilervm.outputPath,compilervm.exports, nil, nil, false);
 end
-
---example: type$var:func arg type$arg arg;
-
-
-
-
--- compile the executable
--- terralib.saveobj("main",{main = main}, nil, nil, false);

@@ -1,1 +1,8 @@
-global int abc 0;
+global int a 15;
+global int b 10;
+global int c 5;
+module std.math;
+module std.io;
+c:addint32 5 5;
+
+printint32 $c;
