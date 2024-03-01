@@ -41,7 +41,7 @@ ListListFloat = list(ListFloat);
 ListListInt = ListListInt32;
 ListListString = list(ListString);
 
-vm = 
+br = 
 {
     source = "",
     outputPath = "",
@@ -49,29 +49,29 @@ vm =
     exports = {},
     currentcmd = "",
 }
--- vm variables
-vm.variables = 
+-- br variables
+br.variables = 
 {
     module = function(path)
         local temp = require(path);
         for k,v in pairs(temp) do
             if k == "exports" then
                 for k,v in pairs(v) do
-                    vm.exports[k] = v;
+                    br.exports[k] = v;
                 end
             else
-                vm.variables[k] = v;
+                br.variables[k] = v;
             end
         end
     end,
     set = function(name, value)
-        vm.variables[name] = value;
+        br.variables[name] = value;
     end,
     export = function(name, as)
         if as then
-            vm.exports[as] = vm.variables[name];
+            br.exports[as] = br.variables[name];
         else
-            vm.exports[name] = vm.variables[name];
+            br.exports[name] = br.variables[name];
         end
     end,
     loadstring = function(...)
@@ -133,11 +133,11 @@ vm.variables =
     end,
 }
 
-vm.variables.eval = vm.variables.loadstring;
-vm.variables["?"] = vm.variables.loadstring;
-vm.variables["?file"] = vm.variables.loadfile;
-vm.variables["#"] = vm.variables.comment;
-vm.variables["{}"] = vm.variables.emptyobject;
+br.variables.eval = br.variables.loadstring;
+br.variables["?"] = br.variables.loadstring;
+br.variables["?file"] = br.variables.loadfile;
+br.variables["#"] = br.variables.comment;
+br.variables["{}"] = br.variables.emptyobject;
 -- parse the arguments
 
 if utils.array.includes(arg, "-v") or utils.array.includes(arg, "--version") then
@@ -158,31 +158,31 @@ elseif arg[1] == nil then
     os.exit(1)
 end
 
-vm.source = utils.file.load.text(arg[1]);
+br.source = utils.file.load.text(arg[1]);
 
 if utils.array.includes(arg, "-o") or utils.array.includes(arg, "--output") then
     local temp = utils.table.find(arg, "-o") or utils.table.find(arg, "--output")
-    vm.outputPath = arg[temp + 1]
+    br.outputPath = arg[temp + 1]
 end
 
 function recursiveset(argname, value)
     if utils.string.includes(argname, ".") then
         if (type(value) == "table") then
-            terralib.loadstring("vm.variables." .. argname .. " = " .. utils.stringify(value))()
+            terralib.loadstring("br.variables." .. argname .. " = " .. utils.stringify(value))()
         else
-            terralib.loadstring("vm.variables." .. argname .. " = " .. value)();
+            terralib.loadstring("br.variables." .. argname .. " = " .. value)();
         end
     else
-        vm.variables[argname] = value;
+        br.variables[argname] = value;
     end
 end
 
 function recursiveget(argname)
     if utils.string.includes(argname, ".") then
-        local result = terralib.loadstring("return vm.variables." .. argname)();
+        local result = terralib.loadstring("return br.variables." .. argname)();
         return result;
     else
-        return vm.variables[argname];
+        return br.variables[argname];
     end
 end
 
@@ -216,10 +216,10 @@ function parseArgs(args)
     return newargs;
 end
 
-vm.source = cleanSource(vm.source)
+br.source = cleanSource(br.source)
 
 function parseSourceFile()
-    local splited = utils.string.split(vm.source, ";");
+    local splited = utils.string.split(br.source, ";");
     local func = "";
     for i = 1, #splited - 1 do
         local splited_args = utils.string.split(splited[i], " ");
@@ -237,7 +237,7 @@ function parseSourceFile()
                 print(func, utils.stringify(args))
                 _function(unpack(args or {}));
             else
-                print(vm.source)
+                print(br.source)
                 error("function " .. func .. " not found")
             end
         end
@@ -246,6 +246,6 @@ end
 
 parseSourceFile();
 
-if vm.outputPath ~= "" then
-    terralib.saveobj(vm.outputPath,vm.exports, nil, nil, false);
+if br.outputPath ~= "" then
+    terralib.saveobj(br.outputPath,br.exports, nil, nil, false);
 end
