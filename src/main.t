@@ -14,20 +14,19 @@ package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath ..
 -- version
 -- version
 -- version
-version = "0.0.7b"
+version = "0.0.7c"
 
 -- libs
 -- libs
 -- libs
-utils = require 'luatils.init'
 list = require('lib.list');
 String = require('lib.string');
 
 -- brutevm
 -- brutevm
 -- brutevm
-br = require "src.br"
-
+br = require "br"
+utils = br.variables.utils;
 -- list types
 -- list types
 -- list types
