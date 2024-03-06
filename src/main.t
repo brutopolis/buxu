@@ -14,7 +14,7 @@ package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath ..
 -- version
 -- version
 -- version
-version = "0.0.7a"
+version = "0.0.7b"
 
 -- libs
 -- libs
@@ -97,6 +97,11 @@ function cleanSource(source)
     return nstr
 end
 
+if arg[1] == nil then
+    print("No source file specified\nuse --help for help.")
+    os.exit(1)
+end
+
 -- read and clean the source file
 -- read and clean the source file
 -- read and clean the source file
@@ -157,8 +162,8 @@ end
 -- parse the source file
 -- parse the source file
 -- parse the source file
-function parseSourceFile()
-    local splited = utils.string.split(br.source, ";");
+function parseSourceFile(src)
+    local splited = utils.string.split(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
         local splited_args = utils.string.split(splited[i], " ");
@@ -176,7 +181,7 @@ function parseSourceFile()
                 print(func, utils.stringify(args))
                 _function(unpack(args or {}));
             else
-                print(br.source)
+                print(src)
                 error("function " .. func .. " not found")
             end
         end
@@ -186,7 +191,7 @@ end
 -- run the parser
 -- run the parser
 -- run the parser
-parseSourceFile();
+parseSourceFile(br.source);
 
 -- save the output if specified
 -- save the output if specified

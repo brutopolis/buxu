@@ -47,7 +47,7 @@ file.isdir = function(path)
 end
 
 file.load.text = function(path)
-    local file = io.open(path, "r")
+    local file = io.open(path, "r") or (function() print("File not found: " .. path); os.exit(1) end)()
     local contents = file:read("*all")
     file:close()
     return contents

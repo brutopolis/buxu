@@ -89,6 +89,25 @@ br.variables =
     end,
     comment = function()
     end,
+    include = function(path)
+        return terralib.includec(path);
+    end,
+    includestring = function(txt)
+        return terralib.includecstring(txt);
+    end,
+    require = function(path)
+        return require(path);
+    end,
+    dobr = function(path)
+        local c = utils.file.load.text(path);
+        c = cleanSource(c);
+        parseSourceFile(c);
+    end,
+    dobrstring = function(str)
+        str = cleanSource(str);
+        parseSourceFile(str);
+    end,
+    utils = utils,
 }
 
 br.variables.eval = br.variables.loadstring;
