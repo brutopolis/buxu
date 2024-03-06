@@ -1,3 +1,4 @@
+local c = terralib.includec("stdio.h");
 terra main()
     var listaint = ListInt.new();
     var listaint2 = ListInt.new();
@@ -49,7 +50,6 @@ terra main()
     c.printf("strsplited[0] = %s\n", strsplited:get(0).array);
     c.printf("strsplited[1] = %s\n", strsplited:get(1).array);
     c.printf("strsplited[2] = %s\n", strsplited:get(2).array);
-    c.printf("teste = %s\n", condensed_args);
 end
 
 return main;

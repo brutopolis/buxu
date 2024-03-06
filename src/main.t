@@ -1,21 +1,36 @@
+-- gets the bruter path
+-- gets the bruter path
+-- gets the bruter path
 bruterPath = debug.getinfo(1).source:match("@?(.*/)");
 --remove the "src/"
 bruterPath = string.sub(bruterPath, 1, #bruterPath-4);
 
+-- add the path to the terralib
+-- add the path to the terralib
+-- add the path to the terralib
 package.terrapath = package.terrapath .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
 package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
 
-version = "0.0.7"
+-- version
+-- version
+-- version
+version = "0.0.7a"
 
+-- libs
+-- libs
+-- libs
 utils = require 'luatils.init'
-tocstr = require('lib.tocstr')
 list = require('lib.list');
 String = require('lib.string');
--- load the main.c
-c = terralib.includec(bruterPath .. "src/main.c");
 
-condensed_args = arg[0] .. " " .. table.concat(arg, " ");
+-- brutevm
+-- brutevm
+-- brutevm
+br = require "src.br"
 
+-- list types
+-- list types
+-- list types
 ListInt8 = list(int8);
 ListInt16 = list(int16);
 ListInt32 = list(int32);
@@ -41,105 +56,9 @@ ListListFloat = list(ListFloat);
 ListListInt = ListListInt32;
 ListListString = list(ListString);
 
-br = 
-{
-    source = "",
-    outputPath = "",
-    variables = {},
-    exports = {},
-    currentcmd = "",
-}
--- br variables
-br.variables = 
-{
-    module = function(path)
-        local temp = require(path);
-        for k,v in pairs(temp) do
-            if k == "exports" then
-                for k,v in pairs(v) do
-                    br.exports[k] = v;
-                end
-            else
-                br.variables[k] = v;
-            end
-        end
-    end,
-    set = function(name, value)
-        br.variables[name] = value;
-    end,
-    export = function(name, as)
-        if as then
-            br.exports[as] = br.variables[name];
-        else
-            br.exports[name] = br.variables[name];
-        end
-    end,
-    loadstring = function(...)
-        local args = {...};
-        local result = "";
-        for i = 1, #args do
-            result = result .. " " .. args[i];
-        end
-        print(result)
-        result = "return(" .. result .. ")"
-        return ((terralib.loadstring(result))());
-    end,
-    loadfile = function(path)
-        return(terralib.loadfile(path)());
-    end,
-    emptyobject = function()
-        return {};
-    end,
-    ["="] = function(value)
-        return value;
-    end,
-    ["+"] = function(a, b)
-        return a + b;
-    end,
-    ["-"] = function(a, b)
-        return a - b;
-    end,
-    ["*"] = function(a, b)
-        return a * b;
-    end,
-    ["/"] = function(a, b)
-        return a / b;
-    end,
-    ["%"] = function(a, b)
-        return a % b;
-    end,
-    ["^"] = function(a, b)
-        return a ^ b;
-    end,
-    ["=="] = function(a, b)
-        return a == b;
-    end,
-    ["~="] = function(a, b)
-        return a ~= b;
-    end,
-    [">"] = function(a, b)
-        return a > b;
-    end,
-    ["<"] = function(a, b)
-        return a < b;
-    end,
-    [">="] = function(a, b)
-        return a >= b;
-    end,
-    ["<="] = function(a, b)
-        return a <= b;
-    end,
-    comment = function()
-    end,
-}
-
-br.variables.eval = br.variables.loadstring;
-br.variables["?"] = br.variables.loadstring;
-br.variables["?file"] = br.variables.loadfile;
-br.variables["#"] = br.variables.comment;
-br.variables["{}"] = br.variables.emptyobject;
--- parse the arguments
-
+-- parse the compiler/interpreter arguments
+-- parse the compiler/interpreter arguments
+-- parse the compiler/interpreter arguments
 if utils.array.includes(arg, "-v") or utils.array.includes(arg, "--version") then
     print("bruter version " .. version)
     os.exit(0)
@@ -158,34 +77,9 @@ elseif arg[1] == nil then
     os.exit(1)
 end
 
-br.source = utils.file.load.text(arg[1]);
-
-if utils.array.includes(arg, "-o") or utils.array.includes(arg, "--output") then
-    local temp = utils.table.find(arg, "-o") or utils.table.find(arg, "--output")
-    br.outputPath = arg[temp + 1]
-end
-
-function recursiveset(argname, value)
-    if utils.string.includes(argname, ".") then
-        if (type(value) == "table") then
-            terralib.loadstring("br.variables." .. argname .. " = " .. utils.stringify(value))()
-        else
-            terralib.loadstring("br.variables." .. argname .. " = " .. value)();
-        end
-    else
-        br.variables[argname] = value;
-    end
-end
-
-function recursiveget(argname)
-    if utils.string.includes(argname, ".") then
-        local result = terralib.loadstring("return br.variables." .. argname)();
-        return result;
-    else
-        return br.variables[argname];
-    end
-end
-
+-- source cleaner
+-- source cleaner
+-- source cleaner
 function cleanSource(source)
     local nstr = utils.string.replace(source, "\n"," ")
     nstr = utils.string.replace(nstr, "\\n", "\n")
@@ -203,6 +97,50 @@ function cleanSource(source)
     return nstr
 end
 
+-- read and clean the source file
+-- read and clean the source file
+-- read and clean the source file
+br.source = utils.file.load.text(arg[1]);
+br.source = cleanSource(br.source)
+
+-- set the output path if specified
+-- set the output path if specified
+-- set the output path if specified
+if utils.array.includes(arg, "-o") or utils.array.includes(arg, "--output") then
+    local temp = utils.table.find(arg, "-o") or utils.table.find(arg, "--output")
+    br.outputPath = arg[temp + 1]
+end
+
+-- setter
+-- setter
+-- setter
+function recursiveset(argname, value)
+    if utils.string.includes(argname, ".") then
+        if (type(value) == "table") then
+            terralib.loadstring("br.variables." .. argname .. " = " .. utils.stringify(value))()
+        else
+            terralib.loadstring("br.variables." .. argname .. " = " .. value)();
+        end
+    else
+        br.variables[argname] = value;
+    end
+end
+
+-- getter
+-- getter
+-- getter
+function recursiveget(argname)
+    if utils.string.includes(argname, ".") then
+        local result = terralib.loadstring("return br.variables." .. argname)();
+        return result;
+    else
+        return br.variables[argname];
+    end
+end
+
+-- parse the arguments
+-- parse the arguments
+-- parse the arguments
 function parseArgs(args)
     local newargs = utils.array.clone(args);
     for i = 1, #args do
@@ -216,8 +154,9 @@ function parseArgs(args)
     return newargs;
 end
 
-br.source = cleanSource(br.source)
-
+-- parse the source file
+-- parse the source file
+-- parse the source file
 function parseSourceFile()
     local splited = utils.string.split(br.source, ";");
     local func = "";
@@ -244,8 +183,14 @@ function parseSourceFile()
     end
 end
 
+-- run the parser
+-- run the parser
+-- run the parser
 parseSourceFile();
 
+-- save the output if specified
+-- save the output if specified
+-- save the output if specified
 if br.outputPath ~= "" then
     terralib.saveobj(br.outputPath,br.exports, nil, nil, false);
 end
