@@ -2,6 +2,7 @@ local utils = require("luatils.init");
 
 local br = 
 {
+    version = "0.0.7d",
     source = "",
     outputPath = "",
     variables = 
@@ -11,6 +12,25 @@ local br =
     },
     exports = {},
     currentcmd = "",
+    preprocessors = 
+    {
+        sugar = function(source)
+            local nstr = utils.string.replace(source, "\n"," ")
+            nstr = utils.string.replace(nstr, "\\n", "\n")
+            while utils.string.includes(nstr, "  ") do
+                nstr = utils.string.replace(nstr, "  ", " ")
+            end
+            nstr = utils.string.replace(nstr, " : ", ":")
+            nstr = utils.string.replace(nstr, " :", ":")
+            nstr = utils.string.replace(nstr, ": ", ":")
+            nstr = utils.string.replace(nstr, " ;", ";")
+            nstr = utils.string.replace(nstr, "; ", ";")
+            nstr = utils.string.replace(nstr, " ; ", ";")
+            nstr = utils.string.replace(nstr, "}", " }")
+            nstr = utils.string.replace(nstr, "{%s+}", "{}")
+            return nstr
+        end
+    },
 }
 
 -- module functions
@@ -26,14 +46,49 @@ br.variables.export = function(name, as)
     end
 end
 
+-- setter
+-- setter
+-- setter
+br.variables.recursiveset = function(argname, value)
+    if utils.string.includes(argname, ".") then
+        if (type(value) == "table") then
+            terralib.loadstring("br.variables." .. argname .. " = " .. utils.stringify(value))()
+        else
+            terralib.loadstring("br.variables." .. argname .. " = " .. value)();
+        end
+    else
+        br.variables[argname] = value;
+    end
+end
+
+-- getter
+-- getter
+-- getter
+br.variables.recursiveget = function(argname)
+    if utils.string.includes(argname, ".") then
+        print("return br.variables." .. argname)
+        local result = terralib.loadstring("return br.variables." .. argname)();
+        return result;
+    else
+        return br.variables[argname];
+    end
+end
+
 -- set
 br.variables.set = function(name, value)
     br.variables[name] = value;
 end
-br.variables.include = function(path)
+
+br.variables.setf = function(varname, funcname, ...)
+    local args = {...};
+    local result;
+    br.variables.recursiveset(funcname, br.variables.recursiveget(funcname)(unpack(args or {})));
+end
+
+br.variables.includec = function(path)
     return terralib.includec(path);
 end
-br.variables.includestring = function(txt)
+br.variables.includecstring = function(txt)
     return terralib.includecstring(txt);
 end
 br.variables.require = function(path)
@@ -43,7 +98,6 @@ end
 -- dobr
 br.variables.dobr = function(path)
     local c = utils.file.load.text(path);
-    c = cleanSource(c);
     parseSourceFile(c);
 end
 
@@ -78,12 +132,9 @@ end
 -- module
 br.variables.module = function(path)
     local temp;
-    if utils.string.includes(path, ".br") then
-        br.variables.dobr(path);
-        temp = br.variables.temp.brmodule or {};
-    elseif utils.string.includes(path, ".lua") or utils.string.includes(path, ".t")then
+    if utils.string.includes(path, ".lua") or utils.string.includes(path, ".t")then
         temp = br.variables.require(path);
-    elseif utils.string.includes(path, ".c") then
+    elseif utils.string.includes(path, ".c") or utils.string.includes(path, ".h") then
         temp = br.variables.include(path);
     else
         temp = br.variables.require(path);
@@ -101,6 +152,15 @@ br.variables.module = function(path)
             br.variables[k] = v;
         end
     end
+end
+
+--string functions
+--string functions
+--string functions
+
+br.variables.string = function(...)
+    local args = {...};
+    return table.concat(args, " ");
 end
 
 -- math functions

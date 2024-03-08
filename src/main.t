@@ -11,11 +11,6 @@ bruterPath = string.sub(bruterPath, 1, #bruterPath-4);
 package.terrapath = package.terrapath .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
 package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
 
--- version
--- version
--- version
-version = "0.0.7c"
-
 -- libs
 -- libs
 -- libs
@@ -59,7 +54,7 @@ ListListString = list(ListString);
 -- parse the compiler/interpreter arguments
 -- parse the compiler/interpreter arguments
 if utils.array.includes(arg, "-v") or utils.array.includes(arg, "--version") then
-    print("bruter version " .. version)
+    print("bruter version " .. br.version)
     os.exit(0)
 elseif utils.array.includes(arg, "--help") or utils.array.includes(arg,"-h") then
     print("Usage: bruter <source file> [-o <output file>] [-h] [-v] [--version] [--help]")
@@ -76,26 +71,6 @@ elseif arg[1] == nil then
     os.exit(1)
 end
 
--- source cleaner
--- source cleaner
--- source cleaner
-function cleanSource(source)
-    local nstr = utils.string.replace(source, "\n"," ")
-    nstr = utils.string.replace(nstr, "\\n", "\n")
-    while utils.string.includes(nstr, "  ") do
-        nstr = utils.string.replace(nstr, "  ", " ")
-    end
-    nstr = utils.string.replace(nstr, " : ", ":")
-    nstr = utils.string.replace(nstr, " :", ":")
-    nstr = utils.string.replace(nstr, ": ", ":")
-    nstr = utils.string.replace(nstr, " ;", ";")
-    nstr = utils.string.replace(nstr, "; ", ";")
-    nstr = utils.string.replace(nstr, " ; ", ";")
-    nstr = utils.string.replace(nstr, "}", " }")
-    nstr = utils.string.replace(nstr, "{%s+}", "{}")
-    return nstr
-end
-
 if arg[1] == nil then
     print("No source file specified\nuse --help for help.")
     os.exit(1)
@@ -105,7 +80,6 @@ end
 -- read and clean the source file
 -- read and clean the source file
 br.source = utils.file.load.text(arg[1]);
-br.source = cleanSource(br.source)
 
 -- set the output path if specified
 -- set the output path if specified
@@ -113,33 +87,6 @@ br.source = cleanSource(br.source)
 if utils.array.includes(arg, "-o") or utils.array.includes(arg, "--output") then
     local temp = utils.table.find(arg, "-o") or utils.table.find(arg, "--output")
     br.outputPath = arg[temp + 1]
-end
-
--- setter
--- setter
--- setter
-function recursiveset(argname, value)
-    if utils.string.includes(argname, ".") then
-        if (type(value) == "table") then
-            terralib.loadstring("br.variables." .. argname .. " = " .. utils.stringify(value))()
-        else
-            terralib.loadstring("br.variables." .. argname .. " = " .. value)();
-        end
-    else
-        br.variables[argname] = value;
-    end
-end
-
--- getter
--- getter
--- getter
-function recursiveget(argname)
-    if utils.string.includes(argname, ".") then
-        local result = terralib.loadstring("return br.variables." .. argname)();
-        return result;
-    else
-        return br.variables[argname];
-    end
 end
 
 -- parse the arguments
@@ -150,7 +97,7 @@ function parseArgs(args)
     for i = 1, #args do
         if string.byte(args[i],1) == 36 then
             local name = utils.string.replace(args[i], "%$", '');
-            newargs[i] = recursiveget(name);
+            newargs[i] = br.variables.recursiveget(name);
         elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or string.byte(args[i],1) == 45 then
             newargs[i] = tonumber(args[i]);
         end
@@ -158,10 +105,23 @@ function parseArgs(args)
     return newargs;
 end
 
+-- preprocess the source
+-- preprocess the source
+-- preprocess the source
+
+function preprocess(_src)
+    local result = _src .. '';
+    for k, v in pairs(br.preprocessors) do
+        result = v(result);
+    end
+    return result;
+end
+
 -- parse the source file
 -- parse the source file
 -- parse the source file
 function parseSourceFile(src)
+    src = preprocess(src);
     local splited = utils.string.split(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
@@ -170,12 +130,11 @@ function parseSourceFile(src)
             local name_and_func = utils.string.split(splited_args[1], ":");
             local name, func = name_and_func[1], name_and_func[2];
             local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
-            --print(name, func, args)
-            recursiveset(name, recursiveget(func)(unpack(args or {})));
+            br.variables.recursiveset(name, br.variables.recursiveget(func)(unpack(args or {})));
         else
             local func = splited_args[1];
             local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
-            local _function = recursiveget(func);
+            local _function = br.variables.recursiveget(func);
             if _function then
                 print(func, utils.stringify(args))
                 _function(unpack(args or {}));
