@@ -2,7 +2,7 @@ local utils = require("luatils.init");
 
 local br = 
 {
-    version = "0.0.7d",
+    version = "0.0.8",
     source = "",
     outputPath = "",
     variables = 
@@ -29,6 +29,30 @@ local br =
             nstr = utils.string.replace(nstr, "}", " }")
             nstr = utils.string.replace(nstr, "{%s+}", "{}")
             return nstr
+        end
+    },
+    lineprocessors = 
+    {
+        setter = function(source)
+            if(utils.string.includes(source, ":")) then
+                local temp = utils.string.split(source, " ");
+                if utils.string.includes(temp[1], ":") then
+                    
+                    local rest = "";
+                    for i = 2, #temp do
+                        rest = rest .. " " .. temp[i];
+                    end
+                    local splited = utils.string.split(temp[1], ":");
+                    local name = splited[1];
+                    local funcname = splited[2];
+                    local result = "setf " .. name .. " " .. funcname .. rest;
+                    return result;
+                else
+                    return source;
+                end
+            else
+                return source;
+            end
         end
     },
 }
@@ -82,7 +106,8 @@ end
 br.variables.setf = function(varname, funcname, ...)
     local args = {...};
     local result;
-    br.variables.recursiveset(funcname, br.variables.recursiveget(funcname)(unpack(args or {})));
+    print(funcname)
+    br.variables.recursiveset(varname, br.variables.recursiveget(funcname)(unpack(args or {})));
 end
 
 br.variables.includec = function(path)
@@ -114,8 +139,8 @@ br.variables.loadstring = function(...)
     for i = 1, #args do
         result = result .. " " .. args[i];
     end
-    print(result)
     result = "return(" .. result .. ")"
+    print("result: " .. result)
     return ((terralib.loadstring(result))());
 end
 

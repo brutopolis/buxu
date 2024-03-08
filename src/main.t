@@ -117,6 +117,14 @@ function preprocess(_src)
     return result;
 end
 
+function lineprocess(_src)
+    local result = _src .. '';
+    for k, v in pairs(br.lineprocessors) do
+        result = v(result);
+    end
+    return result;
+end
+
 -- parse the source file
 -- parse the source file
 -- parse the source file
@@ -125,23 +133,17 @@ function parseSourceFile(src)
     local splited = utils.string.split(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
+        splited[i] = lineprocess(splited[i]);
         local splited_args = utils.string.split(splited[i], " ");
-        if(utils.string.includes(splited_args[1], ":")) then
-            local name_and_func = utils.string.split(splited_args[1], ":");
-            local name, func = name_and_func[1], name_and_func[2];
-            local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
-            br.variables.recursiveset(name, br.variables.recursiveget(func)(unpack(args or {})));
+        local func = splited_args[1];
+        local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
+        local _function = br.variables.recursiveget(func);
+        if _function then
+            print(func, utils.stringify(args))
+            _function(unpack(args or {}));
         else
-            local func = splited_args[1];
-            local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
-            local _function = br.variables.recursiveget(func);
-            if _function then
-                print(func, utils.stringify(args))
-                _function(unpack(args or {}));
-            else
-                print(src)
-                error("function " .. func .. " not found")
-            end
+            print(src)
+            error("function " .. func .. " not found")
         end
     end
 end
