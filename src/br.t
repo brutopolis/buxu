@@ -2,7 +2,7 @@ local utils = require("luatils.init");
 
 local br = 
 {
-    version = "0.0.8",
+    version = "0.0.8a",
     source = "",
     outputPath = "",
     variables = 
@@ -35,7 +35,7 @@ local br =
     {
         setter = function(source)
             if(utils.string.includes(source, ":")) then
-                local temp = utils.string.split(source, " ");
+                local temp = utils.string.split3(source, " ");
                 if utils.string.includes(temp[1], ":") then
                     
                     local rest = "";
@@ -133,15 +133,9 @@ br.variables.dobrstring = function(str)
 end
 
 -- loadstring
-br.variables.loadstring = function(...)
-    local args = {...};
-    local result = "";
-    for i = 1, #args do
-        result = result .. " " .. args[i];
-    end
-    result = "return(" .. result .. ")"
-    print("result: " .. result)
-    return ((terralib.loadstring(result))());
+br.variables.loadstring = function(str)
+    print("str: ", str)
+    return ((terralib.loadstring(str))());
 end
 
 -- loadfile

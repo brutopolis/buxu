@@ -32,6 +32,56 @@ _string.split = function(str, separator)
     return parts
 end
 
+_string.split2 = function(str, separator) -- returns a table of strings respecting the backticks and removing them
+    local result = {}
+    local current = ""
+    local insideString = false
+
+    for i = 1, #str do
+        local char = str:sub(i, i)
+
+        if char == "`" then
+            insideString = not insideString
+        elseif char == separator and not insideString then
+            table.insert(result, current)
+            current = ""
+        else
+            current = current .. char
+        end
+    end
+
+    table.insert(result, current)
+    for i = 1, #result do
+        print(i, result[i])
+    end
+    return result
+end
+
+_string.split3 = function(str, separator) -- returns a table with the parts of the string respecting the backticks and keeping them
+    local result = {}
+    local current = ""
+    local insideString = false
+
+    for i = 1, #str do
+        local char = str:sub(i, i)
+
+        if char == "`" then
+            insideString = not insideString
+            current = current .. char
+        elseif char == separator and not insideString then
+            table.insert(result, current)
+            current = ""
+        else
+            current = current .. char
+        end
+    end
+
+    table.insert(result, current)
+
+    return result
+end
+
+
 _string.replace = function(inputString, oldSubstring, newSubstring)
     newSubstring = newSubstring or ''
     return inputString:gsub(oldSubstring, newSubstring)

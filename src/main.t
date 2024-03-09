@@ -130,11 +130,13 @@ end
 -- parse the source file
 function parseSourceFile(src)
     src = preprocess(src);
-    local splited = utils.string.split(src, ";");
+    local splited = utils.string.split3(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
+        print("splited: ", splited[i]);
         splited[i] = lineprocess(splited[i]);
-        local splited_args = utils.string.split(splited[i], " ");
+        print("processed: ", splited[i]);
+        local splited_args = utils.string.split2(splited[i], " ");
         local func = splited_args[1];
         local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
         local _function = br.variables.recursiveget(func);

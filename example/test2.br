@@ -1,1 +1,1 @@
-? { print("chegou aqui")};
+? `print("chegou aqui")`;

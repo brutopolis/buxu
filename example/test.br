@@ -16,14 +16,15 @@ d.a.b.c.d.e:{};
 d.a.b.c.d.e.f:{};
 d.a.b.c.d.e.f.g:{};
 d.a.b.c.d.e.f.g.h:{};
-d.a.b.c.d.e.f.g.h.i:? {a= 420};
+d.a.b.c.d.e.f.g.h.i:? `return({a= 420})`;
 d.a.b.c.d.e.f.g.h.i.a:= 123;
 printint32 $d.a.b.c.d.e.f.g.h.i.a;
 
-fntest:? 
-terra(a:int32,b:int32,c:int32) 
-    return a+b+c 
-end;
+fntest:? `return(
+    terra(a:int32,b:int32,c:int32) 
+        return a+b+c 
+    end
+)`;
 
 main:?file ./test.t;
 export main;
