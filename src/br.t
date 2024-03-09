@@ -2,7 +2,7 @@ local utils = require("luatils.init");
 
 local br = 
 {
-    version = "0.0.8a",
+    version = "0.0.8b",
     source = "",
     outputPath = "",
     variables = 
@@ -56,6 +56,79 @@ local br =
         end
     },
 }
+
+-- parse the arguments
+-- parse the arguments
+-- parse the arguments
+local function parseArgs(args)
+    local newargs = utils.array.clone(args);
+    for i = 1, #args do
+        if string.byte(args[i],1) == 36 then
+            local name = utils.string.replace(args[i], "%$", '');
+            newargs[i] = br.variables.recursiveget(name);
+        elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or string.byte(args[i],1) == 45 then
+            newargs[i] = tonumber(args[i]);
+        end
+    end
+    return newargs;
+end
+
+-- preprocess the source
+-- preprocess the source
+-- preprocess the source
+
+br.variables.preprocess = function(_src)
+    local result = _src .. '';
+    for k, v in pairs(br.preprocessors) do
+        result = v(result);
+    end
+    return result;
+end
+
+br.variables.lineprocess = function(_src)
+    local result = _src .. '';
+    for k, v in pairs(br.lineprocessors) do
+        result = v(result);
+    end
+    return result;
+end
+
+-- parse the source file
+-- parse the source file
+-- parse the source file
+br.variables.parse = function(src)
+    src = br.variables.preprocess(src);
+    local splited = utils.string.split3(src, ";");
+    local func = "";
+    for i = 1, #splited - 1 do
+        print("splited: ", splited[i]);
+        splited[i] = br.variables.lineprocess(splited[i]);
+        print("processed: ", splited[i]);
+        local splited_args = utils.string.split2(splited[i], " ");
+        local func = splited_args[1];
+        local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
+        local _function = br.variables.recursiveget(func);
+        if _function then
+            print(func, utils.stringify(args))
+            _function(unpack(args or {}));
+        else
+            print(src)
+            error("function " .. func .. " not found")
+        end
+    end
+end
+
+br.variables.repl = function()
+    print("bruter v" .. br.version);
+    while true do
+        io.write("br> ");
+        local line = io.read();
+        if line == "exit" then
+            break;
+        end
+        br.variables.parse(line);
+    end
+end
 
 -- module functions
 -- module functions
@@ -123,13 +196,13 @@ end
 -- dobr
 br.variables.dobr = function(path)
     local c = utils.file.load.text(path);
-    parseSourceFile(c);
+    br.variables.parse(c);
 end
 
 -- dobrstring
 br.variables.dobrstring = function(str)
     str = cleanSource(str);
-    parseSourceFile(str);
+    br.variables.parse(str);
 end
 
 -- loadstring

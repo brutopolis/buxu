@@ -57,7 +57,7 @@ if utils.array.includes(arg, "-v") or utils.array.includes(arg, "--version") the
     print("bruter version " .. br.version)
     os.exit(0)
 elseif utils.array.includes(arg, "--help") or utils.array.includes(arg,"-h") then
-    print("Usage: bruter <source file> [-o <output file>] [-h] [-v] [--version] [--help]")
+    print("Usage: bruter <source file> [-o <output file>] [-h] [-v] [--help] [--version] ")
     print("Options:")
     print("  --help    Display this information")
     print("  -h        Display this information")
@@ -67,13 +67,9 @@ elseif utils.array.includes(arg, "--help") or utils.array.includes(arg,"-h") the
     print("  --output  Output the compiled file to the specified path")
     os.exit(0)
 elseif arg[1] == nil then
-    print("No source file specified")
-    os.exit(1)
-end
-
-if arg[1] == nil then
-    print("No source file specified\nuse --help for help.")
-    os.exit(1)
+    print("No source file specified, starting in REPL instead...")
+    br.variables.repl()
+    os.exit(0)
 end
 
 -- read and clean the source file
@@ -89,71 +85,10 @@ if utils.array.includes(arg, "-o") or utils.array.includes(arg, "--output") then
     br.outputPath = arg[temp + 1]
 end
 
--- parse the arguments
--- parse the arguments
--- parse the arguments
-function parseArgs(args)
-    local newargs = utils.array.clone(args);
-    for i = 1, #args do
-        if string.byte(args[i],1) == 36 then
-            local name = utils.string.replace(args[i], "%$", '');
-            newargs[i] = br.variables.recursiveget(name);
-        elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or string.byte(args[i],1) == 45 then
-            newargs[i] = tonumber(args[i]);
-        end
-    end
-    return newargs;
-end
-
--- preprocess the source
--- preprocess the source
--- preprocess the source
-
-function preprocess(_src)
-    local result = _src .. '';
-    for k, v in pairs(br.preprocessors) do
-        result = v(result);
-    end
-    return result;
-end
-
-function lineprocess(_src)
-    local result = _src .. '';
-    for k, v in pairs(br.lineprocessors) do
-        result = v(result);
-    end
-    return result;
-end
-
--- parse the source file
--- parse the source file
--- parse the source file
-function parseSourceFile(src)
-    src = preprocess(src);
-    local splited = utils.string.split3(src, ";");
-    local func = "";
-    for i = 1, #splited - 1 do
-        print("splited: ", splited[i]);
-        splited[i] = lineprocess(splited[i]);
-        print("processed: ", splited[i]);
-        local splited_args = utils.string.split2(splited[i], " ");
-        local func = splited_args[1];
-        local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
-        local _function = br.variables.recursiveget(func);
-        if _function then
-            print(func, utils.stringify(args))
-            _function(unpack(args or {}));
-        else
-            print(src)
-            error("function " .. func .. " not found")
-        end
-    end
-end
-
 -- run the parser
 -- run the parser
 -- run the parser
-parseSourceFile(br.source);
+br.variables.parse(br.source);
 
 -- save the output if specified
 -- save the output if specified
