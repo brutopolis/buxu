@@ -51,9 +51,6 @@ _string.split2 = function(str, separator) -- returns a table of strings respecti
     end
 
     table.insert(result, current)
-    for i = 1, #result do
-        print(i, result[i])
-    end
     return result
 end
 

@@ -2,11 +2,12 @@ local utils = require("luatils.init");
 
 local br = 
 {
-    version = "0.0.8c",
+    version = "0.0.9",
     source = "",
     outputPath = "",
     data = 
     {
+        debug = false,
         comment = function()end,
         utils = utils,
     },
@@ -92,6 +93,12 @@ br.data.lineprocess = function(_src)
     return result;
 end
 
+br.data.debugprint = function(...)
+    if br.data.debug then
+        print(...);
+    end
+end
+
 -- parse the source file
 -- parse the source file
 -- parse the source file
@@ -100,32 +107,73 @@ br.data.parse = function(src)
     local splited = utils.string.split3(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
-        print("splited: ", splited[i]);
+        br.data.debugprint("\n[DEBUG INFO]: parsing line " .. i);
+        br.data.debugprint("pre: ", splited[i]);
+
         splited[i] = br.data.lineprocess(splited[i]);
-        print("processed: ", splited[i]);
+        
+        br.data.debugprint("pos: ", splited[i]);
+        
         local splited_args = utils.string.split2(splited[i], " ");
         local func = splited_args[1];
         local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
         local _function = br.data.recursiveget(func);
         if _function then
-            print(func, utils.stringify(args))
+            br.data.debugprint(func, utils.stringify(args))
+            br.data.debugprint("[DEBUG DONE]: line " .. i .. " ok\n");
             _function(unpack(args or {}));
+        elseif br.data.exit then -- if on repl
+            br.data.debugprint("Error parsing the following code:");
+            br.data.debugprint(src);
+            br.data.debugprint("[DEBUG FAIL]: function " .. func .. " not found\n");
         else
-            print(src)
-            error("function " .. func .. " not found")
+            br.data.debugprint("Error parsing the following code:");
+            br.data.debugprint(src);
+            br.data.debugprint("[DEBUG FAIL]: function " .. func .. " not found");
+            error("function " .. func .. " not found");
         end
     end
 end
 
 br.data.repl = function()
+    --exit function
+    br.data._replExit = false;
+    br.data.exit = function()
+        br.data._replExit = true;
+    end
+    -- version
     print("bruter v" .. br.version);
-    while true do
+    
+    local line = "";
+    local count = 0;
+    while not br.data._replExit do
         io.write("br> ");
-        local line = io.read();
-        if line == "exit" then
-            break;
+        local buffer = io.read();
+        local clearbuffer = utils.string.replace(buffer, "%s+", "");
+        local ok = true;
+
+        if utils.string.includes(buffer, "`") then
+            for i = 1, #buffer do
+                if buffer:sub(i, i) == "`" then
+                    count = count + 1;
+                end
+            end
+
+            if count % 2 ~= 0 then
+                ok = false;
+            else
+                count = 0;
+            end
         end
-        br.data.parse(line);
+
+        if string.byte(clearbuffer,#clearbuffer) == 59 and ok then
+            br.data.parse(line .. buffer);
+            line = "";
+        elseif buffer == "exit;" then
+            break;
+        else
+            line = line .. buffer;
+        end
     end
 end
 
@@ -178,7 +226,6 @@ end
 br.data.setf = function(varname, funcname, ...)
     local args = {...};
     local result;
-    print(funcname)
     br.data.recursiveset(varname, br.data.recursiveget(funcname)(unpack(args or {})));
 end
 
@@ -206,7 +253,7 @@ end
 
 -- loadstring
 br.data.loadstring = function(str)
-    print("str: ", str)
+    br.data.debugprint("[DEBUG INFO]: loading string: " .. str)
     return ((terralib.loadstring(str))());
 end
 
@@ -297,6 +344,26 @@ br.data["<="] = function(a, b)
     return a <= b;
 end
 
+-- data list functions
+-- data list functions
+-- data list functions
+
+br.data.list = function()
+    for k,v in pairs(br.data) do 
+        print(k, v);
+    end 
+end
+
+br.data.listnames = function()
+    local result = "";
+    for k,v in pairs(br.data) do 
+        result = result .. k .. ", ";
+    end
+    print("br.data contains: \n")
+    print(result:sub(1, #result - 2) .. ";");
+    return result;
+end
+
 -- math aliases
 -- math aliases
 -- math aliases
@@ -326,5 +393,6 @@ br.data["{}"] = br.data.emptyobject;
 -- other aliases
 -- other aliases
 br.data["#"] = br.data.comment;
+br.data.help = br.data.listnames;
 
 return br;

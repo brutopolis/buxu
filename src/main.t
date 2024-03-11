@@ -53,11 +53,18 @@ ListListString = list(ListString);
 -- parse the compiler/interpreter arguments
 -- parse the compiler/interpreter arguments
 -- parse the compiler/interpreter arguments
+if utils.array.includes(arg, "--debug") then
+    br.data.debug = true;
+    local position = utils.table.find(arg, "--debug");
+    print("[WARNING]: Debug mode enabled");
+    table.remove(arg, position);
+end
+
 if utils.array.includes(arg, "-v") or utils.array.includes(arg, "--version") then
     print("bruter version " .. br.version)
     os.exit(0)
 elseif utils.array.includes(arg, "--help") or utils.array.includes(arg,"-h") then
-    print("Usage: bruter <source file> [-o <output file>] [-h] [-v] [--help] [--version] ")
+    print("Usage: bruter <source file> [-o <output file>] [-h] [-v] [--help] [--version] [--debug]")
     print("Options:")
     print("  --help    Display this information")
     print("  -h        Display this information")
@@ -65,6 +72,7 @@ elseif utils.array.includes(arg, "--help") or utils.array.includes(arg,"-h") the
     print("  --version Display the version")
     print("  -o        Output the compiled file to the specified path")
     print("  --output  Output the compiled file to the specified path")
+    print("  --debug   Enable debug mode")
     os.exit(0)
 elseif arg[1] == nil then
     print("No source file specified, starting in REPL instead...")
