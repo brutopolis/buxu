@@ -68,10 +68,10 @@ elseif utils.array.includes(arg, "--help") or utils.array.includes(arg,"-h") the
     print("Options:")
     print("  --help    Display this information")
     print("  -h        Display this information")
-    print("  -v        Display the version")
     print("  --version Display the version")
-    print("  -o        Output the compiled file to the specified path")
+    print("  -v        Display the version")
     print("  --output  Output the compiled file to the specified path")
+    print("  -o        Output the compiled file to the specified path")
     print("  --debug   Enable debug mode")
     os.exit(0)
 elseif arg[1] == nil then
