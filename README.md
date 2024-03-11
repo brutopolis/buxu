@@ -57,7 +57,7 @@ THIS implementation relies completely on terralang and lua.
 `target_variable:function;`
 
 
-- variables always starts with $:
+- data always starts with $:
 
 `function $variable_1 $variable_2 ...;`
 

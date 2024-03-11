@@ -5,7 +5,7 @@ local br =
     version = "0.0.8b",
     source = "",
     outputPath = "",
-    variables = 
+    data = 
     {
         comment = function()end,
         utils = utils,
@@ -65,7 +65,7 @@ local function parseArgs(args)
     for i = 1, #args do
         if string.byte(args[i],1) == 36 then
             local name = utils.string.replace(args[i], "%$", '');
-            newargs[i] = br.variables.recursiveget(name);
+            newargs[i] = br.data.recursiveget(name);
         elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or string.byte(args[i],1) == 45 then
             newargs[i] = tonumber(args[i]);
         end
@@ -76,8 +76,7 @@ end
 -- preprocess the source
 -- preprocess the source
 -- preprocess the source
-
-br.variables.preprocess = function(_src)
+br.data.preprocess = function(_src)
     local result = _src .. '';
     for k, v in pairs(br.preprocessors) do
         result = v(result);
@@ -85,7 +84,7 @@ br.variables.preprocess = function(_src)
     return result;
 end
 
-br.variables.lineprocess = function(_src)
+br.data.lineprocess = function(_src)
     local result = _src .. '';
     for k, v in pairs(br.lineprocessors) do
         result = v(result);
@@ -96,18 +95,18 @@ end
 -- parse the source file
 -- parse the source file
 -- parse the source file
-br.variables.parse = function(src)
-    src = br.variables.preprocess(src);
+br.data.parse = function(src)
+    src = br.data.preprocess(src);
     local splited = utils.string.split3(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
         print("splited: ", splited[i]);
-        splited[i] = br.variables.lineprocess(splited[i]);
+        splited[i] = br.data.lineprocess(splited[i]);
         print("processed: ", splited[i]);
         local splited_args = utils.string.split2(splited[i], " ");
         local func = splited_args[1];
         local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
-        local _function = br.variables.recursiveget(func);
+        local _function = br.data.recursiveget(func);
         if _function then
             print(func, utils.stringify(args))
             _function(unpack(args or {}));
@@ -118,7 +117,7 @@ br.variables.parse = function(src)
     end
 end
 
-br.variables.repl = function()
+br.data.repl = function()
     print("bruter v" .. br.version);
     while true do
         io.write("br> ");
@@ -126,7 +125,7 @@ br.variables.repl = function()
         if line == "exit" then
             break;
         end
-        br.variables.parse(line);
+        br.data.parse(line);
     end
 end
 
@@ -135,101 +134,101 @@ end
 -- module functions
 
 -- export
-br.variables.export = function(name, as)
+br.data.export = function(name, as)
     if as then
-        br.exports[as] = br.variables[name];
+        br.exports[as] = br.data[name];
     else
-        br.exports[name] = br.variables[name];
+        br.exports[name] = br.data[name];
     end
 end
 
 -- setter
 -- setter
 -- setter
-br.variables.recursiveset = function(argname, value)
+br.data.recursiveset = function(argname, value)
     if utils.string.includes(argname, ".") then
         if (type(value) == "table") then
-            terralib.loadstring("br.variables." .. argname .. " = " .. utils.stringify(value))()
+            terralib.loadstring("br.data." .. argname .. " = " .. utils.stringify(value))()
         else
-            terralib.loadstring("br.variables." .. argname .. " = " .. value)();
+            terralib.loadstring("br.data." .. argname .. " = " .. value)();
         end
     else
-        br.variables[argname] = value;
+        br.data[argname] = value;
     end
 end
 
 -- getter
 -- getter
 -- getter
-br.variables.recursiveget = function(argname)
+br.data.recursiveget = function(argname)
     if utils.string.includes(argname, ".") then
-        print("return br.variables." .. argname)
-        local result = terralib.loadstring("return br.variables." .. argname)();
+        print("return br.data." .. argname)
+        local result = terralib.loadstring("return br.data." .. argname)();
         return result;
     else
-        return br.variables[argname];
+        return br.data[argname];
     end
 end
 
 -- set
-br.variables.set = function(name, value)
-    br.variables[name] = value;
+br.data.set = function(name, value)
+    br.data[name] = value;
 end
 
-br.variables.setf = function(varname, funcname, ...)
+br.data.setf = function(varname, funcname, ...)
     local args = {...};
     local result;
     print(funcname)
-    br.variables.recursiveset(varname, br.variables.recursiveget(funcname)(unpack(args or {})));
+    br.data.recursiveset(varname, br.data.recursiveget(funcname)(unpack(args or {})));
 end
 
-br.variables.includec = function(path)
+br.data.includec = function(path)
     return terralib.includec(path);
 end
-br.variables.includecstring = function(txt)
+br.data.includecstring = function(txt)
     return terralib.includecstring(txt);
 end
-br.variables.require = function(path)
+br.data.require = function(path)
     return require(path);
 end
 
 -- dobr
-br.variables.dobr = function(path)
+br.data.dobr = function(path)
     local c = utils.file.load.text(path);
-    br.variables.parse(c);
+    br.data.parse(c);
 end
 
 -- dobrstring
-br.variables.dobrstring = function(str)
+br.data.dobrstring = function(str)
     str = cleanSource(str);
-    br.variables.parse(str);
+    br.data.parse(str);
 end
 
 -- loadstring
-br.variables.loadstring = function(str)
+br.data.loadstring = function(str)
     print("str: ", str)
     return ((terralib.loadstring(str))());
 end
 
 -- loadfile
-br.variables.loadfile = function(path)
+br.data.loadfile = function(path)
     return(terralib.loadfile(path)());
 end
 
 -- emptyobject
-br.variables.emptyobject = function()
+br.data.emptyobject = function()
     return {};
 end
 
 -- module
-br.variables.module = function(path)
+br.data.module = function(path)
     local temp;
     if utils.string.includes(path, ".lua") or utils.string.includes(path, ".t")then
-        temp = br.variables.require(path);
+        temp = br.data.require(path);
     elseif utils.string.includes(path, ".c") or utils.string.includes(path, ".h") then
-        temp = br.variables.include(path);
+        temp = br.data.include(path);
     else
-        temp = br.variables.require(path);
+        temp = br.data.require(path);
     end
     if temp == nil then
         print("Error: module " .. path .. " not found");
@@ -241,7 +240,7 @@ br.variables.module = function(path)
                 br.exports[k] = v;
             end
         else
-            br.variables[k] = v;
+            br.data[k] = v;
         end
     end
 end
@@ -250,7 +249,7 @@ end
 --string functions
 --string functions
 
-br.variables.string = function(...)
+br.data.string = function(...)
     local args = {...};
     return table.concat(args, " ");
 end
@@ -258,74 +257,74 @@ end
 -- math functions
 -- math functions
 -- math functions
-br.variables["="] = function(value)
+br.data["="] = function(value)
     return value;
 end 
-br.variables["+"] = function(a, b)
+br.data["+"] = function(a, b)
     return a + b;
 end 
-br.variables["-"] = function(a, b)
+br.data["-"] = function(a, b)
     return a - b;
 end 
-br.variables["*"] = function(a, b)
+br.data["*"] = function(a, b)
     return a * b;
 end 
-br.variables["/"] = function(a, b)
+br.data["/"] = function(a, b)
     return a / b;
 end 
-br.variables["%"] = function(a, b)
+br.data["%"] = function(a, b)
     return a % b;
 end 
-br.variables["^"] = function(a, b)
+br.data["^"] = function(a, b)
     return a ^ b;
 end 
-br.variables["=="] = function(a, b)
+br.data["=="] = function(a, b)
     return a == b;
 end 
-br.variables["~="] = function(a, b)
+br.data["~="] = function(a, b)
     return a ~= b;
 end 
-br.variables[">"] = function(a, b)
+br.data[">"] = function(a, b)
     return a > b;
 end 
-br.variables["<"] = function(a, b)
+br.data["<"] = function(a, b)
     return a < b;
 end 
-br.variables[">="] = function(a, b)
+br.data[">="] = function(a, b)
     return a >= b;
 end 
-br.variables["<="] = function(a, b)
+br.data["<="] = function(a, b)
     return a <= b;
 end
 
 -- math aliases
 -- math aliases
 -- math aliases
-br.variables.ret = br.variables["="];
-br.variables.add = br.variables["+"];
-br.variables.sub = br.variables["-"];
-br.variables.mul = br.variables["*"];
-br.variables.div = br.variables["/"];
-br.variables.mod = br.variables["%"];
-br.variables.pow = br.variables["^"];
-br.variables.equals = br.variables["=="];
-br.variables.notequals = br.variables["~="];
-br.variables.bigger = br.variables[">"];
-br.variables.smaller = br.variables["<"];
-br.variables.biggerorequals = br.variables[">="];
-br.variables.smallerorequals = br.variables["<="];
+br.data.ret = br.data["="];
+br.data.add = br.data["+"];
+br.data.sub = br.data["-"];
+br.data.mul = br.data["*"];
+br.data.div = br.data["/"];
+br.data.mod = br.data["%"];
+br.data.pow = br.data["^"];
+br.data.equals = br.data["=="];
+br.data.notequals = br.data["~="];
+br.data.bigger = br.data[">"];
+br.data.smaller = br.data["<"];
+br.data.biggerorequals = br.data[">="];
+br.data.smallerorequals = br.data["<="];
 
 -- module aliases
 -- module aliases
 -- module aliases
-br.variables.dobrs = br.variables.dobrstring;
-br.variables["?"] = br.variables.loadstring;
-br.variables["?file"] = br.variables.loadfile;
-br.variables["{}"] = br.variables.emptyobject;
+br.data.dobrs = br.data.dobrstring;
+br.data["?"] = br.data.loadstring;
+br.data["?file"] = br.data.loadfile;
+br.data["{}"] = br.data.emptyobject;
 
 -- other aliases
 -- other aliases
 -- other aliases
-br.variables["#"] = br.variables.comment;
+br.data["#"] = br.data.comment;
 
 return br;

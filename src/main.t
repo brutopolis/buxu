@@ -21,7 +21,7 @@ String = require('lib.string');
 -- brutevm
 -- brutevm
 br = require "br"
-utils = br.variables.utils;
+utils = br.data.utils;
 -- list types
 -- list types
 -- list types
@@ -68,7 +68,7 @@ elseif utils.array.includes(arg, "--help") or utils.array.includes(arg,"-h") the
     os.exit(0)
 elseif arg[1] == nil then
     print("No source file specified, starting in REPL instead...")
-    br.variables.repl()
+    br.data.repl()
     os.exit(0)
 end
 
@@ -88,7 +88,7 @@ end
 -- run the parser
 -- run the parser
 -- run the parser
-br.variables.parse(br.source);
+br.data.parse(br.source);
 
 -- save the output if specified
 -- save the output if specified
