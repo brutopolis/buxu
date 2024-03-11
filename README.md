@@ -20,7 +20,7 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 - [Contributing](#contributing)
 - [License](#license)
 
-## Bruter Operators
+## Operators and such
 
 
 - `$` = indicates a variable, used to get the value of a variables, but not to set.
