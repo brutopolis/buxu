@@ -1,18 +1,60 @@
 local utils = require("luatils.init");
+local list = require("lib.list");
+local String = require("lib.string");
 
+-- list types
+-- list types
+-- list types
+ListInt8 = list(int8);
+ListInt16 = list(int16);
+ListInt32 = list(int32);
+ListInt64 = list(int64);
+ListUInt8 = list(uint8);
+ListUInt16 = list(uint16);
+ListUInt32 = list(uint32);
+ListUInt64 = list(uint64);
+ListDouble = list(double);
+ListFloat = list(float);
+ListString = list(String);
+ListInt = ListInt32;
+ListListInt8 = list(ListInt8);
+ListListInt16 = list(ListInt16);
+ListListInt32 = list(ListInt32);
+ListListInt64 = list(ListInt64);
+ListListUInt8 = list(ListUInt8);
+ListListUInt16 = list(ListUInt16);
+ListListUInt32 = list(ListUInt32);
+ListListUInt64 = list(ListUInt64);
+ListListDouble = list(ListDouble);
+ListListFloat = list(ListFloat);
+ListListInt = ListListInt32;
+ListListString = list(ListString);
+
+-- bruter module
+-- bruter module
+-- bruter module
 local br = 
 {
-    version = "0.0.9",
+    -- version
+    version = "0.1.1a",
+    
+    -- source and output
     source = "",
-    outputPath = "",
-    data = 
-    {
-        debug = false,
-        comment = function()end,
-        utils = utils,
-    },
+    outputpath = "",
+    
+    -- compiled objects exports
     exports = {},
-    currentcmd = "",
+
+    -- other
+    debug = false,
+    comment = function()end,
+    utils = utils,
+    list = list,
+    String = String,
+
+    -- preprocessors and lineprocessors
+    -- preprocessors and lineprocessors
+    -- preprocessors and lineprocessors
     preprocessors = 
     {
         sugar = function(source)
@@ -66,7 +108,7 @@ local function parseArgs(args)
     for i = 1, #args do
         if string.byte(args[i],1) == 36 then
             local name = utils.string.replace(args[i], "%$", '');
-            newargs[i] = br.data.recursiveget(name);
+            newargs[i] = br.recursiveget(name);
         elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or string.byte(args[i],1) == 45 then
             newargs[i] = tonumber(args[i]);
         end
@@ -77,7 +119,7 @@ end
 -- preprocess the source
 -- preprocess the source
 -- preprocess the source
-br.data.preprocess = function(_src)
+br.preprocess = function(_src)
     local result = _src .. '';
     for k, v in pairs(br.preprocessors) do
         result = v(result);
@@ -85,7 +127,7 @@ br.data.preprocess = function(_src)
     return result;
 end
 
-br.data.lineprocess = function(_src)
+br.lineprocess = function(_src)
     local result = _src .. '';
     for k, v in pairs(br.lineprocessors) do
         result = v(result);
@@ -93,8 +135,8 @@ br.data.lineprocess = function(_src)
     return result;
 end
 
-br.data.debugprint = function(...)
-    if br.data.debug then
+br.debugprint = function(...)
+    if br.debug then
         print(...);
     end
 end
@@ -102,51 +144,51 @@ end
 -- parse the source file
 -- parse the source file
 -- parse the source file
-br.data.parse = function(src)
-    src = br.data.preprocess(src);
+br.parse = function(src)
+    src = br.preprocess(src);
     local splited = utils.string.split3(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
-        br.data.debugprint("\n[DEBUG INFO]: parsing line " .. i);
-        br.data.debugprint("pre: ", splited[i]);
+        br.debugprint("\n[DEBUG INFO]: parsing line " .. i);
+        br.debugprint("pre: ", splited[i]);
 
-        splited[i] = br.data.lineprocess(splited[i]);
+        splited[i] = br.lineprocess(splited[i]);
         
-        br.data.debugprint("pos: ", splited[i]);
+        br.debugprint("pos: ", splited[i]);
         
         local splited_args = utils.string.split2(splited[i], " ");
         local func = splited_args[1];
         local args = parseArgs(utils.array.slice(splited_args, 2, #splited_args));
-        local _function = br.data.recursiveget(func);
+        local _function = br.recursiveget(func);
         if _function then
-            br.data.debugprint(func, utils.stringify(args))
-            br.data.debugprint("[DEBUG DONE]: line " .. i .. " ok\n");
+            br.debugprint(func, utils.stringify(args))
+            br.debugprint("[DEBUG DONE]: line " .. i .. " ok\n");
             _function(unpack(args or {}));
-        elseif br.data.exit then -- if on repl
-            br.data.debugprint("Error parsing the following code:");
-            br.data.debugprint(src);
-            br.data.debugprint("[DEBUG FAIL]: function " .. func .. " not found\n");
+        elseif br.exit then -- if on repl
+            br.debugprint("Error parsing the following code:");
+            br.debugprint(src);
+            br.debugprint("[DEBUG FAIL]: function " .. func .. " not found\n");
         else
-            br.data.debugprint("Error parsing the following code:");
-            br.data.debugprint(src);
-            br.data.debugprint("[DEBUG FAIL]: function " .. func .. " not found");
+            br.debugprint("Error parsing the following code:");
+            br.debugprint(src);
+            br.debugprint("[DEBUG FAIL]: function " .. func .. " not found");
             error("function " .. func .. " not found");
         end
     end
 end
 
-br.data.repl = function()
+br.repl = function()
     --exit function
-    br.data._replExit = false;
-    br.data.exit = function()
-        br.data._replExit = true;
+    br._replExit = false;
+    br.exit = function()
+        br._replExit = true;
     end
     -- version
     print("bruter v" .. br.version);
     
     local line = "";
     local count = 0;
-    while not br.data._replExit do
+    while not br._replExit do
         io.write("br> ");
         local buffer = io.read();
         local clearbuffer = utils.string.replace(buffer, "%s+", "");
@@ -167,7 +209,7 @@ br.data.repl = function()
         end
 
         if string.byte(clearbuffer,#clearbuffer) == 59 and ok then
-            br.data.parse(line .. buffer);
+            br.parse(line .. buffer);
             line = "";
         elseif buffer == "exit;" then
             break;
@@ -182,100 +224,100 @@ end
 -- module functions
 
 -- export
-br.data.export = function(name, as)
+br.export = function(name, as)
     if as then
-        br.exports[as] = br.data[name];
+        br.exports[as] = br[name];
     else
-        br.exports[name] = br.data[name];
+        br.exports[name] = br[name];
     end
 end
 
 -- setter
 -- setter
 -- setter
-br.data.recursiveset = function(argname, value)
+br.recursiveset = function(argname, value)
     if utils.string.includes(argname, ".") then
         if (type(value) == "table") then
-            terralib.loadstring("br.data." .. argname .. " = " .. utils.stringify(value))()
+            terralib.loadstring("br." .. argname .. " = " .. utils.stringify(value))()
         else
-            terralib.loadstring("br.data." .. argname .. " = " .. value)();
+            terralib.loadstring("br." .. argname .. " = " .. value)();
         end
     else
-        br.data[argname] = value;
+        br[argname] = value;
     end
 end
 
 -- getter
 -- getter
 -- getter
-br.data.recursiveget = function(argname)
+br.recursiveget = function(argname)
     if utils.string.includes(argname, ".") then
-        print("return br.data." .. argname)
-        local result = terralib.loadstring("return br.data." .. argname)();
+        print("return br." .. argname)
+        local result = terralib.loadstring("return br." .. argname)();
         return result;
     else
-        return br.data[argname];
+        return br[argname];
     end
 end
 
 -- set
-br.data.set = function(name, value)
-    br.data[name] = value;
+br.set = function(name, value)
+    br[name] = value;
 end
 
-br.data.setf = function(varname, funcname, ...)
+br.setf = function(varname, funcname, ...)
     local args = {...};
     local result;
-    br.data.recursiveset(varname, br.data.recursiveget(funcname)(unpack(args or {})));
+    br.recursiveset(varname, br.recursiveget(funcname)(unpack(args or {})));
 end
 
-br.data.includec = function(path)
+br.includec = function(path)
     return terralib.includec(path);
 end
-br.data.includecstring = function(txt)
+br.includecstring = function(txt)
     return terralib.includecstring(txt);
 end
-br.data.require = function(path)
+br.require = function(path)
     return require(path);
 end
 
 -- dobr
-br.data.dobr = function(path)
+br.dobr = function(path)
     local c = utils.file.load.text(path);
-    br.data.parse(c);
+    br.parse(c);
 end
 
 -- dobrstring
-br.data.dobrstring = function(str)
+br.dobrstring = function(str)
     str = cleanSource(str);
-    br.data.parse(str);
+    br.parse(str);
 end
 
 -- loadstring
-br.data.loadstring = function(str)
-    br.data.debugprint("[DEBUG INFO]: loading string: " .. str)
+br.loadstring = function(str)
+    br.debugprint("[DEBUG INFO]: loading string: " .. str)
     return ((terralib.loadstring(str))());
 end
 
 -- loadfile
-br.data.loadfile = function(path)
+br.loadfile = function(path)
     return(terralib.loadfile(path)());
 end
 
 -- emptyobject
-br.data.emptyobject = function()
+br.emptyobject = function()
     return {};
 end
 
 -- module
-br.data.module = function(path)
+br.module = function(path)
     local temp;
     if utils.string.includes(path, ".lua") or utils.string.includes(path, ".t")then
-        temp = br.data.require(path);
+        temp = br.require(path);
     elseif utils.string.includes(path, ".c") or utils.string.includes(path, ".h") then
-        temp = br.data.include(path);
+        temp = br.include(path);
     else
-        temp = br.data.require(path);
+        temp = br.require(path);
     end
     if temp == nil then
         print("Error: module " .. path .. " not found");
@@ -287,7 +329,7 @@ br.data.module = function(path)
                 br.exports[k] = v;
             end
         else
-            br.data[k] = v;
+            br[k] = v;
         end
     end
 end
@@ -296,7 +338,7 @@ end
 --string functions
 --string functions
 
-br.data.string = function(...)
+br.string = function(...)
     local args = {...};
     return table.concat(args, " ");
 end
@@ -304,43 +346,43 @@ end
 -- math functions
 -- math functions
 -- math functions
-br.data["="] = function(value)
+br["="] = function(value)
     return value;
 end 
-br.data["+"] = function(a, b)
+br["+"] = function(a, b)
     return a + b;
 end 
-br.data["-"] = function(a, b)
+br["-"] = function(a, b)
     return a - b;
 end 
-br.data["*"] = function(a, b)
+br["*"] = function(a, b)
     return a * b;
 end 
-br.data["/"] = function(a, b)
+br["/"] = function(a, b)
     return a / b;
 end 
-br.data["%"] = function(a, b)
+br["%"] = function(a, b)
     return a % b;
 end 
-br.data["^"] = function(a, b)
+br["^"] = function(a, b)
     return a ^ b;
 end 
-br.data["=="] = function(a, b)
+br["=="] = function(a, b)
     return a == b;
 end 
-br.data["~="] = function(a, b)
+br["~="] = function(a, b)
     return a ~= b;
 end 
-br.data[">"] = function(a, b)
+br[">"] = function(a, b)
     return a > b;
 end 
-br.data["<"] = function(a, b)
+br["<"] = function(a, b)
     return a < b;
 end 
-br.data[">="] = function(a, b)
+br[">="] = function(a, b)
     return a >= b;
 end 
-br.data["<="] = function(a, b)
+br["<="] = function(a, b)
     return a <= b;
 end
 
@@ -348,18 +390,18 @@ end
 -- data list functions
 -- data list functions
 
-br.data.list = function()
-    for k,v in pairs(br.data) do 
+br.list = function()
+    for k,v in pairs(br) do 
         print(k, v);
     end 
 end
 
-br.data.listnames = function()
+br.listnames = function()
     local result = "";
-    for k,v in pairs(br.data) do 
+    for k,v in pairs(br) do 
         result = result .. k .. ", ";
     end
-    print("br.data contains: \n")
+    print("br contains: \n")
     print(result:sub(1, #result - 2) .. ";");
     return result;
 end
@@ -367,32 +409,32 @@ end
 -- math aliases
 -- math aliases
 -- math aliases
-br.data.ret = br.data["="];
-br.data.add = br.data["+"];
-br.data.sub = br.data["-"];
-br.data.mul = br.data["*"];
-br.data.div = br.data["/"];
-br.data.mod = br.data["%"];
-br.data.pow = br.data["^"];
-br.data.equals = br.data["=="];
-br.data.notequals = br.data["~="];
-br.data.bigger = br.data[">"];
-br.data.smaller = br.data["<"];
-br.data.biggerorequals = br.data[">="];
-br.data.smallerorequals = br.data["<="];
+br.ret = br["="];
+br.add = br["+"];
+br.sub = br["-"];
+br.mul = br["*"];
+br.div = br["/"];
+br.mod = br["%"];
+br.pow = br["^"];
+br.equals = br["=="];
+br.notequals = br["~="];
+br.bigger = br[">"];
+br.smaller = br["<"];
+br.biggerorequals = br[">="];
+br.smallerorequals = br["<="];
 
 -- module aliases
 -- module aliases
 -- module aliases
-br.data.dobrs = br.data.dobrstring;
-br.data["?"] = br.data.loadstring;
-br.data["?file"] = br.data.loadfile;
-br.data["{}"] = br.data.emptyobject;
+br.dobrs = br.dobrstring;
+br["?"] = br.loadstring;
+br["?file"] = br.loadfile;
+br["{}"] = br.emptyobject;
 
 -- other aliases
 -- other aliases
 -- other aliases
-br.data["#"] = br.data.comment;
-br.data.help = br.data.listnames;
+br["#"] = br.comment;
+br.help = br.listnames;
 
 return br;

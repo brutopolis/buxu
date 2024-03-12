@@ -16,7 +16,7 @@ terra main()
     listaint:push(2);
     listaint:insert(333321, 0);
     c.printf("[1][2] = %d\n", listaintint:get(1):get(2));
-    var str = String.new();
+    var str = br.String.new();
     str:push(('a')[0]);
     str:push(('b')[0]);
     str:push(('c')[0]);
@@ -34,16 +34,16 @@ terra main()
     str:push(('h')[0]);
     str:push(('i')[0]);
 
-    var str2 = String.fromString("def");
+    var str2 = br.String.fromString("def");
 
-    var str3:String = String.fromString("xyz");
+    var str3:br.String = br.String.fromString("xyz");
     
     str:replace(str2, str3);
     
     str:print("str = ");
     str3:print("str3 = ");
 
-    var str4 = String.fromString("y");
+    var str4 = br.String.fromString("y");
 
     var strsplited = str:split(str4);
 
