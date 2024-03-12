@@ -2,9 +2,10 @@ a:= 15;
 b:= 10;
 c:= 5;
 v:= 5;
-module std.math;
-module std.io;
-c:addint32 40 $v;
+std:{};
+std.math:module std.math;
+std.io:module std.io;
+c:std.math.addint32 40 $v;
 dobr ./test2.br;
 
 d:{};
@@ -18,7 +19,7 @@ d.a.b.c.d.e.f.g:{};
 d.a.b.c.d.e.f.g.h:{};
 d.a.b.c.d.e.f.g.h.i:? `return({a= 420})`;
 d.a.b.c.d.e.f.g.h.i.a:= 123;
-printint32 $d.a.b.c.d.e.f.g.h.i.a;
+std.io.printint32 $d.a.b.c.d.e.f.g.h.i.a;
 
 fntest:? `return(
     terra(a:int32,b:int32,c:int32) 
@@ -29,5 +30,5 @@ fntest:? `return(
 main:?file ./test.t;
 export main;
 k:fntest 4 5 6;
-printint32 $k;
-printint32 $c;
+std.io.printint32 $k;
+std.io.printint32 $c;

@@ -27,12 +27,14 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 
 - `;` = indicates the end of a command.
 
-- `:` = indicates assignment, can be used only in the first argument like: `variable:function;` this assigns the result of function to $variable (note: this operator is just a syntactic sugar, it is not a real operator, it is transalated to a "setf" command, this operator can be simply removed fom the lineprocessors list).
+- `.` = indicates recursion.
+
+- `:` = indicates assignment, can be used only in the first argument like: `variable:function;` this assigns the result of function to $variable (note: this operator is just a syntactic sugar, this operator can be simply removed from the lineprocessors list).
 
 ## Types
 
 
-- `$variable` = args that starts with $, can be anything, everything is a variable
+- `$variable` = args that starts with $, can be anything, everything in bruter is a variable.
 
 - `number` = args that starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -
 
