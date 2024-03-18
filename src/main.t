@@ -22,7 +22,7 @@ br = require "br"
 if br.utils.array.includes(arg, "--debug") then
     br.debug = true;
     local position = br.utils.table.find(arg, "--debug");
-    print("[WARNING]: Debug mode enabled");
+    print(br.utils.console.colorstring("[WARNING]", "magenta") .. ": Debug mode enabled");
     table.remove(arg, position);
 end
 

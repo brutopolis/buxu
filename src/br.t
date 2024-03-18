@@ -4,7 +4,7 @@
 local br = 
 {
     -- version
-    version = "0.1.1c",
+    version = "0.1.2a",
     
     -- source and output
     source = "",
@@ -26,19 +26,14 @@ local br =
     preprocessors = 
     {
         sugar = function(source)
-            local nstr = br.utils.string.replace(source, "\n"," ")
+            local nstr = br.utils.string.replace(source, "%s+"," ")
             nstr = br.utils.string.replace(nstr, "\\n", "\n")
-            while br.utils.string.includes(nstr, "  ") do
-                nstr = br.utils.string.replace(nstr, "  ", " ")
-            end
             nstr = br.utils.string.replace(nstr, " : ", ":")
             nstr = br.utils.string.replace(nstr, " :", ":")
             nstr = br.utils.string.replace(nstr, ": ", ":")
             nstr = br.utils.string.replace(nstr, " ;", ";")
             nstr = br.utils.string.replace(nstr, "; ", ";")
             nstr = br.utils.string.replace(nstr, " ; ", ";")
-            nstr = br.utils.string.replace(nstr, "}", " }")
-            nstr = br.utils.string.replace(nstr, "{%s+}", "{}")
             return nstr
         end
     },
@@ -107,6 +102,10 @@ br.parseargs = function(args)
             newargs[i] = br.recursiveget(name);
         elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or string.byte(args[i],1) == 45 then
             newargs[i] = tonumber(args[i]);
+        elseif args[i] == "true" then
+            newargs[i] = true;
+        elseif args[i] == "false" then
+            newargs[i] = false;
         end
     end
     return newargs;
@@ -145,7 +144,7 @@ br.parse = function(src)
     local splited = br.utils.string.split3(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
-        br.debugprint("\n[DEBUG INFO]: parsing line " .. i);
+        br.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing line " .. i);
         br.debugprint("pre: ", splited[i]);
 
         splited[i] = br.lineprocess(splited[i]);
@@ -158,16 +157,16 @@ br.parse = function(src)
         local _function = br.recursiveget(func);
         if _function then
             br.debugprint(func, br.utils.stringify(args))
-            br.debugprint("[DEBUG DONE]: line " .. i .. " ok\n");
+            br.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
             _function(unpack(args or {}));
         elseif br.exit then -- if on repl
-            br.debugprint("Error parsing the following code:");
+            br.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
             br.debugprint(src);
-            br.debugprint("[DEBUG FAIL]: function " .. func .. " not found\n");
+            br.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
         else
-            br.debugprint("Error parsing the following code:");
+            br.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
             br.debugprint(src);
-            br.debugprint("[DEBUG FAIL]: function " .. func .. " not found");
+            br.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found");
             error("function " .. func .. " not found");
         end
     end
@@ -207,8 +206,6 @@ br.repl = function()
         if string.byte(clearbuffer,#clearbuffer) == 59 and ok then
             br.parse(line .. buffer);
             line = "";
-        elseif buffer == "exit;" then
-            break;
         else
             line = line .. buffer;
         end
@@ -297,7 +294,7 @@ end
 
 -- loadstring
 br.loadstring = function(str)
-    br.debugprint("[DEBUG INFO]: loading string: " .. str)
+    br.debugprint(br.utils.console.colorstring("[DEBUG INFO]", "magenta") .. ": loading string: " .. str)
     return ((terralib.loadstring(str))());
 end
 
@@ -389,12 +386,11 @@ br.list = function()
     end 
 end
 
-br.listnames = function()
+br.help = function()
     local result = "";
     for k,v in pairs(br) do 
         result = result .. k .. ", ";
     end
-    print("br contains:")
     print(result:sub(1, #result - 2) .. ";");
     return result;
 end
@@ -411,6 +407,5 @@ br["{}"] = br.emptyobject;
 -- other aliases
 -- other aliases
 br["#"] = br.comment;
-br.help = br.listnames;
 
 return br;
