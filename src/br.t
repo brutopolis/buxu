@@ -4,7 +4,7 @@
 local br = 
 {
     -- version
-    version = "0.1.2a",
+    version = "0.1.2b",
     
     -- source and output
     source = "",

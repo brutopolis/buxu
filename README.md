@@ -34,13 +34,16 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 ## Types
 
 
-- `$variable` = args that starts with $, can be anything, everything in bruter is a variable.
+- `$variable` = args that starts with $, can be anything, everything in bruter is stored as a variable and can be modified.
 
 - `number` = args that starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -
+
+- `boolean` = args that are true or false
 
 - `string` = args delimited by backticks(`) and anything else that doesnt match the other types
 
 ## Usage
+
 
 - argless functions:
 
