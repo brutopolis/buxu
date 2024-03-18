@@ -4,7 +4,7 @@
 local br = 
 {
     -- version
-    version = "0.1.1b",
+    version = "0.1.1c",
     
     -- source and output
     source = "",
@@ -394,27 +394,10 @@ br.listnames = function()
     for k,v in pairs(br) do 
         result = result .. k .. ", ";
     end
-    print("br contains: \n")
+    print("br contains:")
     print(result:sub(1, #result - 2) .. ";");
     return result;
 end
-
--- math aliases
--- math aliases
--- math aliases
-br.ret = br["="];
-br.add = br["+"];
-br.sub = br["-"];
-br.mul = br["*"];
-br.div = br["/"];
-br.mod = br["%"];
-br.pow = br["^"];
-br.equals = br["=="];
-br.notequals = br["~="];
-br.bigger = br[">"];
-br.smaller = br["<"];
-br.biggerorequals = br[">="];
-br.smallerorequals = br["<="];
 
 -- module aliases
 -- module aliases

@@ -54,7 +54,7 @@ elseif br.utils.array.includes(arg, "--help") or br.utils.array.includes(arg,"-h
     print("  --debug   Enable debug mode")
     os.exit(0)
 elseif arg[1] == nil then
-    print("No source file specified, starting in REPL instead...")
+    --print("No source file specified, starting in REPL instead...")
     br.repl()
     os.exit(0)
 end
