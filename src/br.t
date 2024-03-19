@@ -273,9 +273,11 @@ end
 br.includec = function(path)
     return terralib.includec(path);
 end
+
 br.includecstring = function(txt)
     return terralib.includecstring(txt);
 end
+
 br.require = function(path)
     return require(path);
 end
