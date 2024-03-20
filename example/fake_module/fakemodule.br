@@ -1,0 +1,3 @@
+fakemodule:{};
+tempfunc:? `return (function (a, b) return("fakeFunction result is " .. (a + b)) end)`;
+fakemodule.fakeFunction:= $tempfunc;

@@ -1,0 +1,9 @@
+print:? return(print); # just a referente to the lua print function;
+
+# this file import a fake module;
+
+dobr ./fakemodule.br;
+
+result:fakemodule.fakeFunction 1 2;
+
+print $result;

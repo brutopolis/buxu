@@ -4,7 +4,7 @@
 local br = 
 {
     -- version
-    version = "0.1.2b",
+    version = "0.1.3a",
     
     -- source and output
     source = "",
@@ -230,28 +230,39 @@ end
 -- setter
 br.recursiveset = function(argname, value)
     if br.utils.string.includes(argname, ".") then
-        if (type(value) == "table") then
-            if (value.module) then
-                br.temp = value;
-                terralib.loadstring("br." .. argname .. " = br.temp")();
-                br.temp = nil;
-            else
-                terralib.loadstring("br." .. argname .. " = " .. br.utils.stringify(value))()
-            end
-        else
+        local _type = type(value);
+        if (_type == "number" or _type == "string" or _type == "boolean") then
             terralib.loadstring("br." .. argname .. " = " .. value)();
+        else
+            br.temp = value; 
+            terralib.loadstring("br." .. argname .. " = br.temp")();
+            br.temp = nil;
         end
     else
         br[argname] = value;
     end
 end
 
+br.validname = function(str)
+    local result = true;
+    for i = 1, #str do -- [a-zA-Z0-9_] and dot
+        local char = str:sub(i, i);
+        if not (char:match("[a-zA-Z0-9_]") or char == ".") then
+            result = false;
+        end
+    end
+    return result;
+end
+
 -- getter
 -- getter
 -- getter
 br.recursiveget = function(argname)
-    if br.utils.string.includes(argname, ".") then
-        print("return br." .. argname)
+    -- if contains characters that arent lua compatible(compatible: [a-zA-Z0-9_]) then acess like br["whatever"]
+    if not br.validname(argname) then
+        return br[argname];
+    elseif br.utils.string.includes(argname, ".") then
+        --print("return br." .. argname)
         local result = terralib.loadstring("return br." .. argname)();
         return result;
     else
