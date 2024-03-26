@@ -1,11 +1,16 @@
 -- bruter module
 -- bruter module
 -- bruter module
+local _bruterPath = debug.getinfo(1).source;
+
 local br = 
 {
     -- version
-    version = "0.1.3a",
+    version = "0.1.4",
     
+    -- current path
+    bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
+
     -- source and output
     source = "",
     outputpath = "",
@@ -27,7 +32,7 @@ local br =
     {
         sugar = function(source)
             local nstr = br.utils.string.replace(source, "%s+"," ")
-            nstr = br.utils.string.replace(nstr, "\\n", "\n")
+            --nstr = br.utils.string.replace(nstr, "\\n", "\n")
             nstr = br.utils.string.replace(nstr, " : ", ":")
             nstr = br.utils.string.replace(nstr, " :", ":")
             nstr = br.utils.string.replace(nstr, ": ", ":")
@@ -225,6 +230,14 @@ br.export = function(name, as)
     end
 end
 
+br.use = function(name)
+    br.dobr(br.bruterpath .. "libr/" .. name .. "/init.br");
+end    
+
+br["nil"] = function()
+    return nil;
+end
+
 -- setter
 -- setter
 -- setter
@@ -393,19 +406,118 @@ end
 -- data list functions
 -- data list functions
 
-br.list = function()
-    for k,v in pairs(br) do 
-        print(k, v);
-    end 
+br.help = function(target)
+
+    local organize = {tables = {}, functions = {}, numbers = {}, strings = {}, booleans = {}, userdata = {}, other = {}};
+    if type(target) == "string" then
+        target = br.recursiveget(target);
+    elseif type(target) == "nil" then
+        target = br;
+    end
+
+    br.debugprint(br.utils.console.colorstring("[HELP INFO]", "magenta") .. ": help for (" .. type(target) .. ")", target);
+    
+    if type(target) == "table" then
+        for k,v in pairs(target) do 
+            local color = "blue";
+            if type(v) == "function" then
+                color = "green";
+                table.insert(organize.functions, k);
+            elseif type(v) == "table" then
+                color = "magenta";
+                table.insert(organize.tables, k);
+            elseif type(v) == "number" then
+                color = "white";
+                table.insert(organize.numbers, k);
+            elseif type(v) == "string" then
+                color = "yellow";
+                table.insert(organize.strings, k);
+            elseif type(v) == "boolean" then
+                color = "cyan";
+                table.insert(organize.booleans, k);
+            elseif type(v) == "userdata" then
+                color = "red";
+                table.insert(organize.userdata, k);
+            end
+            
+            --print(br.utils.console.colorstring(k, color) .. "(" .. type(v) .. ")", v);
+        end
+        if #organize.tables > 0 then
+            print(br.utils.console.colorstring("[", "magenta") .. "tables" .. br.utils.console.colorstring("]", "magenta") .. ":");
+            for k,v in pairs(organize.tables) do
+                print(br.utils.console.colorstring(v, "magenta"), target[v]);  
+            end
+        end
+
+        if #organize.functions > 0 then
+            print(br.utils.console.colorstring("[", "green") .. "functions" .. br.utils.console.colorstring("]", "green") .. ":");
+            for k,v in pairs(organize.functions) do
+                print(br.utils.console.colorstring(v, "green"), target[v]);  
+            end
+        end
+
+        if #organize.numbers > 0 then
+            print(br.utils.console.colorstring("[", "white") .. "numbers" .. br.utils.console.colorstring("]", "white") .. ":");
+            for k,v in pairs(organize.numbers) do
+                print(br.utils.console.colorstring(v, "white"), target[v]);  
+            end
+        end
+
+        if #organize.strings > 0 then
+            print(br.utils.console.colorstring("[", "yellow") .. "strings" .. br.utils.console.colorstring("]", "yellow") .. ":");
+            for k,v in pairs(organize.strings) do
+                print(br.utils.console.colorstring(v, "yellow"), target[v]);  
+            end
+        end
+
+        if #organize.booleans > 0 then
+            print(br.utils.console.colorstring("[", "cyan") .. "booleans" .. br.utils.console.colorstring("]", "cyan") .. ":");
+            for k,v in pairs(organize.booleans) do
+                print(br.utils.console.colorstring(v, "cyan"), target[v]);  
+            end
+        end
+
+        if #organize.userdata > 0 then
+            print(br.utils.console.colorstring("[", "red") .. "userdata" .. br.utils.console.colorstring("]", "red") .. ":");
+            for k,v in pairs(organize.userdata) do
+                print(br.utils.console.colorstring(v, "red"), target[v]);  
+            end
+        end
+
+        if #organize.other > 0 then
+            print(br.utils.console.colorstring("[", "blue") .. "other" .. br.utils.console.colorstring("]", "blue") .. ":");
+            for k,v in pairs(organize.other) do
+                print(br.utils.console.colorstring(v, "blue"), target[v]);  
+            end
+        end
+
+        br.debugprint(br.utils.console.colorstring("[HELP DONE]", "green") .. ": help for (" .. type(target) .. ")", target);
+
+    else
+        br.debugprint(br.utils.console.colorstring("[HELP ERROR]", "red") .. ": invalid target for help function, target has type " .. type(target));    
+    end
 end
 
-br.help = function()
-    local result = "";
-    for k,v in pairs(br) do 
-        result = result .. k .. ", ";
+br.rawhelp = function(target)--just print the names, no color, no types
+    if type(target) == "string" then
+        for k,v in pairs(br.recursiveget(target)) do
+            print(k);
+        end
+    elseif type(target) == "table" then
+        for k,v in pairs(target or br) do 
+            print(k);
+        end
+    elseif type(target) == "nil" then
+        for k,v in pairs(br) do 
+            print(k);
+        end
+    else
+        br.debugprint(br.utils.console.colorstring("[DEBUG ERROR]", "red") .. ": invalid argument for help function");
     end
-    print(result:sub(1, #result - 2) .. ";");
-    return result;
+end
+
+br.alias = function(as, name)
+    br.recursiveset(as,br.recursiveget(name));
 end
 
 -- module aliases
@@ -420,5 +532,6 @@ br["{}"] = br.emptyobject;
 -- other aliases
 -- other aliases
 br["#"] = br.comment;
+br["--"] = br.comment;
 
 return br;

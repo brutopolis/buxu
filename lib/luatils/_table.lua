@@ -54,6 +54,16 @@ _table.recurse = function (arr,subname)
     return tonumber(arr[subname]) or arr[subname]
 end
 
+_table.keys = function(arr)
+    local result = {
+        insert = table.insert
+    }
+    for key, value in pairs(arr) do
+        result:insert(key)
+    end
+    return result
+end
+
 _table.move = function(tbl, fromIndex, toIndex)
     fromIndex = fromIndex or 0
     toIndex = toIndex or 0

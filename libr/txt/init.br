@@ -1,0 +1,122 @@
+txt:{};
+txt.data:{};
+
+txt.new:? `return(
+    function(name) 
+        br.txt.data[name] = ""; 
+    end)`;
+
+txt.save:? `return(
+    function(name) 
+        br.utils.file.save.text(name .. ".txt", br.txt.data[name]); 
+    end)`;
+
+txt.load:? `return(
+    function(name) 
+        br.txt.data[name] = br.utils.file.load.text(name .. ".txt"); 
+    end)`;
+
+txt.concat:? `return(
+    function(name, text) 
+        br.txt.data[name] = br.txt.data[name] .. text; 
+    end)`;
+
+txt.set:? `return(
+    function(name, text) 
+        br.txt.data[name] = text; 
+    end)`;
+
+txt.get:? `return(
+    function(name) 
+        return br.txt.data[name]; 
+    end)`;
+
+txt.clear:? `return(
+    function(name) 
+        br.txt.data[name] = ""; 
+    end)`;
+
+txt.remove:? `return(
+    function(name) 
+        br.txt.data[name] = nil; 
+    end)`;
+
+txt.exists:? `return(
+    function(name) 
+        return br.txt.data[name] ~= nil; 
+    end)`;
+
+txt.size:? `return(
+    function(name) 
+        return #br.txt.data[name]; 
+    end)`;
+
+txt.print:? `return(
+    function(name)
+        print(br.txt.data[name]);
+    end)`;
+
+txt.char:{};
+
+txt.char.at:? `return(
+    function(name, index)
+        return string.sub(br.txt.data[name], index, index);
+    end)`;
+
+txt.char.push:? `return(
+    function(name, char)
+        if(type(char) == "number") then
+            br.txt.data[name] = br.txt.data[name] .. string.char(char);
+        elseif #char == 1 then
+            br.txt.data[name] = br.txt.data[name] .. char;
+        else
+            br.debugprint(br.utils.console.colorstring("[DEBUG WARNING]","red") .. ": txt.char.push: char must be a single character or a number, concatenating just the first character of the string.");
+            br.txt.data[name] = br.txt.data[name] .. string.sub(char, 1, 1);
+        end
+    end)`;
+
+txt.char.set:? `return(
+    function(name, index, char)
+        if(type(char) == "number") then
+            br.txt.data[name] = string.sub(br.txt.data[name], 1, index) .. string.char(char) .. string.sub(br.txt.data[name], index+1);
+        elseif #char == 1 then
+            br.txt.data[name] = string.sub(br.txt.data[name], 1, index) .. char .. string.sub(br.txt.data[name], index+1);
+        else
+            br.debugprint(br.utils.console.colorstring("[DEBUG WARNING]","red") .. ": txt.char.set: char must be a single character or a number, setting just the first character of the string.");
+            br.txt.data[name] = string.sub(br.txt.data[name], 1, index) .. string.sub(char, 1, 1) .. string.sub(br.txt.data[name], index+1);
+        end
+    end)`;
+
+txt.line:{};
+
+txt.line.push:? `return(
+    function(name, text) 
+        br.txt.data[name] = br.txt.data[name] .. "\n" .. text; 
+    end)`;
+
+txt.line.set:? `return(
+    function(name, linenumber, text) 
+        local lines = br.utils.string.split(br.txt.data[name], "\n"); 
+        lines[linenumber+1] = text; 
+        br.txt.data[name] = table.concat(lines, "\n"); 
+    end)`;
+
+txt.line.get:? `return(
+    function(name, linenumber) 
+        local lines = br.utils.string.split(br.txt.data[name], "\n"); 
+        return lines[linenumber+1]; 
+    end)`;
+
+txt.line.remove:? `return(
+    function(name, linenumber) 
+        local lines = br.utils.string.split(br.txt.data[name], "\n"); 
+        table.remove(lines, linenumber+1); 
+        br.txt.data[name] = table.concat(lines, "\n"); 
+    end)`;
+
+txt.line.insert:? `return(
+    function(name, linenumber, text) 
+        local lines = br.utils.string.split(br.txt.data[name], "\n"); 
+        table.insert(lines, linenumber+1, text); 
+        br.txt.data[name] = table.concat(lines, "\n"); 
+    end)`;

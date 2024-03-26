@@ -54,16 +54,6 @@ array.new = function(size, value)
     return result
 end
 
-array.keys = function(arr)
-    local result = {
-        insert = table.insert
-    }
-    for key, value in pairs(arr) do
-        result:insert(key)
-    end
-    return result
-end
-
 array.random = function(start, fim, size)
     local result = {}
     local range = fim - start + 1

@@ -5,3 +5,4 @@ main
 *.br.o
 *.br.so
 example/test
+example/test.txt

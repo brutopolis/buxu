@@ -1,7 +1,7 @@
 -- gets the bruter path
 -- gets the bruter path
 -- gets the bruter path
-bruterPath = debug.getinfo(1).source:match("@?(.*/)");
+local bruterPath = debug.getinfo(1).source:match("@?(.*/)");
 --remove the "src/"
 bruterPath = string.sub(bruterPath, 1, #bruterPath-4);
 
