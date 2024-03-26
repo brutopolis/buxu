@@ -6,7 +6,7 @@ local _bruterPath = debug.getinfo(1).source;
 local br = 
 {
     -- version
-    version = "0.1.4",
+    version = "0.1.4a",
     
     -- current path
     bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
@@ -24,7 +24,6 @@ local br =
     utils = require("lib.luatils"),
     list = require("lib.list"),
     String = require("lib.string"),
-
     -- preprocessors and lineprocessors
     -- preprocessors and lineprocessors
     -- preprocessors and lineprocessors
@@ -183,8 +182,10 @@ br.repl = function()
     br.exit = function()
         br._replExit = true;
     end
-    -- version
-    print("bruter v" .. br.version);
+    -- version, only print if not in a breakpoint repl
+    if not br._inBreakpoint then
+        print("bruter v" .. br.version);
+    end
     
     local line = "";
     local count = 0;
@@ -217,6 +218,31 @@ br.repl = function()
     end
 end
 
+br.breakpoint = function()
+    if not br.debug then
+        print(br.utils.console.colorstring("[WARNING]", "red") .. ": a breakpoint been ignored because debug mode is not enabled.");
+        return;
+    end
+    br._inBreakpoint = true;
+    print(br.utils.console.colorstring("[BREAKPOINT]", "red") .. ": entering breakpoint repl, type 'exit' to continue");
+    br.repl();
+    if br.debug then
+        print(br.utils.console.colorstring("[BREAKPOINT DONE]", "green") .. ": continuing execution");
+    else
+        print("\n" .. br.utils.console.colorstring("[BREAKPOINT DONE]", "yellow") .. ": continuing execution, but debug mode is not enabled anymore, so breakpoints will be ignored.\n");
+    end
+    br._inBreakpoint = false;
+end
+
+br.turn = function(target)
+    if type(target) == "string" then
+        if type(br.recursiveget(target)) == "boolean" then
+            br.recursiveset(target, not br.recursiveget(target));
+        else
+            br.debugprint(br.utils.console.colorstring("[ERROR]", "red") .. ": cant turn, target is not a boolean");
+        end
+    end
+end
 -- module functions
 -- module functions
 -- module functions
@@ -230,9 +256,9 @@ br.export = function(name, as)
     end
 end
 
-br.use = function(name)
-    br.dobr(br.bruterpath .. "libr/" .. name .. "/init.br");
-end    
+br.using = function(name)
+    br.dobr(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".br");
+end
 
 br["nil"] = function()
     return nil;

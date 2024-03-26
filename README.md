@@ -13,6 +13,10 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 
 (make sure to install terra and add it to your PATH before using bruter)
 
+
+*`UNDER HEAVY DEVELOPMENT` - api should change a lot, while the raw language itself should be stable*
+
+
 ## Table of Contents
 
 - [Types](#types)
