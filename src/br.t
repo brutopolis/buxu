@@ -6,7 +6,7 @@ local _bruterPath = debug.getinfo(1).source;
 local br = 
 {
     -- version
-    version = "0.2.0a",
+    version = "0.2.0b",
     
     -- current path
     bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
@@ -49,7 +49,7 @@ br.parseargs = function(args)
         if string.byte(args[i],1) == 36 then
             local name = br.utils.string.replace(args[i], "%$", '');
             newargs[i] = br.recursiveget(name);
-        elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or string.byte(args[i],1) == 45 then
+        elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or (string.byte(args[i],1) == 45 and (#args[i] > 1 and string.byte(args[i],2) > 47 and string.byte(args[i],2) < 58)) then
             newargs[i] = tonumber(args[i]);
         elseif args[i] == "true" then
             newargs[i] = true;
@@ -192,40 +192,32 @@ end
 -- setter
 br.recursiveset = function(argname, value)
     if br.utils.string.includes(argname, ".") then
-        local _type = type(value);
-        if (_type == "number" or _type == "string" or _type == "boolean") then
-            terralib.loadstring("br." .. argname .. " = " .. value)();
-        else
-            br.temp = value; 
-            terralib.loadstring("br." .. argname .. " = br.temp")();
-            br.temp = nil;
+        br.temp = value; 
+        local result_txt = "br";
+        local splited = br.utils.string.split2(argname, ".");
+        for i = 1, #splited - 1 do
+            result_txt = result_txt .. "[\"" .. splited[i] .. "\"]";
         end
+        result_txt = result_txt .. "[\"" .. splited[#splited] .. "\"] = br.temp";
+        terralib.loadstring(result_txt)();
+        br.temp = nil;
     else
         br[argname] = value;
     end
-end
-
-br.validname = function(str)
-    local result = true;
-    for i = 1, #str do -- [a-zA-Z0-9_] and dot
-        local char = str:sub(i, i);
-        if not (char:match("[a-zA-Z0-9_]") or char == ".") then
-            result = false;
-        end
-    end
-    return result;
 end
 
 -- getter
 -- getter
 -- getter
 br.recursiveget = function(argname)
-    -- if contains characters that arent lua compatible(compatible: [a-zA-Z0-9_]) then access like br["whatever"]
-    if not br.validname(argname) then
-        return br[argname];
-    elseif br.utils.string.includes(argname, ".") then
-        --print("return br." .. argname)
-        local result = terralib.loadstring("return br." .. argname)();
+    if br.utils.string.includes(argname, ".") then
+        --print("return br." .. argname) -- from a.b.c to ["a"]["b"]["c"]
+        local result_txt = "return br";
+        local splited = br.utils.string.split2(argname, ".");
+        for i = 1, #splited do
+            result_txt = result_txt .. "[\"" .. splited[i] .. "\"]";
+        end
+        local result = terralib.loadstring(result_txt)();
         return result;
     else
         return br[argname];
@@ -240,7 +232,14 @@ end
 br.setfrom = function(varname, funcname, ...)
     local args = {...};
     local result;
-    br.recursiveset(varname, br.recursiveget(funcname)(unpack(args or {})));
+    if type(funcname) == "string" then
+        result = br.recursiveget(funcname)(unpack(args or {}));
+    elseif type(funcname) == "function" then
+        result = funcname(unpack(args or {}));
+    else 
+        
+    end
+        br.recursiveset(varname, br.recursiveget(funcname)(unpack(args or {})));
 end
 
 br.includec = function(path)
@@ -287,46 +286,6 @@ br.string = function(...)
     return table.concat(args, " ");
 end
 
--- math functions
--- math functions
--- math functions
-
-br["+"] = function(a, b)
-    return a + b;
-end 
-br["-"] = function(a, b)
-    return a - b;
-end 
-br["*"] = function(a, b)
-    return a * b;
-end 
-br["/"] = function(a, b)
-    return a / b;
-end 
-br["%"] = function(a, b)
-    return a % b;
-end 
-br["^"] = function(a, b)
-    return a ^ b;
-end 
-br["=="] = function(a, b)
-    return a == b;
-end 
-br["~="] = function(a, b)
-    return a ~= b;
-end 
-br[">"] = function(a, b)
-    return a > b;
-end 
-br["<"] = function(a, b)
-    return a < b;
-end 
-br[">="] = function(a, b)
-    return a >= b;
-end 
-br["<="] = function(a, b)
-    return a <= b;
-end
 
 -- data list functions
 -- data list functions

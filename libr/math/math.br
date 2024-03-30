@@ -1,0 +1,39 @@
+set math {};
+
+? `
+	-- Math library
+	for k, v in pairs(math) do
+		br.math[k] = v;
+	end
+`;
+
+setfrom + ? `return function(...)
+	local args = {...};
+	local result = args[1];
+	for i = 2, #args do
+		result = result + args[i];
+	end
+	return result;
+end`;
+
+setfrom - ? `return function(...)
+	local args = {...};
+	local result = args[1];
+	for i = 2, #args do
+		result = result - args[i];
+	end
+	return result;
+end`;
+
+setfrom * ? `return function(...)
+	local args = {...};
+	local result = args[1];
+	for i = 2, #args do
+		result = result * args[i];
+	end
+	return result;
+end`;
+
+setfrom / ? `return function(a, b) return a / b; end`;
+setfrom ^ ? `return function(a, b) return a ^ b; end`;
+setfrom % ? `return function(a, b) return a % b; end`;
