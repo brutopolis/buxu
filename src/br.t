@@ -6,7 +6,7 @@ local _bruterPath = debug.getinfo(1).source;
 local br = 
 {
     -- version
-    version = "0.1.4a",
+    version = "0.1.4b",
     
     -- current path
     bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
@@ -30,14 +30,14 @@ local br =
     preprocessors = 
     {
         sugar = function(source)
-            local nstr = br.utils.string.replace(source, "%s+"," ")
+            local nstr = br.utils.string.replace3(source, "%s+"," ")
             --nstr = br.utils.string.replace(nstr, "\\n", "\n")
-            nstr = br.utils.string.replace(nstr, " : ", ":")
-            nstr = br.utils.string.replace(nstr, " :", ":")
-            nstr = br.utils.string.replace(nstr, ": ", ":")
-            nstr = br.utils.string.replace(nstr, " ;", ";")
-            nstr = br.utils.string.replace(nstr, "; ", ";")
-            nstr = br.utils.string.replace(nstr, " ; ", ";")
+            nstr = br.utils.string.replace3(nstr, " : ", ":")
+            nstr = br.utils.string.replace3(nstr, " :", ":")
+            nstr = br.utils.string.replace3(nstr, ": ", ":")
+            nstr = br.utils.string.replace3(nstr, " ;", ";")
+            nstr = br.utils.string.replace3(nstr, "; ", ";")
+            nstr = br.utils.string.replace3(nstr, " ; ", ";")
             return nstr
         end
     },

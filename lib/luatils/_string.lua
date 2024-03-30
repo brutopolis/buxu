@@ -84,6 +84,73 @@ _string.replace = function(inputString, oldSubstring, newSubstring)
     return inputString:gsub(oldSubstring, newSubstring)
 end
 
+_string.replace2 = function(inputString, oldSubstring, newSubstring) -- returns a string with the oldSubstring replaced by the newSubstring respecting the backticks enclosed strings
+    local result = ""
+    local insideString = false
+    local current = ""
+
+    for i = 1, #inputString do
+        local char = inputString:sub(i, i)
+
+        if char == "`" then
+            insideString = not insideString
+            current = current .. char
+        elseif not insideString and char == oldSubstring:sub(1, 1) then
+            if current ~= "" then
+                result = result .. current
+                current = ""
+            end
+
+            if inputString:sub(i, i + #oldSubstring - 1) == oldSubstring then
+                result = result .. newSubstring
+                i = i + #oldSubstring - 1
+            else
+                result = result .. char
+            end
+        else
+            current = current .. char
+        end
+    end
+
+    result = result .. current
+
+    return result
+end
+
+_string.replace3 = function(inputString, oldSubstring, newSubstring) -- returns a string with the oldSubstring replaced by the newSubstring respecting the backticks enclosed strings and keeping them
+    local result = ""
+    local insideString = false
+    local current = ""
+
+    for i = 1, #inputString do
+        local char = inputString:sub(i, i)
+
+        if char == "`" then
+            insideString = not insideString
+            current = current .. char
+        elseif not insideString and char == oldSubstring:sub(1, 1) then
+            if current ~= "" then
+                result = result .. current
+                current = ""
+            end
+
+            if inputString:sub(i, i + #oldSubstring - 1) == oldSubstring then
+                result = result .. newSubstring
+                i = i + #oldSubstring - 1
+            else
+                result = result .. char
+            end
+        else
+            current = current .. char
+        end
+    end
+
+    result = result .. current
+
+    return result
+end
+
+
 _string.includes = function(str, substring)
     return string.find(str, substring, 1, true) ~= nil
 end
