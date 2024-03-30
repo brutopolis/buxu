@@ -1,4 +1,4 @@
-setf luapi ? `
+setfrom luapi ? `
     terralib.includepath = terralib.includepath .. ";" .. terralib.terrahome .. "/include/terra";
 
     capi = terralib.includecstring [[

@@ -6,7 +6,7 @@ local _bruterPath = debug.getinfo(1).source;
 local br = 
 {
     -- version
-    version = "0.1.4b",
+    version = "0.2.0a",
     
     -- current path
     bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
@@ -22,78 +22,23 @@ local br =
     debug = false,
     comment = function()end,
     utils = require("lib.luatils"),
-    list = require("lib.list"),
-    String = require("lib.string"),
-    -- preprocessors and lineprocessors
-    -- preprocessors and lineprocessors
-    -- preprocessors and lineprocessors
+    
+    -- preprocessors
+    -- preprocessors
+    -- preprocessors
     preprocessors = 
     {
         sugar = function(source)
             local nstr = br.utils.string.replace3(source, "%s+"," ")
-            --nstr = br.utils.string.replace(nstr, "\\n", "\n")
-            nstr = br.utils.string.replace3(nstr, " : ", ":")
-            nstr = br.utils.string.replace3(nstr, " :", ":")
-            nstr = br.utils.string.replace3(nstr, ": ", ":")
-            nstr = br.utils.string.replace3(nstr, " ;", ";")
-            nstr = br.utils.string.replace3(nstr, "; ", ";")
-            nstr = br.utils.string.replace3(nstr, " ; ", ";")
+            nstr = br.utils.string.replace3(nstr, "\n", "")
+            nstr = br.utils.string.replace3(nstr, "  ", "")
+            nstr = br.utils.string.replace(nstr, "; ", ";")
+            nstr = br.utils.string.replace(nstr, " ;", ";")
+            nstr = br.utils.string.replace(nstr, " ; ", ";")
             return nstr
         end
-    },
-    lineprocessors = 
-    {
-        setter = function(source)
-            if(br.utils.string.includes(source, ":")) then
-                local temp = br.utils.string.split3(source, " ");
-                if br.utils.string.includes(temp[1], ":") then
-                    
-                    local rest = "";
-                    for i = 2, #temp do
-                        rest = rest .. " " .. temp[i];
-                    end
-                    local splited = br.utils.string.split(temp[1], ":");
-                    local name = splited[1];
-                    local funcname = splited[2];
-                    local result = "setf " .. name .. " " .. funcname .. rest;
-                    return result;
-                else
-                    return source;
-                end
-            else
-                return source;
-            end
-        end
-    },
+    }
 }
-
--- list types
--- list types
--- list types
-ListInt8 = br.list(int8);
-ListInt16 = br.list(int16);
-ListInt32 = br.list(int32);
-ListInt64 = br.list(int64);
-ListUInt8 = br.list(uint8);
-ListUInt16 = br.list(uint16);
-ListUInt32 = br.list(uint32);
-ListUInt64 = br.list(uint64);
-ListDouble = br.list(double);
-ListFloat = br.list(float);
-ListString = br.list(br.String);
-ListInt = ListInt32;
-ListListInt8 = br.list(ListInt8);
-ListListInt16 = br.list(ListInt16);
-ListListInt32 = br.list(ListInt32);
-ListListInt64 = br.list(ListInt64);
-ListListUInt8 = br.list(ListUInt8);
-ListListUInt16 = br.list(ListUInt16);
-ListListUInt32 = br.list(ListUInt32);
-ListListUInt64 = br.list(ListUInt64);
-ListListDouble = br.list(ListDouble);
-ListListFloat = br.list(ListFloat);
-ListListInt = ListListInt32;
-ListListString = br.list(ListString);
 
 -- parse the arguments
 -- parse the arguments
@@ -110,6 +55,10 @@ br.parseargs = function(args)
             newargs[i] = true;
         elseif args[i] == "false" then
             newargs[i] = false;
+        elseif args[i] == "{}" then
+            newargs[i] = {};
+        elseif args[i] == "nil" then
+            newargs[i] = nil;
         end
     end
     return newargs;
@@ -121,14 +70,6 @@ end
 br.preprocess = function(_src)
     local result = _src .. '';
     for k, v in pairs(br.preprocessors) do
-        result = v(result);
-    end
-    return result;
-end
-
-br.lineprocess = function(_src)
-    local result = _src .. '';
-    for k, v in pairs(br.lineprocessors) do
         result = v(result);
     end
     return result;
@@ -149,11 +90,6 @@ br.parse = function(src)
     local func = "";
     for i = 1, #splited - 1 do
         br.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing line " .. i);
-        br.debugprint("pre: ", splited[i]);
-
-        splited[i] = br.lineprocess(splited[i]);
-        
-        br.debugprint("pos: ", splited[i]);
         
         local splited_args = br.utils.string.split2(splited[i], " ");
         local func = splited_args[1];
@@ -234,15 +170,6 @@ br.breakpoint = function()
     br._inBreakpoint = false;
 end
 
-br.turn = function(target)
-    if type(target) == "string" then
-        if type(br.recursiveget(target)) == "boolean" then
-            br.recursiveset(target, not br.recursiveget(target));
-        else
-            br.debugprint(br.utils.console.colorstring("[ERROR]", "red") .. ": cant turn, target is not a boolean");
-        end
-    end
-end
 -- module functions
 -- module functions
 -- module functions
@@ -258,10 +185,6 @@ end
 
 br.using = function(name)
     br.dobr(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".br");
-end
-
-br["nil"] = function()
-    return nil;
 end
 
 -- setter
@@ -297,7 +220,7 @@ end
 -- getter
 -- getter
 br.recursiveget = function(argname)
-    -- if contains characters that arent lua compatible(compatible: [a-zA-Z0-9_]) then acess like br["whatever"]
+    -- if contains characters that arent lua compatible(compatible: [a-zA-Z0-9_]) then access like br["whatever"]
     if not br.validname(argname) then
         return br[argname];
     elseif br.utils.string.includes(argname, ".") then
@@ -310,11 +233,11 @@ br.recursiveget = function(argname)
 end
 
 -- set
-br.set = function(name, value)
-    br[name] = value;
+br.set = function(as, value)
+    br.recursiveset(as,value);
 end
 
-br.setf = function(varname, funcname, ...)
+br.setfrom = function(varname, funcname, ...)
     local args = {...};
     local result;
     br.recursiveset(varname, br.recursiveget(funcname)(unpack(args or {})));
@@ -355,27 +278,6 @@ br.loadfile = function(path)
     return(terralib.loadfile(path)());
 end
 
--- emptyobject
-br.emptyobject = function()
-    return {};
-end
-
--- module
-br.module = function(path)
-    local temp;
-    
-    if br.utils.string.includes(path, ".lua") or br.utils.string.includes(path, ".t") then
-        temp = br.require(path);
-    elseif br.utils.string.includes(path, ".c") or br.utils.string.includes(path, ".h") then
-        temp = br.include(path);
-    else
-        temp = br.require(path);
-    end
-    temp.module = true;
-    
-    return temp;
-end
-
 --string functions
 --string functions
 --string functions
@@ -388,9 +290,7 @@ end
 -- math functions
 -- math functions
 -- math functions
-br["="] = function(value)
-    return value;
-end 
+
 br["+"] = function(a, b)
     return a + b;
 end 
@@ -542,22 +442,11 @@ br.rawhelp = function(target)--just print the names, no color, no types
     end
 end
 
-br.alias = function(as, name)
-    br.recursiveset(as,br.recursiveget(name));
-end
 
 -- module aliases
 -- module aliases
 -- module aliases
-br.dobrs = br.dobrstring;
 br["?"] = br.loadstring;
 br["?file"] = br.loadfile;
-br["{}"] = br.emptyobject;
-
--- other aliases
--- other aliases
--- other aliases
-br["#"] = br.comment;
-br["--"] = br.comment;
 
 return br;

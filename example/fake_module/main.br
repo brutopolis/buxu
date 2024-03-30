@@ -1,9 +1,9 @@
-print:? return(print); # just a referente to the lua print function;
+setfrom print ? return(print); comment just a reference to the lua print function;
 
-# this file import a fake module;
+comment this file import a fake module;
 
 dobr ./fakemodule.br;
 
-result:fakemodule.fakeFunction 1 2;
+setfrom result fakemodule.fakeFunction 1 2;
 
 print $result;

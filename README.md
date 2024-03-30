@@ -6,7 +6,7 @@
 Specifications and reference implementation of bruter.
 
 
-Bruter is meant to be a language template, all it can parse are simple commands, but has built-in preprocessing and lineprocessing so you can create your own language that transpile to bruter.
+Bruter is meant to be a language template, all it can parse are simple commands, but has built-in preprocessing so you can create your own language that transpile to bruter.
 
 
 Thanks to Terralang, bruter does fully support Lua and Terra, and also supports most of C features.
@@ -14,7 +14,7 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 (make sure to install terra and add it to your PATH before using bruter)
 
 
-*`UNDER HEAVY DEVELOPMENT` - api should change a lot, while the raw language itself should be stable*
+*`UNDER HEAVY DEVELOPMENT` - api should change a lot*
 
 
 ## Table of Contents
@@ -33,8 +33,6 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 
 - `.` = indicates recursion.
 
-- `:` = indicates assignment, can be used only in the first argument like: `variable:function;` this assigns the result of function to $variable (note: this operator is just a syntactic sugar, this operator can be simply removed from the lineprocessors list).
-
 ## Types
 
 
@@ -45,6 +43,10 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 - `boolean` = args that are true or false
 
 - `string` = args delimited by backticks(`) and anything else that doesnt match the other types
+
+- `{}` = special type to create empty objects
+
+- `nil` = nil;
 
 ## Usage
 
@@ -59,14 +61,14 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 `function arg1 arg2 ...;`
 
 
-- function which return goes to $target_variable (":" denotes a return, the target variable must be on the left):
+- function which return goes to $target_variable:
 
-`target_variable:function ...;`
+`setfrom target_variable function ...;`
 
 
 - argless function which return goes to $target_variable:
 
-`target_variable:function;`
+`setfrom target_variable function;`
 
 
 - variables always starts with $:
