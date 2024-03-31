@@ -63,18 +63,43 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 
 - function which return goes to $target_variable:
 
-`setfrom target_variable function ...;`
+`set target_variable from function ...;`
 
 
 - argless function which return goes to $target_variable:
 
-`setfrom target_variable function;`
+`set target_variable from function;`
 
 
 - variables always starts with $:
 
 `function $variable_1 $variable_2 ...;`
 
+## Libraries
+
+bruter by default does not work with modules, bruter libraries are just scripts that are interpreted real-time, so you can create your own libraries by creating a script that defines functions and variables, and then include it in your main script, bruter libraries have access to all variables and functions in the main script and vice-versa, use with caution, as this does not use any cache at all, it will re-interpret the library every time it is called.
+
+bruter libraries can be loaded by the `using` command like so:
+
+    using library_name;
+
+it will look for the library in the following paths:
+
+    libr_path/library_name/library_name.br
+    libr_path/library_name/library_name.lua
+    libr_path/library_name/library_name.t
+    libr_path/library_name.br
+    libr_path/library_name.lua
+    libr_path/library_name.t
+if none of the paths are found it will throw an error.    
+
+if you really want a library that work as a module you can create a "fake module" see `examples/fake_module/main.br` for an example in vanilla bruter. 
+
+you can also use the `require` function:
+
+    set module from require `module_name`;
+    
+lua and terra packages are handled with loadfile not require, so they are not cached and can be reloaded, this is done to behave like brute packages, but you can use require to load lua and terra packages.
 
 ## Contributing
 

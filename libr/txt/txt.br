@@ -2,69 +2,69 @@ help;
 set txt {};
 set txt.data {};
 
-setfrom txt.new ?  `return(
+set txt.new from ? `return(
     function(name) 
         br.txt.data[name] = ""; 
     end)`;
 
-setfrom txt.save ?  `return(
+set txt.save from ? `return(
     function(name) 
         br.utils.file.save.text(name .. ".txt", br.txt.data[name]); 
     end)`;
 
-setfrom txt.load ?  `return(
+set txt.load from ? `return(
     function(name) 
         br.txt.data[name] = br.utils.file.load.text(name .. ".txt"); 
     end)`;
 
-setfrom txt.concat ?  `return(
+set txt.concat from ? `return(
     function(name, text) 
         br.txt.data[name] = br.txt.data[name] .. text; 
     end)`;
 
-setfrom txt.set ?  `return(
+set txt.set from ? `return(
     function(name, text) 
         br.txt.data[name] = text; 
     end)`;
 
-setfrom txt.get ?  `return(
+set txt.get from ? `return(
     function(name) 
         return br.txt.data[name]; 
     end)`;
 
-setfrom txt.clear ?  `return(
+set txt.clear from ? `return(
     function(name) 
         br.txt.data[name] = ""; 
     end)`;
 
-setfrom txt.remove ?  `return(
+set txt.remove from ? `return(
     function(name) 
         br.txt.data[name] = nil; 
     end)`;
 
-setfrom txt.exists ?  `return(
+set txt.exists from ? `return(
     function(name) 
         return br.txt.data[name] ~= nil; 
     end)`;
 
-setfrom txt.size ?  `return(
+set txt.size from ? `return(
     function(name) 
         return #br.txt.data[name]; 
     end)`;
 
-setfrom txt.print ?  `return(
+set txt.print from ? `return(
     function(name)
         print(br.txt.data[name]);
     end)`;
 
 set txt.char {};
 
-setfrom txt.char.at ?  `return(
+set txt.char.at from ? `return(
     function(name, index)
         return string.sub(br.txt.data[name], index, index);
     end)`;
 
-setfrom txt.char.push ?  `return(
+set txt.char.push from ? `return(
     function(name, char)
         if(type(char) == "number") then
             br.txt.data[name] = br.txt.data[name] .. string.char(char);
@@ -76,7 +76,7 @@ setfrom txt.char.push ?  `return(
         end
     end)`;
 
-setfrom txt.char.set ?  `return(
+set txt.char.set from ? `return(
     function(name, index, char)
         if(type(char) == "number") then
             br.txt.data[name] = string.sub(br.txt.data[name], 1, index) .. string.char(char) .. string.sub(br.txt.data[name], index+1);
@@ -90,32 +90,32 @@ setfrom txt.char.set ?  `return(
 
 set txt.line {};
 
-setfrom txt.line.push ?  `return(
+set txt.line.push from ? `return(
     function(name, text) 
         br.txt.data[name] = br.txt.data[name] .. "\n" .. text; 
     end)`;
 
-setfrom txt.line.set ?  `return(
+set txt.line.set from ? `return(
     function(name, linenumber, text) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         lines[linenumber+1] = text; 
         br.txt.data[name] = table.concat(lines, "\n"); 
     end)`;
 
-setfrom txt.line.get ?  `return(
+set txt.line.get from ? `return(
     function(name, linenumber) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         return lines[linenumber+1]; 
     end)`;
 
-setfrom txt.line.remove ?  `return(
+set txt.line.remove from ? `return(
     function(name, linenumber) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         table.remove(lines, linenumber+1); 
         br.txt.data[name] = table.concat(lines, "\n"); 
     end)`;
 
-setfrom txt.line.insert ?  `return(
+set txt.line.insert from ? `return(
     function(name, linenumber, text) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         table.insert(lines, linenumber+1, text); 

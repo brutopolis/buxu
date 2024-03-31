@@ -6,7 +6,7 @@ local _bruterPath = debug.getinfo(1).source;
 local br = 
 {
     -- version
-    version = "0.2.0b",
+    version = "0.2.1a",
     
     -- current path
     bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
@@ -184,8 +184,84 @@ br.export = function(name, as)
 end
 
 br.using = function(name)
-    br.dobr(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".br");
+    -- new 
+    if br.utils.file.exist(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".br") then
+        br.br.include(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".br");
+    elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".lua") then
+        terralib.loadfile(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".lua")();
+    elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".t") then
+        terralib.loadfile(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".t")();
+    elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. ".br") then
+        br.br.include(br.bruterpath .. "libr/" .. name .. ".br");
+    elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. ".lua") then
+        terralib.loadfile(br.bruterpath .. "libr/" .. name .. ".lua")();
+    elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. ".t") then
+        terralib.loadfile(br.bruterpath .. "libr/" .. name .. ".t")();
+    else
+        br.debugprint(br.utils.console.colorstring("[ERROR]", "red") .. ": no main file found for module " .. name);
+    end
 end
+
+
+
+br.br = {};
+
+br.br.include = function(path)
+    local c = br.utils.file.load.text(path);
+    br.parse(c);
+end
+
+br.br.includestring = function(str)
+    br.parse(str);
+end
+
+
+
+br["terra"] = {};
+
+-- loadstring (lua/terra)
+br["terra"].loadstring = function(str)
+    br.debugprint(br.utils.console.colorstring("[DEBUG INFO]", "magenta") .. ": loading string: " .. str)
+    return ((terralib.loadstring(str))());
+end
+
+-- loadfile (lua/terra)
+br["terra"].loadfile = function(path)
+    return(terralib.loadfile(path)());
+end
+
+-- require lua/terra file
+br["terra"].require = function(path)
+    return require(path);
+end
+
+
+
+br.c = {};
+
+-- include C code
+br.c.include = function(path)
+    return terralib.includec(path);
+end
+
+-- include C string
+br.c.includestring = function(txt)
+    return terralib.includecstring(txt);
+end
+
+
+-- terra aliases
+-- terra aliases
+-- terra aliases
+br["?"] = br["terra"].loadstring;
+br["?file"] = br["terra"].loadfile;
+br["?require"] = br["terra"].require;
+
+br["ç"] = br.c.includestring;
+br["çfile"] = br.c.include;
+
+br["!"] = br.br.includestring;
+br["!file"] = br.br.include;
 
 -- setter
 -- setter
@@ -225,11 +301,11 @@ br.recursiveget = function(argname)
 end
 
 -- set
-br.set = function(as, value)
+br.br.setvalue = function(as, value)
     br.recursiveset(as,value);
 end
 
-br.setfrom = function(varname, funcname, ...)
+br.br.setfrom = function(varname, funcname, ...)
     local args = {...};
     local result;
     if type(funcname) == "string" then
@@ -242,40 +318,25 @@ br.setfrom = function(varname, funcname, ...)
         br.recursiveset(varname, br.recursiveget(funcname)(unpack(args or {})));
 end
 
-br.includec = function(path)
-    return terralib.includec(path);
+br.set = function(...) -- if keyword "from" is found, the next is the funcname, the following should be the arguments, and the ones before it should be the variables names, as lua does support multiple returns, the variables will be setted in order
+    if br.utils.array.includes({...}, "from") then
+        local args = {...};
+        local fromindex = br.utils.table.find(args, "from");
+        local varnames = br.utils.array.slice(args, 1, fromindex - 1);
+        local funcname = args[fromindex + 1];
+        local funcargs = br.utils.array.slice(args, fromindex + 2, #args);
+        local result = {br.recursiveget(funcname)(unpack(funcargs or {}))};
+        for i = 1, #varnames do
+            br.recursiveset(varnames[i], result[i]);
+        end
+    else
+        local args = {...};
+        local varname = args[1];
+        local value = args[2];
+        br.recursiveset(varname, value);
+    end
 end
 
-br.includecstring = function(txt)
-    return terralib.includecstring(txt);
-end
-
-br.require = function(path)
-    return require(path);
-end
-
--- dobr
-br.dobr = function(path)
-    local c = br.utils.file.load.text(path);
-    br.parse(c);
-end
-
--- dobrstring
-br.dobrstring = function(str)
-    str = cleanSource(str);
-    br.parse(str);
-end
-
--- loadstring
-br.loadstring = function(str)
-    br.debugprint(br.utils.console.colorstring("[DEBUG INFO]", "magenta") .. ": loading string: " .. str)
-    return ((terralib.loadstring(str))());
-end
-
--- loadfile
-br.loadfile = function(path)
-    return(terralib.loadfile(path)());
-end
 
 --string functions
 --string functions
@@ -285,7 +346,6 @@ br.string = function(...)
     local args = {...};
     return table.concat(args, " ");
 end
-
 
 -- data list functions
 -- data list functions
@@ -400,12 +460,5 @@ br.rawhelp = function(target)--just print the names, no color, no types
         br.debugprint(br.utils.console.colorstring("[DEBUG ERROR]", "red") .. ": invalid argument for help function");
     end
 end
-
-
--- module aliases
--- module aliases
--- module aliases
-br["?"] = br.loadstring;
-br["?file"] = br.loadfile;
 
 return br;

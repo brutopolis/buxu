@@ -1,3 +1,3 @@
 set fakemodule {};
-setfrom tempfunc ? `return (function (a, b) return("fakeFunction result is " .. (a + b)) end)`;
+set tempfunc from ? `return (function (a, b) return("fakeFunction result is " .. (a + b)) end)`;
 set fakemodule.fakeFunction $tempfunc;
