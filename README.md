@@ -3,9 +3,6 @@
 
 ## Description
 
-Specifications and reference implementation of bruter.
-
-
 Bruter is meant to be a language template, all it can parse are simple commands, but has built-in preprocessing so you can create your own language that transpile to bruter.
 
 
