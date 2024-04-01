@@ -6,7 +6,7 @@ local _bruterPath = debug.getinfo(1).source;
 local br = 
 {
     -- version
-    version = "0.2.1a",
+    version = "0.2.1b",
     
     -- current path
     bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
@@ -198,7 +198,7 @@ br.using = function(name)
     elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. ".t") then
         terralib.loadfile(br.bruterpath .. "libr/" .. name .. ".t")();
     else
-        br.debugprint(br.utils.console.colorstring("[ERROR]", "red") .. ": no main file found for module " .. name);
+        br.debugprint(br.utils.console.colorstring("[ERROR]", "red") .. ": library not found: " .. name);
     end
 end
 
@@ -237,18 +237,17 @@ end
 
 
 
-br.c = {};
+br.C = {};
 
 -- include C code
-br.c.include = function(path)
+br.C.include = function(path)
     return terralib.includec(path);
 end
 
 -- include C string
-br.c.includestring = function(txt)
+br.C.includestring = function(txt)
     return terralib.includecstring(txt);
 end
-
 
 -- terra aliases
 -- terra aliases
@@ -257,8 +256,8 @@ br["?"] = br["terra"].loadstring;
 br["?file"] = br["terra"].loadfile;
 br["?require"] = br["terra"].require;
 
-br["ç"] = br.c.includestring;
-br["çfile"] = br.c.include;
+br["ç"] = br.C.includestring;
+br["çfile"] = br.C.include;
 
 br["!"] = br.br.includestring;
 br["!file"] = br.br.include;
@@ -301,11 +300,11 @@ br.recursiveget = function(argname)
 end
 
 -- set
-br.br.setvalue = function(as, value)
+br.setvalue = function(as, value)
     br.recursiveset(as,value);
 end
 
-br.br.setfrom = function(varname, funcname, ...)
+br.setfrom = function(varname, funcname, ...)
     local args = {...};
     local result;
     if type(funcname) == "string" then
@@ -387,6 +386,11 @@ br.help = function(target)
             
             --print(br.utils.console.colorstring(k, color) .. "(" .. type(v) .. ")", v);
         end
+        
+        for k,v in pairs(organize) do
+            table.sort(v);
+        end
+
         if #organize.tables > 0 then
             print(br.utils.console.colorstring("[", "magenta") .. "tables" .. br.utils.console.colorstring("]", "magenta") .. ":");
             for k,v in pairs(organize.tables) do
