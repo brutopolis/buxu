@@ -6,7 +6,7 @@ local _bruterPath = debug.getinfo(1).source;
 local br = 
 {
     -- version
-    version = "0.2.1b",
+    version = "0.2.1c",
     
     -- current path
     bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
@@ -55,8 +55,6 @@ br.parseargs = function(args)
             newargs[i] = true;
         elseif args[i] == "false" then
             newargs[i] = false;
-        elseif args[i] == "{}" then
-            newargs[i] = {};
         elseif args[i] == "nil" then
             newargs[i] = nil;
         end
@@ -270,9 +268,16 @@ br.recursiveset = function(argname, value)
         br.temp = value; 
         local result_txt = "br";
         local splited = br.utils.string.split2(argname, ".");
+
+        if br.utils.array.includes(splited, "") then
+            br[argname] = value;
+            return;
+        end
+
         for i = 1, #splited - 1 do
             result_txt = result_txt .. "[\"" .. splited[i] .. "\"]";
         end
+        
         result_txt = result_txt .. "[\"" .. splited[#splited] .. "\"] = br.temp";
         terralib.loadstring(result_txt)();
         br.temp = nil;
@@ -286,9 +291,12 @@ end
 -- getter
 br.recursiveget = function(argname)
     if br.utils.string.includes(argname, ".") then
-        --print("return br." .. argname) -- from a.b.c to ["a"]["b"]["c"]
+            
         local result_txt = "return br";
         local splited = br.utils.string.split2(argname, ".");
+        if br.utils.array.includes(splited, "") then 
+            return br[argname];
+        end
         for i = 1, #splited do
             result_txt = result_txt .. "[\"" .. splited[i] .. "\"]";
         end
@@ -463,6 +471,18 @@ br.rawhelp = function(target)--just print the names, no color, no types
     else
         br.debugprint(br.utils.console.colorstring("[DEBUG ERROR]", "red") .. ": invalid argument for help function");
     end
+end
+
+br["{}"] = function(...)
+    return {...};
+end
+
+br["..."] = function(...)
+    return unpack({...});
+end
+
+br["unpack"] = function(target)
+    return unpack(target);
 end
 
 return br;

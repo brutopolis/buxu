@@ -41,8 +41,6 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 
 - `string` = args delimited by backticks(`) and anything else that doesnt match the other types
 
-- `{}` = special type to create empty objects
-
 - `nil` = nil;
 
 ## Usage
