@@ -2,69 +2,69 @@ help;
 set txt from {};
 set txt.data from {};
 
-set txt.new from ? `return(
+set txt.new (? `return(
     function(name) 
         br.txt.data[name] = ""; 
-    end)`;
+    end)`);
 
-set txt.save from ? `return(
+set txt.save (? `return(
     function(name) 
         br.utils.file.save.text(name .. ".txt", br.txt.data[name]); 
-    end)`;
+    end)`);
 
-set txt.load from ? `return(
+set txt.load (? `return(
     function(name) 
         br.txt.data[name] = br.utils.file.load.text(name .. ".txt"); 
-    end)`;
+    end)`);
 
-set txt.concat from ? `return(
+set txt.concat (? `return(
     function(name, text) 
         br.txt.data[name] = br.txt.data[name] .. text; 
-    end)`;
+    end)`);
 
-set txt.set from ? `return(
+set txt.set (? `return(
     function(name, text) 
         br.txt.data[name] = text; 
-    end)`;
+    end)`);
 
-set txt.get from ? `return(
+set txt.get (? `return(
     function(name) 
         return br.txt.data[name]; 
-    end)`;
+    end)`);
 
-set txt.clear from ? `return(
+set txt.clear (? `return(
     function(name) 
         br.txt.data[name] = ""; 
-    end)`;
+    end)`);
 
-set txt.remove from ? `return(
+set txt.remove (? `return(
     function(name) 
         br.txt.data[name] = nil; 
-    end)`;
+    end)`);
 
-set txt.exists from ? `return(
+set txt.exists (? `return(
     function(name) 
         return br.txt.data[name] ~= nil; 
-    end)`;
+    end)`);
 
-set txt.size from ? `return(
+set txt.size (? `return(
     function(name) 
         return #br.txt.data[name]; 
-    end)`;
+    end)`);
 
-set txt.print from ? `return(
+set txt.print (? `return(
     function(name)
         print(br.txt.data[name]);
-    end)`;
+    end)`);
 
 set txt.char from {};
 
-set txt.char.at from ? `return(
+set txt.char.at (? `return(
     function(name, index)
         return string.sub(br.txt.data[name], index, index);
-    end)`;
+    end)`);
 
-set txt.char.push from ? `return(
+set txt.char.push (? `return(
     function(name, char)
         if(type(char) == "number") then
             br.txt.data[name] = br.txt.data[name] .. string.char(char);
@@ -74,9 +74,9 @@ set txt.char.push from ? `return(
             br.debugprint(br.utils.console.colorstring("[DEBUG WARNING]","red") .. ": txt.char.push: char must be a single character or a number, concatenating just the first character of the string.");
             br.txt.data[name] = br.txt.data[name] .. string.sub(char, 1, 1);
         end
-    end)`;
+    end)`);
 
-set txt.char.set from ? `return(
+set txt.char.set (? `return(
     function(name, index, char)
         if(type(char) == "number") then
             br.txt.data[name] = string.sub(br.txt.data[name], 1, index) .. string.char(char) .. string.sub(br.txt.data[name], index+1);
@@ -86,38 +86,38 @@ set txt.char.set from ? `return(
             br.debugprint(br.utils.console.colorstring("[DEBUG WARNING]","red") .. ": txt.char.set: char must be a single character or a number, setting just the first character of the string.");
             br.txt.data[name] = string.sub(br.txt.data[name], 1, index) .. string.sub(char, 1, 1) .. string.sub(br.txt.data[name], index+1);
         end
-    end)`;
+    end)`);
 
 set txt.line from {};
 
-set txt.line.push from ? `return(
+set txt.line.push (? `return(
     function(name, text) 
         br.txt.data[name] = br.txt.data[name] .. "\n" .. text; 
-    end)`;
+    end)`);
 
-set txt.line.set from ? `return(
+set txt.line.set (? `return(
     function(name, linenumber, text) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         lines[linenumber+1] = text; 
         br.txt.data[name] = table.concat(lines, "\n"); 
-    end)`;
+    end)`);
 
-set txt.line.get from ? `return(
+set txt.line.get (? `return(
     function(name, linenumber) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         return lines[linenumber+1]; 
-    end)`;
+    end)`);
 
-set txt.line.remove from ? `return(
+set txt.line.remove (? `return(
     function(name, linenumber) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         table.remove(lines, linenumber+1); 
         br.txt.data[name] = table.concat(lines, "\n"); 
-    end)`;
+    end)`);
 
-set txt.line.insert from ? `return(
+set txt.line.insert (? `return(
     function(name, linenumber, text) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         table.insert(lines, linenumber+1, text); 
         br.txt.data[name] = table.concat(lines, "\n"); 
-    end)`;
+    end)`);

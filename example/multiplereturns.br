@@ -1,4 +1,0 @@
-set mfunc from ? `return function(_a,_b,_c) return _c,_b,_a; end`;
-
-set a b c from mfunc 5 6 7;
-? `print("returned:",br.a,br.b,br.c)`;

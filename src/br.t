@@ -6,7 +6,7 @@ local _bruterPath = debug.getinfo(1).source;
 local br = 
 {
     -- version
-    version = "0.2.2",
+    version = "0.2.2a",
     
     -- current path
     bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
@@ -22,7 +22,6 @@ local br =
     debug = false,
     comment = function()end,
     utils = require("lib.luatils"),
-    lastsetten = {},
     -- preprocessors
     -- preprocessors
     -- preprocessors
@@ -55,27 +54,34 @@ local br =
 -- parse the arguments
 -- parse the arguments
 -- parse the arguments
+br.parsearg = function(larg)
+    local result = larg;
+    if string.byte(larg,1) == 36 then -- variable
+        local name = br.utils.string.replace(larg, "%$", '');
+        result = br.recursiveget(name);
+    elseif string.byte(larg,1) == 40 then -- sentence
+        -- remove first and last char by their indexes
+        result = br.parse(string.sub(larg, 2, #larg - 1),true);
+    elseif (string.byte(larg,1) > 47 and string.byte(larg,1) < 58) or (string.byte(larg,1) == 45 and (#larg > 1 and string.byte(larg,2) > 47 and string.byte(larg,2) < 58)) then -- number
+        result = tonumber(larg);
+    --else if backtick
+    elseif string.byte(larg,1) == 96 then
+        result = string.sub(larg, 2, #larg - 1);
+    elseif larg == "true" then
+        result = true;
+    elseif larg == "false" then
+        result = false;
+    elseif larg == "nil" then
+        result = nil;
+    end
+    
+    return result;
+end
+
 br.parseargs = function(args)
     local newargs = br.utils.array.clone(args);
     for i = 1, #args do
-        print(args[i], string.byte(args[i],1), i)
-        if string.byte(args[i],1) == 36 then -- variable
-            local name = br.utils.string.replace(args[i], "%$", '');
-            newargs[i] = br.recursiveget(name);
-        elseif string.byte(args[i],1) == 40 then -- sentence
-            -- remove first and last char by their indexes
-            newargs[i] = br.parse(string.sub(args[i], 2, #args[i] - 1),true);
-            print(i)
-            print(newargs[i]);
-        elseif (string.byte(args[i],1) > 47 and string.byte(args[i],1) < 58) or (string.byte(args[i],1) == 45 and (#args[i] > 1 and string.byte(args[i],2) > 47 and string.byte(args[i],2) < 58)) then -- number
-            newargs[i] = tonumber(args[i]);
-        elseif args[i] == "true" then
-            newargs[i] = true;
-        elseif args[i] == "false" then
-            newargs[i] = false;
-        elseif args[i] == "nil" then
-            newargs[i] = nil;
-        end
+        newargs[i] = br.parsearg(args[i]);
     end
     return newargs;
 end
@@ -102,7 +108,7 @@ end
 -- parse the source file
 br.parse = function(src, isSentence)
     if isSentence then 
-        src = "set lastsetten from " .. src;
+        src = "fakeset " .. src;
     end
     src = br.preprocess(src);
     local splited = br.utils.string.split3(src, ";");
@@ -110,17 +116,38 @@ br.parse = function(src, isSentence)
     for i = 1, #splited - 1 do
         br.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing line " .. i);
         
-        local splited_args = br.utils.string.split2(splited[i], " ");
+        local splited_args = br.utils.string.split3(splited[i], " ");
+        
+        local func = splited_args[1];
+        table.remove(splited_args, 1);
+
+        -- first char is a variable or or a sentence it parse it as arg first, else, its a funcion name
+        if string.byte(func,1) == 36 or string.byte(func,1) == 40 then
+            func = br.parsearg(func);
+        end
+        
         local args = br.parseargs(splited_args);
-        local func = args[1];
-        table.remove(args, 1);
-        local _function = br.recursiveget(func);
+        local _function = type(func) == "function" and br.recursiveget(func) or br.recursiveget(func);
         if _function and isSentence then
-            br.debugprint(func, br.utils.stringify(args))
+            
+            -- command debbuger
+            br.debugprint(func .. "{")
+            for k,v in pairs(splited_args) do
+                br.debugprint("    " .. k .. " =",v);
+            end
+            br.debugprint("}");
+            
             br.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
             return(_function(unpack(args or {})));
         elseif _function then
-            br.debugprint(func, br.utils.stringify(args))
+            
+            -- command debbuger
+            br.debugprint(func .. "{")
+            for k,v in pairs(splited_args) do
+                br.debugprint("    " .. k .. " =",v);
+            end
+            br.debugprint("}");
+
             br.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
             _function(unpack(args or {}));
         elseif br.exit then -- if on repl
@@ -294,7 +321,6 @@ br.recursiveset = function(argname, value)
         br.temp = value; 
         local result_txt = "br";
         local splited = br.utils.string.split2(argname, ".");
-
         if br.utils.array.includes(splited, "") then
             br[argname] = value;
             return;
@@ -334,7 +360,7 @@ br.recursiveget = function(argname)
 end
 
 -- set
-br.setvalue = function(varname, value)
+br.setvalue = function(varname, value, ...)
     br.recursiveset(varname,value);
     return value;
 end
@@ -351,27 +377,43 @@ br.setfrom = function(varname, funcname, ...)
     return result;
 end
 
-br.set = function(...) -- if keyword "from" is found, the next is the funcname, the following should be the arguments, and the ones before it should be the variables names, as lua does support multiple returns, the variables will be setted in order
-    if br.utils.array.includes({...}, "from") then
-        local args = {...};
-        local fromindex = br.utils.table.find(args, "from");
-        local varnames = br.utils.array.slice(args, 1, fromindex - 1);
-        local funcname = args[fromindex + 1];
-        local funcargs = br.utils.array.slice(args, fromindex + 2, #args);
-        local result = {br.recursiveget(funcname)(unpack(funcargs or {}))};
-        for i = 1, #varnames do
-            br.recursiveset(varnames[i], result[i]);
-        end
-        return unpack(result);
-    else
-        local args = {...};
-        local varname = args[1];
-        local value = args[2];
-        br.recursiveset(varname, value);
-        return value;
+-- set
+br.set = function(varname, value, ...)
+    if value == "from" then
+        return br.setfrom(varname, ...);
     end
+    br.recursiveset(varname,value);
+    return value;
 end
 
+br.fakesetfrom = function(funcname, ...)
+    local args = {...};
+    local result;
+    if type(funcname) == "string" then
+        result = br.recursiveget(funcname)(unpack(args or {}));
+    elseif type(funcname) == "function" then
+        result = funcname(unpack(args or {}));
+    end
+    return result;
+end
+
+br.fakeset = function(value, ...)
+    if value == "from" then
+        return br.fakesetfrom(...);
+    elseif #({...}) > 0 then
+        return br.fakesetfrom(value, ...);
+    elseif type(value) == "function" then
+        return br.fakesetfrom(value, ...);
+    else
+        local target = br.recursiveget(value);
+        if target then
+            if type(target) == "function" then
+                return br.fakesetfrom(value, ...);
+            end
+        end
+    end
+    return value;
+end
 
 --string functions
 --string functions
@@ -501,22 +543,10 @@ br.rawhelp = function(target)--just print the names, no color, no types
     end
 end
 
+br.print = print;
+
 br["{}"] = function(...)
     return {...};
-end
-
-br["..."] = function(...)
-    return unpack({...});
-end
-
-br["unpack"] = function(target)
-    return unpack(target);
-end
-
-br["pack"] = function(...)
-    local funcname = ({...})[1];
-    local args = br.utils.array.slice({...}, 2, #({...}));
-    return{funcname(unpack(args))};
 end
 
 return br;
