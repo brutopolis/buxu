@@ -111,10 +111,6 @@ you can also use the `require` function:
     
 lua and terra packages are handled with loadfile not require, so they are not cached and can be reloaded, this is done to behave like brute packages, but you can use require to load lua and terra packages.
 
-## Contributing
-
-[WORK IN PROGRESS]
-
 ## License
 
 [WORK IN PROGRESS]

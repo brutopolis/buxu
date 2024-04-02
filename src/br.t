@@ -5,12 +5,6 @@ local _bruterPath = debug.getinfo(1).source;
 
 local br = 
 {
-    
-    
-    
-
-    
-    
     -- compiled objects exports
     exports = {},
 
@@ -23,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.2b",
+        version = "0.2.2c",
         -- source and output
         source = "",
         outputpath = "",
