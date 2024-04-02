@@ -20,7 +20,7 @@ br = require "br"
 -- parse the compiler/interpreter arguments
 -- parse the compiler/interpreter arguments
 if br.utils.array.includes(arg, "--debug") then
-    br.debug = true;
+    br.vm.debug = true;
     local position = br.utils.table.find(arg, "--debug");
     print(br.utils.console.colorstring("[WARNING]", "magenta") .. ": Debug mode enabled");
     table.remove(arg, position);
@@ -31,7 +31,7 @@ end
 -- set the output path if specified
 if br.utils.array.includes(arg, "-o") or br.utils.array.includes(arg, "--output") then
     local temp = br.utils.table.find(arg, "-o") or br.utils.table.find(arg, "--output")
-    br.outputpath = arg[temp + 1]
+    br.vm.outputpath = arg[temp + 1]
     table.remove(arg, temp)
     table.remove(arg, temp)
 end
@@ -40,7 +40,7 @@ end
 -- check for help and version flags
 -- check for help and version flags
 if br.utils.array.includes(arg, "-v") or br.utils.array.includes(arg, "--version") then
-    print("bruter version " .. br.version)
+    print("bruter version " .. br.vm.version)
     os.exit(0)
 elseif br.utils.array.includes(arg, "--help") or br.utils.array.includes(arg,"-h") then
     print("Usage: bruter <source file> [-o <output file>] [-h] [-v] [--help] [--version] [--debug]")
@@ -62,16 +62,16 @@ end
 -- read and clean the source file
 -- read and clean the source file
 -- read and clean the source file
-br.source = br.utils.file.load.text(arg[1]);
+br.vm.source = br.utils.file.load.text(arg[1]);
 
 -- run the parser
 -- run the parser
 -- run the parser
-br.parse(br.source);
+br.vm.parse(br.vm.source);
 
 -- save the output if specified
 -- save the output if specified
 -- save the output if specified
-if br.outputpath ~= "" then
-    terralib.saveobj(br.outputpath, br.exports, nil, nil, true);
+if br.vm.outputpath ~= "" then
+    terralib.saveobj(br.vm.outputpath, br.exports, nil, nil, true);
 end

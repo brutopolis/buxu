@@ -71,7 +71,7 @@ set txt.char.push (? `return(
         elseif #char == 1 then
             br.txt.data[name] = br.txt.data[name] .. char;
         else
-            br.debugprint(br.utils.console.colorstring("[DEBUG WARNING]","red") .. ": txt.char.push: char must be a single character or a number, concatenating just the first character of the string.");
+            br.vm.debugprint(br.utils.console.colorstring("[DEBUG WARNING]","red") .. ": txt.char.push: char must be a single character or a number, concatenating just the first character of the string.");
             br.txt.data[name] = br.txt.data[name] .. string.sub(char, 1, 1);
         end
     end)`);
@@ -83,7 +83,7 @@ set txt.char.set (? `return(
         elseif #char == 1 then
             br.txt.data[name] = string.sub(br.txt.data[name], 1, index) .. char .. string.sub(br.txt.data[name], index+1);
         else
-            br.debugprint(br.utils.console.colorstring("[DEBUG WARNING]","red") .. ": txt.char.set: char must be a single character or a number, setting just the first character of the string.");
+            br.vm.debugprint(br.utils.console.colorstring("[DEBUG WARNING]","red") .. ": txt.char.set: char must be a single character or a number, setting just the first character of the string.");
             br.txt.data[name] = string.sub(br.txt.data[name], 1, index) .. string.sub(char, 1, 1) .. string.sub(br.txt.data[name], index+1);
         end
     end)`);

@@ -5,63 +5,71 @@ local _bruterPath = debug.getinfo(1).source;
 
 local br = 
 {
-    -- version
-    version = "0.2.2a",
     
-    -- current path
-    bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
+    
+    
 
-    -- source and output
-    source = "",
-    outputpath = "",
+    
     
     -- compiled objects exports
     exports = {},
 
     -- other
-    debug = false,
     comment = function()end,
     utils = require("lib.luatils"),
     -- preprocessors
     -- preprocessors
     -- preprocessors
-    preprocessors = 
+    vm = 
     {
-        sugar = function(source)
-            local nstr = br.utils.string.replace3(source, "%s+"," ")
-            
-            nstr = br.utils.string.replace(nstr, "%( ", "%(")
-            nstr = br.utils.string.replace(nstr, " %) ", "%)")
-            nstr = br.utils.string.replace(nstr, " %)", "%)")
-            
-            nstr = br.utils.string.replace3(nstr, "\n", "")
-            nstr = br.utils.string.replace3(nstr, "  ", "")
-            
-            nstr = br.utils.string.replace(nstr, "; ", ";")
-            nstr = br.utils.string.replace(nstr, " ;", ";")
-            nstr = br.utils.string.replace(nstr, " ; ", ";")
-            
-            -- if last char not ; add it
-            if string.byte(nstr, #nstr) ~= 59 then
-                nstr = nstr .. ";";
+        -- version
+        version = "0.2.2b",
+        -- source and output
+        source = "",
+        outputpath = "",
+        -- current path
+        bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
+        -- debug mode
+        debug = false,
+        
+        preprocessors = 
+        {
+            sugar = function(source)
+                local nstr = br.utils.string.replace3(source, "%s+"," ")
+                
+                nstr = br.utils.string.replace(nstr, "%( ", "%(")
+                nstr = br.utils.string.replace(nstr, " %) ", "%)")
+                nstr = br.utils.string.replace(nstr, " %)", "%)")
+                
+                nstr = br.utils.string.replace3(nstr, "\n", "")
+                nstr = br.utils.string.replace3(nstr, "  ", "")
+                
+                nstr = br.utils.string.replace(nstr, "; ", ";")
+                nstr = br.utils.string.replace(nstr, " ;", ";")
+                nstr = br.utils.string.replace(nstr, " ; ", ";")
+                
+                -- if last char not ; add it
+                if string.byte(nstr, #nstr) ~= 59 then
+                    nstr = nstr .. ";";
+                end
+                
+                return nstr
             end
-            
-            return nstr
-        end
-    }
+        }
+    },
 }
 
 -- parse the arguments
 -- parse the arguments
 -- parse the arguments
-br.parsearg = function(larg)
+br.vm.parsearg = function(larg)
     local result = larg;
     if string.byte(larg,1) == 36 then -- variable
         local name = br.utils.string.replace(larg, "%$", '');
-        result = br.recursiveget(name);
+        result = br.vm.recursiveget(name);
     elseif string.byte(larg,1) == 40 then -- sentence
         -- remove first and last char by their indexes
-        result = br.parse(string.sub(larg, 2, #larg - 1),true);
+        result = br.vm.parse(string.sub(larg, 2, #larg - 1),true);
     elseif (string.byte(larg,1) > 47 and string.byte(larg,1) < 58) or (string.byte(larg,1) == 45 and (#larg > 1 and string.byte(larg,2) > 47 and string.byte(larg,2) < 58)) then -- number
         result = tonumber(larg);
     --else if backtick
@@ -78,10 +86,10 @@ br.parsearg = function(larg)
     return result;
 end
 
-br.parseargs = function(args)
+br.vm.parseargs = function(args)
     local newargs = br.utils.array.clone(args);
     for i = 1, #args do
-        newargs[i] = br.parsearg(args[i]);
+        newargs[i] = br.vm.parsearg(args[i]);
     end
     return newargs;
 end
@@ -89,16 +97,16 @@ end
 -- preprocess the source
 -- preprocess the source
 -- preprocess the source
-br.preprocess = function(_src)
+br.vm.preprocess = function(_src)
     local result = _src .. '';
-    for k, v in pairs(br.preprocessors) do
+    for k, v in pairs(br.vm.preprocessors) do
         result = v(result);
     end
     return result;
 end
 
-br.debugprint = function(...)
-    if br.debug then
+br.vm.debugprint = function(...)
+    if br.vm.debug then
         print(...);
     end
 end
@@ -106,15 +114,15 @@ end
 -- parse the source file
 -- parse the source file
 -- parse the source file
-br.parse = function(src, isSentence)
+br.vm.parse = function(src, isSentence)
     if isSentence then 
-        src = "fakeset " .. src;
+        src = "vm.fakeset " .. src;
     end
-    src = br.preprocess(src);
+    src = br.vm.preprocess(src);
     local splited = br.utils.string.split3(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
-        br.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing line " .. i);
+        br.vm.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing line " .. i);
         
         local splited_args = br.utils.string.split3(splited[i], " ");
         
@@ -123,41 +131,41 @@ br.parse = function(src, isSentence)
 
         -- first char is a variable or or a sentence it parse it as arg first, else, its a funcion name
         if string.byte(func,1) == 36 or string.byte(func,1) == 40 then
-            func = br.parsearg(func);
+            func = br.vm.parsearg(func);
         end
         
-        local args = br.parseargs(splited_args);
-        local _function = type(func) == "function" and br.recursiveget(func) or br.recursiveget(func);
+        local args = br.vm.parseargs(splited_args);
+        local _function = type(func) == "function" and br.vm.recursiveget(func) or br.vm.recursiveget(func);
         if _function and isSentence then
             
             -- command debbuger
-            br.debugprint(func .. "{")
+            br.vm.debugprint(func .. "{")
             for k,v in pairs(splited_args) do
-                br.debugprint("    " .. k .. " =",v);
+                br.vm.debugprint("    " .. k .. " =",v);
             end
-            br.debugprint("}");
+            br.vm.debugprint("}");
             
-            br.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
+            br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
             return(_function(unpack(args or {})));
         elseif _function then
             
             -- command debbuger
-            br.debugprint(func .. "{")
+            br.vm.debugprint(func .. "{")
             for k,v in pairs(splited_args) do
-                br.debugprint("    " .. k .. " =",v);
+                br.vm.debugprint("    " .. k .. " =",v);
             end
-            br.debugprint("}");
+            br.vm.debugprint("}");
 
-            br.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
+            br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
             _function(unpack(args or {}));
         elseif br.exit then -- if on repl
-            br.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
-            br.debugprint(src);
-            br.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
+            br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
+            br.vm.debugprint(src);
+            br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
         else
-            br.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
-            br.debugprint(src);
-            br.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found");
+            br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
+            br.vm.debugprint(src);
+            br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found");
             error("function " .. func .. " not found");
         end
     end
@@ -165,18 +173,18 @@ end
 
 br.repl = function()
     --exit function
-    br._replExit = false;
+    br.vm._replExit = false;
     br.exit = function()
-        br._replExit = true;
+        br.vm._replExit = true;
     end
     -- version, only print if not in a breakpoint repl
-    if not br._inBreakpoint then
-        print("bruter v" .. br.version);
+    if not br.vm._inBreakpoint then
+        print("bruter v" .. br.vm.version);
     end
     
     local line = "";
     local count = 0;
-    while not br._replExit do
+    while not br.vm._replExit do
         io.write("br> ");
         local buffer = io.read();
         local clearbuffer = br.utils.string.replace(buffer, "%s+", "");
@@ -197,7 +205,7 @@ br.repl = function()
         end
 
         if string.byte(clearbuffer,#clearbuffer) == 59 and ok then
-            br.parse(line .. buffer);
+            br.vm.parse(line .. buffer);
             line = "";
         else
             line = line .. buffer;
@@ -206,19 +214,19 @@ br.repl = function()
 end
 
 br.breakpoint = function()
-    if not br.debug then
+    if not br.vm.debug then
         print(br.utils.console.colorstring("[WARNING]", "red") .. ": a breakpoint been ignored because debug mode is not enabled.");
         return;
     end
-    br._inBreakpoint = true;
+    br.vm._inBreakpoint = true;
     print(br.utils.console.colorstring("[BREAKPOINT]", "red") .. ": entering breakpoint repl, type 'exit' to continue");
     br.repl();
-    if br.debug then
+    if br.vm.debug then
         print(br.utils.console.colorstring("[BREAKPOINT DONE]", "green") .. ": continuing execution");
     else
         print("\n" .. br.utils.console.colorstring("[BREAKPOINT DONE]", "yellow") .. ": continuing execution, but debug mode is not enabled anymore, so breakpoints will be ignored.\n");
     end
-    br._inBreakpoint = false;
+    br.vm._inBreakpoint = false;
 end
 
 -- module functions
@@ -236,34 +244,32 @@ end
 
 br.using = function(name)
     -- new 
-    if br.utils.file.exist(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".br") then
-        br.br.include(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".br");
-    elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".lua") then
-        terralib.loadfile(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".lua")();
-    elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".t") then
-        terralib.loadfile(br.bruterpath .. "libr/" .. name .. "/" .. name .. ".t")();
-    elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. ".br") then
-        br.br.include(br.bruterpath .. "libr/" .. name .. ".br");
-    elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. ".lua") then
-        terralib.loadfile(br.bruterpath .. "libr/" .. name .. ".lua")();
-    elseif br.utils.file.exist(br.bruterpath .. "libr/" .. name .. ".t") then
-        terralib.loadfile(br.bruterpath .. "libr/" .. name .. ".t")();
+    if br.utils.file.exist(br.vm.bruterpath .. "libr/" .. name .. "/" .. name .. ".br") then
+        br.bruter.include(br.vm.bruterpath .. "libr/" .. name .. "/" .. name .. ".br");
+    elseif br.utils.file.exist(br.vm.bruterpath .. "libr/" .. name .. "/" .. name .. ".lua") then
+        terralib.loadfile(br.vm.bruterpath .. "libr/" .. name .. "/" .. name .. ".lua")();
+    elseif br.utils.file.exist(br.vm.bruterpath .. "libr/" .. name .. "/" .. name .. ".t") then
+        terralib.loadfile(br.vm.bruterpath .. "libr/" .. name .. "/" .. name .. ".t")();
+    elseif br.utils.file.exist(br.vm.bruterpath .. "libr/" .. name .. ".br") then
+        br.bruter.include(br.vm.bruterpath .. "libr/" .. name .. ".br");
+    elseif br.utils.file.exist(br.vm.bruterpath .. "libr/" .. name .. ".lua") then
+        terralib.loadfile(br.vm.bruterpath .. "libr/" .. name .. ".lua")();
+    elseif br.utils.file.exist(br.vm.bruterpath .. "libr/" .. name .. ".t") then
+        terralib.loadfile(br.vm.bruterpath .. "libr/" .. name .. ".t")();
     else
-        br.debugprint(br.utils.console.colorstring("[ERROR]", "red") .. ": library not found: " .. name);
+        br.vm.debugprint(br.utils.console.colorstring("[ERROR]", "red") .. ": library not found: " .. name);
     end
 end
 
+br.bruter = {};
 
-
-br.br = {};
-
-br.br.include = function(path)
+br.bruter.include = function(path)
     local c = br.utils.file.load.text(path);
-    br.parse(c);
+    br.vm.parse(c);
 end
 
-br.br.includestring = function(str)
-    br.parse(str);
+br.bruter.includestring = function(str)
+    br.vm.parse(str);
 end
 
 
@@ -272,7 +278,7 @@ br["terra"] = {};
 
 -- loadstring (lua/terra)
 br["terra"].loadstring = function(str)
-    br.debugprint(br.utils.console.colorstring("[DEBUG INFO]", "magenta") .. ": loading string: " .. str)
+    br.vm.debugprint(br.utils.console.colorstring("[DEBUG INFO]", "magenta") .. ": loading string: " .. str)
     return ((terralib.loadstring(str))());
 end
 
@@ -310,13 +316,13 @@ br["?require"] = br["terra"].require;
 br["ç"] = br.C.includestring;
 br["çfile"] = br.C.include;
 
-br["!"] = br.br.includestring;
-br["!file"] = br.br.include;
+br["!"] = br.bruter.includestring;
+br["!file"] = br.bruter.include;
 
 -- setter
 -- setter
 -- setter
-br.recursiveset = function(argname, value)
+br.vm.recursiveset = function(argname, value)
     if br.utils.string.includes(argname, ".") then
         br.temp = value; 
         local result_txt = "br";
@@ -341,7 +347,7 @@ end
 -- getter
 -- getter
 -- getter
-br.recursiveget = function(argname)
+br.vm.recursiveget = function(argname)
     if br.utils.string.includes(argname, ".") then
             
         local result_txt = "return br";
@@ -360,58 +366,58 @@ br.recursiveget = function(argname)
 end
 
 -- set
-br.setvalue = function(varname, value, ...)
-    br.recursiveset(varname,value);
+br.vm.setvalue = function(varname, value, ...)
+    br.vm.recursiveset(varname,value);
     return value;
 end
 
-br.setfrom = function(varname, funcname, ...)
+br.vm.setfrom = function(varname, funcname, ...)
     local args = {...};
     local result;
     if type(funcname) == "string" then
-        result = br.recursiveget(funcname)(unpack(args or {}));
+        result = br.vm.recursiveget(funcname)(unpack(args or {}));
     elseif type(funcname) == "function" then
         result = funcname(unpack(args or {}));
     end
-    br.recursiveset(varname, result);
+    br.vm.recursiveset(varname, result);
     return result;
+end
+
+br.vm.fakesetfrom = function(funcname, ...)
+    local args = {...};
+    local result;
+    if type(funcname) == "string" then
+        result = br.vm.recursiveget(funcname)(unpack(args or {}));
+    elseif type(funcname) == "function" then
+        result = funcname(unpack(args or {}));
+    end
+    return result;
+end
+
+br.vm.fakeset = function(value, ...)
+    if value == "from" then
+        return br.vm.fakesetfrom(...);
+    elseif #({...}) > 0 then
+        return br.vm.fakesetfrom(value, ...);
+    elseif type(value) == "function" then
+        return br.vm.fakesetfrom(value, ...);
+    else
+        local target = br.vm.recursiveget(value);
+        if target then
+            if type(target) == "function" then
+                return br.vm.fakesetfrom(value, ...);
+            end
+        end
+    end
+    return value;
 end
 
 -- set
 br.set = function(varname, value, ...)
     if value == "from" then
-        return br.setfrom(varname, ...);
+        return br.vm.setfrom(varname, ...);
     end
-    br.recursiveset(varname,value);
-    return value;
-end
-
-br.fakesetfrom = function(funcname, ...)
-    local args = {...};
-    local result;
-    if type(funcname) == "string" then
-        result = br.recursiveget(funcname)(unpack(args or {}));
-    elseif type(funcname) == "function" then
-        result = funcname(unpack(args or {}));
-    end
-    return result;
-end
-
-br.fakeset = function(value, ...)
-    if value == "from" then
-        return br.fakesetfrom(...);
-    elseif #({...}) > 0 then
-        return br.fakesetfrom(value, ...);
-    elseif type(value) == "function" then
-        return br.fakesetfrom(value, ...);
-    else
-        local target = br.recursiveget(value);
-        if target then
-            if type(target) == "function" then
-                return br.fakesetfrom(value, ...);
-            end
-        end
-    end
+    br.vm.recursiveset(varname,value);
     return value;
 end
 
@@ -432,12 +438,12 @@ br.help = function(target)
 
     local organize = {tables = {}, functions = {}, numbers = {}, strings = {}, booleans = {}, userdata = {}, other = {}};
     if type(target) == "string" then
-        target = br.recursiveget(target);
+        target = br.vm.recursiveget(target);
     elseif type(target) == "nil" then
         target = br;
     end
 
-    br.debugprint(br.utils.console.colorstring("[HELP INFO]", "magenta") .. ": help for (" .. type(target) .. ")", target);
+    br.vm.debugprint(br.utils.console.colorstring("[HELP INFO]", "magenta") .. ": help for (" .. type(target) .. ")", target);
     
     if type(target) == "table" then
         for k,v in pairs(target) do 
@@ -493,7 +499,13 @@ br.help = function(target)
         if #organize.strings > 0 then
             print(br.utils.console.colorstring("[", "yellow") .. "strings" .. br.utils.console.colorstring("]", "yellow") .. ":");
             for k,v in pairs(organize.strings) do
-                print(br.utils.console.colorstring(v, "yellow"), target[v]);  
+                --print(#v)
+                if #target[v] > 32 then
+                    print(br.utils.console.colorstring(v, "yellow"), string.sub(target[v], 1, 32) .. "...");
+                else
+                    print(br.utils.console.colorstring(v, "yellow"), target[v]);  
+                end
+                --print(br.utils.console.colorstring(v, "yellow"), target[v]);  
             end
         end
 
@@ -518,28 +530,10 @@ br.help = function(target)
             end
         end
 
-        br.debugprint(br.utils.console.colorstring("[HELP DONE]", "green") .. ": help for (" .. type(target) .. ")", target);
+        br.vm.debugprint(br.utils.console.colorstring("[HELP DONE]", "green") .. ": help for (" .. type(target) .. ")", target);
 
     else
-        br.debugprint(br.utils.console.colorstring("[HELP ERROR]", "red") .. ": invalid target for help function, target has type " .. type(target));    
-    end
-end
-
-br.rawhelp = function(target)--just print the names, no color, no types
-    if type(target) == "string" then
-        for k,v in pairs(br.recursiveget(target)) do
-            print(k);
-        end
-    elseif type(target) == "table" then
-        for k,v in pairs(target or br) do 
-            print(k);
-        end
-    elseif type(target) == "nil" then
-        for k,v in pairs(br) do 
-            print(k);
-        end
-    else
-        br.debugprint(br.utils.console.colorstring("[DEBUG ERROR]", "red") .. ": invalid argument for help function");
+        br.vm.debugprint(br.utils.console.colorstring("[HELP ERROR]", "red") .. ": invalid target for help function, target has type " .. type(target));    
     end
 end
 
@@ -547,6 +541,22 @@ br.print = print;
 
 br["{}"] = function(...)
     return {...};
+end
+
+br["debug"] = function(wish)
+    if wish == true then
+        br.vm.debug = true;
+    elseif wish == false then
+        br.vm.debug = false;
+    else 
+        br.vm.debug = not br.vm.debug;
+    end
+
+    if br.vm.debug then
+        print(br.utils.console.colorstring("[DEBUG INFO]", "green") .. ": debug mode enabled");
+    else
+        print(br.utils.console.colorstring("[DEBUG INFO]", "red") .. ": debug mode disabled");
+    end
 end
 
 return br;

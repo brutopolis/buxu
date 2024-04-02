@@ -3,11 +3,13 @@
 
 ## Description
 
-Bruter is meant to be a language template, all it can parse are simple commands, but has built-in preprocessing so you can create your own language that transpile to bruter.
+Bruter is a metaprogramable script language that in extremely simple to parse and interpret, it also can compile Terra and C;
+
+
+A "Lua-only"(lua-based instead terra-based) support is planned for cases when compiling is not needed and/or low disk space and such, but not implemented yet, currently bruter only works on top of terralang.
 
 
 Thanks to Terralang, bruter does fully support Lua and Terra, and also supports most of C features.
-
 (make sure to install terra and add it to your PATH before using bruter)
 
 
@@ -41,34 +43,47 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 
 - `string` = args delimited by backticks(`) and anything else that doesnt match the other types
 
+- `sentence` = code that is enclosed by parenthesis, it is executed in order then the result is put in place of the sentence.
+
 - `nil` = nil;
 
 ## Usage
 
 
-- argless functions:
+argless functions:
 
-`function;`
-
-
-- returnless function:
-
-`function arg1 arg2 ...;`
+    function;
 
 
-- function which return goes to $target_variable:
+returnless function:
 
-`set target_variable from function ...;`
-
-
-- argless function which return goes to $target_variable:
-
-`set target_variable from function;`
+    function $variable_1 $variable_2 ...;
 
 
-- variables always starts with $:
+function which return goes to $target_variable:
 
-`function $variable_1 $variable_2 ...;`
+    set target_variable from function;
+    set target_variable (function ...);
+    set target_variable (from function ...);
+    set target_variable (value);
+
+
+argless function which return goes to $target_variable:
+
+    set target_variable from function;
+    set target_variable (function);
+    set target_variable (from function);
+    set target_variable (value);
+
+variables always starts with $:
+
+    function $variable_1 $variable_2 ...;
+
+
+enclosed sentences are executed in order:
+
+    function (function (function ...));
+
 
 ## Libraries
 
