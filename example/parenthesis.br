@@ -1,5 +1,5 @@
 using math;
-(set a(+(4)(55)(6)(-(^(4)(4))(%(45)(7)))));
+({set}({a})(+(4)(55)(6)(-(^(4)(4))(%(45)(7))))); comment this is just to battle test the math parenthesis, keys and the math functions;
 print it is $a;
 
 
