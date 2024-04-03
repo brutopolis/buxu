@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.2d",
+        version = "0.2.2e",
         -- source and output
         source = "",
         outputpath = "",
@@ -130,7 +130,8 @@ br.vm.parse = function(src, isSentence)
         end
         
         local args = br.vm.parseargs(splited_args);
-        local _function = type(func) == "function" and br.vm.recursiveget(func) or br.vm.recursiveget(func);
+        local _function = type(func) == "function" and func or br.vm.recursiveget(func);
+        
         if _function and isSentence then
             
             -- command debbuger
@@ -141,7 +142,12 @@ br.vm.parse = function(src, isSentence)
             br.vm.debugprint("}");
             
             br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
-            return(_function(unpack(args or {})));
+            
+            -- in a sentence the code execution stops on the first return it gets
+            local result = _function(unpack(args or {}));
+            if result then
+                return result;
+            end
         elseif _function then
             
             -- command debbuger
@@ -158,10 +164,17 @@ br.vm.parse = function(src, isSentence)
             br.vm.debugprint(src);
             br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
         else
-            br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
-            br.vm.debugprint(src);
-            br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found");
-            error("function " .. func .. " not found");
+            --if first char is a parentesis and the last too
+            if string.byte(splited[i],1) == 40 and string.byte(splited[i],#splited[i]) == 41 then
+                br.vm.debugprint(br.utils.console.colorstring("Warning", "yellow") .. " parsing the following line:");
+                br.vm.debugprint(splited[i]);
+                br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "yellow") .. ": function " .. func .. " not found");
+            else -- if not
+                br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
+                br.vm.debugprint(src);
+                br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found");
+                error("function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+            end
         end
     end
 end
