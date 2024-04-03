@@ -1,9 +1,0 @@
-set print from ? return(print); comment just a reference to the lua print function;
-
-comment this file import a fake module;
-
-!file ./fakemodule.br;
-
-set result from fakemodule.fakeFunction 1 2;
-
-print $result;

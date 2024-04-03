@@ -7,4 +7,5 @@ bruter --debug luapi.br # the order of the arguments doesn't matter when using f
 bruter -o test compiling.br --debug # Compile the compiling.br file into a executable called test
 bruter --debug conditions.br
 bruter --debug types.br
+bruter --debug fakemodules.br
 ./test # Run the test executable

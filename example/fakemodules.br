@@ -1,0 +1,6 @@
+comment this file "import" a fake module;
+!file ./resource/fakemodule.br;
+
+set result from fakemodule.fakeFunction 1 2;
+
+print $result;
