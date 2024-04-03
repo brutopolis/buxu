@@ -1,5 +1,18 @@
 using math;
-if (> 5 4) 
+
+set a 45;
+set b 5;
+
+if (< $a $b) 
 {
-    print `5 > 4`;
+    print `$a > $b`;
+}
+else 
+{
+    comment heh just showing that keynested strings can be sentence enclosed;
+    if (== $a $b) ((((({print `$a == $b`;})))))
+    else 
+    {
+        print `$a < $b`;
+    };
 };

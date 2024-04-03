@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.3a",
+        version = "0.2.3b",
         -- source and output
         source = "",
         outputpath = "",
@@ -31,6 +31,8 @@ local br =
             sugar = function(source)
                 local nstr = br.utils.string.replace3(source, "%s+"," ")
                 
+                nstr = br.utils.string.replace(nstr, "%}", "%} ")
+                nstr = br.utils.string.replace(nstr, "%{", " %{")
                 nstr = br.utils.string.replace(nstr, "%( ", "%(")
                 nstr = br.utils.string.replace(nstr, " %) ", "%)")
                 nstr = br.utils.string.replace(nstr, " %)", "%)")
@@ -108,7 +110,9 @@ br["~="] = function(a,b) return a ~= b; end
 -- parse the arguments
 br.vm.parsearg = function(larg)
     local result = larg;
-
+    if larg == nil or larg == "" then
+        return nil;
+    end
     -- if a variable, get it
     if string.byte(larg,1) == 36 then -- variable
         local name = br.utils.string.replace(larg, "%$", '');
@@ -235,18 +239,6 @@ br.vm.parse = function(src, isSentence)
                 br.vm.debugprint(src);
                 br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found");
                 error("function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
-            end
-        end
-    end
-end
-
-br["if"] = function(condition, codestr)
-    if condition then
-        if type(codestr) == "string" then
-            if string.byte(codestr,1) == 123 and string.byte(codestr,#codestr) == 125 then
-                return br.vm.parse(string.sub(codestr, 2, #codestr - 1), true);
-            else
-                return br.vm.parse(codestr, true);
             end
         end
     end
@@ -637,6 +629,33 @@ br["debug"] = function(wish)
         print(br.utils.console.colorstring("[DEBUG INFO]", "green") .. ": debug mode enabled");
     else
         print(br.utils.console.colorstring("[DEBUG INFO]", "red") .. ": debug mode disabled");
+    end
+end
+
+br["if"] = function(condition, codestr, _else, codestr2)
+    if condition then
+        if type(codestr) == "string" then
+            return br.vm.parse(codestr, true);
+        elseif type(codestr) == "function" then
+            return codestr();
+        end
+    else
+        if _else then
+            print(_else)
+            if type(_else) == "function" then
+                return _else();
+            elseif type(_else) == "string" and _else == "else" then
+                if _else == "else" then
+                    if type(codestr2) == "string" then
+                        return br.vm.parse(codestr2, true);
+                    elseif type(codestr2) == "function" then
+                        return codestr2();
+                    end
+                else
+                    return br.vm.parse(_else, true);
+                end
+            end
+        end
     end
 end
 
