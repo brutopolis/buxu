@@ -16,3 +16,22 @@ else
         print `$a < $b`;
     };
 };
+
+set c false;
+set d true;
+
+if (&& $c $d) 
+{
+    print `$a == $b`;
+}
+else 
+{
+    if (|| $c $d) 
+    {
+        print `$a != $b`;
+    }
+    else 
+    {
+        print `wtf`;
+    };
+};

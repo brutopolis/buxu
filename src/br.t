@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.3b",
+        version = "0.2.3c",
         -- source and output
         source = "",
         outputpath = "",
@@ -237,8 +237,13 @@ br.vm.parse = function(src, isSentence)
             else -- if not
                 br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
                 br.vm.debugprint(src);
-                br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found");
-                error("function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+                if type(_function) == "string" or type(_function) == "number" or type(_function) == "boolean" then
+                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+                    print("function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+                else
+                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": unamed function not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+                    print("unamed function not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+                end
             end
         end
     end
@@ -657,6 +662,24 @@ br["if"] = function(condition, codestr, _else, codestr2)
             end
         end
     end
+end
+
+br["&&"] = function(...)
+    for k,v in pairs({...}) do
+        if not v then
+            return false;
+        end
+    end
+    return true;
+end
+
+br["||"] = function(...)
+    for k,v in pairs({...}) do
+        if v then
+            return true;
+        end
+    end
+    return false;
 end
 
 return br;
