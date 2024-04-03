@@ -37,6 +37,7 @@ _string.split2 = function(str, separator) -- returns a table of strings respecti
     local current = ""
     local insideString = false
     local scopeLevel = 0
+    local uscopeLevel = 0
     for i = 1, #str do
         local char = str:sub(i, i)
 
@@ -48,7 +49,13 @@ _string.split2 = function(str, separator) -- returns a table of strings respecti
         elseif not insideString and char == ")" then
             scopeLevel = scopeLevel - 1
             current = current .. char
-        elseif char == separator and not insideString and scopeLevel == 0 then
+        elseif not insideString and char == "{" then
+            uscopeLevel = uscopeLevel + 1
+            current = current .. char
+        elseif not insideString and char == "}" then
+            uscopeLevel = uscopeLevel - 1
+            current = current .. char
+        elseif char == separator and not insideString and scopeLevel == 0 and uscopeLevel == 0 then
             table.insert(result, current)
             current = ""
         else
@@ -65,6 +72,7 @@ _string.split3 = function(str, separator) -- returns a table with the parts of t
     local current = ""
     local insideString = false
     local scopeLevel = 0
+    local uscopeLevel = 0
     for i = 1, #str do
         local char = str:sub(i, i)
 
@@ -77,7 +85,13 @@ _string.split3 = function(str, separator) -- returns a table with the parts of t
         elseif not insideString and char == ")" then
             scopeLevel = scopeLevel - 1
             current = current .. char
-        elseif char == separator and not insideString and scopeLevel == 0 then
+        elseif not insideString and char == "{" then
+            uscopeLevel = uscopeLevel + 1
+            current = current .. char
+        elseif not insideString and char == "}" then
+            uscopeLevel = uscopeLevel - 1
+            current = current .. char
+        elseif char == separator and not insideString and scopeLevel == 0 and uscopeLevel == 0 then
             table.insert(result, current)
             current = ""
         else
@@ -102,6 +116,7 @@ _string.replace3 = function(inputString, oldSubstring, newSubstring) -- returns 
     local current = ""
 
     local scopeLevel = 0;
+    local uscopeLevel = 0;
 
     for i = 1, #inputString do
         local char = inputString:sub(i, i)
@@ -115,7 +130,13 @@ _string.replace3 = function(inputString, oldSubstring, newSubstring) -- returns 
         elseif not insideString and char == ")" then
             scopeLevel = scopeLevel - 1
             current = current .. char
-        elseif not insideString and char == oldSubstring:sub(1, 1) and scopeLevel == 0 then
+        elseif not insideString and char == "{" then
+            uscopeLevel = uscopeLevel + 1
+            current = current .. char
+        elseif not insideString and char == "}" then
+            uscopeLevel = uscopeLevel - 1
+            current = current .. char
+        elseif not insideString and char == oldSubstring:sub(1, 1) and scopeLevel == 0 and uscopeLevel == 0 then
             if current ~= "" then
                 result = result .. current
                 current = ""
@@ -139,7 +160,7 @@ end
 
 
 _string.includes = function(str, substring)
-    return string.find(str, substring, 1, true) ~= nil
+    return type(str) == "string" and (string.find(str, substring, 1, true) ~= nil) or nil;
 end
 
 _string.trim = function(s)

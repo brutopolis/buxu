@@ -41,7 +41,7 @@ Thanks to Terralang, bruter does fully support Lua and Terra, and also supports 
 
 - `boolean` = args that are true or false
 
-- `string` = args delimited by backticks(`) and anything else that doesnt match the other types
+- `string` = args delimited by backticks(`) or keys({}) and anything else that doesnt match the other types
 
 - `sentence` = code that is enclosed by parenthesis, it is executed in order then the result is put in place of the sentence.
 
@@ -108,6 +108,8 @@ if you really want a library that work as a module you can create a "fake module
 you can also use the `require` function:
 
     set module from require `module_name`;
+    set module (require `module_name`);
+
     
 lua and terra packages are handled with loadfile not require, so they are not cached and can be reloaded, this is done to behave like brute packages, but you can use require to load lua and terra packages.
 

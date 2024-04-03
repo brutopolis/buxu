@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.2e",
+        version = "0.2.3",
         -- source and output
         source = "",
         outputpath = "",
@@ -35,6 +35,11 @@ local br =
                 nstr = br.utils.string.replace(nstr, " %) ", "%)")
                 nstr = br.utils.string.replace(nstr, " %)", "%)")
                 nstr = br.utils.string.replace(nstr, "%(", " %(")
+                
+                --if the first two chars ate " (" remove the space
+                if string.byte(nstr,1) == 32 and string.byte(nstr,2) == 40 then
+                    nstr = string.sub(nstr, 2, #nstr);
+                end
                 
                 nstr = br.utils.string.replace3(nstr, "\n", "")
                 nstr = br.utils.string.replace3(nstr, "  ", "")
@@ -54,22 +59,74 @@ local br =
     },
 }
 
+-- math and logic functions
+-- math and logic functions
+-- math and logic functions
+
+br.math = {};
+
+br["+"] = function(...)
+	local args = {...};
+	local result = args[1];
+	for i = 2, #args do
+		result = result + args[i];
+	end
+	return result;
+end
+
+br["-"] = function(...)
+	local args = {...};
+	local result = args[1];
+	for i = 2, #args do
+		result = result - args[i];
+	end
+	return result;
+end
+
+br["*"] = function(...)
+	local args = {...};
+	local result = args[1];
+	for i = 2, #args do
+		result = result * args[i];
+	end
+	return result;
+end
+
+br["/"] = function(a,b) return a / b; end
+br["^"] = function(a,b) return a ^ b; end
+br["%"] = function(a,b) return a % b; end
+
+br["<"] = function(a,b) return a < b; end
+br["<="] = function(a,b) return a <= b; end
+br[">"] = function(a,b) return a > b; end
+br[">="] = function(a,b) return a >= b; end
+br["=="] = function(a,b) return a == b; end
+br["~="] = function(a,b) return a ~= b; end
+
 -- parse the arguments
 -- parse the arguments
 -- parse the arguments
 br.vm.parsearg = function(larg)
     local result = larg;
+
+    -- if a variable, get it
     if string.byte(larg,1) == 36 then -- variable
         local name = br.utils.string.replace(larg, "%$", '');
         result = br.vm.recursiveget(name);
+    
+    -- if a sentence enclose by parentesis, remove them and parse it
     elseif string.byte(larg,1) == 40 then -- sentence
-        -- remove first and last char by their indexes
         result = br.vm.parse(string.sub(larg, 2, #larg - 1),true);
+
+    -- if a number
     elseif (string.byte(larg,1) > 47 and string.byte(larg,1) < 58) or (string.byte(larg,1) == 45 and (#larg > 1 and string.byte(larg,2) > 47 and string.byte(larg,2) < 58)) then -- number
         result = tonumber(larg);
-    --else if backtick
-    elseif string.byte(larg,1) == 96 then
+
+
+    -- if enclose by keys {} or backticks remove them
+    elseif string.byte(larg,1) == 96 or string.byte(larg,1) == 123 then
         result = string.sub(larg, 2, #larg - 1);
+
     elseif larg == "true" then
         result = true;
     elseif larg == "false" then
@@ -168,12 +225,28 @@ br.vm.parse = function(src, isSentence)
             if string.byte(splited[i],1) == 40 and string.byte(splited[i],#splited[i]) == 41 then
                 br.vm.debugprint(br.utils.console.colorstring("Warning", "yellow") .. " parsing the following line:");
                 br.vm.debugprint(splited[i]);
-                br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "yellow") .. ": function " .. func .. " not found");
+                if _function then
+                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "yellow") .. ": function " .. func .. " not found, but the code seems to be enclosed in a sentence, so the execution was continued");
+                else
+                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "yellow") .. ": unamed function not found, but the code seems to be enclosed in a sentence, so the execution was continued");
+                end
             else -- if not
                 br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
                 br.vm.debugprint(src);
                 br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found");
                 error("function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+            end
+        end
+    end
+end
+
+br["if"] = function(condition, codestr)
+    if condition then
+        if type(codestr) == "string" then
+            if string.byte(codestr,1) == 123 and string.byte(codestr,#codestr) == 125 then
+                return br.vm.parse(string.sub(codestr, 2, #codestr - 1), true);
+            else
+                return br.vm.parse(codestr, true);
             end
         end
     end
@@ -547,7 +620,7 @@ end
 
 br.print = print;
 
-br["{}"] = function(...)
+br["[]"] = function(...)
     return {...};
 end
 

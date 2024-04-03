@@ -1,0 +1,19 @@
+(10); comment this is a number enclosed in a sentence;
+
+comment this is a string;
+comment `this is a string too`;
+comment {this is a string too};
+
+(comment this is a sentence);
+(comment `this is a sentence too`);
+(comment {this is a sentence too});
+(comment (comment (comment multilevel sentence)));
+comment (comment (comment multilevel sentence));
+
+set variable 0; comment this has setten a variable;
+($variable); comment this is a variable enclosed in a sentence;
+
+(true); comment this is a boolean enclosed in a sentence;
+(false); comment this is a boolean enclosed in a sentence;
+
+(nil); comment this is a nil enclosed in a sentence;

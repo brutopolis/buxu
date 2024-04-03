@@ -1,6 +1,6 @@
 help;
-set txt from {};
-set txt.data from {};
+set txt from [];
+set txt.data from [];
 
 set txt.new (? `return(
     function(name) 
@@ -57,7 +57,7 @@ set txt.print (? `return(
         print(br.txt.data[name]);
     end)`);
 
-set txt.char from {};
+set txt.char from [];
 
 set txt.char.at (? `return(
     function(name, index)
@@ -88,7 +88,7 @@ set txt.char.set (? `return(
         end
     end)`);
 
-set txt.line from {};
+set txt.line from [];
 
 set txt.line.push (? `return(
     function(name, text) 
