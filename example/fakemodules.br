@@ -1,5 +1,5 @@
 comment this file "import" a fake module;
-!file ./resource/fakemodule.br;
+bruter.include ./resource/fakemodule.br;
 
 set result from fakemodule.fakeFunction 1 2;
 

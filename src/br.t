@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.3d",
+        version = "0.2.4",
         -- source and output
         source = "",
         outputpath = "",
@@ -103,7 +103,7 @@ br["<="] = function(a,b) return a <= b; end
 br[">"] = function(a,b) return a > b; end
 br[">="] = function(a,b) return a >= b; end
 br["=="] = function(a,b) return a == b; end
-br["~="] = function(a,b) return a ~= b; end
+br["!="] = function(a,b) return a ~= b; end
 
 -- parse the arguments
 -- parse the arguments
@@ -121,15 +121,15 @@ br.vm.parsearg = function(larg)
     -- if a sentence enclose by parentesis, remove them and parse it
     elseif string.byte(larg,1) == 40 then -- sentence
         result = br.vm.parse(string.sub(larg, 2, #larg - 1),true);
-
+    
+    -- if enclose by keys {} or backticks remove them
+    elseif string.byte(larg,1) == 96 or string.byte(larg,1) == 123 then
+        result = string.sub(larg, 2, #larg - 1);
+        
     -- if a number
     elseif (string.byte(larg,1) > 47 and string.byte(larg,1) < 58) or (string.byte(larg,1) == 45 and (#larg > 1 and string.byte(larg,2) > 47 and string.byte(larg,2) < 58)) then -- number
         result = tonumber(larg);
 
-
-    -- if enclose by keys {} or backticks remove them
-    elseif string.byte(larg,1) == 96 or string.byte(larg,1) == 123 then
-        result = string.sub(larg, 2, #larg - 1);
 
     elseif larg == "true" then
         result = true;
@@ -179,14 +179,14 @@ br.vm.parse = function(src, isSentence)
     local func = "";
     for i = 1, #splited - 1 do
         br.vm.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing line " .. i);
-        
+        br.vm.debugprint(br.utils.console.colorstring("[DEBUG CODE]", "cyan") .. ": " .. splited[i] .. br.utils.console.colorstring("\n[CODE END]", "cyan"));
         local splited_args = br.utils.string.split3(splited[i], " ");
         
         local func = splited_args[1];
         table.remove(splited_args, 1);
 
         -- first char is a variable or or a sentence it parse it as arg first, else, its a funcion name
-        if string.byte(func,1) == 36 or string.byte(func,1) == 40 then
+        if string.byte(func,1) == 36 or string.byte(func,1) == 40 or string.byte(func,1) == 96 or string.byte(func,1) == 123 or (string.byte(func,1) > 47 and string.byte(func,1) < 58) or (string.byte(func,1) == 45 and (#func > 1 and string.byte(func,2) > 47 and string.byte(func,2) < 58)) then
             func = br.vm.parsearg(func);
         end
         
@@ -390,12 +390,6 @@ end
 br["?"] = br["terra"].loadstring;
 br["?file"] = br["terra"].loadfile;
 br["?require"] = br["terra"].require;
-
-br["ç"] = br.C.includestring;
-br["çfile"] = br.C.include;
-
-br["!"] = br.bruter.includestring;
-br["!file"] = br.bruter.include;
 
 -- setter
 -- setter
@@ -680,6 +674,23 @@ br["||"] = function(...)
         end
     end
     return false;
+end
+
+br["!"] = function(value)
+    return not value;
+end
+
+br["while"] = function(condition, codestr)
+    --print (condition, br.vm.parse(condition))
+    local _cond = br.vm.parse(condition, true);
+    while _cond do
+        if type(codestr) == "string" then
+            br.vm.parse(codestr, true);
+        elseif type(codestr) == "function" then
+            codestr();
+        end
+        _cond = br.vm.parse(condition, true);
+    end
 end
 
 return br;

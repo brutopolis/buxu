@@ -8,4 +8,5 @@ bruter -o test compiling.br --debug # Compile the compiling.br file into a execu
 bruter --debug conditions.br
 bruter --debug types.br
 bruter --debug fakemodules.br
+bruter --debug loop.br
 ./test # Run the test executable
