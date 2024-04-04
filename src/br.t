@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.4",
+        version = "0.2.4a",
         -- source and output
         source = "",
         outputpath = "",
@@ -467,9 +467,7 @@ br.vm.fakesetfrom = function(funcname, ...)
 end
 
 br.vm.fakeset = function(value, ...)
-    if value == "from" then
-        return br.vm.fakesetfrom(...);
-    elseif #({...}) > 0 then
+    if #({...}) > 0 then
         return br.vm.fakesetfrom(value, ...);
     elseif type(value) == "function" then
         return br.vm.fakesetfrom(value, ...);
@@ -486,10 +484,10 @@ end
 
 -- set
 br.set = function(varname, value, ...)
-    if value == "from" then
-        return br.vm.setfrom(varname, ...);
-    end
     br.vm.recursiveset(varname,value);
+end
+
+br["return"] = function(value)
     return value;
 end
 
@@ -658,6 +656,13 @@ br["if"] = function(condition, codestr, _else, codestr2)
     end
 end
 
+br.vm.bulkparse = function(src, isSentence)
+    local splited = br.utils.string.split3(src, ";");
+    for i = 1, #splited - 1 do
+        br.vm.parse(splited[i], isSentence);
+    end
+end
+
 br["&&"] = function(...)
     for k,v in pairs({...}) do
         if not v then
@@ -688,6 +693,29 @@ br["while"] = function(condition, codestr)
             br.vm.parse(codestr, true);
         elseif type(codestr) == "function" then
             codestr();
+        end
+        _cond = br.vm.parse(condition, true);
+    end
+end
+
+br["for"] = function(init, condition, increment, codestr)
+    if type(init) == "string" then
+        br.vm.parse(init, true);
+    elseif type(init) == "function" then
+        init();
+    end
+
+    local _cond = br.vm.parse(condition, true);
+    while _cond do
+        if type(codestr) == "string" then
+            br.vm.parse(codestr, true);
+        elseif type(codestr) == "function" then
+            codestr();
+        end
+        if type(increment) == "string" then
+            br.vm.parse(increment, true);
+        elseif type(increment) == "function" then
+            increment();
         end
         _cond = br.vm.parse(condition, true);
     end

@@ -1,3 +1,2 @@
-set fakemodule from [];
-set tempfunc from ? `return (function (a, b) return("fakeFunction result is " .. (a + b)) end)`;
-set fakemodule.fakeFunction $tempfunc;
+set fakemodule ([]);
+set fakemodule.fakeFunction (? `return (function (a, b) return("fakeFunction result is " .. (a + b)) end)`);
