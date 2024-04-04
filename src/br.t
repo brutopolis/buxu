@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.4b",
+        version = "0.2.4c",
         -- source and output
         source = "",
         outputpath = "",
@@ -118,7 +118,6 @@ br.vm.parsearg = function(larg)
     if string.byte(larg,1) == 36 then -- variable
         local name = br.utils.string.replace(larg, "%$", '');
         result = br.vm.recursiveget(name);
-    
     -- if a sentence enclose by parentesis, remove them and parse it
     elseif string.byte(larg,1) == 40 then -- sentence
         result = br.vm.parse(string.sub(larg, 2, #larg - 1),true);
@@ -139,12 +138,16 @@ br.vm.parsearg = function(larg)
     elseif larg == "nil" then
         result = nil;
     end
+
+    if result == nil then
+        return false;
+    end
     
     return result;
 end
 
 br.vm.parseargs = function(args)
-    local newargs = br.utils.array.clone(args);
+    local newargs = args;
     for i = 1, #args do
         newargs[i] = br.vm.parsearg(args[i]);
     end
@@ -173,10 +176,6 @@ end
 -- parse the source file
 br.vm.parse = function(src, isSentence)
     if isSentence then 
-        if type(src) == "table" then
-            print(br.utils.stringify(src))
-            
-        end
         src = "vm.fakeset " .. src;
     end
     src = br.vm.preprocess(src);
@@ -197,7 +196,7 @@ br.vm.parse = function(src, isSentence)
         
         local args = br.vm.parseargs(splited_args);
         local _function = type(func) == "function" and func or br.vm.recursiveget(func);
-        
+
         if _function and isSentence then
             
             -- command debbuger
@@ -489,7 +488,11 @@ end
 
 -- set
 br.set = function(varname, value, ...)
-    br.vm.recursiveset(varname,value);
+    if value == "from" then
+        br.vm.setfrom(varname, ...);
+    else
+        br.vm.recursiveset(varname,value);
+    end
 end
 
 br["return"] = function(value)
@@ -619,9 +622,9 @@ br["[]"] = function(...)
 end
 
 br["debug"] = function(wish)
-    if wish == true then
+    if wish then
         br.vm.debug = true;
-    elseif wish == false then
+    elseif not wish then
         br.vm.debug = false;
     else 
         br.vm.debug = not br.vm.debug;
@@ -646,7 +649,6 @@ br["if"] = function(condition, codestr, _else, codestr2)
         end
     else
         if _else then
-            print(_else)
             if type(_else) == "function" then
                 return _else();
             elseif type(_else) == "string" and _else == "else" then
@@ -700,20 +702,8 @@ br["while"] = function(condition, codestr)
     end
 end
 
-br["forin"] = function(varname, target, codestr)
-    for k,v in pairs(target) do
-        br.set(varname, v);
-        if type(codestr) == "string" then
-            br.vm.parse(codestr, true);
-        elseif type(codestr) == "function" then
-            codestr();
-        end
-    end
-end
-
 br["for"] = function(...)
     local args = {...};
-
     local init = args[1];
     local condition = args[2];
     local increment = args[3];
@@ -766,6 +756,18 @@ br["for"] = function(...)
         end
 
         _cond = br.vm.parse(condition, true);
+    end
+end
+
+-- get the first valid value
+br["valid"] = function(...)
+    local args = {...};
+    --print(br.utils.stringify(args));
+    for k,v in pairs(args) do
+        --print(v);
+        if v then
+            return v;
+        end
     end
 end
 

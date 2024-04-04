@@ -1,2 +1,2 @@
-set fakemodule ([]);
+set fakemodule from [];
 set fakemodule.fakeFunction (? `return (function (a, b) return("fakeFunction result is " .. (a + b)) end)`);

@@ -35,3 +35,20 @@ else
         print `wtf`;
     };
 };
+
+comment another way of doing ||;
+if (< $a $b;== $a $b;> $a $b) 
+{
+    print `wtf2`;
+}
+else 
+{
+    print `wtf3`;
+};
+
+set e 51;
+comment only the value of the last statement is returned, the rest are ignored because they are nil;
+set f (return $v;return $h;return $v;return $e); comment this is the hard way of doing it;
+print medieval way = $f;
+set f (valid $v $h $v $e); comment this is the easy way of doing it;
+print modern way = $f;
