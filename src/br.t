@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.4a",
+        version = "0.2.4b",
         -- source and output
         source = "",
         outputpath = "",
@@ -104,6 +104,7 @@ br[">"] = function(a,b) return a > b; end
 br[">="] = function(a,b) return a >= b; end
 br["=="] = function(a,b) return a == b; end
 br["!="] = function(a,b) return a ~= b; end
+br["includes"] = function(a,b) return br.utils.array.includes(a,b); end
 
 -- parse the arguments
 -- parse the arguments
@@ -172,6 +173,10 @@ end
 -- parse the source file
 br.vm.parse = function(src, isSentence)
     if isSentence then 
+        if type(src) == "table" then
+            print(br.utils.stringify(src))
+            
+        end
         src = "vm.fakeset " .. src;
     end
     src = br.vm.preprocess(src);
@@ -630,6 +635,9 @@ br["debug"] = function(wish)
 end
 
 br["if"] = function(condition, codestr, _else, codestr2)
+    if type(condition) == "string" then
+        condition = br.vm.parse(condition, true);
+    end
     if condition then
         if type(codestr) == "string" then
             return br.vm.parse(codestr, true);
@@ -653,13 +661,6 @@ br["if"] = function(condition, codestr, _else, codestr2)
                 end
             end
         end
-    end
-end
-
-br.vm.bulkparse = function(src, isSentence)
-    local splited = br.utils.string.split3(src, ";");
-    for i = 1, #splited - 1 do
-        br.vm.parse(splited[i], isSentence);
     end
 end
 
@@ -688,6 +689,7 @@ end
 br["while"] = function(condition, codestr)
     --print (condition, br.vm.parse(condition))
     local _cond = br.vm.parse(condition, true);
+    
     while _cond do
         if type(codestr) == "string" then
             br.vm.parse(codestr, true);
@@ -698,7 +700,51 @@ br["while"] = function(condition, codestr)
     end
 end
 
-br["for"] = function(init, condition, increment, codestr)
+br["forin"] = function(varname, target, codestr)
+    for k,v in pairs(target) do
+        br.set(varname, v);
+        if type(codestr) == "string" then
+            br.vm.parse(codestr, true);
+        elseif type(codestr) == "function" then
+            codestr();
+        end
+    end
+end
+
+br["for"] = function(...)
+    local args = {...};
+
+    local init = args[1];
+    local condition = args[2];
+    local increment = args[3];
+    local codestr = args[4];
+    local other = args[5];
+    local _in;
+    if type(condition == "string") and condition == "in" then
+        local target = increment;
+        for k,v in pairs(target) do
+            br.set(init, v);
+            if type(codestr) == "string" then
+                br.vm.parse(codestr, true);
+            elseif type(codestr) == "function" then
+                codestr();
+            end
+        end
+        return;
+    elseif type(increment == "string") and increment == "in" then
+        local target = codestr;
+        for k,v in pairs(target) do
+            br.set(init, k);
+            br.set(condition, v);
+            if type(other) == "string" then
+                br.vm.parse(other, true);
+            elseif type(other) == "function" then
+                other();
+            end
+        end
+        return;
+    end
+    
     if type(init) == "string" then
         br.vm.parse(init, true);
     elseif type(init) == "function" then
@@ -712,11 +758,13 @@ br["for"] = function(init, condition, increment, codestr)
         elseif type(codestr) == "function" then
             codestr();
         end
+
         if type(increment) == "string" then
             br.vm.parse(increment, true);
         elseif type(increment) == "function" then
             increment();
         end
+
         _cond = br.vm.parse(condition, true);
     end
 end
