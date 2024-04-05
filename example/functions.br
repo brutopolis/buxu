@@ -1,0 +1,21 @@
+comment defining a function;
+
+set b from [];
+
+function b.strtest {str}
+{
+    set a 1;
+    print $a;
+    return $str; comment not that this really matter as everything in bruter is global;
+};
+
+set b.abc (function {a b c}
+{
+    print this is a function print;
+});
+
+b.abc;
+
+help;
+
+print (b.strtest `this is a string`);

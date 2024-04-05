@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.4e",
+        version = "0.2.5",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -25,7 +25,7 @@ local br =
         bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
         -- debug mode
         debug = false,
-        
+        funcdata = {},
         preprocessors = 
         {
             sugar = function(source)
@@ -783,6 +783,55 @@ br["for"] = function(...)
 
         _cond = br.vm.parse(condition, true);
     end
+end
+
+br["function"] = function(name, argstr, codestr)
+    if codestr == nil then
+        argstr = name;
+        codestr = argstr;
+        name = nil;
+    end
+    
+    local args = br.utils.string.split2(argstr, " ");
+    
+    local _func;
+
+    if type(codestr) == "string" then
+        _func = function()
+            local result = br.vm.parse(codestr, true);
+            return result;
+        end;
+    
+    elseif type(codestr) == "function" then
+        _func = function(...)
+            return codestr(unpack({...}));
+        end;
+    end
+
+    local result = function(...)
+        local globalbakcup = {}
+        local _args = {...};
+        
+        for i,v in pairs(args) do
+            globalbakcup[v] = br[v];
+            br[v] = _args[i];
+        end
+
+        local result = _func();
+        
+        for i,v in pairs(args) do
+            br[v] = globalbakcup[v];
+        end
+        
+        return result;
+    end
+
+    if name then
+        br.set(name, result);
+    else 
+        return result;
+    end
+    
 end
 
 return br;
