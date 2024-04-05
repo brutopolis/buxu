@@ -54,5 +54,5 @@ else
 set e 51;
 comment only the value of the last statement is returned, the rest are ignored because they are nil;
 comment : is a return statement just like return;
-set f (@$v;@$h;@$v;@$e);
+set f (:$v;:$h;:$v;:$e);
 print f = $f;

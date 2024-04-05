@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.4d",
+        version = "0.2.4e",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -46,7 +46,7 @@ local br =
                 nstr = br.utils.string.replace3(nstr, "\n", "")
                 nstr = br.utils.string.replace3(nstr, "  ", "")
 
-                
+
                 nstr = br.utils.string.replace3(nstr, ":$", ": $")
                 
                 nstr = br.utils.string.replace(nstr, "; ", ";")
