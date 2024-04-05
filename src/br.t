@@ -17,8 +17,8 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.4c",
-        -- source and output
+        version = "0.2.4d",
+        -- source and outputs
         source = "",
         outputpath = "",
         -- current path
@@ -45,6 +45,9 @@ local br =
                 
                 nstr = br.utils.string.replace3(nstr, "\n", "")
                 nstr = br.utils.string.replace3(nstr, "  ", "")
+
+                
+                nstr = br.utils.string.replace3(nstr, ":$", ": $")
                 
                 nstr = br.utils.string.replace(nstr, "; ", ";")
                 nstr = br.utils.string.replace(nstr, " ;", ";")
@@ -102,9 +105,32 @@ br["<"] = function(a,b) return a < b; end
 br["<="] = function(a,b) return a <= b; end
 br[">"] = function(a,b) return a > b; end
 br[">="] = function(a,b) return a >= b; end
-br["=="] = function(a,b) return a == b; end
+
+br["=="] = function(...) 
+    local args = {...};
+    local result = args[1];
+    for i = 2, #args do
+        if result ~= args[i] then
+            return false;
+        end
+    end
+    return true;
+end
+
 br["!="] = function(a,b) return a ~= b; end
-br["includes"] = function(a,b) return br.utils.array.includes(a,b); end
+
+br["includes"] = function(a,b) 
+    return br.utils.array.includes(a,b); 
+end
+
+br["exists"] = function(...)
+    for k,v in pairs({...}) do
+        if not v then
+            return false;
+        end
+    end
+    return true;
+end
 
 -- parse the arguments
 -- parse the arguments
@@ -137,10 +163,6 @@ br.vm.parsearg = function(larg)
         result = false;
     elseif larg == "nil" then
         result = nil;
-    end
-
-    if result == nil then
-        return false;
     end
     
     return result;
@@ -499,6 +521,10 @@ br["return"] = function(value)
     return value;
 end
 
+br[":"] = function(value)
+    return value;
+end
+
 --string functions
 --string functions
 --string functions
@@ -756,18 +782,6 @@ br["for"] = function(...)
         end
 
         _cond = br.vm.parse(condition, true);
-    end
-end
-
--- get the first valid value
-br["valid"] = function(...)
-    local args = {...};
-    --print(br.utils.stringify(args));
-    for k,v in pairs(args) do
-        --print(v);
-        if v then
-            return v;
-        end
     end
 end
 

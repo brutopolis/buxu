@@ -20,13 +20,16 @@ else
 set c false;
 set d true;
 
-if (&& $c $d) 
+
+comment this is a "and" statement;
+if (== (:$c) (:$d)) 
 {
     print `$a == $b`;
 }
 else 
 {
-    if (|| $c $d) 
+    comment comment "or" statement;
+    if (:$c;:$d) 
     {
         print `$a != $b`;
     }
@@ -36,8 +39,10 @@ else
     };
 };
 
-comment another way of doing ||;
-if (< $a $b;== $a $b;> $a $b) 
+comment another way of doing "or" statement;
+if (<  $a $b;
+    == $a $b;
+    >  $a $b) 
 {
     print `wtf2`;
 }
@@ -48,7 +53,6 @@ else
 
 set e 51;
 comment only the value of the last statement is returned, the rest are ignored because they are nil;
-set f (return $v;return $h;return $v;return $e); comment this is the hard way of doing it;
-print medieval way = $f;
-set f (valid $v $h $v $e); comment this is the easy way of doing it;
-print modern way = $f;
+comment : is a return statement just like return;
+set f (@$v;@$h;@$v;@$e);
+print f = $f;
