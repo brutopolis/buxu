@@ -2,69 +2,69 @@ help;
 set txt ([]);
 set txt.data ([]);
 
-set txt.new (? `return(
+set txt.new (lua.eval `return(
     function(name) 
         br.txt.data[name] = ""; 
     end)`);
 
-set txt.save (? `return(
+set txt.save (lua.eval `return(
     function(name) 
         br.utils.file.save.text(name .. ".txt", br.txt.data[name]); 
     end)`);
 
-set txt.load (? `return(
+set txt.load (lua.eval `return(
     function(name) 
         br.txt.data[name] = br.utils.file.load.text(name .. ".txt"); 
     end)`);
 
-set txt.concat (? `return(
+set txt.concat (lua.eval `return(
     function(name, text) 
         br.txt.data[name] = br.txt.data[name] .. text; 
     end)`);
 
-set txt.set (? `return(
+set txt.set (lua.eval `return(
     function(name, text) 
         br.txt.data[name] = text; 
     end)`);
 
-set txt.get (? `return(
+set txt.get (lua.eval `return(
     function(name) 
         return br.txt.data[name]; 
     end)`);
 
-set txt.clear (? `return(
+set txt.clear (lua.eval `return(
     function(name) 
         br.txt.data[name] = ""; 
     end)`);
 
-set txt.remove (? `return(
+set txt.remove (lua.eval `return(
     function(name) 
         br.txt.data[name] = nil; 
     end)`);
 
-set txt.exists (? `return(
+set txt.exists (lua.eval `return(
     function(name) 
         return br.txt.data[name] ~= nil; 
     end)`);
 
-set txt.size (? `return(
+set txt.size (lua.eval `return(
     function(name) 
         return #br.txt.data[name]; 
     end)`);
 
-set txt.print (? `return(
+set txt.print (lua.eval `return(
     function(name)
         print(br.txt.data[name]);
     end)`);
 
 set txt.char ([]);
 
-set txt.char.at (? `return(
+set txt.char.at (lua.eval `return(
     function(name, index)
         return string.sub(br.txt.data[name], index, index);
     end)`);
 
-set txt.char.push (? `return(
+set txt.char.push (lua.eval `return(
     function(name, char)
         if(type(char) == "number") then
             br.txt.data[name] = br.txt.data[name] .. string.char(char);
@@ -76,7 +76,7 @@ set txt.char.push (? `return(
         end
     end)`);
 
-set txt.char.set (? `return(
+set txt.char.set (lua.eval `return(
     function(name, index, char)
         if(type(char) == "number") then
             br.txt.data[name] = string.sub(br.txt.data[name], 1, index) .. string.char(char) .. string.sub(br.txt.data[name], index+1);
@@ -90,32 +90,32 @@ set txt.char.set (? `return(
 
 set txt.line ([]);
 
-set txt.line.push (? `return(
+set txt.line.push (lua.eval `return(
     function(name, text) 
         br.txt.data[name] = br.txt.data[name] .. "\n" .. text; 
     end)`);
 
-set txt.line.set (? `return(
+set txt.line.set (lua.eval `return(
     function(name, linenumber, text) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         lines[linenumber+1] = text; 
         br.txt.data[name] = table.concat(lines, "\n"); 
     end)`);
 
-set txt.line.get (? `return(
+set txt.line.get (lua.eval `return(
     function(name, linenumber) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         return lines[linenumber+1]; 
     end)`);
 
-set txt.line.remove (? `return(
+set txt.line.remove (lua.eval `return(
     function(name, linenumber) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         table.remove(lines, linenumber+1); 
         br.txt.data[name] = table.concat(lines, "\n"); 
     end)`);
 
-set txt.line.insert (? `return(
+set txt.line.insert (lua.eval `return(
     function(name, linenumber, text) 
         local lines = br.utils.string.split(br.txt.data[name], "\n"); 
         table.insert(lines, linenumber+1, text); 

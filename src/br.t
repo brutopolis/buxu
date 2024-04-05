@@ -9,7 +9,7 @@ local br =
     exports = {},
 
     -- other
-    comment = function()end,
+    ["//"] = function()end,
     utils = require("lib.luatils"),
     -- preprocessors
     -- preprocessors
@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.5a",
+        version = "0.2.6",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -34,11 +34,11 @@ local br =
                 nstr = br.utils.string.replace(nstr, "%}", "%} ")
                 nstr = br.utils.string.replace(nstr, "%{", " %{")
                 nstr = br.utils.string.replace(nstr, "%( ", "%(")
-                nstr = br.utils.string.replace(nstr, " %) ", "%)")
                 nstr = br.utils.string.replace(nstr, " %)", "%)")
                 nstr = br.utils.string.replace(nstr, "%(", " %(")
+                nstr = br.utils.string.replace3(nstr, "//", "// ")
                 
-                --if the first two chars ate " (" remove the space
+                --if the first two chars are " (" remove the space
                 if string.byte(nstr,1) == 32 and string.byte(nstr,2) == 40 then
                     nstr = string.sub(nstr, 2, #nstr);
                 end
@@ -204,7 +204,7 @@ br.vm.parse = function(src, isSentence)
     local splited = br.utils.string.split3(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
-        br.vm.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing line " .. i);
+        br.vm.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing command " .. i);
         br.vm.debugprint(br.utils.console.colorstring("[DEBUG CODE]", "cyan") .. ": " .. splited[i] .. br.utils.console.colorstring("\n[CODE END]", "cyan"));
         local splited_args = br.utils.string.split3(splited[i], " ");
         
@@ -212,67 +212,54 @@ br.vm.parse = function(src, isSentence)
         table.remove(splited_args, 1);
         --print( splited[i])
         if func == "" or func == nil or splited[i] == "" or splited[i] == "%s+" then
-            br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": empty line, skipping");
+            br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": empty command, skipping");
         else 
             -- first char is a variable or or a sentence it parse it as arg first, else, its a funcion name
             if string.byte(func,1) == 36 or string.byte(func,1) == 40 or string.byte(func,1) == 96 or string.byte(func,1) == 123 or (string.byte(func,1) > 47 and string.byte(func,1) < 58) or (string.byte(func,1) == 45 and (#func > 1 and string.byte(func,2) > 47 and string.byte(func,2) < 58)) then
                 func = br.vm.parsearg(func);
             end
-            
-            local args = br.vm.parseargs(splited_args);
-            local _function = type(func) == "function" and func or br.vm.recursiveget(func);
 
-            if _function and isSentence then
-                
-                -- command debbuger
-                br.vm.debugprint(func .. "{")
-                for k,v in pairs(splited_args) do
-                    br.vm.debugprint("    " .. k .. " =",v);
-                end
-                br.vm.debugprint("}");
-                
-                br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
-                
-                -- in a sentence the code execution stops on the first return it gets
-                local result = _function(unpack(args or {}));
-                if result then
-                    return result;
-                end
-            elseif _function then
-                
-                -- command debbuger
-                br.vm.debugprint(func .. "{")
-                for k,v in pairs(splited_args) do
-                    br.vm.debugprint("    " .. k .. " =",v);
-                end
-                br.vm.debugprint("}");
-
-                br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
-                _function(unpack(args or {}));
-            elseif br.exit then -- if on repl
-                br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
-                br.vm.debugprint(src);
-                br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
+            if func == "//" then
+                br.vm.debugprint(br.utils.console.colorstring("[DEBUG INFO]", "yellow") .. ": command is a commentary, skipping");
             else
-                --if first char is a parentesis and the last too
-                if string.byte(splited[i],1) == 40 and string.byte(splited[i],#splited[i]) == 41 then
-                    br.vm.debugprint(br.utils.console.colorstring("Warning", "yellow") .. " parsing the following line:");
-                    br.vm.debugprint(splited[i]);
-                    if _function then
-                        br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "yellow") .. ": function " .. func .. " not found, but the code seems to be enclosed in a sentence, so the execution was continued");
-                    else
-                        br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "yellow") .. ": unamed function not found, but the code seems to be enclosed in a sentence, so the execution was continued");
+                local args = br.vm.parseargs(splited_args);
+                local _function = type(func) == "function" and func or br.vm.recursiveget(func);
+
+                if _function and isSentence then
+                    
+                    -- command debbuger
+                    br.vm.debugprint(func .. "{")
+                    for k,v in pairs(splited_args) do
+                        br.vm.debugprint("    " .. k .. " =",v);
                     end
-                else -- if not
+                    br.vm.debugprint("}");
+                    
+                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": command " .. i .. " ok\n");
+                    
+                    -- in a sentence the code execution stops on the first return it gets
+                    local result = _function(unpack(args or {}));
+                    if result then
+                        return result;
+                    end
+                elseif _function then
+                    
+                    -- command debbuger
+                    br.vm.debugprint(func .. "{")
+                    for k,v in pairs(splited_args) do
+                        br.vm.debugprint("    " .. k .. " =",v);
+                    end
+                    br.vm.debugprint("}");
+
+                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": command " .. i .. " ok\n");
+                    _function(unpack(args or {}));
+                elseif br.exit then -- if on repl
                     br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
                     br.vm.debugprint(src);
-                    if type(_function) == "string" or type(_function) == "number" or type(_function) == "boolean" then
-                        br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
-                        error("function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
-                    else
-                        br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": unamed function not found, as code seems not to be enclosed in a sentence, the execution was stopped");
-                        print("unamed function not found, as code seems not to be enclosed in a sentence, the execution was stopped");
-                    end
+                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
+                else
+                    br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
+                    br.vm.debugprint(splited[i]);
+                    br.vm.debugprint("unamed function, ignoring command " .. i);
                 end
             end
         end
@@ -376,27 +363,27 @@ br.bruter.include = function(path)
     br.vm.parse(c);
 end
 
-br.bruter.includestring = function(str)
+br.bruter.eval = function(str)
     br.vm.parse(str);
 end
 
 
 
-br["terra"] = {};
+br["lua"] = {};
 
 -- loadstring (lua/terra)
-br["terra"].loadstring = function(str)
+br["lua"].eval = function(str)
     br.vm.debugprint(br.utils.console.colorstring("[DEBUG INFO]", "magenta") .. ": loading string: " .. str)
     return ((terralib.loadstring(str))());
 end
 
 -- loadfile (lua/terra)
-br["terra"].loadfile = function(path)
+br["lua"].include = function(path)
     return(terralib.loadfile(path)());
 end
 
 -- require lua/terra file
-br["terra"].require = function(path)
+br["lua"].require = function(path)
     return require(path);
 end
 
@@ -410,16 +397,9 @@ br.C.include = function(path)
 end
 
 -- include C string
-br.C.includestring = function(txt)
+br.C.eval = function(txt)
     return terralib.includecstring(txt);
 end
-
--- terra aliases
--- terra aliases
--- terra aliases
-br["?"] = br["terra"].loadstring;
-br["?file"] = br["terra"].loadfile;
-br["?require"] = br["terra"].require;
 
 -- setter
 -- setter
@@ -477,7 +457,12 @@ br.vm.setfrom = function(varname, funcname, ...)
     local args = {...};
     local result;
     if type(funcname) == "string" then
-        result = br.vm.recursiveget(funcname)(unpack(args or {}));
+        result = br.vm.recursiveget(funcname);
+        if type(result) == "function" then
+            result = result(unpack(args or {}));
+        else
+            print(br.utils.console.colorstring("[WARN]", "magenta") .. ": setfrom: " .. funcname .. " is not a function");
+        end
     elseif type(funcname) == "function" then
         result = funcname(unpack(args or {}));
     end
@@ -490,7 +475,6 @@ br.vm.fakesetfrom = function(funcname, ...)
     local result;
     if type(funcname) == "string" then
         result = br.vm.recursiveget(funcname);
-        --print(br.utils.console.colorstring("[DEBUG INFO]", "magenta") .. ": fakesetfrom: " .. funcname, result);
         if type(result) == "function" then
             result = result(unpack(args or {}));
         else

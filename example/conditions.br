@@ -9,7 +9,7 @@ if (< $a $b)
 }
 else 
 {
-    comment heh just showing that keynested strings can be sentence enclosed;
+    // heh just showing that keynested strings can be sentence enclosed;
     if (== $a $b) ((((({print `$a == $b`;})))))
     else 
     {
@@ -21,14 +21,14 @@ set c false;
 set d true;
 
 
-comment this is a "and" statement;
+// this is a "and" statement;
 if (== (:$c) (:$d)) 
 {
     print `$a == $b`;
 }
 else 
 {
-    comment comment "or" statement;
+    // "or" statement;
     if (:$c;:$d) 
     {
         print `$a != $b`;
@@ -39,7 +39,7 @@ else
     };
 };
 
-comment another way of doing "or" statement;
+// another way of doing "or" statement;
 if (<  $a $b;
     == $a $b;
     >  $a $b) 
@@ -52,7 +52,7 @@ else
 };
 
 set e 51;
-comment only the value of the last statement is returned, the rest are ignored because they are nil;
-comment : is a return statement just like return;
+// only the value of the last statement is returned, the rest are ignored because they are nil;
+// : is a return statement just like return;
 set f (:$v;:$h;:$v;:$e);
 print f = $f;

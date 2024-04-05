@@ -1,4 +1,4 @@
-comment defining a function;
+// defining a function;
 
 set b from [];
 
@@ -6,7 +6,7 @@ function b.strtest {str a b c}
 {
     set a 1;
     print $a;
-    return $str; comment not that this really matter as everything in bruter is global;
+    return $str; // not that returns really matter here, as everything in bruter is global, but there is a return statement;
 };
 
 set abc from function {a b c}
@@ -14,15 +14,21 @@ set abc from function {a b c}
     print `this is a function print` $a $b $c;
 };
 
-print ((function{num1 num2}{return (+ $num1 $num2);}) 5 5);
+print(
+    (function {num1 num2}
+        {
+            print 55555 ;
+            return (+ $num1 $num2);
+        }
+    ) 5 5);
 
 set b.abc $abc;
 
-? {br.b.abc()};
+lua.eval {br.b.abc()};
 help b;
 
 b.abc 55 44 11;
 
-comment print `sum 5 5 is` (sum 5 5);
+//print `sum 5 5 is` (sum 5 5);
 
 print (b.strtest `this is a string`);

@@ -1,9 +1,9 @@
-using txt; comment Load the txt library;
+using txt; // Load the txt library;
 
 txt.new test;
 txt.concat test `Hello, World! This is a test.`;
 txt.concat test `
-`; comment Add a new line;
+`; // Add a new line;
 txt.line.push test `This is a new line.`;
 
 set tlp $txt.line.push;
