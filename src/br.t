@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.5",
+        version = "0.2.5a",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -210,65 +210,69 @@ br.vm.parse = function(src, isSentence)
         
         local func = splited_args[1];
         table.remove(splited_args, 1);
-
-        -- first char is a variable or or a sentence it parse it as arg first, else, its a funcion name
-        if string.byte(func,1) == 36 or string.byte(func,1) == 40 or string.byte(func,1) == 96 or string.byte(func,1) == 123 or (string.byte(func,1) > 47 and string.byte(func,1) < 58) or (string.byte(func,1) == 45 and (#func > 1 and string.byte(func,2) > 47 and string.byte(func,2) < 58)) then
-            func = br.vm.parsearg(func);
-        end
-        
-        local args = br.vm.parseargs(splited_args);
-        local _function = type(func) == "function" and func or br.vm.recursiveget(func);
-
-        if _function and isSentence then
-            
-            -- command debbuger
-            br.vm.debugprint(func .. "{")
-            for k,v in pairs(splited_args) do
-                br.vm.debugprint("    " .. k .. " =",v);
+        --print( splited[i])
+        if func == "" or func == nil or splited[i] == "" or splited[i] == "%s+" then
+            br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": empty line, skipping");
+        else 
+            -- first char is a variable or or a sentence it parse it as arg first, else, its a funcion name
+            if string.byte(func,1) == 36 or string.byte(func,1) == 40 or string.byte(func,1) == 96 or string.byte(func,1) == 123 or (string.byte(func,1) > 47 and string.byte(func,1) < 58) or (string.byte(func,1) == 45 and (#func > 1 and string.byte(func,2) > 47 and string.byte(func,2) < 58)) then
+                func = br.vm.parsearg(func);
             end
-            br.vm.debugprint("}");
             
-            br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
-            
-            -- in a sentence the code execution stops on the first return it gets
-            local result = _function(unpack(args or {}));
-            if result then
-                return result;
-            end
-        elseif _function then
-            
-            -- command debbuger
-            br.vm.debugprint(func .. "{")
-            for k,v in pairs(splited_args) do
-                br.vm.debugprint("    " .. k .. " =",v);
-            end
-            br.vm.debugprint("}");
+            local args = br.vm.parseargs(splited_args);
+            local _function = type(func) == "function" and func or br.vm.recursiveget(func);
 
-            br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
-            _function(unpack(args or {}));
-        elseif br.exit then -- if on repl
-            br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
-            br.vm.debugprint(src);
-            br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
-        else
-            --if first char is a parentesis and the last too
-            if string.byte(splited[i],1) == 40 and string.byte(splited[i],#splited[i]) == 41 then
-                br.vm.debugprint(br.utils.console.colorstring("Warning", "yellow") .. " parsing the following line:");
-                br.vm.debugprint(splited[i]);
-                if _function then
-                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "yellow") .. ": function " .. func .. " not found, but the code seems to be enclosed in a sentence, so the execution was continued");
-                else
-                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "yellow") .. ": unamed function not found, but the code seems to be enclosed in a sentence, so the execution was continued");
+            if _function and isSentence then
+                
+                -- command debbuger
+                br.vm.debugprint(func .. "{")
+                for k,v in pairs(splited_args) do
+                    br.vm.debugprint("    " .. k .. " =",v);
                 end
-            else -- if not
+                br.vm.debugprint("}");
+                
+                br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
+                
+                -- in a sentence the code execution stops on the first return it gets
+                local result = _function(unpack(args or {}));
+                if result then
+                    return result;
+                end
+            elseif _function then
+                
+                -- command debbuger
+                br.vm.debugprint(func .. "{")
+                for k,v in pairs(splited_args) do
+                    br.vm.debugprint("    " .. k .. " =",v);
+                end
+                br.vm.debugprint("}");
+
+                br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": line " .. i .. " ok\n");
+                _function(unpack(args or {}));
+            elseif br.exit then -- if on repl
                 br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
                 br.vm.debugprint(src);
-                if type(_function) == "string" or type(_function) == "number" or type(_function) == "boolean" then
-                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
-                    error("function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
-                else
-                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": unamed function not found, as code seems not to be enclosed in a sentence, the execution was stopped");
-                    error("unamed function not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+                br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
+            else
+                --if first char is a parentesis and the last too
+                if string.byte(splited[i],1) == 40 and string.byte(splited[i],#splited[i]) == 41 then
+                    br.vm.debugprint(br.utils.console.colorstring("Warning", "yellow") .. " parsing the following line:");
+                    br.vm.debugprint(splited[i]);
+                    if _function then
+                        br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "yellow") .. ": function " .. func .. " not found, but the code seems to be enclosed in a sentence, so the execution was continued");
+                    else
+                        br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "yellow") .. ": unamed function not found, but the code seems to be enclosed in a sentence, so the execution was continued");
+                    end
+                else -- if not
+                    br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
+                    br.vm.debugprint(src);
+                    if type(_function) == "string" or type(_function) == "number" or type(_function) == "boolean" then
+                        br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+                        error("function " .. func .. " not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+                    else
+                        br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": unamed function not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+                        print("unamed function not found, as code seems not to be enclosed in a sentence, the execution was stopped");
+                    end
                 end
             end
         end
@@ -485,7 +489,13 @@ br.vm.fakesetfrom = function(funcname, ...)
     local args = {...};
     local result;
     if type(funcname) == "string" then
-        result = br.vm.recursiveget(funcname)(unpack(args or {}));
+        result = br.vm.recursiveget(funcname);
+        --print(br.utils.console.colorstring("[DEBUG INFO]", "magenta") .. ": fakesetfrom: " .. funcname, result);
+        if type(result) == "function" then
+            result = result(unpack(args or {}));
+        else
+            print(br.utils.console.colorstring("[WARN]", "magenta") .. ": fakesetfrom: " .. funcname .. " is not a function");
+        end
     elseif type(funcname) == "function" then
         result = funcname(unpack(args or {}));
     end
@@ -692,24 +702,6 @@ br["if"] = function(condition, codestr, _else, codestr2)
     end
 end
 
-br["&&"] = function(...)
-    for k,v in pairs({...}) do
-        if not v then
-            return false;
-        end
-    end
-    return true;
-end
-
-br["||"] = function(...)
-    for k,v in pairs({...}) do
-        if v then
-            return true;
-        end
-    end
-    return false;
-end
-
 br["!"] = function(value)
     return not value;
 end
@@ -785,15 +777,22 @@ br["for"] = function(...)
     end
 end
 
-br["function"] = function(name, argstr, codestr)
-    if codestr == nil then
-        argstr = name;
-        codestr = argstr;
-        name = nil;
+br["function"] = function(...)
+
+    local __args = {...};
+    local name, argstr, codestr;
+    
+    if #__args == 2 then
+        argstr = __args[1];
+        codestr = __args[2];
+    elseif #__args == 3 then
+        name = __args[1];
+        argstr = __args[2];
+        codestr = __args[3];
     end
     
     local args = br.utils.string.split2(argstr, " ");
-    
+
     local _func;
 
     if type(codestr) == "string" then
@@ -828,10 +827,9 @@ br["function"] = function(name, argstr, codestr)
 
     if name then
         br.set(name, result);
-    else 
+    else  -- this is note working because
         return result;
     end
-    
 end
 
 return br;

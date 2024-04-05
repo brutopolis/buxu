@@ -2,20 +2,27 @@ comment defining a function;
 
 set b from [];
 
-function b.strtest {str}
+function b.strtest {str a b c}
 {
     set a 1;
     print $a;
     return $str; comment not that this really matter as everything in bruter is global;
 };
 
-set b.abc (function {a b c}
+set abc from function {a b c}
 {
-    print this is a function print;
-});
+    print `this is a function print` $a $b $c;
+};
 
-b.abc;
+print ((function{num1 num2}{return (+ $num1 $num2);}) 5 5);
 
-help;
+set b.abc $abc;
+
+? {br.b.abc()};
+help b;
+
+b.abc 55 44 11;
+
+comment print `sum 5 5 is` (sum 5 5);
 
 print (b.strtest `this is a string`);
