@@ -1,7 +1,5 @@
 local array = {}
 
-array.unpack = unpack or table.unpack
-
 array.slice = function(arr, start, final)
     local sliced_array = {}
     for i = start, final do
@@ -64,19 +62,6 @@ array.random = function(start, fim, size)
     return result
 end
 
-array.clone = function(obj)
-    if type(obj) ~= "table" then
-      return obj
-    end
-  
-    local clone = {}
-    for key, value in pairs(obj) do
-      clone[key] = array.clone(value)
-    end
-  
-    return clone
-end
-
 array.minmax = function(arr)
     local min = arr[1]
     local max = arr[1]
@@ -101,45 +86,6 @@ array.sum = function(arr)
     return sum
 end
 
-array.map = function(arr, callback)
-    local result = {}
-    for i = 1, #arr do
-        result[i] = callback(arr[i], i)
-    end
-    return result
-end
-
-array.filter = function(arr, callback)
-    local result = {}
-    local names = {}
-    for k, v in pairs(arr) do
-        if callback(v, k) then
-            table.insert(result, v)
-            table.insert(names, k)
-        end
-    end
-    return result, names
-end
-
-array.reduce = function(arr, callback, initial)
-    local accumulator = initial
-    for i = 1, #arr do
-        accumulator = callback(accumulator, arr[i])
-    end
-    return accumulator
-end
-
-array.includes = function(arr, value)
-    if not arr then
-        return false
-    end
-    for k, v in pairs(arr) do
-        if (value == v) then
-            return true,k
-        end
-    end
-    return false
-end
 
 array.tostring = function(arr)
     local result = ''
@@ -147,30 +93,6 @@ array.tostring = function(arr)
         result = result .. ' ' .. v
     end
     return result
-end
-
-array.clear = function(arr)
-    local result = {}
-    local index = 1
-  
-    for i = 1, #arr do
-      if arr[i] ~= nil then
-        result[index] = arr[i]
-        index = index + 1
-      end
-    end
-  
-    return result
-end
-
-array.selfclear = function(arr)
-    local index = 1
-    for i = 1, #arr do
-      if arr[i] ~= nil then
-        arr[index] = arr[i]
-        index = index + 1
-      end
-    end
 end
 
 return array

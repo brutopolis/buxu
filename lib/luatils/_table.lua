@@ -94,6 +94,94 @@ _table.find = function(tbl, value)
     return nil  -- Return nil if the element is not found
 end
 
+_table.sort = function(_obj)
+    table.sort(_obj,function(a,b) 
+        if type(a) == "string" and type(b) == "string" then
+            return a < b;
+        elseif type(a) == "number" and type(b) == "number" then
+            return a < b;
+        end
+     end);
+end
 
+_table.unpack = unpack or table.unpack
+
+_table.clone = function(obj)
+    if type(obj) ~= "table" then
+      return obj
+    end
+  
+    local clone = {}
+    for key, value in pairs(obj) do
+      clone[key] = _table.clone(value)
+    end
+
+    return clone
+end
+
+_table.map = function(arr, callback)
+    local result = {}
+    for i = 1, #arr do
+        result[i] = callback(arr[i], i)
+    end
+    return result
+end
+
+_table.filter = function(arr, callback)
+    local result = {}
+    local names = {}
+    for k, v in pairs(arr) do
+        if callback(v, k) then
+            table.insert(result, v)
+            table.insert(names, k)
+        end
+    end
+    return result, names
+end
+
+_table.reduce = function(arr, callback, initial)
+    local accumulator = initial
+    for i = 1, #arr do
+        accumulator = callback(accumulator, arr[i])
+    end
+    return accumulator
+end
+
+_table.includes = function(arr, value)
+    if not arr then
+        return false
+    end
+    for k, v in pairs(arr) do
+        if (value == v) then
+            return true,k
+        end
+    end
+    return false
+end
+
+
+_table.clear = function(arr)
+    local result = {}
+    local index = 1
+  
+    for i = 1, #arr do
+      if arr[i] ~= nil then
+        result[index] = arr[i]
+        index = index + 1
+      end
+    end
+  
+    return result
+end
+
+_table.selfclear = function(arr)
+    local index = 1
+    for i = 1, #arr do
+      if arr[i] ~= nil then
+        arr[index] = arr[i]
+        index = index + 1
+      end
+    end
+end
 
 return _table

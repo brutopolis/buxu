@@ -19,7 +19,7 @@ br = require "br"
 -- parse the compiler/interpreter arguments
 -- parse the compiler/interpreter arguments
 -- parse the compiler/interpreter arguments
-if br.utils.array.includes(arg, "--debug") then
+if br.utils.table.includes(arg, "--debug") then
     br.vm.debug = true;
     local position = br.utils.table.find(arg, "--debug");
     print(br.utils.console.colorstring("[WARNING]", "magenta") .. ": Debug mode enabled");
@@ -29,7 +29,7 @@ end
 -- set the output path if specified
 -- set the output path if specified
 -- set the output path if specified
-if br.utils.array.includes(arg, "-o") or br.utils.array.includes(arg, "--output") then
+if br.utils.table.includes(arg, "-o") or br.utils.table.includes(arg, "--output") then
     local temp = br.utils.table.find(arg, "-o") or br.utils.table.find(arg, "--output")
     br.vm.outputpath = arg[temp + 1]
     table.remove(arg, temp)
@@ -39,10 +39,10 @@ end
 -- check for help and version flags
 -- check for help and version flags
 -- check for help and version flags
-if br.utils.array.includes(arg, "-v") or br.utils.array.includes(arg, "--version") then
+if br.utils.table.includes(arg, "-v") or br.utils.table.includes(arg, "--version") then
     print("bruter version " .. br.vm.version)
     os.exit(0)
-elseif br.utils.array.includes(arg, "--help") or br.utils.array.includes(arg,"-h") then
+elseif br.utils.table.includes(arg, "--help") or br.utils.table.includes(arg,"-h") then
     print("Usage: bruter <source file> [-o <output file>] [-h] [-v] [--help] [--version] [--debug]")
     print("Options:")
     print("  --help    Display this information")

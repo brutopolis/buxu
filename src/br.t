@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6",
+        version = "0.2.6a",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -120,7 +120,7 @@ end
 br["!="] = function(a,b) return a ~= b; end
 
 br["includes"] = function(a,b) 
-    return br.utils.array.includes(a,b); 
+    return br.utils.table.includes(a,b); 
 end
 
 br["exists"] = function(...)
@@ -137,13 +137,17 @@ end
 -- parse the arguments
 br.vm.parsearg = function(larg)
     local result = larg;
+
     if larg == nil or larg == "" then
         return nil;
     end
+
     -- if a variable, get it
     if string.byte(larg,1) == 36 then -- variable
         local name = br.utils.string.replace(larg, "%$", '');
+        name = br.vm.parsearg(name);
         result = br.vm.recursiveget(name);
+
     -- if a sentence enclose by parentesis, remove them and parse it
     elseif string.byte(larg,1) == 40 then -- sentence
         result = br.vm.parse(string.sub(larg, 2, #larg - 1),true);
@@ -156,11 +160,12 @@ br.vm.parsearg = function(larg)
     elseif (string.byte(larg,1) > 47 and string.byte(larg,1) < 58) or (string.byte(larg,1) == 45 and (#larg > 1 and string.byte(larg,2) > 47 and string.byte(larg,2) < 58)) then -- number
         result = tonumber(larg);
 
-
     elseif larg == "true" then
         result = true;
+
     elseif larg == "false" then
         result = false;
+
     elseif larg == "nil" then
         result = nil;
     end
@@ -207,10 +212,10 @@ br.vm.parse = function(src, isSentence)
         br.vm.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing command " .. i);
         br.vm.debugprint(br.utils.console.colorstring("[DEBUG CODE]", "cyan") .. ": " .. splited[i] .. br.utils.console.colorstring("\n[CODE END]", "cyan"));
         local splited_args = br.utils.string.split3(splited[i], " ");
-        
+
         local func = splited_args[1];
         table.remove(splited_args, 1);
-        --print( splited[i])
+
         if func == "" or func == nil or splited[i] == "" or splited[i] == "%s+" then
             br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": empty command, skipping");
         else 
@@ -409,16 +414,22 @@ br.vm.recursiveset = function(argname, value)
         br.temp = value; 
         local result_txt = "br";
         local splited = br.utils.string.split2(argname, ".");
-        if br.utils.array.includes(splited, "") then
+        if br.utils.table.includes(splited, "") then
             br[argname] = value;
             return;
         end
-
-        for i = 1, #splited - 1 do
-            result_txt = result_txt .. "[\"" .. splited[i] .. "\"]";
+        
+        for k,v in pairs(splited) do
+            splited[k] = tonumber(v) or splited[k];
+            if type(splited[k]) == "number" then
+                result_txt = result_txt .. "[" .. splited[k] .. "]";
+            else
+                result_txt = result_txt .. "[\"" .. splited[k] .. "\"]";
+            end
         end
         
-        result_txt = result_txt .. "[\"" .. splited[#splited] .. "\"] = br.temp";
+        result_txt = result_txt .. " = br.temp";
+
         terralib.loadstring(result_txt)();
         br.temp = nil;
     else
@@ -431,14 +442,18 @@ end
 -- getter
 br.vm.recursiveget = function(argname)
     if br.utils.string.includes(argname, ".") then
-            
         local result_txt = "return br";
         local splited = br.utils.string.split2(argname, ".");
-        if br.utils.array.includes(splited, "") then 
+        if br.utils.table.includes(splited, "") then 
             return br[argname];
         end
-        for i = 1, #splited do
-            result_txt = result_txt .. "[\"" .. splited[i] .. "\"]";
+        for k,v in pairs(splited) do
+            splited[k] = tonumber(v) or splited[k];
+            if type(splited[k]) == "number" then
+                result_txt = result_txt .. "[" .. splited[k] .. "]";
+            else
+                result_txt = result_txt .. "[\"" .. splited[k] .. "\"]";
+            end
         end
         local result = terralib.loadstring(result_txt)();
         return result;
@@ -535,8 +550,10 @@ end
 br.help = function(target)
 
     local organize = {tables = {}, functions = {}, numbers = {}, strings = {}, booleans = {}, userdata = {}, other = {}};
+    
     if type(target) == "string" then
         target = br.vm.recursiveget(target);
+
     elseif type(target) == "nil" then
         target = br;
     end
@@ -565,12 +582,10 @@ br.help = function(target)
                 color = "red";
                 table.insert(organize.userdata, k);
             end
-            
-            --print(br.utils.console.colorstring(k, color) .. "(" .. type(v) .. ")", v);
         end
         
         for k,v in pairs(organize) do
-            table.sort(v);
+            br.utils.table.sort(v);
         end
 
         if #organize.tables > 0 then
