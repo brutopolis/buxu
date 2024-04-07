@@ -1,2 +1,26 @@
 set mapSize 32;
 set map (utils.matrix.new $mapSize $mapSize 0);
+
+set player from [];
+set player.position from [];
+set player.position.x 0;
+set player.position.y 0;
+
+set player.status from [];
+set player.status.hp 100;
+set player.status.mp 100;
+set player.status.attack 10;
+set player.status.defense 5;
+set player.status.speed 5;
+
+set player.inventory from [];
+set player.equipment from [];
+
+set player.equipment.weapon from [];
+set player.equipment.helm from [];
+set player.equipment.chest from [];
+set player.equipment.legs from [];
+set player.equipment.boots from [];
+set player.equipment.gloves from [];
+set player.equipment.ring from [];
+set player.equipment.amulet from [];
