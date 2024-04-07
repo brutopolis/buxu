@@ -1,0 +1,2 @@
+set mapSize 32;
+set map (utils.matrix.new $mapSize $mapSize 0);

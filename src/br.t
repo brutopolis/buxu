@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6a",
+        version = "0.2.6b",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -420,7 +420,7 @@ br.vm.recursiveset = function(argname, value)
         end
         
         for k,v in pairs(splited) do
-            splited[k] = tonumber(v) or splited[k];
+            splited[k] = br.vm.parsearg(splited[k]);
             if type(splited[k]) == "number" then
                 result_txt = result_txt .. "[" .. splited[k] .. "]";
             else
@@ -448,7 +448,7 @@ br.vm.recursiveget = function(argname)
             return br[argname];
         end
         for k,v in pairs(splited) do
-            splited[k] = tonumber(v) or splited[k];
+            splited[k] = br.vm.parsearg(splited[k]);
             if type(splited[k]) == "number" then
                 result_txt = result_txt .. "[" .. splited[k] .. "]";
             else
@@ -539,8 +539,11 @@ end
 --string functions
 
 br.string = function(...)
-    local args = {...};
-    return table.concat(args, " ");
+    local str = "";
+    for i,v in pairs({...}) do
+        str = str .. v;
+    end
+    return str;
 end
 
 -- data list functions
