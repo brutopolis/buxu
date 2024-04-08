@@ -1,15 +1,54 @@
-set mapSize 32;
+set mapSize 16;
+
+set roomMinAmount 2;
+set roomMaxAmount 5;
+
+set roomMinSize 3;
+set roomMaxSize 6;
+
+set genRoom from function {x y w h}
+{
+
+};
+
+set vector2 from function {x y}
+{
+    return (object x $x y $y);
+};
+
 set map (utils.matrix.new $mapSize $mapSize 0);
 
-set player from [];
-set player.position from [];
-set player.position.x 0;
-set player.position.y 0;
+set Creature from function {name position} 
+{
+	return (object name $name hp 100 mp 100 attack 1 defense 1 speed 1 position $position);
+};
 
-set player.status from [];
-set player.status.hp 100;
-set player.status.mp 100;
-set player.status.attack 10;
-set player.status.defense 5;
-set player.status.speed 5;
+set player (Creature {Player} (vector2 1 1));
 
+lua.eval {br["rawprint"] = io.write;};
+
+set printmaptile from function {_map _x _y}
+{
+    lua.eval (string `io.write("" .. br._map[` $_y `][` $_x `]);`);
+};
+
+set printmap from function {_map _player}
+{
+    for {set y 1} {< $y $mapSize} {set y (+ $y 1)}
+    {
+        for {set x 1} {< $x $mapSize} {set x (+ $x 1)}
+        {
+            if (and (== $x $_player.position.x) (== $y $_player.position.y))
+            {
+                rawprint `@`;
+            }
+            else
+            {
+                printmaptile $map $x $y;
+            };
+        };
+        print ``;
+    }
+};
+
+printmap $map $player;

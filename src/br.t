@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6c",
+        version = "0.2.6d",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -108,15 +108,8 @@ br["<="] = function(a,b) return a <= b; end
 br[">"] = function(a,b) return a > b; end
 br[">="] = function(a,b) return a >= b; end
 
-br["=="] = function(...) 
-    local args = {...};
-    local result = args[1];
-    for i = 2, #args do
-        if result ~= args[i] then
-            return false;
-        end
-    end
-    return true;
+br["=="] = function(a, b)
+    return (a == b) and true or false;
 end
 
 br["!="] = function(a,b) return a ~= b; end
@@ -843,6 +836,10 @@ br["function"] = function(...)
     else  -- this is note working because
         return result;
     end
+end
+
+br["and"] = function(a,b)
+    return(a and b);
 end
 
 return br;
