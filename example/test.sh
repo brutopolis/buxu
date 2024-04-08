@@ -11,7 +11,7 @@ bruter -o test compiling.br --debug # Compile the compiling.br file into a execu
 #bruter
 bruter --debug conditions.br
 #bruter
-bruter --debug types.br
+bruter types.br
 #bruter
 bruter --debug fakemodules.br
 #bruter

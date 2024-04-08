@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6b",
+        version = "0.2.6c",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -38,12 +38,14 @@ local br =
                 nstr = br.utils.string.replace(nstr, "%(", " %(")
                 nstr = br.utils.string.replace3(nstr, "//", "// ")
                 
+                
                 --if the first two chars are " (" remove the space
                 if string.byte(nstr,1) == 32 and string.byte(nstr,2) == 40 then
                     nstr = string.sub(nstr, 2, #nstr);
                 end
                 
-                nstr = br.utils.string.replace3(nstr, "\n", "")
+                nstr = br.utils.string.replace3(nstr, "\t", " ")
+                nstr = br.utils.string.replace3(nstr, "\n", " ")
                 nstr = br.utils.string.replace3(nstr, "  ", "")
 
 
@@ -526,6 +528,15 @@ br.set = function(varname, value, ...)
     end
 end
 
+br.object = function(...)
+    local args = {...};
+    local obj = {};
+    for i = 1, #args, 2 do
+        obj[args[i]] = args[i + 1];
+    end
+    return obj;
+end
+
 br["return"] = function(value)
     return value;
 end
@@ -729,7 +740,7 @@ br["for"] = function(...)
     local increment = args[3];
     local codestr = args[4];
     local other = args[5];
-    local _in;
+
     if type(condition == "string") and condition == "in" then
         local target = increment;
         for k,v in pairs(target) do
