@@ -20,9 +20,23 @@ br = require "br"
 -- parse the compiler/interpreter arguments
 -- parse the compiler/interpreter arguments
 if br.utils.table.includes(arg, "--debug") then
-    br.vm.debug = true;
+    br.vm.debug = 1;
     local position = br.utils.table.find(arg, "--debug");
     print(br.utils.console.colorstring("[WARNING]", "magenta") .. ": Debug mode enabled");
+    table.remove(arg, position);
+end
+
+if br.utils.table.includes(arg, "--debug-code") then
+    br.vm.debug = 2;
+    local position = br.utils.table.find(arg, "--debug-code");
+    print(br.utils.console.colorstring("[WARNING]", "magenta") .. ": Debug code mode enabled");
+    table.remove(arg, position);
+end
+
+if br.utils.table.includes(arg, "--debug-command") then
+    br.vm.debug = 3;
+    local position = br.utils.table.find(arg, "--debug-command");
+    print(br.utils.console.colorstring("[WARNING]", "magenta") .. ": Debug table mode enabled");
     table.remove(arg, position);
 end
 
@@ -52,6 +66,8 @@ elseif br.utils.table.includes(arg, "--help") or br.utils.table.includes(arg,"-h
     print("  --output  Output the compiled file to the specified path")
     print("  -o        Output the compiled file to the specified path")
     print("  --debug   Enable debug mode")
+    print("  --debug-code   Enable debug code mode")
+    print("  --debug-command   Enable debug command mode")
     os.exit(0)
 elseif arg[1] == nil then
     --print("No source file specified, starting in REPL instead...")

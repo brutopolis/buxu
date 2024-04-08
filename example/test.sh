@@ -1,7 +1,7 @@
 #bruter --debug test.br -o test # Compile the test.br file into a executable
 #bruter -c test.br -o test.br.o # Compile the test.br as a static library
 #bruter -c test.br -o test.br.so # Compile the test.br as a shared library
-bruter txt.br --debug # just interpret the txt.br file
+bruter txt.br # just interpret the txt.br file
 #bruter
 bruter scopes.br --debug # interpret the scopes.br file in debug mode
 #bruter
@@ -15,5 +15,7 @@ bruter types.br
 #bruter
 bruter --debug fakemodules.br
 #bruter
-bruter --debug loop.br
+bruter --debug-command loop.br
+#bruter
+bruter --debug-code roguelike.br
 ./test # Run the test executable

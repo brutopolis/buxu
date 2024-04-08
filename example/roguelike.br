@@ -1,54 +1,87 @@
 set mapSize 16;
+set random $utils.random;
 
-set roomMinAmount 2;
-set roomMaxAmount 5;
-
-set roomMinSize 3;
-set roomMaxSize 6;
-
-set genRoom from function {x y w h}
+set Vector2 from function {x y}
 {
-
+    return (obj x $x y $y);
 };
 
-set vector2 from function {x y}
-{
-    return (object x $x y $y);
-};
+lua.eval {br.push = function(t, v) table.insert(t, v) end};
 
-set map (utils.matrix.new $mapSize $mapSize 0);
+set roomMaxSize (Vector2 32 32);
+set roomAmount 16;
 
 set Creature from function {name position} 
 {
-	return (object name $name hp 100 mp 100 attack 1 defense 1 speed 1 position $position);
+    set tempcreature (obj name $name position $position);
+    set tempcreature.globalPosition 1;
+    set tempcreature.needs (obj hunger 100 thirst 100 health 100);
+    return $tempcreature;
 };
 
-set player (Creature {Player} (vector2 1 1));
+set Room from function {w h}
+{
+    set temproom (obj w $w h $h);
+    set temproom.map (utils.matrix.new $w $h 1);
+    
+    set iy (random 2 (- $h 2));
+    set oy (random 2 (- $h 1));
+    
+    set tmpw (- $w 1);
+    
+    // input door;
+    set temproom.map.$tmpw.$iy 5;
+    
+    
+    // output door;
+    set temproom.map.1.$oy 3
+
+    //help temproom.map;
+
+    for {set i 2} {< $i (- $w 1)} {set i (+ $i 1)}
+    {
+        for {set j 2} {< $j (- $h 1)} {set j (+ $j 1)}
+        {
+            set temproom.map.$i.$j 0;
+        };
+    };
+
+
+    return $temproom;
+};
+
+set genRooms from function {}
+{
+    set rooms from [];
+    while {< (len $rooms) $roomAmount}
+    {
+        push $rooms (Room (random 5 $roomMaxSize.x) (random 5 $roomMaxSize.y ));
+    };
+    return $rooms;
+};
+        
+set world from [];
+set world.rooms (genRooms);
+set world.creatures ([]);
+
+push $world.creatures (Creature `player` (Vector2 2 2));
 
 lua.eval {br["rawprint"] = io.write;};
 
 set printmaptile from function {_map _x _y}
 {
-    lua.eval (string `io.write("" .. br._map[` $_y `][` $_x `]);`);
+    lua.eval (string `io.write("" .. br._map[` $_x `][` $_y `]);`);
 };
 
-set printmap from function {_map _player}
+for k v in $world.rooms
 {
-    for {set y 1} {< $y $mapSize} {set y (+ $y 1)}
+    for {set i 1} {< $i ($v.w)} {set i (+ $i 1)}
     {
-        for {set x 1} {< $x $mapSize} {set x (+ $x 1)}
+        for {set j 1} {< $j ($v.h)} {set j (+ $j 1)}
         {
-            if (and (== $x $_player.position.x) (== $y $_player.position.y))
-            {
-                rawprint `@`;
-            }
-            else
-            {
-                printmaptile $map $x $y;
-            };
+            printmaptile $v.map $i $j;
         };
         print ``;
-    }
+    };
 };
 
-printmap $map $player;

@@ -17,14 +17,14 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6d",
+        version = "0.2.6e",
         -- source and outputs
         source = "",
         outputpath = "",
         -- current path
         bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
         -- debug mode
-        debug = false,
+        debug = 0,
         funcdata = {},
         preprocessors = 
         {
@@ -188,7 +188,7 @@ br.vm.preprocess = function(_src)
 end
 
 br.vm.debugprint = function(...)
-    if br.vm.debug then
+    if br.vm.debug > 0 then
         print(...);
     end
 end
@@ -204,8 +204,10 @@ br.vm.parse = function(src, isSentence)
     local splited = br.utils.string.split3(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
-        br.vm.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing command " .. i);
-        br.vm.debugprint(br.utils.console.colorstring("[DEBUG CODE]", "cyan") .. ": " .. splited[i] .. br.utils.console.colorstring("\n[CODE END]", "cyan"));
+        --br.vm.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing command " .. i);
+        if br.vm.debug >= 1 and br.vm.debug < 3 then
+            br.vm.debugprint(br.utils.console.colorstring("[DEBUG CODE]", "cyan") .. ": " .. splited[i]);
+        end
         local splited_args = br.utils.string.split3(splited[i], " ");
 
         local func = splited_args[1];
@@ -220,7 +222,7 @@ br.vm.parse = function(src, isSentence)
             end
 
             if func == "//" then
-                br.vm.debugprint(br.utils.console.colorstring("[DEBUG INFO]", "yellow") .. ": command is a commentary, skipping");
+                --br.vm.debugprint(br.utils.console.colorstring("[DEBUG INFO]", "yellow") .. ": command is a commentary, skipping");
             else
                 local args = br.vm.parseargs(splited_args);
                 local _function = type(func) == "function" and func or br.vm.recursiveget(func);
@@ -228,37 +230,43 @@ br.vm.parse = function(src, isSentence)
                 if _function and isSentence then
                     
                     -- command debbuger
-                    br.vm.debugprint(func .. "{")
-                    for k,v in pairs(splited_args) do
-                        br.vm.debugprint("    " .. k .. " =",v);
+                    if br.vm.debug == 3 or br.vm.debug == 1 then
+                        br.vm.debugprint(func .. "{")
+                        for k,v in pairs(splited_args) do
+                            br.vm.debugprint("    " .. k .. " =",v);
+                        end
+                        br.vm.debugprint("}");
                     end
-                    br.vm.debugprint("}");
-                    
-                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": command " .. i .. " ok\n");
                     
                     -- in a sentence the code execution stops on the first return it gets
                     local result = _function(unpack(args or {}));
+                    
                     if result then
                         return result;
                     end
-                elseif _function then
-                    
-                    -- command debbuger
-                    br.vm.debugprint(func .. "{")
-                    for k,v in pairs(splited_args) do
-                        br.vm.debugprint("    " .. k .. " =",v);
-                    end
-                    br.vm.debugprint("}");
 
-                    br.vm.debugprint(br.utils.console.colorstring("[DEBUG DONE]", "green") .. ": command " .. i .. " ok\n");
+                elseif _function then
+                    if br.vm.debug == 3 or br.vm.debug == 1 then
+                        -- command debbuger
+                        br.vm.debugprint(func .. "{")
+                        for k,v in pairs(splited_args) do
+                            br.vm.debugprint("    " .. k .. " =",v);
+                        end
+                        br.vm.debugprint("}");
+                    end
+                    
                     _function(unpack(args or {}));
                 elseif br.exit then -- if on repl
-                    br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
-                    br.vm.debugprint(src);
+                    if br.vm.debug >= 1 and br.vm.debug < 3 then
+                        br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
+                        br.vm.debugprint(src);
+                    end
                     br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
                 else
-                    br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
-                    br.vm.debugprint(splited[i]);
+                    if br.vm.debug >= 1 and br.vm.debug < 3 then
+                        br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
+                        br.vm.debugprint(splited[i]);
+                    end
                     br.vm.debugprint("unamed function, ignoring command " .. i);
                 end
             end
@@ -521,7 +529,7 @@ br.set = function(varname, value, ...)
     end
 end
 
-br.object = function(...)
+br.obj = function(...)
     local args = {...};
     local obj = {};
     for i = 1, #args, 2 do
@@ -661,22 +669,6 @@ br.print = print;
 
 br["[]"] = function(...)
     return {...};
-end
-
-br["debug"] = function(wish)
-    if wish then
-        br.vm.debug = true;
-    elseif not wish then
-        br.vm.debug = false;
-    else 
-        br.vm.debug = not br.vm.debug;
-    end
-
-    if br.vm.debug then
-        print(br.utils.console.colorstring("[DEBUG INFO]", "green") .. ": debug mode enabled");
-    else
-        print(br.utils.console.colorstring("[DEBUG INFO]", "red") .. ": debug mode disabled");
-    end
 end
 
 br["if"] = function(condition, codestr, _else, codestr2)
@@ -840,6 +832,14 @@ end
 
 br["and"] = function(a,b)
     return(a and b);
+end
+
+br["or"] = function(a,b)
+    return(a or b);
+end
+
+br["len"] = function(a)
+    return #a;
 end
 
 return br;
