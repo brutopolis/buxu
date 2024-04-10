@@ -1,3 +1,12 @@
+if not terralib then
+    --package.terrapath = package.path;
+    terralib = {
+        loadfile = loadfile,
+        loadstring = loadstring,
+
+    }
+end
+
 -- gets the bruter path
 -- gets the bruter path
 -- gets the bruter path
@@ -8,8 +17,13 @@ bruterPath = string.sub(bruterPath, 1, #bruterPath-4);
 -- add the path to the terralib
 -- add the path to the terralib
 -- add the path to the terralib
-package.terrapath = package.terrapath .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
-package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
+if package.terrapath then
+    package.terrapath = package.terrapath .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
+    package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
+else 
+    package.path = package.path .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
+    package.path = package.path .. bruterPath .. "?.lua;" .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
+end
 
 -- brutevm
 -- brutevm
@@ -88,6 +102,6 @@ br.vm.parse(br.vm.source);
 -- save the output if specified
 -- save the output if specified
 -- save the output if specified
-if br.vm.outputpath ~= "" then
+if br.vm.outputpath ~= "" and terralib.saveobj then
     terralib.saveobj(br.vm.outputpath, br.exports, nil, nil, true);
 end

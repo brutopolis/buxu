@@ -39,7 +39,7 @@ function encoder.decrypt(encryptedMessage, key)
         table.insert(decryptedBuffer, decryptedValue)
     end
 
-    return string.char(unpack(decryptedBuffer))
+    return string.char((unpack or table.unpack)(decryptedBuffer))
 end
 
 return encoder;

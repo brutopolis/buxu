@@ -59,7 +59,7 @@ util.time = function(func, ...)
         func, name = func[1], func[2]
     end
     local tclock = os.clock()
-    local result = func(util.array.unpack({...}))
+    local result = func(util.table.unpack({...}))
     tclock = os.clock() - tclock
     print(name .. ": " .. tclock .. " seconds")
     return result, tclock
@@ -231,7 +231,7 @@ util.repeater = function(plist, func, args, time, _type)
       for i,v in ipairs(plist) do
          if v.type == 1 then
              if v.clockstart + v.time < os.time() then 
-               v.func(util.array.unpack(v.args))
+               v.func(util.table.unpack(v.args))
                plist[i] = nil
                util.array.selfclear(plist)
                
@@ -243,7 +243,7 @@ util.repeater = function(plist, func, args, time, _type)
                util.array.selfclear(plist)
                return plist
             end
-            v.func(util.array.unpack(v.args))
+            v.func(util.table.unpack(v.args))
           end
       end
   else

@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6e",
+        version = "0.2.6f",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -239,7 +239,7 @@ br.vm.parse = function(src, isSentence)
                     end
                     
                     -- in a sentence the code execution stops on the first return it gets
-                    local result = _function(unpack(args or {}));
+                    local result = _function(br.utils.table.unpack(args or {}));
                     
                     if result then
                         return result;
@@ -255,7 +255,7 @@ br.vm.parse = function(src, isSentence)
                         br.vm.debugprint("}");
                     end
                     
-                    _function(unpack(args or {}));
+                    _function(br.utils.table.unpack(args or {}));
                 elseif br.exit then -- if on repl
                     if br.vm.debug >= 1 and br.vm.debug < 3 then
                         br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
@@ -282,7 +282,7 @@ br.repl = function()
     end
     -- version, only print if not in a breakpoint repl
     if not br.vm._inBreakpoint then
-        print("bruter v" .. br.vm.version);
+        print("bruter v" .. br.vm.version.. "(" .. ((terralib.version and ("Terra " .. terralib.version .. " + " .. _VERSION)) or _VERSION) .. ")");
     end
     
     local line = "";
@@ -477,12 +477,12 @@ br.vm.setfrom = function(varname, funcname, ...)
     if type(funcname) == "string" then
         result = br.vm.recursiveget(funcname);
         if type(result) == "function" then
-            result = result(unpack(args or {}));
+            result = result(br.utils.table.unpack(args or {}));
         else
             print(br.utils.console.colorstring("[WARN]", "magenta") .. ": setfrom: " .. funcname .. " is not a function");
         end
     elseif type(funcname) == "function" then
-        result = funcname(unpack(args or {}));
+        result = funcname(br.utils.table.unpack(args or {}));
     end
     br.vm.recursiveset(varname, result);
     return result;
@@ -494,12 +494,12 @@ br.vm.fakesetfrom = function(funcname, ...)
     if type(funcname) == "string" then
         result = br.vm.recursiveget(funcname);
         if type(result) == "function" then
-            result = result(unpack(args or {}));
+            result = result(br.utils.table.unpack(args or {}));
         else
             print(br.utils.console.colorstring("[WARN]", "magenta") .. ": fakesetfrom: " .. funcname .. " is not a function");
         end
     elseif type(funcname) == "function" then
-        result = funcname(unpack(args or {}));
+        result = funcname(br.utils.table.unpack(args or {}));
     end
     return result;
 end
@@ -801,7 +801,7 @@ br["function"] = function(...)
     
     elseif type(codestr) == "function" then
         _func = function(...)
-            return codestr(unpack({...}));
+            return codestr(br.utils.table.unpack({...}));
         end;
     end
 
