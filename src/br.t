@@ -17,7 +17,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6f",
+        version = "0.2.6g",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -282,7 +282,7 @@ br.repl = function()
     end
     -- version, only print if not in a breakpoint repl
     if not br.vm._inBreakpoint then
-        print("bruter v" .. br.vm.version.. "(" .. ((terralib.version and ("Terra " .. terralib.version .. " + " .. _VERSION)) or _VERSION) .. ")");
+        print("bruter v" .. br.vm.version.. " (" .. ((terralib.version and ("Terra " .. terralib.version .. " + " .. _VERSION)) or _VERSION) .. ")");
     end
     
     local line = "";
