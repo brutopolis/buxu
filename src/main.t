@@ -30,6 +30,10 @@ end
 -- brutevm
 br = require "br"
 
+if not package.terrapath then
+    br.C = nil; -- removes the C api if running on lua
+end
+
 -- parse the compiler/interpreter arguments
 -- parse the compiler/interpreter arguments
 -- parse the compiler/interpreter arguments
