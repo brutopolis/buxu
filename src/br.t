@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6o",
+        version = "0.2.6p",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -40,6 +40,31 @@ local br =
 }
 
 br.this = br;
+
+br.vm.safe = function()
+    local function safeMessage()
+        print(br.utils.console.colorstring("[SAFE MODE]", "green") .. ": this is safe bruter!");
+    end
+    br.lua.eval = safeMessage;
+    br.lua.include = safeMessage;
+    br.lua.require = safeMessage;
+    if br.C then
+        br.C.include = safeMessage;
+        br.C.eval = safeMessage;
+    end
+    br.global = nil;
+    br.this = nil;
+    br.using = safeMessage;
+    br.bruter.eval = safeMessage;
+    br.bruter.include = safeMessage;
+    for k,v in pairs(br.utils.file.load) do
+        br.utils.file.load[k] = safeMessage;
+    end
+    br.utils.file.exist = safeMessage;
+    br.utils.file.check = safeMessage;
+    br.utils.load = safeMessage;
+    print(br.utils.console.colorstring("[SAFE MODE]","green") .. ": bruter safe mode enabled!");
+end
 
 br.vm.preprocessors.sugar = function(source)
     local nstr = br.utils.string.replace3(source, "%s+"," ")
