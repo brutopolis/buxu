@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.j",
+        version = "0.2.6j",
         -- source and outputs
         source = "",
         outputpath = "",
