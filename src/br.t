@@ -13,6 +13,7 @@ end
 
 local br = 
 {
+    global = _G,
     -- compiled objects exports
     exports = {},
 
@@ -25,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6i",
+        version = "0.2.j",
         -- source and outputs
         source = "",
         outputpath = "",
