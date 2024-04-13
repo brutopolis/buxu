@@ -11,6 +11,6 @@ else
 end
 
 
-br = dofile(bruterPath .. "/src/br.t");
+local br = dofile(bruterPath .. "/src/br.t");
 
 return br

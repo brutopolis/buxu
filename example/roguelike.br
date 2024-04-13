@@ -1,6 +1,8 @@
 set mapSize 16;
 set random $utils.random;
 
+set global.br $this;
+
 set Vector2 from function {x y}
 {
     return (obj x $x y $y);

@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6j",
+        version = "0.2.6k",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -35,45 +35,46 @@ local br =
         -- debug mode
         debug = 0,
         funcdata = {},
-        preprocessors = 
-        {
-            sugar = function(source)
-                local nstr = br.utils.string.replace3(source, "%s+"," ")
-                
-                nstr = br.utils.string.replace(nstr, "%}", "%} ")
-                nstr = br.utils.string.replace(nstr, "%{", " %{")
-                nstr = br.utils.string.replace(nstr, "%( ", "%(")
-                nstr = br.utils.string.replace(nstr, " %)", "%)")
-                nstr = br.utils.string.replace(nstr, "%(", " %(")
-                nstr = br.utils.string.replace3(nstr, "//", "// ")
-                
-                
-                --if the first two chars are " (" remove the space
-                if string.byte(nstr,1) == 32 and string.byte(nstr,2) == 40 then
-                    nstr = string.sub(nstr, 2, #nstr);
-                end
-                
-                nstr = br.utils.string.replace3(nstr, "\t", " ")
-                nstr = br.utils.string.replace3(nstr, "\n", " ")
-                nstr = br.utils.string.replace3(nstr, "  ", "")
-
-
-                nstr = br.utils.string.replace3(nstr, ":$", ": $")
-                
-                nstr = br.utils.string.replace(nstr, "; ", ";")
-                nstr = br.utils.string.replace(nstr, " ;", ";")
-                nstr = br.utils.string.replace(nstr, " ; ", ";")
-                
-                -- if last char not ; add it
-                if string.byte(nstr, #nstr) ~= 59 then
-                    nstr = nstr .. ";";
-                end
-                
-                return nstr
-            end
-        }
+        preprocessors = {}
     },
 }
+
+br.this = br;
+
+br.vm.preprocessors.sugar = function(source)
+    local nstr = br.utils.string.replace3(source, "%s+"," ")
+    
+    nstr = br.utils.string.replace(nstr, "%}", "%} ")
+    nstr = br.utils.string.replace(nstr, "%{", " %{")
+    nstr = br.utils.string.replace(nstr, "%( ", "%(")
+    nstr = br.utils.string.replace(nstr, " %)", "%)")
+    nstr = br.utils.string.replace(nstr, "%(", " %(")
+    nstr = br.utils.string.replace3(nstr, "//", "// ")
+    
+    
+    --if the first two chars are " (" remove the space
+    if string.byte(nstr,1) == 32 and string.byte(nstr,2) == 40 then
+        nstr = string.sub(nstr, 2, #nstr);
+    end
+    
+    nstr = br.utils.string.replace3(nstr, "\t", " ")
+    nstr = br.utils.string.replace3(nstr, "\n", " ")
+    nstr = br.utils.string.replace3(nstr, "  ", "")
+
+
+    nstr = br.utils.string.replace3(nstr, ":$", ": $")
+    
+    nstr = br.utils.string.replace(nstr, "; ", ";")
+    nstr = br.utils.string.replace(nstr, " ;", ";")
+    nstr = br.utils.string.replace(nstr, " ; ", ";")
+    
+    -- if last char not ; add it
+    if string.byte(nstr, #nstr) ~= 59 then
+        nstr = nstr .. ";";
+    end
+    
+    return nstr
+end
 
 -- math and logic functions
 -- math and logic functions
@@ -427,56 +428,58 @@ end
 -- setter
 br.vm.recursiveset = function(argname, value)
     if br.utils.string.includes(argname, ".") then
-        br.temp = value; 
-        local result_txt = "br";
-        local splited = br.utils.string.split2(argname, ".");
-        if br.utils.table.includes(splited, "") then
-            br[argname] = value;
-            return;
-        end
+        local result = br
+        local splited = br.utils.string.split2(argname, ".")
+        local lastKey = table.remove(splited)  -- Remove the last key to set its value later
         
-        for k,v in pairs(splited) do
-            splited[k] = br.vm.parsearg(splited[k]);
-            if type(splited[k]) == "number" then
-                result_txt = result_txt .. "[" .. splited[k] .. "]";
-            else
-                result_txt = result_txt .. "[\"" .. splited[k] .. "\"]";
+        for i, key in ipairs(splited) do
+            if key ~= "" then
+                key = br.vm.parsearg(key)
+                if result[key] == nil then
+                    -- Create nested table if key doesn't exist
+                    result[key] = {}
+                elseif type(result[key]) ~= "table" then
+                    -- If a non-table value exists in the middle of the path, cannot proceed
+                    return
+                end
+                result = result[key]
             end
         end
         
-        result_txt = result_txt .. " = br.temp";
-
-        terralib.loadstring(result_txt)();
-        br.temp = nil;
+        -- Set the value of the last key
+        result[br.vm.parsearg(lastKey)] = value
+        
+        return
     else
-        br[argname] = value;
+        br[argname] = value
     end
 end
+
 
 -- getter
 -- getter
 -- getter
 br.vm.recursiveget = function(argname)
     if br.utils.string.includes(argname, ".") then
-        local result_txt = "return br";
-        local splited = br.utils.string.split2(argname, ".");
-        if br.utils.table.includes(splited, "") then 
-            return br[argname];
-        end
-        for k,v in pairs(splited) do
-            splited[k] = br.vm.parsearg(splited[k]);
-            if type(splited[k]) == "number" then
-                result_txt = result_txt .. "[" .. splited[k] .. "]";
-            else
-                result_txt = result_txt .. "[\"" .. splited[k] .. "\"]";
+        local result = br
+        local splited = br.utils.string.split2(argname, ".")
+        
+        for _, key in ipairs(splited) do
+            if key ~= "" then
+                key = br.vm.parsearg(key);
+                result = result[key]
+                if result == nil then
+                    return nil  -- Key not found, return nil
+                end
             end
         end
-        local result = terralib.loadstring(result_txt)();
-        return result;
+        
+        return result
     else
-        return br[argname];
+        return br[argname]
     end
 end
+
 
 -- set
 br.vm.setvalue = function(varname, value, ...)

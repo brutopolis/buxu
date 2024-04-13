@@ -1,8 +1,6 @@
-dofile("../bruter.lua");
+local br = dofile("../bruter.lua"); -- using dofile because using require() would require the path to be in package.path
 
--- br is a global variable, so you can use it without return
--- local br = require("bruter"); also works(if in upper path)
--- br = require("bruter"); -- also works
--- require("bruter"); -- also works
-
+-- local br = require("bruter"); also works
+br.vm.debug = 1;
+br.bruter.include("../example/roguelike.br");
 br.repl();
