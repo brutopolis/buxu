@@ -283,22 +283,25 @@ br.vm.parse = function(src, isSentence)
     end
 end
 
-br.repl = function()
+br.repl = function(message, inputFunction)
+    message = message or "bruter v" .. br.vm.version.. " (" .. ((terralib.version and ("Terra " .. terralib.version .. " + " .. _VERSION)) or _VERSION) .. ")";
+    inputFunction = inputFunction or io.read;
+    
     --exit function
     br.vm._replExit = false;
+    
     br.exit = function()
         br.vm._replExit = true;
     end
-    -- version, only print if not in a breakpoint repl
-    if not br.vm._inBreakpoint then
-        print("bruter v" .. br.vm.version.. " (" .. ((terralib.version and ("Terra " .. terralib.version .. " + " .. _VERSION)) or _VERSION) .. ")");
-    end
     
+    -- version, only print if not in a breakpoint repl
+    print(message);
+
     local line = "";
     local count = 0;
     while not br.vm._replExit do
         io.write("br> ");
-        local buffer = io.read();
+        local buffer = inputFunction();
         local clearbuffer = br.utils.string.replace(buffer, "%s+", "");
         local ok = true;
 
@@ -325,19 +328,20 @@ br.repl = function()
     end
 end
 
-br.breakpoint = function()
+br.breakpoint = function(inputFunction)
     if not br.vm.debug then
         print(br.utils.console.colorstring("[WARNING]", "red") .. ": a breakpoint been ignored because debug mode is not enabled.");
         return;
     end
     br.vm._inBreakpoint = true;
-    print(br.utils.console.colorstring("[BREAKPOINT]", "red") .. ": entering breakpoint repl, type 'exit' to continue");
-    br.repl();
+
+    br.repl(br.utils.console.colorstring("[BREAKPOINT]", "red") .. ": entering breakpoint repl, type 'exit' to continue", inputFunction);
     if br.vm.debug then
         print(br.utils.console.colorstring("[BREAKPOINT DONE]", "green") .. ": continuing execution");
     else
         print("\n" .. br.utils.console.colorstring("[BREAKPOINT DONE]", "yellow") .. ": continuing execution, but debug mode is not enabled anymore, so breakpoints will be ignored.\n");
     end
+
     br.vm._inBreakpoint = false;
 end
 
