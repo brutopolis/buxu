@@ -15,7 +15,7 @@ bruter types.br
 #bruter
 bruter --debug fakemodules.br
 #bruter
-bruter --debug-command loop.br
+bruter --debug loop.br
 #bruter
-bruter --debug-code roguelike.br
+bruter --debug roguelike.br
 ./test # Run the test executable

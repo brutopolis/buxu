@@ -26,14 +26,14 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6k",
+        version = "0.2.6l",
         -- source and outputs
         source = "",
         outputpath = "",
         -- current path
         bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
         -- debug mode
-        debug = 0,
+        debug = false,
         funcdata = {},
         preprocessors = {}
     },
@@ -198,7 +198,7 @@ br.vm.preprocess = function(_src)
 end
 
 br.vm.debugprint = function(...)
-    if br.vm.debug > 0 then
+    if br.vm.debug then
         print(...);
     end
 end
@@ -214,10 +214,7 @@ br.vm.parse = function(src, isSentence)
     local splited = br.utils.string.split3(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
-        --br.vm.debugprint("\n" .. br.utils.console.colorstring("[DEBUG LINE]", "cyan") .. ": parsing command " .. i);
-        if br.vm.debug >= 1 and br.vm.debug < 3 then
-            br.vm.debugprint(br.utils.console.colorstring("[DEBUG CODE]", "cyan") .. ": " .. splited[i]);
-        end
+        br.vm.debugprint(br.utils.console.colorstring("[DEBUG CODE]", "cyan") .. ": " .. splited[i]);
         local splited_args = br.utils.string.split3(splited[i], " ");
 
         local func = splited_args[1];
@@ -240,7 +237,7 @@ br.vm.parse = function(src, isSentence)
                 if _function and isSentence then
                     
                     -- command debbuger
-                    if br.vm.debug == 3 or br.vm.debug == 1 then
+                    if br.vm.debug then
                         br.vm.debugprint(func .. "{")
                         for k,v in pairs(splited_args) do
                             br.vm.debugprint("    " .. k .. " =",v);
@@ -256,7 +253,7 @@ br.vm.parse = function(src, isSentence)
                     end
 
                 elseif _function then
-                    if br.vm.debug == 3 or br.vm.debug == 1 then
+                    if br.vm.debug then
                         -- command debbuger
                         br.vm.debugprint(func .. "{")
                         for k,v in pairs(splited_args) do
@@ -267,13 +264,13 @@ br.vm.parse = function(src, isSentence)
                     
                     _function(br.utils.table.unpack(args or {}));
                 elseif br.exit then -- if on repl
-                    if br.vm.debug >= 1 and br.vm.debug < 3 then
+                    if br.vm.debug then
                         br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
                         br.vm.debugprint(src);
                     end
                     br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
                 else
-                    if br.vm.debug >= 1 and br.vm.debug < 3 then
+                    if br.vm.debug then
                         br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
                         br.vm.debugprint(splited[i]);
                     end
@@ -351,8 +348,10 @@ end
 -- module functions
 
 -- export
-br.export = function(name, as)
-    if as then
+br.export = function(name, as, other)
+    if as == "as" then
+        br.exports[other] = br[name];
+    elseif as then
         br.exports[as] = br[name];
     else
         br.exports[name] = br[name];

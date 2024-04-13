@@ -25,23 +25,9 @@ br = require "br"
 -- parse the compiler/interpreter arguments
 -- parse the compiler/interpreter arguments
 if br.utils.table.includes(arg, "--debug") then
-    br.vm.debug = 1;
+    br.vm.debug = true;
     local position = br.utils.table.find(arg, "--debug");
     print(br.utils.console.colorstring("[WARNING]", "magenta") .. ": Debug mode enabled");
-    table.remove(arg, position);
-end
-
-if br.utils.table.includes(arg, "--debug-code") then
-    br.vm.debug = 2;
-    local position = br.utils.table.find(arg, "--debug-code");
-    print(br.utils.console.colorstring("[WARNING]", "magenta") .. ": Debug code mode enabled");
-    table.remove(arg, position);
-end
-
-if br.utils.table.includes(arg, "--debug-command") then
-    br.vm.debug = 3;
-    local position = br.utils.table.find(arg, "--debug-command");
-    print(br.utils.console.colorstring("[WARNING]", "magenta") .. ": Debug table mode enabled");
     table.remove(arg, position);
 end
 
