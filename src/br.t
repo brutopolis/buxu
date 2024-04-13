@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6l",
+        version = "0.2.6m",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -82,32 +82,9 @@ end
 
 br.math = {};
 
-br["+"] = function(...)
-	local args = {...};
-	local result = args[1];
-	for i = 2, #args do
-		result = result + args[i];
-	end
-	return result;
-end
-
-br["-"] = function(...)
-	local args = {...};
-	local result = args[1];
-	for i = 2, #args do
-		result = result - args[i];
-	end
-	return result;
-end
-
-br["*"] = function(...)
-	local args = {...};
-	local result = args[1];
-	for i = 2, #args do
-		result = result * args[i];
-	end
-	return result;
-end
+br["+"] = function(a,b) return a + b; end
+br["-"] = function(a,b) return a - b; end
+br["*"] = function(a,b) return a * b; end
 
 br["/"] = function(a,b) return a / b; end
 br["^"] = function(a,b) return a ^ b; end
