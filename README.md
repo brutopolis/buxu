@@ -3,24 +3,16 @@
 
 ## Description
 
-Bruter is a metaprogramable script language that in extremely simple to parse and interpret, it also can compile Terra and C;
-
-
-A "Lua-only"(lua-based instead terra-based) support is planned for cases when compiling is not needed and/or low disk space and such, but not implemented yet, currently bruter only works on top of terralang.
-
-
-Thanks to Terralang, bruter does fully support Lua and Terra, and also supports most of C features.
-(make sure to install terra and add it to your PATH before using bruter)
-
+Bruter is a metaprogramable console language that in extremely simple to interpret, it can run using Lua or Terra, it can also be loaded as a module;
 
 *`UNDER HEAVY DEVELOPMENT` - api should change a lot*
 
+Lua(5.1+) and Terra compatible;
 
 ## Table of Contents
 
 - [Types](#types)
 - [Usage](#usage)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Operators and such
@@ -87,8 +79,6 @@ enclosed sentences are executed in order:
 
 ## Libraries
 
-bruter by default does not work with modules, bruter libraries are just scripts that are interpreted real-time, so you can create your own libraries by creating a script that defines functions and variables, and then include it in your main script, bruter libraries have access to all variables and functions in the main script and vice-versa, use with caution, as this does not use any cache at all, it will re-interpret the library every time it is called.
-
 bruter libraries can be loaded by the `using` command like so:
 
     using library_name;
@@ -115,4 +105,4 @@ lua and terra packages are handled with loadfile not require, so they are not ca
 
 ## License
 
-[WORK IN PROGRESS]
+not licensed at all, do whatever you want with it, i just ask you to give me the proper credits if you use it in your project :)
