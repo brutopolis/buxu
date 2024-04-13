@@ -2,5 +2,5 @@ local br = dofile("../bruter.lua"); -- using dofile because using require() woul
 
 -- local br = require("bruter"); also works
 br.vm.debug = 1;
-br.bruter.include("../example/roguelike.br");
+br.bruter.include("roguelike.br");
 br.repl();
