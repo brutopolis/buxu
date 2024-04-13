@@ -3,6 +3,14 @@
 -- bruter module
 local _bruterPath = debug.getinfo(1).source;
 
+if not terralib then
+    --package.terrapath = package.path;
+    terralib = {
+        loadfile = loadfile,
+        loadstring = loadstring,
+    }
+end
+
 local br = 
 {
     -- compiled objects exports
@@ -17,7 +25,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.6h",
+        version = "0.2.6i",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -840,6 +848,11 @@ end
 
 br["len"] = function(a)
     return #a;
+end
+
+if not package.terrapath then
+    br.C = nil; -- removes the C api if running on lua
+    br.exports = nil;
 end
 
 return br;
