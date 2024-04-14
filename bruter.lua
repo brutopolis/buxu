@@ -1,7 +1,5 @@
 local bruterPath = debug.getinfo(1).source:match("@?(.*/)");
 
---remove the "src/"
-bruterPath = string.sub(bruterPath, 1, #bruterPath-4);
 -- if already not in the path add it
 if (package.terrapath and not (string.find(package.terrapath, bruterPath .. "lib/?/?.t", 1, true))) or (not (string.find(package.path, bruterPath .. "lib/?/?.t", 1, true))) then
     if package.terrapath then
@@ -17,6 +15,6 @@ if (package.terrapath and not (string.find(package.terrapath, bruterPath .. "lib
     end
 end
 
-local br = dofile(bruterPath .. "/src/br.t");
+local br = require("br");
 
 return br
