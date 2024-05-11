@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.7a",
+        version = "0.2.7b",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -189,6 +189,22 @@ br.vm.parseargs = function(args)
     return newargs;
 end
 
+br.vm.parseargsoptimized = function(args)
+    local newargs = {args = br.utils.table.clone(args), func = nil, variables = {}};
+    
+    for i = 1, #args do
+        if br.utils.string.includes(args[i], "$") and not br.utils.string.includes(args[i], "(") then
+            newargs.args[i] = nil;
+            table.insert(newargs.variables, {name = br.utils.string.replace3(args[i], "%$", ''), index = i});
+            --print("amendobobo   ")
+        else
+            newargs.args[i] = br.vm.parsearg(args[i]);
+            --print(args[i], newargs.args[i]);
+        end
+    end
+    return newargs;
+end
+
 -- preprocess the source
 -- preprocess the source
 -- preprocess the source
@@ -280,6 +296,61 @@ br.vm.parse = function(src, isSentence)
                     br.vm.debugprint("unamed function, ignoring command " .. i);
                 end
             end
+        end
+    end
+end
+
+br.vm.runoptimized = function(opt)
+    for k,v in pairs(opt.variables) do
+        opt.args[v.index] = br.vm.recursiveget(br.utils.string.replace(v.name,"%$",""));
+        --print(v.name, opt.args[v.index]);
+    end
+    
+    local result = opt.func(br.utils.table.unpack(opt.args or {}));
+    --print(opt.name,result);
+    return result;
+end
+
+-- like parse but creates a optimized object to be run
+br.vm.optimize = function(command, isSentence)
+    command = br.vm.preprocess(command);
+    --if last char is ; remove it
+    if string.byte(command, #command) == 59 then
+        command = string.sub(command, 1, #command - 1);
+    end
+    br.vm.debugprint(br.utils.console.colorstring("[DEBUG CODE]", "cyan") .. ": " .. command);
+    --print(command);
+    local splited_args = br.utils.string.split3(command, " ");
+    local func = table.remove(splited_args, 1);
+
+    if func == "" or func == nil or command == "" or command == "%s+" then
+        br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": empty command, skipping");
+    else 
+        -- first char is a variable or a sentence it parse it as arg first, else, its a funcion name
+        if string.byte(func,1) == 36 or string.byte(func,1) == 40 or string.byte(func,1) == 96 or string.byte(func,1) == 123 or (string.byte(func,1) > 47 and string.byte(func,1) < 58) or (string.byte(func,1) == 45 and (#func > 1 and string.byte(func,2) > 47 and string.byte(func,2) < 58)) then
+            func = br.vm.parsearg(func);
+        end
+
+        local opt = br.vm.parseargsoptimized(splited_args);
+
+        opt.name = func;
+        local _function = type(func) == "function" and func or br.vm.recursiveget(func);
+
+        if _function then
+            opt.func = _function;
+            return opt;
+        elseif br.exit then -- if on repl
+            if br.vm.debug then
+                br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
+                br.vm.debugprint(src);
+            end
+            br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
+        else
+            if br.vm.debug then
+                br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
+                br.vm.debugprint(command);
+            end
+            br.vm.debugprint("unamed function, ignoring command " .. i);
         end
     end
 end
@@ -489,6 +560,32 @@ br.vm.recursiveget = function(argname)
     end
 end
 
+-- recursive get the upper object and the key
+br.vm.recursivegetref = function(argname)
+    if br.utils.string.includes(argname, ".") then
+        local result = br
+        local splited = br.utils.string.split2(argname, ".")
+        local lastKey = table.remove(splited)  -- Remove the last key to set its value later
+        
+        for i, key in ipairs(splited) do
+            if key ~= "" then
+                key = br.vm.parsearg(key)
+                if result[key] == nil then
+                    -- Create nested table if key doesn't exist
+                    result[key] = {}
+                elseif type(result[key]) ~= "table" then
+                    -- If a non-table value exists in the middle of the path, cannot proceed
+                    return
+                end
+                result = result[key]
+            end
+        end
+        
+        return result, br.vm.parsearg(lastKey)
+    else
+        return br, argname
+    end
+end
 
 -- set
 br.vm.setvalue = function(varname, value, ...)
@@ -731,19 +828,33 @@ end
 
 br["while"] = function(condition, codestr)
     --print (condition, br.vm.parse(condition))
-    local _cond = br.vm.parse(condition, true);
+    local condfunc;
+    local codefunc;
     
-    while _cond do
-        if type(codestr) == "string" then
-            br.vm.parse(codestr, true);
-        elseif type(codestr) == "function" then
-            codestr();
+    if type(condition) == "string" then
+        condfunc = function()
+            return br.vm.parse(condition, true);
         end
-        _cond = br.vm.parse(condition, true);
+    elseif type(condition) == "function" then
+        condfunc = condition;
+    else
+        error("invalid condition");
+    end
+
+    if type(codestr) == "string" then
+        codefunc = function() return     br.vm.parse(codestr, true); end
+    elseif type(codestr) == "function" then
+        codefunc = codestr;
+    else
+        error("invalid code");
+    end
+
+    while condfunc() do
+        codefunc();
     end
 end
 
-br["for"] = function(...)
+br["each"] = function(...)
     local args = {...};
     local init = args[1];
     local condition = args[2];
@@ -775,6 +886,14 @@ br["for"] = function(...)
         end
         return;
     end
+end
+
+br["for"] = function(...)
+    local args = {...};
+    local init = args[1];
+    local condition = args[2];
+    local increment = args[3];
+    local codestr = args[4];
     
     if type(init) == "string" then
         br.vm.parse(init, true);
@@ -782,7 +901,12 @@ br["for"] = function(...)
         init();
     end
 
-    local _cond = br.vm.parse(condition, true);
+    local optcond = br.vm.optimize(condition, true);
+
+    local _cond = br.vm.runoptimized(optcond);
+
+    
+
     while _cond do
         if type(codestr) == "string" then
             br.vm.parse(codestr, true);
@@ -796,7 +920,7 @@ br["for"] = function(...)
             increment();
         end
 
-        _cond = br.vm.parse(condition, true);
+        _cond = br.vm.runoptimized(optcond);
     end
 end
 
