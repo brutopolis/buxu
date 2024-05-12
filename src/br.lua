@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.7b",
+        version = "0.2.7c",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -36,6 +36,7 @@ local br =
         debug = false,
         funcdata = {},
         preprocessors = {},
+        cache = {},
         oneliner = false
     },
 }
@@ -226,13 +227,35 @@ end
 -- parse the source file
 -- parse the source file
 br.vm.parse = function(src, isSentence)
+    
+    if br.vm.cache[src] then
+        if isSentence then
+            return br.vm.runoptimized(br.vm.cache[src]);
+        else
+            br.vm.runoptimized(br.vm.cache[src]);
+            return;
+        end
+    elseif not br.utils.string.includes(src, [[(]]) and not br.utils.string.includes(src, [[;]]) then
+        br.vm.cache[src] = br.vm.optimize(src);
+        if isSentence then
+            return br.vm.runoptimized(br.vm.cache[src]);
+        else
+            br.vm.runoptimized(br.vm.cache[src]);
+            return;
+        end
+    end
+
     if isSentence then 
         src = "vm.fakeset " .. src;
     end
     src = br.vm.preprocess(src);
+
+
     local splited = br.utils.string.split3(src, ";");
     local func = "";
     for i = 1, #splited - 1 do
+        
+
         br.vm.debugprint(br.utils.console.colorstring("[DEBUG CODE]", "cyan") .. ": " .. splited[i]);
         local splited_args = br.utils.string.split3(splited[i], " ");
 
@@ -297,6 +320,7 @@ br.vm.parse = function(src, isSentence)
                 end
             end
         end
+        ::forend::
     end
 end
 
@@ -312,7 +336,7 @@ br.vm.runoptimized = function(opt)
 end
 
 -- like parse but creates a optimized object to be run
-br.vm.optimize = function(command, isSentence)
+br.vm.optimize = function(command)
     command = br.vm.preprocess(command);
     --if last char is ; remove it
     if string.byte(command, #command) == 59 then
@@ -339,18 +363,6 @@ br.vm.optimize = function(command, isSentence)
         if _function then
             opt.func = _function;
             return opt;
-        elseif br.exit then -- if on repl
-            if br.vm.debug then
-                br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
-                br.vm.debugprint(src);
-            end
-            br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
-        else
-            if br.vm.debug then
-                br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
-                br.vm.debugprint(command);
-            end
-            br.vm.debugprint("unamed function, ignoring command " .. i);
         end
     end
 end
@@ -755,7 +767,6 @@ br.help = function(target)
                 else
                     print(br.utils.console.colorstring(v, "yellow"), target[v]);  
                 end
-                --print(br.utils.console.colorstring(v, "yellow"), target[v]);  
             end
         end
 
@@ -901,9 +912,7 @@ br["for"] = function(...)
         init();
     end
 
-    local optcond = br.vm.optimize(condition, true);
-
-    local _cond = br.vm.runoptimized(optcond);
+    local _cond = br.vm.parse(condition, true);
 
     
 
@@ -920,7 +929,7 @@ br["for"] = function(...)
             increment();
         end
 
-        _cond = br.vm.runoptimized(optcond);
+        _cond = br.vm.parse(condition, true);
     end
 end
 
