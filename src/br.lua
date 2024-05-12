@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.7d",
+        version = "0.2.7e",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -942,21 +942,25 @@ br["for"] = function(...)
     end
 
     local _cond = br.vm.parse(condition, true);
+    local _code;
+    local _incr;
 
-    
+    if type(codestr) == "string" then
+        _code = codestr;
+        codestr = function() br.vm.parse(_code, true) end;
+    elseif type(codestr) == "function" then
+    end
+
+    if type(increment) == "string" then
+        _incr = increment;
+        increment = function() br.vm.parse(_incr, true) end;
+    elseif type(increment) == "function" then
+    end
 
     while _cond do
-        if type(codestr) == "string" then
-            br.vm.parse(codestr, true);
-        elseif type(codestr) == "function" then
-            codestr();
-        end
-
-        if type(increment) == "string" then
-            br.vm.parse(increment, true);
-        elseif type(increment) == "function" then
-            increment();
-        end
+        
+        codestr();
+        increment();
 
         _cond = br.vm.parse(condition, true);
     end
