@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.7e",
+        version = "0.2.7f",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -1033,11 +1033,20 @@ br["len"] = function(a)
     return #a;
 end
 
-br["shortcut"] = function(name, ...)
-    local cmd = table.concat({...}, " ");
-    br[name] = function()
-        br.vm.parse(cmd);
-    end;
+br["shortcut"] = function(name, funcname, ...)
+    local args = {...};
+
+    local func = br.vm.recursiveget(funcname);
+
+    if #args > 0 then
+        br[name] = function()
+            return func(br.utils.table.unpack(args));
+        end;
+    else
+        br[name] = function()
+            return func(funcname)();
+        end;
+    end
 end
 
 if not package.terrapath then
