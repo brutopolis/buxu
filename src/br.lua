@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.7g",
+        version = "0.2.7h",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -198,7 +198,8 @@ br.vm.parseargsoptimized = function(args)
     for i = 1, #args do
         if br.utils.string.includes(args[i], "$") and not br.utils.string.includes(args[i], "(") then
             newargs.args[i] = nil;
-            table.insert(newargs.variables, {name = br.utils.string.replace3(args[i], "%$", ''), index = i});
+            local ref, name = br.vm.recursivegetref(br.utils.string.replace(args[i], "%$", ''));
+            table.insert(newargs.variables, {name = name, ref = ref, index = i});
             --print("amendobobo   ")
         else
             newargs.args[i] = br.vm.parsearg(args[i]);
@@ -355,8 +356,11 @@ br.vm.runoptimized = function(opt)
         br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": empty command, skipping");
         return;
     end
+
     for k,v in pairs(opt.variables) do
-        opt.args[v.index] = br.vm.recursiveget(br.utils.string.replace(v.name,"%$",""));
+        --br.help(v)
+        --print(v.name, v.ref);
+        opt.args[v.index] = v.ref[v.name];
         --print(v.name, opt.args[v.index]);
     end
     
@@ -605,6 +609,7 @@ end
 -- recursive get the upper object and the key
 br.vm.recursivegetref = function(argname)
     if br.utils.string.includes(argname, ".") then
+        
         local result = br
         local splited = br.utils.string.split2(argname, ".")
         local lastKey = table.remove(splited)  -- Remove the last key to set its value later
@@ -625,6 +630,7 @@ br.vm.recursivegetref = function(argname)
         
         return result, br.vm.parsearg(lastKey)
     else
+        
         return br, argname
     end
 end
