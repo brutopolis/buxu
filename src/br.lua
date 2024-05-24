@@ -26,12 +26,12 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.7h",
+        version = "0.2.8",
         -- source and outputs
         source = "",
         outputpath = "",
         -- current path
-        bruterpath = string.sub(_bruterPath, 2, #_bruterPath-8),
+        bruterpath = string.sub(_bruterPath, 2, #_bruterPath-17),
         -- debug mode
         debug = false,
         funcdata = {},
@@ -341,9 +341,9 @@ br.vm.parse = function(src, isSentence)
             else
                 br.vm.runoptimized(br.vm.cache[splited[i]]);
             end
+        else
+            result = br.vm.parsecmd(splited[i], isSentence);
         end
-
-        result = br.vm.parsecmd(splited[i], isSentence);
 
         if result then
             return result;
@@ -486,7 +486,6 @@ br.export = function(name, as, other)
 end
 
 br.using = function(name)
-    -- new 
     if br.utils.file.exist(br.vm.bruterpath .. "libr/" .. name .. "/" .. name .. ".br") then
         br.bruter.include(br.vm.bruterpath .. "libr/" .. name .. "/" .. name .. ".br");
     elseif br.utils.file.exist(br.vm.bruterpath .. "libr/" .. name .. "/" .. name .. ".lua") then
