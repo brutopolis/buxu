@@ -53,6 +53,6 @@ else
 
 set e 51;
 // only the value of the last statement is returned, the rest are ignored because they are nil;
-// : is a return statement just like return;
-set f (: $v;: $h;: $v;: $e);
+
+set f (return $v;return $h;return $v;return $e);
 print f = $f;

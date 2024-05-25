@@ -1,0 +1,6 @@
+set `&&` $and;
+set `||` $or;
+set `!` $not;
+set `and` nil;
+set `or` nil;
+set `not` nil;

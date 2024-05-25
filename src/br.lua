@@ -27,7 +27,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.9a",
+        version = "0.2.9b",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -72,14 +72,11 @@ br["/"] = function(a,b) return a / b; end
 br["^"] = function(a,b) return a ^ b; end
 br["%"] = function(a,b) return a % b; end
 
-br["&&"] = function(a,b) return a and b; end
 br["and"] = function(a,b) return a and b; end
 
-br["||"] = function(a,b) return a or b; end
 br["or"] = function(a,b) return a or b; end
 
-br["!"] = function(a) return not a; end
-
+br["not"] = function(a) return not a; end
 
 br["<"] = function(a,b) return a < b; end
 br["<="] = function(a,b) return a <= b; end
@@ -90,6 +87,7 @@ br["=="] = function(a, b)
     return (a == b) and true or false;
 end
 
+-- attention: not ~= but !=
 br["!="] = function(a,b) return a ~= b; end
 
 br["includes"] = function(a,b) 
@@ -655,10 +653,6 @@ br["return"] = function(value)
     return value;
 end
 
-br[":"] = function(value)
-    return value;
-end
-
 --string functions
 --string functions
 --string functions
@@ -972,7 +966,7 @@ br["len"] = function(a)
 end
 
 -- arrow function 
-br["@"] = function(funcname, ...)
+br["shortcut"] = function(funcname, ...)
     local args = {...};
     local func = br.vm.recursiveget(funcname);
     return function()

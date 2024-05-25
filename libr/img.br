@@ -208,7 +208,7 @@ set , (lua.eval {
 , 1 128 170 set;
 , 1 128 171 obj;
 , 1 128 172 return;
-, 1 128 173 :;
+// , 1 128 173 :; // removed;
 , 1 128 174 string;
 , 1 128 175 help;
 , 1 128 176 print;
