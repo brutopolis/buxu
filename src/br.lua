@@ -27,7 +27,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.9",
+        version = "0.2.9a",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -979,8 +979,5 @@ br["@"] = function(funcname, ...)
         return func(br.utils.table.unpack(args));
     end
 end
-
--- default function
-br["@@"] = br["function"];
 
 return br;
