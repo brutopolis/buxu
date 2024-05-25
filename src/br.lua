@@ -27,7 +27,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.9b",
+        version = "0.2.9c",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -202,7 +202,7 @@ br.vm.parsecmd = function(cmd, isSentence)
                 
                 -- command debbuger
                 if br.vm.debug then
-                    br.vm.debugprint(func .. "{")
+                    br.vm.debugprint(func, "{")
                     for k,v in pairs(splited_args) do
                         br.vm.debugprint("    " .. k .. " =",v);
                     end
@@ -219,7 +219,7 @@ br.vm.parsecmd = function(cmd, isSentence)
             elseif _function then
                 if br.vm.debug then
                     -- command debbuger
-                    br.vm.debugprint(func .. "{")
+                    br.vm.debugprint(func, "{")
                     for k,v in pairs(splited_args) do
                         br.vm.debugprint("    " .. k .. " =",v);
                     end
@@ -232,7 +232,7 @@ br.vm.parsecmd = function(cmd, isSentence)
                     br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
                     br.vm.debugprint(src);
                 end
-                br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function " .. func .. " not found\n");
+                br.vm.debugprint(br.utils.console.colorstring("[DEBUG FAIL]", "red") .. ": function ", func , " not found\n");
             else
                 if br.vm.debug then
                     br.vm.debugprint(br.utils.console.colorstring("Error", "red") .. " parsing the following code:");
@@ -375,19 +375,6 @@ br.repl = function(message, inputFunction)
         
         if not br.vm.oneliner then 
             local ok = true;
-            if br.utils.string.includes(buffer, "`") then
-                for i = 1, #buffer do
-                    if buffer:sub(i, i) == "`" then
-                        count = count + 1;
-                    end
-                end
-    
-                if count % 2 ~= 0 then
-                    ok = false;
-                else
-                    count = 0;
-                end
-            end
     
             if string.byte(clearbuffer,#clearbuffer) == 59 and ok then
                 br.vm.parse(line .. buffer);
@@ -918,6 +905,8 @@ br["function"] = function(...)
         name = __args[1];
         argstr = __args[2];
         codestr = __args[3];
+    elseif #__args == 1 then
+        codestr = __args[1];
     end
     
     local args = br.utils.string.split2(argstr, " ");
@@ -966,11 +955,10 @@ br["len"] = function(a)
 end
 
 -- arrow function 
-br["shortcut"] = function(funcname, ...)
+br["shortcut"] = function(...)
     local args = {...};
-    local func = br.vm.recursiveget(funcname);
     return function()
-        return func(br.utils.table.unpack(args));
+        return br.vm.parse(table.concat(args, " "), true);
     end
 end
 

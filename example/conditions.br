@@ -5,15 +5,15 @@ set b 5;
 
 if (< $a $b) 
 {
-    print `$a > $b`;
+    print {$a > $b};
 }
 else 
 {
     // heh just showing that keynested strings can be sentence enclosed;
-    if (== $a $b) ((((({print `$a == $b`;})))))
+    if (== $a $b) ((((({print {$a == $b};})))))
     else 
     {
-        print `$a < $b`;
+        print {$a < $b};
     };
 };
 
@@ -24,18 +24,18 @@ set d true;
 // this is a "and" statement;
 if (== $c $d) 
 {
-    print `$a == $b`;
+    print {$a == $b};
 }
 else 
 {
     // "or" statement;
     if (return $c;return $d) 
     {
-        print `$a != $b`;
+        print {$a != $b};
     }
     else 
     {
-        print `wtf`;
+        print {wtf};
     };
 };
 
@@ -44,11 +44,11 @@ if (<  $a $b;
     == $a $b;
     >  $a $b) 
 {
-    print `wtf2`;
+    print {wtf2};
 }
 else 
 {
-    print `wtf3`;
+    print {wtf3};
 };
 
 set e 51;

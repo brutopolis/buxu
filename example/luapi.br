@@ -1,9 +1,9 @@
 using luapi;
 
-set test (lua.eval `return terra() 
+set test (lua.eval {return terra() 
     var sess = br.luapi();
     sess:eval("print('Hello from Lua!')");
     sess:close();
-end`);
+end});
 
 test;

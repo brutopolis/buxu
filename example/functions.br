@@ -11,10 +11,10 @@ function b.strtest {str a b c}
 
 set abc from function {a b c}
 {
-    print `this is a function print` $a $b $c;
+    print {this is a function print} $a $b $c;
 };
 
-print(
+print (
     (function {num1 num2}
         {
             print 55555 ;
@@ -29,4 +29,5 @@ help b;
 
 b.abc 55 44 11;
 
-print (b.strtest `this is a string`);
+// that is a special type of function that doesnt need args;
+(shortcut print (b.strtest {this is a string}));

@@ -103,6 +103,16 @@ you can also use the `require` function:
     
 lua and terra packages are handled with loadfile not require, so they are not cached and can be reloaded, this is done to behave like brute packages, but you can use require to load lua and terra packages.
 
+## Reserved keywords
+
+- ` `` ` = string delimiter
+- `{}` = string delimiter
+- `$` = variable indicator
+- `.` = recursion
+- `;` = end of command
+
+- any other word or symbol can be redefined as your will
+
 ## License
 
 not licensed at all, do whatever you want with it, i just ask you to give me the proper credits if you use it in your project :)
