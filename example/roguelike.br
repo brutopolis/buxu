@@ -1,7 +1,7 @@
 set mapSize 16;
 set random $utils.random;
 
-set global.br $this;
+set lua.global.br $bruter.global;
 
 set Vector2 from function {x y}
 {

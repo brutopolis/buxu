@@ -14,7 +14,6 @@ end
 
 local br = 
 {
-    global = _G,
     -- compiled objects exports
     exports = {},
 
@@ -27,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.9c",
+        version = "0.2.9d",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -41,8 +40,6 @@ local br =
         oneliner = false
     },
 }
-
-br.this = br;
 
 br.vm.preprocessors.sugar = function(source)
     local nstr = br.utils.string.replace3(source, "%s*"," ")
@@ -432,6 +429,8 @@ end
 
 br.bruter = {};
 
+br.bruter.global = br;
+
 br.bruter.include = function(path)
     local c = br.utils.file.load.text(path);
     br.vm.parse(c);
@@ -444,6 +443,8 @@ end
 
 
 br["lua"] = {};
+
+br["lua"].global = _G;
 
 -- loadstring (lua/terra)
 br["lua"].eval = function(str)
