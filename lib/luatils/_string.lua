@@ -117,6 +117,8 @@ _string.replace3 = function(inputString, oldSubstring, newSubstring) -- returns 
     local scopeLevel = 0;
     local uscopeLevel = 0;
 
+    local oldSubstringLength = #oldSubstring
+
     for i = 1, #inputString do
         local char = inputString:sub(i, i)
 
@@ -141,9 +143,9 @@ _string.replace3 = function(inputString, oldSubstring, newSubstring) -- returns 
                 current = ""
             end
 
-            if inputString:sub(i, i + #oldSubstring - 1) == oldSubstring then
+            if inputString:sub(i, i + oldSubstringLength - 1) == oldSubstring then
                 result = result .. newSubstring
-                i = i + #oldSubstring - 1
+                i = i + oldSubstringLength - 1
             else
                 result = result .. char
             end
@@ -156,7 +158,6 @@ _string.replace3 = function(inputString, oldSubstring, newSubstring) -- returns 
 
     return result
 end
-
 
 _string.includes = function(str, substring)
     return type(str) == "string" and (string.find(str, substring, 1, true) ~= nil) or nil;

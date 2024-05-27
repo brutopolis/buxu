@@ -86,7 +86,7 @@ br.vm.source = br.utils.file.load.text(arg[1]);
 -- run the parser
 -- run the parser
 -- run the parser
-br.vm.parse(br.vm.source);
+br.vm.parse(br.vm.preprocess(br.vm.source));
 
 -- save the output if specified
 -- save the output if specified

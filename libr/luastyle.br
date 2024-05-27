@@ -1,4 +1,4 @@
-set `~=` $!=;
-set `--` $//;
-set `!=` nil;
-set `//` nil;
+set {~=} $!=;
+set {--} $//;
+set {!=} nil;
+set {//} nil;

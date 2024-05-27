@@ -14,5 +14,5 @@ tlp test {This is a fourth new line.};
 
 txt.line.remove test 2;
 txt.print test;
-breakpoint;
+repl {breakpoint line 17};
 txt.save test;

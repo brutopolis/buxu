@@ -54,17 +54,15 @@ returnless function:
 
 function which return goes to $target_variable:
 
-    set target_variable from function;
+    set target_variable from function ...;
     set target_variable (function ...);
-    set target_variable (from function ...);
     set target_variable (value);
 
 
 argless function which return goes to $target_variable:
 
-    set target_variable from function;
-    set target_variable (function);
-    set target_variable (from function);
+    set target_variable from function ...;
+    set target_variable (function ...);
     set target_variable (value);
 
 variables always starts with $:
@@ -72,7 +70,7 @@ variables always starts with $:
     function $variable_1 $variable_2 ...;
 
 
-enclosed sentences are executed in order:
+enclosed sentences are executed from inside to outside:
 
     function (function (function ...));
 

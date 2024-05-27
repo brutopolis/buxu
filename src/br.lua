@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.9d",
+        version = "0.2.9e",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -42,9 +42,9 @@ local br =
 }
 
 br.vm.preprocessors.sugar = function(source)
-    local nstr = br.utils.string.replace3(source, "%s*"," ")
+    local nstr = source
     
-    nstr = br.utils.string.replace3(nstr, "\n", " ")
+    nstr = br.utils.string.replace(nstr, "\n", " ")
     nstr = br.utils.string.replace3(nstr, "  ", "")
     
     nstr = br.utils.string.replace(nstr, "%s*;%s*", ";")
@@ -354,18 +354,17 @@ br.repl = function(message, inputFunction)
     inputFunction = inputFunction or io.read;
     
     --exit function
-    br.vm._replExit = false;
+    br.vm.exit = false;
     
     br.exit = function()
-        br.vm._replExit = true;
+        br.vm.exit = true;
     end
     
-    -- version, only print if not in a breakpoint repl
     print(message);
 
     local line = "";
     local count = 0;
-    while not br.vm._replExit do
+    while not br.vm.exit do
         io.write("br> ");
         local buffer = inputFunction();
         local clearbuffer = br.utils.string.replace(buffer, "%s+", "");
@@ -386,23 +385,6 @@ br.repl = function(message, inputFunction)
             br.vm.parse(buffer);
         end
     end
-end
-
-br.breakpoint = function(inputFunction)
-    if not br.vm.debug then
-        print(br.utils.console.colorstring("[WARNING]", "red") .. ": a breakpoint been ignored because debug mode is not enabled.");
-        return;
-    end
-    br.vm._inBreakpoint = true;
-
-    br.repl(br.utils.console.colorstring("[BREAKPOINT]", "red") .. ": entering breakpoint repl, type 'exit' to continue", inputFunction);
-    if br.vm.debug then
-        print(br.utils.console.colorstring("[BREAKPOINT DONE]", "green") .. ": continuing execution");
-    else
-        print("\n" .. br.utils.console.colorstring("[BREAKPOINT DONE]", "yellow") .. ": continuing execution, but debug mode is not enabled anymore, so breakpoints will be ignored.\n");
-    end
-
-    br.vm._inBreakpoint = false;
 end
 
 -- module functions

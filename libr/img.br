@@ -188,7 +188,7 @@ set , (lua.eval {
 , 1 128 150 vm.runoptimized;
 , 1 128 151 vm.optimize;
 , 1 128 152 repl;
-, 1 128 153 breakpoint;
+// , 1 128 153 breakpoint; // removed;
 , 1 128 154 export;
 , 1 128 155 using;
 , 1 128 156 bruter.include;
