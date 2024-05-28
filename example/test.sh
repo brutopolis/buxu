@@ -17,8 +17,6 @@ bruter --debug fakemodules.br
 bruter
 bruter --debug loop.br
 bruter
-bruter --debug roguelike.br
-bruter
 bruter --debug functions.br
 bruter
 bruter --debug img.br

@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.2.9e",
+        version = "0.3.0",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -776,34 +776,6 @@ br["if"] = function(condition, codestr, _else, codestr2)
     end
 end
 
-br["while"] = function(condition, codestr)
-    --print (condition, br.vm.parse(condition))
-    local condfunc;
-    local codefunc;
-    
-    if type(condition) == "string" then
-        condfunc = function()
-            return br.vm.parse(condition, true);
-        end
-    elseif type(condition) == "function" then
-        condfunc = condition;
-    else
-        error("invalid condition");
-    end
-
-    if type(codestr) == "string" then
-        codefunc = function() return     br.vm.parse(codestr, true); end
-    elseif type(codestr) == "function" then
-        codefunc = codestr;
-    else
-        error("invalid code");
-    end
-
-    while condfunc() do
-        codefunc();
-    end
-end
-
 br["each"] = function(...)
     local args = {...};
     local init = args[1];
@@ -838,111 +810,79 @@ br["each"] = function(...)
     end
 end
 
-br["for"] = function(...)
-    local args = {...};
-    local init = args[1];
-    local condition = args[2];
-    local increment = args[3];
-    local codestr = args[4];
-    
-    if type(init) == "string" then
+br["repeat"] = function(codestr, operation, ...)
+    if operation == "while" then
+        local args = {...}
+        local condition = args[1];
+        local _cond = br.vm.parse(condition, true);
+        while _cond do
+            br.vm.parse(codestr, true);
+            _cond = br.vm.parse(condition, true)
+        end
+    elseif operation == "until" then
+        local args = {...}
+        local condition = args[1];
+        local _cond = br.vm.parse(condition, true);
+        repeat
+            br.vm.parse(codestr, true);
+            _cond = br.vm.parse(condition, true)
+        until _cond
+    elseif operation == "for" then
+        local args = {...}
+        local init = args[1];
+        local condition = args[2];
+        local increment = args[3];
+
         br.vm.parse(init, true);
-    elseif type(init) == "function" then
-        init();
+
+        local _cond = br.vm.parse(condition, true);
+
+        while _cond do
+            br.vm.parse(codestr, true);
+            br.vm.parse(increment, true);
+            _cond = br.vm.parse(condition, true);
+        end
+    else
+        local args = {...}
+        local times = operation;
+        for i = 1, times do
+            br.vm.parse(codestr, true);
+        end
+    end
+end 
+
+br["function"] = function(argstr,codestr)
+    local args;
+
+    if not codestr then
+        codestr = argstr;
+        args = {};
+    else
+        args = br.utils.string.split3(argstr, " ");
     end
 
-    local _cond = br.vm.parse(condition, true);
-    local _code;
-    local _incr;
+    local _func = function()
+        local result = br.vm.parse(codestr, true);
+        return result;
+    end;
 
-    if type(codestr) == "string" then
-        _code = codestr;
-        codestr = function() br.vm.parse(_code, true) end;
-    elseif type(codestr) == "function" then
-    end
-
-    if type(increment) == "string" then
-        _incr = increment;
-        increment = function() br.vm.parse(_incr, true) end;
-    elseif type(increment) == "function" then
-    end
-
-    while _cond do
-        
-        codestr();
-        increment();
-
-        _cond = br.vm.parse(condition, true);
-    end
-end
-
-br["function"] = function(...)
-
-    local __args = {...};
-    local name, argstr, codestr;
-    
-    if #__args == 2 then
-        argstr = __args[1];
-        codestr = __args[2];
-    elseif #__args == 3 then
-        name = __args[1];
-        argstr = __args[2];
-        codestr = __args[3];
-    elseif #__args == 1 then
-        codestr = __args[1];
-    end
-    
-    local args = br.utils.string.split2(argstr, " ");
-
-    local _func;
-
-    if type(codestr) == "string" then
-        _func = function()
-            local result = br.vm.parse(codestr, true);
-            return result;
-        end;
-    
-    elseif type(codestr) == "function" then
-        _func = function(...)
-            return codestr(br.utils.table.unpack({...}));
-        end;
-    end
-
-    local result = function(...)
-        local globalbakcup = {}
+    return(function(...)
         local _args = {...};
         
         for i,v in pairs(args) do
-            globalbakcup[v] = br[v];
             br[v] = _args[i];
         end
-
-        local result = _func();
         
-        for i,v in pairs(args) do
-            br[v] = globalbakcup[v];
-        end
-        
-        return result;
-    end
+        return _func();
+    end);
+end
 
-    if name then
-        br.set(name, result);
-    else
-        return result;
-    end
+br.lua["function"] = function(args, codestr)
+    return br.utils.load("return function(" .. br.utils.string.replace(args," ", ", ") .. ") " .. codestr .. " end")();
 end
 
 br["len"] = function(a)
     return #a;
-end
-
--- arrow function 
-br["shortcut"] = function(...)
-    local args = {...};
-    return function()
-        return br.vm.parse(table.concat(args, " "), true);
-    end
 end
 
 return br;

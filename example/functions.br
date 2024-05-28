@@ -2,16 +2,16 @@
 
 set b from [];
 
-function b.strtest {str a b c}
+set b.strtest from function {str a _b c}
 {
     set a 1;
     print $a;
     return $str; // not that returns really matter here, as everything in bruter is global, but there is a return statement;
 };
 
-set abc from function {a b c}
+set abc from function {a _b c}
 {
-    print {this is a function print} $a $b $c;
+    print {this is a function print} $a $_b $c;
 };
 
 print (
@@ -29,5 +29,5 @@ help b;
 
 b.abc 55 44 11;
 
-// that is a special type of function that doesnt need args;
-(shortcut print (b.strtest {this is a string}));
+set a (function {print (b.strtest {this is a string})});
+a;

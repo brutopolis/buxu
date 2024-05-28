@@ -4,14 +4,23 @@ set a 45;
 set b 5;
 
 set c from [] 1 2 3 4 5 6 7 8 9 10;
+// while;
 
-while {> $a 0} 
+repeat
 {
     set a (- $a 1);
     print a = $a;
-};
+} while {> $a 0};
 
-for {set i 0} {< $i 10} {set i (+ $i 1)} 
+// until;
+repeat 
+{
+    set b (- $b 1);
+    print b = $b;
+} until {== $b 0};
+
+set i 0;
+repeat
 {
     print $i;
     if (< $i 5)
@@ -21,7 +30,8 @@ for {set i 0} {< $i 10} {set i (+ $i 1)}
             set i 10;
         };
     };
-};
+    set i (+ $i 1);
+} 10;
 
 each value in $c
 {
@@ -34,10 +44,10 @@ each name value in $c
     print value = $value;
 };
 
-for {set i 0} {< $i 10} {set i (+ $i 1)}
+repeat
 {
     // print i = $i;
-};
+} for {set i 0} {< $i 10} {set i (+ $i 1)};
 
 print $i;
 print $a;
