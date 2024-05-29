@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.3.0",
+        version = "0.3.0a",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -810,7 +810,7 @@ br["each"] = function(...)
     end
 end
 
-br["repeat"] = function(codestr, operation, ...)
+br["loop"] = function(codestr, operation, ...)
     if operation == "while" then
         local args = {...}
         local condition = args[1];
@@ -842,12 +842,13 @@ br["repeat"] = function(codestr, operation, ...)
             br.vm.parse(increment, true);
             _cond = br.vm.parse(condition, true);
         end
-    else
+    elseif type(operation) == "number" then
         local args = {...}
-        local times = operation;
-        for i = 1, times do
+        for i = 1, operation do
             br.vm.parse(codestr, true);
         end
+    else
+        print("Error: unknown loop")
     end
 end 
 

@@ -41,7 +41,7 @@ set Room from function {w h}
     // print $w $h;
 
     set i 1;
-    repeat
+    loop
     {
         // print $i;
         set temproom.map.$i.1 35;
@@ -50,7 +50,7 @@ set Room from function {w h}
     } while {< $i $w};
 
     set i 1;
-    repeat
+    loop
     {
         set temproom.map.1.$i 35;
         set temproom.map.$tmpw.$i 35;
@@ -81,11 +81,11 @@ set genRooms from function {}
 {
     set rooms from [];
     set x 1;
-    repeat
+    loop
     {
         set rooms.$x from [];
         set y 1;
-        repeat
+        loop
         {
             set rooms.$x.$y (Room (random 7 $roomMaxSize.x) (random 7 $roomMaxSize.y ));
             set y (+ $y 1);
@@ -113,9 +113,9 @@ lua.eval {br["io"] = io};
 
 set printroom from function {_map}
 {
-    repeat 
+    loop 
     {
-        repeat 
+        loop 
         {
             if {and (== $j $player.position.x) (== $i $player.position.y)}
             {
