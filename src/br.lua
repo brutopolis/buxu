@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.3.0a",
+        version = "0.3.0b",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -510,7 +510,7 @@ br.vm.recursiveget = function(argname)
                 end
             end
         end
-        
+
         return result
     else
         return br[argname]
@@ -586,16 +586,12 @@ br.vm.fakesetfrom = function(funcname, ...)
 end
 
 br.vm.fakeset = function(value, ...)
-    if #({...}) > 0 then
-        return br.vm.fakesetfrom(value, ...);
-    elseif type(value) == "function" then
+    if type(value) == "function" then
         return br.vm.fakesetfrom(value, ...);
     else
         local target = br.vm.recursiveget(value);
-        if target then
-            if type(target) == "function" then
-                return br.vm.fakesetfrom(value, ...);
-            end
+        if type(target) == "function" then
+            return br.vm.fakesetfrom(value, ...);
         end
     end
     return value;
@@ -752,62 +748,27 @@ br["if"] = function(condition, codestr, _else, codestr2)
         condition = br.vm.parse(condition, true);
     end
     if condition then
-        if type(codestr) == "string" then
-            return br.vm.parse(codestr, true);
-        elseif type(codestr) == "function" then
-            return codestr();
-        end
+        return br.vm.parse(codestr, true);
     else
         if _else then
-            if type(_else) == "function" then
-                return _else();
-            elseif type(_else) == "string" and _else == "else" then
-                if _else == "else" then
-                    if type(codestr2) == "string" then
-                        return br.vm.parse(codestr2, true);
-                    elseif type(codestr2) == "function" then
-                        return codestr2();
-                    end
-                else
-                    return br.vm.parse(_else, true);
-                end
+            if _else == "else" then
+                return br.vm.parse(codestr2, true);
+            else
+                return br.vm.parse(_else, true);
             end
         end
     end
 end
 
-br["each"] = function(...)
-    local args = {...};
-    local init = args[1];
-    local condition = args[2];
-    local increment = args[3];
-    local codestr = args[4];
-    local other = args[5];
+br["each"] = function(name, value, _in, target, codestr)
 
-    if type(condition == "string") and condition == "in" then
-        local target = increment;
-        for k,v in pairs(target) do
-            br.set(init, v);
-            if type(codestr) == "string" then
-                br.vm.parse(codestr, true);
-            elseif type(codestr) == "function" then
-                codestr();
-            end
-        end
-        return;
-    elseif type(increment == "string") and increment == "in" then
-        local target = codestr;
-        for k,v in pairs(target) do
-            br.set(init, k);
-            br.set(condition, v);
-            if type(other) == "string" then
-                br.vm.parse(other, true);
-            elseif type(other) == "function" then
-                other();
-            end
-        end
-        return;
+    for k,v in pairs(target) do
+        br.set(name, k);
+        br.set(value, v);
+        br.vm.parse(codestr, true);
     end
+
+    return;
 end
 
 br["loop"] = function(codestr, operation, ...)
@@ -848,7 +809,7 @@ br["loop"] = function(codestr, operation, ...)
             br.vm.parse(codestr, true);
         end
     else
-        print("Error: unknown loop")
+        print("Error: unknown loop");
     end
 end 
 

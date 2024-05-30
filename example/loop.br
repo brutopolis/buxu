@@ -35,14 +35,8 @@ loop
 
 loop
 {
-    // print i = $i;
+    print i = $i;
 } for {set i 0} {< $i 10} {set i (+ $i 1)};
-
-
-each value in $c
-{
-    print value = $value;
-};
 
 each name value in $c
 {
