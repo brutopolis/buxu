@@ -26,7 +26,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.3.0b",
+        version = "0.3.0c",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -161,7 +161,7 @@ end
 -- preprocess the source
 -- preprocess the source
 br.vm.preprocess = function(_src)
-    local result = _src .. '';
+    local result = _src;
     for k, v in pairs(br.vm.preprocessors) do
         result = v(result);
     end
