@@ -171,4 +171,12 @@ _string.firstWord = function(str)
     return str:match("%S+") or ""
 end
 
+_string.concat = function(...)
+    local result = ""
+    for i = 1, select("#", ...) do
+        result = result .. select(i, ...)
+    end
+    return result
+end
+
 return _string

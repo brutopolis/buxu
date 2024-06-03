@@ -25,7 +25,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.3.1",
+        version = "0.3.1a",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -43,7 +43,7 @@ local br =
 br.vm.preprocessors.sugar = function(source)
     local nstr = source
     
-    nstr = br.utils.string.replace(nstr, "\n", " ")
+    nstr = br.utils.string.replace3(nstr, "\n", " ")
     nstr = br.utils.string.replace3(nstr, "  ", "")
     
     nstr = br.utils.string.replace(nstr, "%s*;%s*", ";")
