@@ -25,7 +25,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.3.1b",
+        version = "0.3.1c",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -779,6 +779,13 @@ br["if"] = function(condition, codestr, _else, codestr2)
 end
 
 br["each"] = function(name, value, _in, target, codestr)
+    if not codestr then
+        codestr = target;
+        target = _in;
+        _in = value;
+        value = name;
+        name = "";
+    end
 
     for k,v in pairs(target) do
         br.set(name, k);
