@@ -25,7 +25,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.3.1a",
+        version = "0.3.1b",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -35,12 +35,13 @@ local br =
         debug = false,
         funcdata = {},
         preprocessors = {},
+        _preprocessors = {},
         cache = {},
         oneliner = false
     },
 }
 
-br.vm.preprocessors.sugar = function(source)
+br.vm._preprocessors.sugar = function(source)
     local nstr = source
     
     nstr = br.utils.string.replace3(nstr, "\n", " ")
@@ -55,6 +56,24 @@ br.vm.preprocessors.sugar = function(source)
     
     return nstr
 end
+
+br.vm._preprocessors.fast_sugar = function(source)
+    local nstr = source
+    
+    nstr = br.utils.string.replace(nstr, "\n", " ")
+    nstr = br.utils.string.replace3(nstr, "  ", "")
+    
+    nstr = br.utils.string.replace(nstr, "%s*;%s*", ";")
+    
+    -- if last char not ; add it
+    if string.byte(nstr, #nstr) ~= 59 then
+        nstr = nstr .. ";";
+    end
+    
+    return nstr
+end
+
+br.vm.preprocessors.sugar = br.vm._preprocessors.sugar;
 
 -- math and logic functions
 -- math and logic functions

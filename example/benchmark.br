@@ -1,6 +1,9 @@
 set mapSize 16;
 set random $utils.random;
 
+// trick to make the code faster;
+set vm.preprocessors.sugar $vm._preprocessors.fast_sugar;
+
 set lua.global.br $bruter.global;
 
 set Vector2 from function {x y}
