@@ -8,7 +8,6 @@ if not terralib then
     terralib = {
         loadfile = loadfile,
         loadstring = loadstring or load,
-        require = require,
     }
 end
 
@@ -26,7 +25,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.3.0c",
+        version = "0.3.1",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -441,7 +440,7 @@ end
 
 -- require lua/terra file
 br["lua"].require = function(path)
-    return terralib.require(path);
+    return require(path);
 end
 
 if package.terrapath then
@@ -823,19 +822,15 @@ br["function"] = function(argstr,codestr)
         args = br.utils.string.split3(argstr, " ");
     end
 
-    local _func = function()
-        local result = br.vm.parse(codestr, true);
-        return result;
-    end;
-
     return(function(...)
         local _args = {...};
+        
         
         for i,v in pairs(args) do
             br[v] = _args[i];
         end
         
-        return _func();
+        return br.vm.parse(codestr, true);
     end);
 end
 
@@ -845,6 +840,30 @@ end
 
 br["len"] = function(a)
     return #a;
+end
+
+-- config
+-- config
+-- config
+
+if br.utils.file.exist(br.vm.bruterpath .. "config.br") then
+    br.bruter.include(br.vm.bruterpath .. "config.br");
+else
+    print(br.utils.console.colorstring("[ERROR]", "red") .. ": config.br not found in " .. br.vm.bruterpath);
+end
+
+-- multithreading
+-- multithreading
+-- multithreading
+
+if br.vm.multithread and br.vm.effilpath then
+    if br.utils.file.exist(br.vm.bruterpath .. "lib/effil/" .. br.vm.effilpath .. "/effil.so") then
+        package.cpath = package.cpath .. ";" .. br.vm.bruterpath .. "lib/effil/" .. br.vm.effilpath .. "/?.so";
+        br.vm["effil"] = require("effil");
+    else
+        print(br.utils.console.colorstring("[ERROR]", "red") .. ": effil not found in " .. br.vm.bruterpath .. "lib/effil/" .. br.vm.effilpath);
+        print(br.utils.console.colorstring("[ERROR]", "red") .. ": multithreading disabled");
+    end
 end
 
 return br;

@@ -14,11 +14,13 @@ if (package.terrapath and not (string.find(package.terrapath, bruterPath .. "lib
         package.terrapath = package.terrapath .. bruterPath .. "?.lua;" .. bruterPath .. "src/?.lua;" .. bruterPath .. "src/?/?.lua;"
         package.terrapath = package.terrapath .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
         package.terrapath = package.terrapath .. bruterPath .. "lib/?.t;" .. bruterPath .. "lib/?/?.t;"
+        package.cpath = package.cpath .. bruterPath .. "lib/?.so;" .. bruterPath .. "lib/?/?.so;"
     else 
         package.path = package.path .. bruterPath .. "?.t;" .. bruterPath .. "src/?.t;" .. bruterPath .. "src/?/?.t;"
         package.path = package.path .. bruterPath .. "?.lua;" .. bruterPath .. "src/?.lua;" .. bruterPath .. "src/?/?.lua;"
         package.path = package.path .. bruterPath .. "lib/?.lua;" .. bruterPath .. "lib/?/?.lua;"
         package.path = package.path .. bruterPath .. "lib/?.t;" .. bruterPath .. "lib/?/?.t;"
+        package.cpath = package.cpath .. bruterPath .. "lib/?.so;" .. bruterPath .. "lib/?/?.so;"
     end
 end
 
