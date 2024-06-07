@@ -137,7 +137,7 @@ file.load.ini = function(path)
     splited = _string.replace(splited, "%s+=%s+", "=");
     splited = _string.split(splited, ";");
 
-    for i, v in ipairs(splited) do
+    for i, v in pairs(splited) do
         local splited2 = _string.split3(v, "=");
         if string.byte(splited2[1]) == 32 then
             splited2[1] = string.sub(splited2[1], 2);
@@ -151,9 +151,9 @@ end;
 file.save.ini = function(path, ini)
     local txt = "";
     for i, v in pairs(ini) do
-        txt = txt .. i .. "=" .. v .. "\n";
+        txt = txt .. i .. " = " .. v .. ";\n";
     end;
-    file.save.txt(path, txt);
+    file.save.text(path, txt);
 end;
 
 file.exist = function(path)

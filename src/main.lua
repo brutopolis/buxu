@@ -39,6 +39,33 @@ if br.utils.table.includes(arg, "--debug") then
     table.remove(arg, position);
 end
 
+while br.utils.table.includes(arg, "--config") do
+    local position = br.utils.table.find(arg, "--config");
+    local temp = arg[position + 1];
+    local temp2 = arg[position + 2];
+    if temp and temp2 then
+        br.vm.config[temp] = br.vm.parsearg(temp2);
+    end
+    table.remove(arg, position);
+    table.remove(arg, position);
+    table.remove(arg, position);
+    br.help(arg)
+end
+
+while br.utils.table.includes(arg, "--set") do
+    local position = br.utils.table.find(arg, "--set");
+    local temp = arg[position + 1];
+    local temp2 = arg[position + 2];
+    if temp and temp2 then
+        br.vm.recursiveset(temp,br.vm.parsearg(temp2));
+    end
+    table.remove(arg, position);
+    table.remove(arg, position);
+    table.remove(arg, position);
+end
+
+br.utils.file.save.ini(bruterPath .. "config.ini", br.vm.config);
+
 -- set the output path if specified
 -- set the output path if specified
 -- set the output path if specified
@@ -62,7 +89,7 @@ if br.utils.table.includes(arg, "-v") or br.utils.table.includes(arg, "--version
     print("bruter version " .. br.vm.version)
     os.exit(0)
 elseif br.utils.table.includes(arg, "--help") or br.utils.table.includes(arg,"-h") then
-    print("Usage: bruter <source file> [-o <output file>] [-h] [-v] [-ol] [--help] [--version] [--debug] [--oneliner]")
+    print("Usage: bruter <source file> [-o <output file>] [-h] [-v] [-ol] [--help] [--version] [--config] [--set] [--debug] [--oneliner]")
     print("Options:")
     print("  --help     Display this information")
     print("  -h         Display this information")
@@ -73,6 +100,9 @@ elseif br.utils.table.includes(arg, "--help") or br.utils.table.includes(arg,"-h
     print("  --debug    Enable debug mode")
     print("  --oneliner Enable oneliner mode(linebreak acts as a semicolon)")
     print("  -ol        Enable oneliner mode(linebreak acts as a semicolon)")
+    print("  --config   Sets a config.ini variable")
+    print("  --set      Sets a session variable")
+
     os.exit(0)
 elseif arg[1] == nil then
     --print("No source file specified, starting in REPL instead...")

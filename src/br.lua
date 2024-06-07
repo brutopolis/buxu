@@ -25,7 +25,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.3.1e",
+        version = "0.3.2",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -873,8 +873,8 @@ end
 -- config
 
 if br.utils.file.exist(br.vm.bruterpath .. "config.ini") then
-    local config = br.utils.file.load.ini(br.vm.bruterpath .. "config.ini");
-    for k,v in pairs(config) do
+    br.vm.config = br.utils.file.load.ini(br.vm.bruterpath .. "config.ini");
+    for k,v in pairs(br.vm.config) do
         br.vm[k] = br.vm.parsearg(v);
     end
 else
