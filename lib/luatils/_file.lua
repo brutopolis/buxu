@@ -1,4 +1,4 @@
-local _string = require "string"
+local _string = require "lib.luatils._string"
 local file = {}
 file.save = {}
 file.load = {}
@@ -126,6 +126,35 @@ file.load.map = function(filepath)
     end
     return result
 end
+
+file.load.ini = function(path)
+    local ini = {};
+    local txt = file.load.text(path);
+    local splited = _string.replace3(txt, "\n", " ");
+    splited = _string.replace3(splited, "\r", " ");
+    splited = _string.replace3(splited, "\t", " ");
+    splited = _string.replace3(splited, "  ", " ");
+    splited = _string.replace(splited, "%s+=%s+", "=");
+    splited = _string.split(splited, ";");
+
+    for i, v in ipairs(splited) do
+        local splited2 = _string.split3(v, "=");
+        if string.byte(splited2[1]) == 32 then
+            splited2[1] = string.sub(splited2[1], 2);
+        end;
+        ini[splited2[1]] = splited2[2];
+    end;
+
+    return ini;
+end;
+
+file.save.ini = function(path, ini)
+    local txt = "";
+    for i, v in pairs(ini) do
+        txt = txt .. i .. "=" .. v .. "\n";
+    end;
+    file.save.txt(path, txt);
+end;
 
 file.exist = function(path)
     local file = io.open(path, "r")

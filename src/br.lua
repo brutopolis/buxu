@@ -25,7 +25,7 @@ local br =
     vm = 
     {
         -- version
-        version = "0.3.1d",
+        version = "0.3.1e",
         -- source and outputs
         source = "",
         outputpath = "",
@@ -45,6 +45,8 @@ br.vm._preprocessors.sugar = function(source)
     local nstr = source
     
     nstr = br.utils.string.replace3(nstr, "\n", " ")
+    nstr = br.utils.string.replace3(nstr, "\r", " ")
+    nstr = br.utils.string.replace3(nstr, "\t", " ")
     nstr = br.utils.string.replace3(nstr, "  ", "")
     
     nstr = br.utils.string.replace(nstr, "%s*;%s*", ";")
@@ -850,8 +852,6 @@ br["function"] = function(argstr,codestr)
 
     return(function(...)
         local _args = {...};
-        
-        
         for i,v in pairs(args) do
             br[v] = _args[i];
         end
@@ -872,10 +872,13 @@ end
 -- config
 -- config
 
-if br.utils.file.exist(br.vm.bruterpath .. "config.br") then
-    br.bruter.include(br.vm.bruterpath .. "config.br");
+if br.utils.file.exist(br.vm.bruterpath .. "config.ini") then
+    local config = br.utils.file.load.ini(br.vm.bruterpath .. "config.ini");
+    for k,v in pairs(config) do
+        br.vm[k] = br.vm.parsearg(v);
+    end
 else
-    print(br.utils.console.colorstring("[ERROR]", "red") .. ": config.br not found in " .. br.vm.bruterpath);
+    print(br.utils.console.colorstring("[ERROR]", "red") .. ": config.ini not found in " .. br.vm.bruterpath);
 end
 
 -- multithreading

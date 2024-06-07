@@ -110,6 +110,10 @@ _string.replace = function(inputString, oldSubstring, newSubstring)
 end
 
 _string.replace3 = function(inputString, oldSubstring, newSubstring) -- returns a string with the oldSubstring replaced by the newSubstring respecting the backticks enclosed strings and keeping them
+    if string.find(inputString, oldSubstring) == nil then
+        return inputString
+    end
+    
     local result = ""
     local insideString = false
     local current = ""

@@ -1,2 +1,0 @@
-set vm.multithread false;
-set vm.effilpath effil_luajit_linux_64;
