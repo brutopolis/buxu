@@ -66,6 +66,12 @@ end
 
 br.utils.file.save.ini(bruterPath .. "config.ini", br.vm.config);
 
+
+if br.utils.table.includes(arg, "--lua") then
+    table.remove(arg, position);
+    br.lua.eval(br.utils.file.load.text(arg[1]));
+end
+
 -- set the output path if specified
 -- set the output path if specified
 -- set the output path if specified
@@ -102,6 +108,7 @@ elseif br.utils.table.includes(arg, "--help") or br.utils.table.includes(arg,"-h
     print("  -ol        Enable oneliner mode(linebreak acts as a semicolon)")
     print("  --config   Sets a config.ini variable")
     print("  --set      Sets a session variable")
+    print("  --lua      Run the source file as a lua script")
 
     os.exit(0)
 elseif arg[1] == nil then
