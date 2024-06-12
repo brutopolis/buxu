@@ -6,3 +6,4 @@ main
 *.br.so
 example/test
 example/test.txt
+*.vsix

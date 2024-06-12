@@ -10,7 +10,7 @@ loop
 {
     set a (- $a 1);
     print a = $a;
-} while {> $a 0};
+} while `> $a 0`;
 
 // until;
 loop 

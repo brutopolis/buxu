@@ -1,0 +1,80 @@
+{
+    "name": "Bruter",
+    "scopeName": "source.bruter",
+    "patterns": [
+      {
+        "include": "#variables"
+      },
+      {
+        "include": "#keywords"
+      },
+      {
+        "include": "#strings"
+      },
+      {
+        "include": "#numbers"
+      },
+      {
+        "include": "#comments"
+      },
+      {
+        "include": "#functions"
+      }
+    ],
+    "repository": {
+      "variables": {
+        "patterns": [
+          {
+            "name": "variable.other.bruter",
+            "match": "\\$[a-zA-Z_][a-zA-Z0-9_]*"
+          }
+        ]
+      },
+      "keywords": {
+        "patterns": [
+          {
+            "name": "keyword.control.bruter",
+            "match": "\\b(set|from|require|using|loop|while|until|for|each|if|print)\\b"
+          }
+        ]
+      },
+      "strings": {
+        "patterns": [
+          {
+            "name": "string.quoted.single.bruter",
+            "begin": "`",
+            "end": "`"
+          }
+        ]
+      },
+      "numbers": {
+        "patterns": [
+          {
+            "name": "constant.numeric.bruter",
+            "match": "-?\\b\\d+\\b"
+          }
+        ]
+      },
+      "comments": {
+        "patterns": [
+          {
+            "name": "comment.line.double-slash.bruter",
+            "begin": "//",
+            "end": "$"
+          }
+        ]
+      },
+      "functions": {
+        "patterns": [
+          {
+            "name": "entity.name.function.bruter",
+            "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b(?=\\s*\\()"
+          }
+        ]
+      }
+    },
+    "scopeName": "source.bruter",
+    "fileTypes": ["br"],
+    "uuid": "00000000-0000-0000-0000-000000000000"
+  }
+  
