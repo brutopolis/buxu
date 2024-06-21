@@ -13,12 +13,13 @@ Lua(5.1+) compatible;
 
 ## Table of Contents
 
-
+- [Operators](#operators)
 - [Types](#types)
 - [Usage](#usage)
-- [License](#license)
+- [Libraries] (#libraries)
+- [Reserved] (#reserved)
 
-## Operators and such
+## Operators
 
 
 - `$` = variable.
@@ -40,12 +41,9 @@ Lua(5.1+) compatible;
 
 - `nil` = nil;
 
-anything else is string.
+anything untyped is string.
 
 ## Usage
-
-
-functions usage:
 
     function;
     function ...;
@@ -65,17 +63,13 @@ library search path:
 
     libr_path/library_name/library_name.br
     libr_path/library_name/library_name.lua
-    libr_path/library_name/library_name.t
     libr_path/library_name.br
     libr_path/library_name.lua
-    libr_path/library_name.t
 
-## Reserved keywords
+## Reserved
 
 - ` `` ` = string delimiter
 - `{}` = string delimiter
 - `$` = variable indicator
 - `.` = recursion
 - `;` = end of command
-
-- anything else can be redefined
