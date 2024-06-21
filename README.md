@@ -16,8 +16,8 @@ Lua(5.1+) compatible;
 - [Operators](#operators)
 - [Types](#types)
 - [Usage](#usage)
-- [Libraries] (#libraries)
-- [Reserved] (#reserved)
+- [Libraries](#libraries)
+- [Reserved](#reserved)
 
 ## Operators
 
