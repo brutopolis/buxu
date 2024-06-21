@@ -37,11 +37,9 @@ Lua(5.1+) compatible;
 
 - `boolean` = true or false.
 
-- `string` = enclosed by (``) or ({}).
+- `string` = enclosed by (``), ({}) or untyped.
 
 - `nil` = nil;
-
-anything untyped is string.
 
 ## Usage
 
