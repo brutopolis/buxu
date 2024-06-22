@@ -34,7 +34,7 @@
         "patterns": [
           {
             "name": "keyword.control.bruter",
-            "match": "\\b(set|from|require|using|loop|while|until|for|each|if|print)\\b"
+            "match": "\\b(from|while|until|for|each|in|print|else|if|set|loop|using\\b)"
           }
         ]
       },
@@ -45,6 +45,7 @@
             "begin": "`",
             "end": "`"
           }
+          
         ]
       },
       "numbers": {
@@ -60,15 +61,16 @@
           {
             "name": "comment.line.double-slash.bruter",
             "begin": "//",
-            "end": "$"
+            "end": ";"
           }
         ]
       },
       "functions": {
         "patterns": [
           {
+
             "name": "entity.name.function.bruter",
-            "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b(?=\\s*\\()"
+            "match": "\\b(STATE|SET|INSERT|DELETE|MOVE|SWAP|SHIFT|RANDOM|COPY|FILL|REVERSE|SORT|FIND|IF|EQUAL|NOT_EQUAL|GREATER|LESS|GREATER_OR_EQUAL|LESS_OR_EQUAL|AND|OR|PRINT|SCAN|GOTO|ADD|SUB|MUL|DIV|INCREMENT|DECREMENT|MOD|POW|SQRT|ABS|MIN|MAX|RANDOM|ROUND|FLOOR|CEIL|TRUNC|SIN|COS|TAN|ASIN|ACOS|ATAN|ATAN2|SINH|COSH|TANH|EXP|FREXP|LDEXP|LOG|LOG2|LOG10|LOAD|SAVE)\\b"
           }
         ]
       }
