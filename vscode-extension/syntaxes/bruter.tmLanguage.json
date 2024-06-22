@@ -34,7 +34,7 @@
         "patterns": [
           {
             "name": "keyword.control.bruter",
-            "match": "\\b(from|while|until|for|each|in|print|else|if|set|loop|using\\b)"
+            "match": "\\b(from|while|until|for|each|\\s+in\\s+|print|else|if\\s*|set\\s*|loop\\s+|loop{|using\\s*\\b)"
           }
         ]
       },
