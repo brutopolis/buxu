@@ -82,28 +82,6 @@ if br.utils.table.includes(arg, "-o") or br.utils.table.includes(arg, "--output"
     table.remove(arg, temp)
 end
 
-if br.utils.table.includes(arg, "-H") or br.utils.table.includes(arg, "--header") then
-    local position = br.utils.table.find(arg, "-H") or br.utils.table.find(arg, "--header");
-    local file = br.utils.file.load.text(arg[position + 1]);
-    local name = arg[position + 2];
-    table.remove(arg, position);
-    file = br.utils.string.replace(file, "\\", "\\\\");
-    file = br.utils.string.replace(file, "\"", "\\\"");
-    file = br.utils.string.replace(file, "\n\n", "\n");
-    local script = "const char* " .. name .. " = ";
-    local splited = br.utils.string.split(file, "\n");
-    for i = 1, #splited do
-        if #splited[i] > 1 and splited[i]:byte(1) == 45 and splited[i]:byte(2) == 45 then
-        else
-            script = script .. "\"" .. splited[i] .. "\\n\"\n";
-        end
-    end
-    script = script:sub(1, #script - 1) .. ";";
-    --set with output
-    br.utils.file.save.text(br.vm.outputpath, script);
-    return;
-end
-
 if br.utils.table.includes(arg, "--oneliner") or br.utils.table.includes(arg, "-ol") then
     br.vm.oneliner = true;
     local position = br.utils.table.find(arg, "--oneliner") or br.utils.table.find(arg, "-ol");
@@ -131,8 +109,6 @@ elseif br.utils.table.includes(arg, "--help") or br.utils.table.includes(arg,"-h
     print("  --config   Sets a config.ini variable")
     print("  --set      Sets a session variable")
     print("  --lua      Run the source file as a lua script")
-    print("  -H         Create a header file from a text file")
-    print("  --header   Create a header file from a text file")
 
     os.exit(0)
 elseif arg[1] == nil then
