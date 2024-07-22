@@ -198,12 +198,56 @@ GenericStack parseArgs(StringStack strs, GenericHashTable globals)
     return stack;
 }
 
+// list of core functions
+typedef struct 
+{
+    char* name;
+    Generic (*func)(GenericStack*, GenericHashTable);
+} Function;
+
+typedef HashTable(Function) FunctionTable;
+
+Generic add(GenericStack* args, GenericHashTable globals) 
+{
+    Generic a = StackPop(*args);
+    Generic b = StackPop(*args);
+    Generic result;
+    if (a.type == 1 && b.type == 1) 
+    {
+        result.value.i = a.value.i + b.value.i;
+        result.type = 1;
+    } 
+    else if (a.type == 2 && b.type == 2) 
+    {
+        result.value.f = a.value.f + b.value.f;
+        result.type = 2;
+    } 
+    else if (a.type == 3 && b.type == 3) 
+    {
+        result.value.s = (char*)malloc((strlen(a.value.s) + strlen(b.value.s) + 1) * sizeof(char));
+        strcpy(result.value.s, a.value.s);
+        strcat(result.value.s, b.value.s);
+        result.type = 3;
+    } 
+    else 
+    {
+        result.value.i = 0;
+        result.type = 1;
+    }
+    return result;
+}
+
+
+
 
 int main() 
 {
     const char* input = "abc :(hello world!) 555 1234 1.423421 :(string a b c d e f g 1 2 3 4 5) ";
-    GenericHashTable vht;
-    GenericStack args = parseArgs(splitString(input), vht);
+    GenericHashTable generics;
+    GenericStack args = parseArgs(splitString(input), generics);
+    FunctionTable functions;
+    HashTableInit(functions);
+    
 
     for (int i = 0; i < args.size; ++i) 
     {
