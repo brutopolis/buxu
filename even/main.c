@@ -80,14 +80,17 @@ typedef struct
 {
     Value value;
     int type;
-} Generic;
+} Variable;
 
-typedef Stack(Generic) GenericStack;
+typedef Stack(Variable) VariableStack;
 typedef Stack(char*) StringStack;
 
-typedef HashTable(Generic) GenericHashTable;
+typedef HashTable(Variable) VariableHashTable;
 
+typedef Variable (*Function)(VariableHashTable, VariableStack*);
 
+typedef VariableStack Table;
+typedef VariableHashTable State;
 
 StringStack splitString(const char* str) 
 {
@@ -135,31 +138,33 @@ StringStack splitString(const char* str)
     return stack;
 }
 
-GenericStack parseArgs(StringStack strs, GenericHashTable globals)
+Table parse(State state, char *cmd)
 {
-    GenericStack stack;
-    StackInit(stack);
+    Table result;
+    StackInit(result);
 
-    for (int i = 0; i < strs.size; ++i) 
+    StringStack splited = splitString(cmd);
+
+    for (int i = 0; i < splited.size; ++i) 
     {
-        char* str = strs.data[i];
+        char* str = splited.data[i];
 
         if (str[0] == ':') 
         {
             // String
-            Generic v;
+            Variable v;
             // Remove the colon and the parentheses
             v.value.s = strndup(str + 2, strlen(str) - 3);
             v.type = 3;
-            StackPush(stack, v);
+            StackPush(result, v);
         }
         else if (str[0] == '$') 
         {
             // Variable
-            Generic v;
-            v = HashTableGet(Generic, globals, str + 1);
+            Variable v;
+            v = HashTableGet(Variable, state, str + 1);
             
-            StackPush(stack, v);
+            StackPush(result, v);
         }
         else if (str[0] == '(') 
         {
@@ -167,7 +172,7 @@ GenericStack parseArgs(StringStack strs, GenericHashTable globals)
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
         {
             // Number
-            Generic v;
+            Variable v;
             if (strchr(str, '.')) 
             {
                 v.value.f = atof(str);
@@ -178,40 +183,40 @@ GenericStack parseArgs(StringStack strs, GenericHashTable globals)
                 v.value.i = atoi(str);
                 v.type = 1;
             }
-            StackPush(stack, v);
+            StackPush(result, v);
         }
         else 
         {
             // string
-            Generic v;
+            Variable v;
             v.value.s = strdup(str);
             v.type = 3;
-            StackPush(stack, v);
+            StackPush(result, v);
         }
         
         free(str);
 
     }
 
+    StackFree(splited);
 
-
-    return stack;
+    return result;
 }
 
 // list of core functions
-typedef struct 
-{
-    char* name;
-    Generic (*func)(GenericStack*, GenericHashTable);
-} Function;
 
-typedef HashTable(Function) FunctionTable;
-
-Generic add(GenericStack* args, GenericHashTable globals) 
+Variable _set(State variables, Table* args) 
 {
-    Generic a = StackPop(*args);
-    Generic b = StackPop(*args);
-    Generic result;
+    Variable _key = StackShift(*args);
+    Variable _value = StackShift(*args);
+    return _key;
+}
+
+Variable _add(VariableHashTable variables, Table* args) 
+{
+    Variable a = StackPop(*args);
+    Variable b = StackPop(*args);
+    Variable result;
     if (a.type == 1 && b.type == 1) 
     {
         result.value.i = a.value.i + b.value.i;
@@ -237,60 +242,50 @@ Generic add(GenericStack* args, GenericHashTable globals)
     return result;
 }
 
-
-
+void interpret(State state, char* input) 
+{
+    Table args = parse(state, input);
+    char* funcName = StackShift(args).value.s;
+    if (HashTableGet(Variable, state, funcName).type == 4) 
+    {
+        Variable result = ((Function)HashTableGet(Variable, state, funcName).value.p)(state, &args);
+        if (result.type == 1) 
+        {
+            printf("Result: %d\n", result.value.i);
+        } 
+        else if (result.type == 2) 
+        {
+            printf("Result: %f\n", result.value.f);
+        } 
+        else if (result.type == 3) 
+        {
+            printf("Result: %s\n", result.value.s);
+        }
+    }
+}
 
 int main() 
 {
-    const char* input = "abc :(hello world!) 555 1234 1.423421 :(string a b c d e f g 1 2 3 4 5) ";
-    GenericHashTable generics;
-    GenericStack args = parseArgs(splitString(input), generics);
-    FunctionTable functions;
-    HashTableInit(functions);
     
 
-    for (int i = 0; i < args.size; ++i) 
-    {
-        Generic v = args.data[i];
-        if (v.type == 1) 
-        {
-            printf("int: %d\n", v.value.i);
-        } 
-        else if (v.type == 2) 
-        {
-            printf("Float: %f\n", v.value.f);
-        }
-        else if (v.type == 3) 
-        {
-            printf("String: %s\n", v.value.s);
-        }
-    }
+    State state;
+    HashTableInit(state);
 
-    StringStack tokens = splitString(input);
+    Variable tempFunc;
+    tempFunc.type = 4;
+    
+    tempFunc.value.p = _add;
+    HashTableInsert(state, "add", tempFunc);
 
-    for (int i = 0; i < tokens.size; ++i) {
-        printf("Token %d: %s\n", i, tokens.data[i]);
-    }
+    tempFunc.value.p = _set;
+    HashTableInsert(state, "set", tempFunc);
+    
+    interpret(state, "set a 10");
+    interpret(state, "set b 20");
+    interpret(state, "add 10 20");
+    Variable result = HashTableGet(Variable, state, "add");
 
-    StackFree(tokens);
-
-    // hashtable test
-    HashTable(int) table;
-    HashTableInit(table);
-
-    HashTableInsert(table, "a", 1);
-    HashTableInsert(table, "b", 2);
-    HashTableInsert(table, "c", 3);
-
-    printf("Value of a: %d\n", HashTableGet(int, table, "a"));
-    printf("Value of b: %d\n", HashTableGet(int, table, "b"));
-    printf("Value of c: %d\n", HashTableGet(int, table, "c"));
-
-    HashTableRemove(table, "b");
-
-    printf("Value of f: %d\n", HashTableGet(int, table, "f"));
-
-    HashTableFree(table);
+    
     
     return 0;
 }
