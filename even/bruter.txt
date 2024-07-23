@@ -1,0 +1,8 @@
+types
+
+0 - void
+1 = int
+2 = float
+3 = string
+4 = function
+5 = table

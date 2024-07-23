@@ -87,10 +87,11 @@ typedef Stack(char*) StringStack;
 
 typedef HashTable(Variable) VariableHashTable;
 
-typedef Variable (*Function)(VariableHashTable*, VariableStack*);
-
-typedef VariableStack Table;
 typedef VariableHashTable State;
+typedef VariableStack Table;
+
+typedef Variable (*Function)(State*, Table*);
+
 
 StringStack splitString(const char* str) 
 {
@@ -149,7 +150,7 @@ Table parse(State state, char *cmd)
     {
         char* str = splited.data[i];
 
-        if (str[0] == ':') 
+        if (str[0] == '!') 
         {
             // String
             Variable v;
@@ -168,6 +169,13 @@ Table parse(State state, char *cmd)
         }
         else if (str[0] == '(') 
         {
+            // expression
+            Variable v;
+            Variable expression;
+            Table args = parse(state, strndup(str + 1, strlen(str) - 2));
+
+            v = ((Function)HashTableGet(Variable, state, "interpret").value.p)(&state, &args);
+            StackPush(result, v);
         }
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
         {
@@ -203,20 +211,83 @@ Table parse(State state, char *cmd)
     return result;
 }
 
+
+Variable interpret(State *state, char* input) 
+{
+    Table args = parse(*state, input);
+    char* funcName = StackShift(args).value.s;
+    if (HashTableGet(Variable, *state, funcName).type == 4) 
+    {
+        Variable result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, &args);
+        StackFree(args);
+        return result;
+    }
+    StackFree(args);
+
+}
+
+Variable _interpret(State *state, Table* args) 
+{
+    char* funcName = StackShift(*args).value.s;
+    if (HashTableGet(Variable, *state, funcName).type == 4) 
+    {
+        Variable result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, args);
+        StackFree(*args);
+        return result;
+    }
+    StackFree(*args);
+    //return result;
+}
+
 // list of core functions
 
 Variable _set(State *state, Table* args) 
 {
     Variable _key = StackShift(*args);
     Variable _value = StackShift(*args);
-    HashTableInsert(*state, _key.value.s, _value);
+    
+    if (_value.type == 3 && strcmp(_value.value.s, "from") == 0) 
+    {
+        Variable func = HashTableGet(Variable, *state, StackShift(*args).value.s);
+        if (func.type == 4)
+        {
+            _value = ((Function)func.value.p)(state, args);
+            HashTableInsert(*state, _key.value.s, _value);
+        }
+    }
+    else
+    {
+        HashTableInsert(*state, _key.value.s, _value);
+    }
+
     return _value;
+}
+
+Variable _print(State *state, Table* args) 
+{
+    while (args->size > 0) 
+    {
+        Variable v = StackShift(*args);
+        if (v.type == 1) 
+        {
+            printf("%d ", v.value.i);
+        } 
+        else if (v.type == 2) 
+        {
+            printf("%f ", v.value.f);
+        } 
+        else if (v.type == 3) 
+        {
+            printf("%s ", v.value.s);
+        }
+    }
+    printf("\n");
 }
 
 Variable _add(State *state, Table* args) 
 {
-    Variable a = StackPop(*args);
-    Variable b = StackPop(*args);
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
     Variable result;
     if (a.type == 1 && b.type == 1) 
     {
@@ -243,36 +314,9 @@ Variable _add(State *state, Table* args)
     return result;
 }
 
-void interpret(State *state, char* input) 
-{
-    Table args = parse(*state, input);
-    char* funcName = StackShift(args).value.s;
-    printf("teste %d\n", HashTableGet(Variable, *state, funcName).type);
-    
-    if (HashTableGet(Variable, *state, funcName).type == 4) 
-    {
-        Variable result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, &args);
-        if (result.type == 1) 
-        {
-            printf("Result: %d\n", result.value.i);
-        } 
-        else if (result.type == 2) 
-        {
-            printf("Result: %f\n", result.value.f);
-        } 
-        else if (result.type == 3) 
-        {
-            printf("Result: %s\n", result.value.s);
-        }
-    }
-
-    StackFree(args);
-}
 
 int main() 
 {
-    
-
     State state;
     HashTableInit(state);
 
@@ -284,11 +328,20 @@ int main()
 
     tempFunc.value.p = _set;
     HashTableInsert(state, "set", tempFunc);
+
+    tempFunc.value.p = _print;
+    HashTableInsert(state, "print", tempFunc);
+
+    tempFunc.value.p = _interpret;
+    HashTableInsert(state, "interpret", tempFunc);
     
-    //interpret(&state, "set a 10");
     interpret(&state, "set a 103");
     interpret(&state, "set b 200");
-    interpret(&state, "add $a $b");
+    interpret(&state, "set c from add $a $b");
+    interpret(&state, "print A = $a");
+    interpret(&state, "print B = $b");
+    interpret(&state, "print C = $c");
+    interpret(&state, "print D = (add teste !( 1 das da a23))");
     
     return 0;
 }
