@@ -87,7 +87,7 @@ typedef Stack(char*) StringStack;
 
 typedef HashTable(Variable) VariableHashTable;
 
-typedef Variable (*Function)(VariableHashTable, VariableStack*);
+typedef Variable (*Function)(VariableHashTable*, VariableStack*);
 
 typedef VariableStack Table;
 typedef VariableHashTable State;
@@ -205,14 +205,15 @@ Table parse(State state, char *cmd)
 
 // list of core functions
 
-Variable _set(State variables, Table* args) 
+Variable _set(State *state, Table* args) 
 {
     Variable _key = StackShift(*args);
     Variable _value = StackShift(*args);
-    return _key;
+    HashTableInsert(*state, _key.value.s, _value);
+    return _value;
 }
 
-Variable _add(VariableHashTable variables, Table* args) 
+Variable _add(State *state, Table* args) 
 {
     Variable a = StackPop(*args);
     Variable b = StackPop(*args);
@@ -242,13 +243,15 @@ Variable _add(VariableHashTable variables, Table* args)
     return result;
 }
 
-void interpret(State state, char* input) 
+void interpret(State *state, char* input) 
 {
-    Table args = parse(state, input);
+    Table args = parse(*state, input);
     char* funcName = StackShift(args).value.s;
-    if (HashTableGet(Variable, state, funcName).type == 4) 
+    printf("teste %d\n", HashTableGet(Variable, *state, funcName).type);
+    
+    if (HashTableGet(Variable, *state, funcName).type == 4) 
     {
-        Variable result = ((Function)HashTableGet(Variable, state, funcName).value.p)(state, &args);
+        Variable result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, &args);
         if (result.type == 1) 
         {
             printf("Result: %d\n", result.value.i);
@@ -262,6 +265,8 @@ void interpret(State state, char* input)
             printf("Result: %s\n", result.value.s);
         }
     }
+
+    StackFree(args);
 }
 
 int main() 
@@ -280,12 +285,10 @@ int main()
     tempFunc.value.p = _set;
     HashTableInsert(state, "set", tempFunc);
     
-    interpret(state, "set a 10");
-    interpret(state, "set b 20");
-    interpret(state, "add 10 20");
-    Variable result = HashTableGet(Variable, state, "add");
-
-    
+    //interpret(&state, "set a 10");
+    interpret(&state, "set a 103");
+    interpret(&state, "set b 200");
+    interpret(&state, "add $a $b");
     
     return 0;
 }
