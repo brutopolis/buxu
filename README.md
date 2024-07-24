@@ -4,7 +4,7 @@
 ## Description
 
 
-Bruter is a metaprogramable template language written in C;
+Bruter is a metaprogramable lightweight language written in C;
 
 *`UNDER HEAVY DEVELOPMENT`*
 

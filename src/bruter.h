@@ -71,7 +71,14 @@ const enum
 #define HashTable(T) struct { char **keys; T *ValueStack; int size; int capacity; }
 #define HashTableInit(h) do { (h).keys = NULL; (h).ValueStack = NULL; (h).size = 0; (h).capacity = 0; } while (0)
 #define HashTableFree(h) do { free((h).keys); free((h).ValueStack); } while (0)
+//verify if key k already exists in the hashtable and re-set the value else insert a new key-value pair
 #define HashTableInsert(h, k, v) do { \
+    for (int i = 0; i < (h).size; i++) { \
+        if (strcmp((h).keys[i], k) == 0) { \
+            (h).ValueStack[i] = (v); \
+            break; \
+        } \
+    } \
     if ((h).size == (h).capacity) { \
         (h).capacity = (h).capacity == 0 ? 1 : (h).capacity * 2; \
         (h).keys = realloc((h).keys, (h).capacity * sizeof(*(h).keys)); \

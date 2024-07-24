@@ -419,6 +419,11 @@ int main(int argc, char** argv)
                 printf("  -h  Show this help message\n");
                 return 0;
             }
+            else if (strcmp(arg, "-v") == 0)
+            {
+                printf("bruter %s\n", Version);
+                return 0;
+            }
             else
             {
                 printf("Unknown option: %s\n", arg);
