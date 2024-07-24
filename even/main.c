@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 //stack implementation
 #define Stack(T) struct { T *data; int size; int capacity; }
@@ -29,6 +30,27 @@
     (s).data[i1] = (s).data[i2]; \
     (s).data[i2] = tmp; \
 } while (0)
+//insert element v at index i
+#define StackInsert(s, i, v) do { \
+    if ((s).size == (s).capacity) { \
+        (s).capacity = (s).capacity == 0 ? 1 : (s).capacity * 2; \
+        (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
+    } \
+    for (int j = (s).size; j > i; j--) { \
+        (s).data[j] = (s).data[j - 1]; \
+    } \
+    (s).data[i] = (v); \
+    (s).size++; \
+} while (0)
+//remove element at index i and return it
+#define StackRemove(s, i) ({ \
+    typeof((s).data[i]) ret = (s).data[i]; \
+    for (int j = i; j < (s).size - 1; j++) { \
+        (s).data[j] = (s).data[j + 1]; \
+    } \
+    (s).size--; \
+    ret; \
+})
 
 
 //hashtables implementation
@@ -70,7 +92,6 @@
 
 typedef union 
 {
-    int i;
     float f;
     char* s;
     void* p;
@@ -92,8 +113,9 @@ typedef VariableStack Table;
 
 typedef Variable (*Function)(State*, Table*);
 
+const Variable Nil = {.type = 0, .value = {0}};
 
-StringStack splitString(const char* str) 
+StringStack specialSplit(const char* str) 
 {
     StringStack stack;
     StackInit(stack);
@@ -139,31 +161,71 @@ StringStack splitString(const char* str)
     return stack;
 }
 
+StringStack stringSplit(const char* str, const char delim) 
+{
+    StringStack splited;
+    StackInit(splited);
+    int n = 0;
+    //split string by ; but not in parentheses
+    while (n < strlen(str))
+    {
+        char token[1024];
+        int tokenIndex = 0;
+        int insideParens = 0;
+        while (n < strlen(str))
+        {
+            char c = str[n];
+            if (c == '(') 
+            {
+                insideParens++;
+            } 
+            else if (c == ')') 
+            {
+                if (insideParens > 0) 
+                {
+                    insideParens--;
+                }
+            }
+            if (c == delim && insideParens == 0)
+            {
+                break;
+            }
+            token[tokenIndex++] = c;
+            n++;
+        }
+        token[tokenIndex] = '\0';
+        char* newToken = (char*)malloc((tokenIndex + 1) * sizeof(char));
+        strcpy(newToken, token);
+        StackPush(splited, newToken);
+        n++;
+    }
+    return splited;
+}
+
 Table parse(State state, char *cmd)
 {
     Table result;
     StackInit(result);
 
-    StringStack splited = splitString(cmd);
+    StringStack splited = specialSplit(cmd);
 
     for (int i = 0; i < splited.size; ++i) 
     {
         char* str = splited.data[i];
 
-        if (str[0] == '!') 
-        {
-            // String
-            Variable v;
-            // Remove the colon and the parentheses
-            v.value.s = strndup(str + 2, strlen(str) - 3);
-            v.type = 3;
-            StackPush(result, v);
-        }
-        else if (str[0] == '$') 
+        if (str[0] == '$') 
         {
             // Variable
             Variable v;
-            v = HashTableGet(Variable, state, str + 1);
+            if(str[1] == '(')
+            {
+                v.value.s = strndup(str + 2, strlen(str) - 3);
+                v.type = 3;
+            }
+            else
+            {
+                v = HashTableGet(Variable, state, str + 1);
+            }
             
             StackPush(result, v);
         }
@@ -181,16 +243,8 @@ Table parse(State state, char *cmd)
         {
             // Number
             Variable v;
-            if (strchr(str, '.')) 
-            {
-                v.value.f = atof(str);
-                v.type = 2;
-            } 
-            else 
-            {
-                v.value.i = atoi(str);
-                v.type = 1;
-            }
+            v.value.f = atof(str);
+            v.type = 2;
             StackPush(result, v);
         }
         else 
@@ -223,44 +277,54 @@ Variable interpret(State *state, char* input)
         return result;
     }
     StackFree(args);
+    return Nil;
+}
 
+Variable bulkInterpret(State *state, const char* input) 
+{
+    StringStack splited = stringSplit(input, ';');
+    Variable result = Nil;
+    while (splited.size > 0)
+    {
+        result = interpret(state, StackShift(splited));
+        if (result.type != 0)
+        {
+            break;
+        }
+    }
+    StackFree(splited);
+    return result;
 }
 
 Variable _interpret(State *state, Table* args) 
 {
-    char* funcName = StackShift(*args).value.s;
-    if (HashTableGet(Variable, *state, funcName).type == 4) 
+    Variable result = Nil;
+    if (args->size == 1)
     {
-        Variable result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, args);
+        return bulkInterpret(state, StackShift(*args).value.s);
+    }
+    else
+    {
+        char* funcName = StackShift(*args).value.s;
+        if (HashTableGet(Variable, *state, funcName).type == 4) 
+        {
+            result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, args);
+            StackFree(*args);
+            return result;
+        }
         StackFree(*args);
         return result;
     }
-    StackFree(*args);
-    //return result;
 }
 
-// list of core functions
 
+// list of core functions
 Variable _set(State *state, Table* args) 
 {
     Variable _key = StackShift(*args);
     Variable _value = StackShift(*args);
-    
-    if (_value.type == 3 && strcmp(_value.value.s, "from") == 0) 
-    {
-        Variable func = HashTableGet(Variable, *state, StackShift(*args).value.s);
-        if (func.type == 4)
-        {
-            _value = ((Function)func.value.p)(state, args);
-            HashTableInsert(*state, _key.value.s, _value);
-        }
-    }
-    else
-    {
-        HashTableInsert(*state, _key.value.s, _value);
-    }
-
-    return _value;
+    HashTableInsert(*state, _key.value.s, _value);
+    return Nil;
 }
 
 Variable _print(State *state, Table* args) 
@@ -268,11 +332,7 @@ Variable _print(State *state, Table* args)
     while (args->size > 0) 
     {
         Variable v = StackShift(*args);
-        if (v.type == 1) 
-        {
-            printf("%d ", v.value.i);
-        } 
-        else if (v.type == 2) 
+        if (v.type == 2) 
         {
             printf("%f ", v.value.f);
         } 
@@ -282,66 +342,134 @@ Variable _print(State *state, Table* args)
         }
     }
     printf("\n");
+    return Nil;
 }
+
+// math functions
 
 Variable _add(State *state, Table* args) 
 {
-    Variable a = StackShift(*args);
-    Variable b = StackShift(*args);
-    Variable result;
-    if (a.type == 1 && b.type == 1) 
-    {
-        result.value.i = a.value.i + b.value.i;
-        result.type = 1;
-    } 
-    else if (a.type == 2 && b.type == 2) 
-    {
-        result.value.f = a.value.f + b.value.f;
-        result.type = 2;
-    } 
-    else if (a.type == 3 && b.type == 3) 
-    {
-        result.value.s = (char*)malloc((strlen(a.value.s) + strlen(b.value.s) + 1) * sizeof(char));
-        strcpy(result.value.s, a.value.s);
-        strcat(result.value.s, b.value.s);
-        result.type = 3;
-    } 
-    else 
-    {
-        result.value.i = 0;
-        result.type = 1;
-    }
+    Variable result = Nil;
+    result.value.f = StackShift(*args).value.f + StackShift(*args).value.f;
+    result.type = 2;
+    return result;
+}
+
+Variable _sub(State *state, Table* args) 
+{
+    Variable result = Nil;
+    result.value.f = StackShift(*args).value.f - StackShift(*args).value.f;
+    result.type = 2;
+    return result;
+}
+
+Variable _mul(State *state, Table* args) 
+{
+    Variable result = Nil;
+    result.value.f = StackShift(*args).value.f * StackShift(*args).value.f;
+    result.type = 2;
+    return result;
+}
+
+Variable _div(State *state, Table* args) 
+{
+    Variable result = Nil;
+    result.value.f = StackShift(*args).value.f / StackShift(*args).value.f;
+    result.type = 2;
+    return result;
+}
+
+Variable _mod(State *state, Table* args) 
+{
+    Variable result = Nil;
+    result.value.f = (int)StackShift(*args).value.f % (int)StackShift(*args).value.f;
+    result.type = 2;
+    return result;
+}
+
+Variable _pow(State *state, Table* args) 
+{
+    Variable result = Nil;
+    result.value.f = pow(StackShift(*args).value.f, StackShift(*args).value.f);
+    result.type = 2;
+    return result;
+}
+
+Variable _ceil(State *state, Table* args) 
+{
+    Variable result = Nil;
+    result.value.f = ceil(StackShift(*args).value.f);
+    result.type = 2;
+    return result;
+}
+
+Variable _floor(State *state, Table* args) 
+{
+    Variable result = Nil;
+    result.value.f = floor(StackShift(*args).value.f);
+    result.type = 2;
+    return result;
+}
+
+Variable _round(State *state, Table* args) 
+{
+    Variable result = Nil;
+    result.value.f = round(StackShift(*args).value.f);
+    result.type = 2;
     return result;
 }
 
 
-int main() 
+// State functions
+void registerFunction(State *state, char* name, Function func) 
 {
+    Variable tempFunc = Nil;
+    tempFunc.type = 4;
+    tempFunc.value.p = func;
+    HashTableInsert(*state, name, tempFunc);
+}
+
+
+int main(int argc, char** argv) 
+{
+    
     State state;
     HashTableInit(state);
 
-    Variable tempFunc;
-    tempFunc.type = 4;
     
-    tempFunc.value.p = _add;
-    HashTableInsert(state, "add", tempFunc);
-
-    tempFunc.value.p = _set;
-    HashTableInsert(state, "set", tempFunc);
-
-    tempFunc.value.p = _print;
-    HashTableInsert(state, "print", tempFunc);
-
-    tempFunc.value.p = _interpret;
-    HashTableInsert(state, "interpret", tempFunc);
+    registerFunction(&state, "add", _add);
+    registerFunction(&state, "sub", _sub);
+    registerFunction(&state, "mul", _mul);
+    registerFunction(&state, "div", _div);
+    registerFunction(&state, "mod", _mod);
+    registerFunction(&state, "pow", _pow);
+    registerFunction(&state, "ceil", _ceil);
+    registerFunction(&state, "floor", _floor);
+    registerFunction(&state, "round", _round);
     
-    interpret(&state, "set a 103");
-    interpret(&state, "set b 200");
-    interpret(&state, "set c from add $a $b");
-    interpret(&state, "print A = $a");
-    interpret(&state, "print B = $b");
-    interpret(&state, "print C = $c");
-    interpret(&state, "print D = (add teste !( 1 das da a23))");
+
+    registerFunction(&state, "set", _set);
+    registerFunction(&state, "print", _print);
+    registerFunction(&state, "interpret", _interpret);
+
     
+    
+    bulkInterpret(&state,
+        "set a 103.4;"
+        "set b 2;"
+        
+        "set c ($(print abc;add $a $b;));"
+        "set d ($(sub $a $b;));"
+        "set e ($(mul $a $b;));"
+        "set f ($(div $a $b;));"
+
+        "print A = $a;"
+        "print B = $b;"
+        "print C = $c;"
+        "print D = $d;"
+        "print E = $e;"
+        "print F = $f;"
+    );
+
     return 0;
 }
