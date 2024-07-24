@@ -3,8 +3,8 @@ set b 2;
 
 set c ($(print abc;add $a $b;));
 set d ($(sub $a $b;));
-set e ($(mul $a $b;));
-set f ($(div $a $b;));
+set e (mul $a $b);
+set f (div $a $b);
 
 print A = $a;
 print B = $b;
@@ -12,3 +12,5 @@ print C = $c;
 print D = $d;
 print E = $e;
 print F = $f;
+
+print seems ok! bruter interpreter compiled and located at ./bin/bruter;

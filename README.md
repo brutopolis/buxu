@@ -4,12 +4,9 @@
 ## Description
 
 
-Bruter is a metaprogramable template language written in lua;
+Bruter is a metaprogramable template language written in C;
 
 *`UNDER HEAVY DEVELOPMENT`*
-
-Lua(5.1+) compatible;
-
 
 ## Table of Contents
 
@@ -28,16 +25,14 @@ Lua(5.1+) compatible;
 
 - `.` = recursion.
 
-## Types
+## Arg Types
 
 
 - `$variable` = starts with $
 
 - `number` = starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -
 
-- `boolean` = true or false.
-
-- `string` = enclosed by (``), ({}) or untyped.
+- `string` = enclosed by $() or untyped.
 
 - `nil` = nil;
 
@@ -46,12 +41,11 @@ Lua(5.1+) compatible;
     function;
     function ...;
     function (function (function ...));
-    set target_variable from function ...;
     set target_variable (function ...);
     set target_variable value;
     function $variable_1 $variable_2 ...;
 
-## Libraries
+## Libraries -- not implemented yet -- desconsider
 
 bruter libraries are loaded with `using`:
 
@@ -60,14 +54,13 @@ bruter libraries are loaded with `using`:
 library search path:
 
     libr_path/library_name/library_name.br
-    libr_path/library_name/library_name.lua
     libr_path/library_name.br
-    libr_path/library_name.lua
 
 ## Reserved
 
-- ` `` ` = string delimiter
-- `{}` = string delimiter
+- `()` = expression
+- `($())` = multi-expression
+- `$()` = string delimiter
 - `$` = variable indicator
 - `.` = recursion
 - `;` = end of command
