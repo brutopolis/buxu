@@ -114,6 +114,16 @@ typedef VariableStack Table;
 typedef Variable (*Function)(State*, Table*);
 
 const Variable Nil = {.type = 0, .value = {0}};
+// type -1 is error, it can contain a string with the error message
+const enum 
+{
+    ERROR = -1,
+    VOID = 0,
+    TABLE = 1,
+    NUMBER = 2,
+    STRING = 3,
+    FUNCTION = 4
+} Types;
 
 StringStack specialSplit(const char* str) 
 {
@@ -270,14 +280,20 @@ Variable interpret(State *state, char* input)
 {
     Table args = parse(*state, input);
     char* funcName = StackShift(args).value.s;
+    Variable result = Nil;
     if (HashTableGet(Variable, *state, funcName).type == 4) 
     {
-        Variable result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, &args);
+        result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, &args);
         StackFree(args);
         return result;
     }
+    else
+    {
+        result.type = -1;
+        result.value.s = strdup("Unknown function");
+    }
     StackFree(args);
-    return Nil;
+    return result;
 }
 
 Variable bulkInterpret(State *state, const char* input) 
@@ -312,6 +328,11 @@ Variable _interpret(State *state, Table* args)
             StackFree(*args);
             return result;
         }
+        else
+        {
+            result.type = -1;
+            result.value.s = strdup("Unknown function");
+        }
         StackFree(*args);
         return result;
     }
@@ -343,6 +364,42 @@ Variable _print(State *state, Table* args)
     }
     printf("\n");
     return Nil;
+}
+
+Variable _help(State *state, Table* args) 
+{
+    printf("Available functions:\n");
+    
+    for (int i = 0; i < state->size; i++) 
+    {
+        switch (state->ValueStack[i].type) 
+        {
+            case -1:
+                printf("[error] %s\n", state->keys[i]);
+                break;
+            case 0:
+                printf("[void] %s\n", state->keys[i]);
+                break;
+            case 1:
+                printf("[table] %s\n", state->keys[i]);
+                break;
+            case 2:
+                printf("[number] %s\n", state->keys[i]);
+                break;
+            case 3:
+                printf("[string] %s\n", state->keys[i]);
+                break;
+            case 4:
+                printf("[function] %s\n", state->keys[i]);
+                break;
+        } 
+    }
+    return Nil;
+}
+
+Variable _exit(State *state, Table* args) 
+{
+    exit(0);
 }
 
 // math functions
@@ -429,13 +486,93 @@ void registerFunction(State *state, char* name, Function func)
     HashTableInsert(*state, name, tempFunc);
 }
 
+void repl(State *state) 
+{
+    char input[1024];
+    while (1) 
+    {
+        printf("br> ");
+        fgets(input, 1024, stdin);
+        input[strlen(input) - 1] = '\0';
+        Variable result = bulkInterpret(state, input);
+        if (result.type > 0) 
+        {
+            if (result.type == 2) 
+            {
+                printf("returned: %f\n", result.value.f);
+            } 
+            else if (result.type == 3) 
+            {
+                printf("returned: %s\n", result.value.s);
+            }
+        }
+        else if(result.type == -1)
+        {
+            printf("Error(%s): %s\n", result.value.s, input);
+        }
+    }
+}
 
 int main(int argc, char** argv) 
 {
-    
     State state;
     HashTableInit(state);
+    char* filename;
+    char* filetxt;
 
+    //turn args into a string stack
+    StringStack args;
+    StackInit(args);
+
+    for (int i = 1; i < argc; i++)
+    {
+        StackPush(args, argv[i]);
+    }
+
+
+    while (args.size > 0)
+    {
+        char* arg = StackShift(args);
+        if (arg[0] == '-')
+        {
+            if (strcmp(arg, "-h") == 0)
+            {
+                printf("Usage: bruter [options] [file]\n");
+                printf("Options:\n");
+                printf("  -h  Show this help message\n");
+                return 0;
+            }
+            else
+            {
+                printf("Unknown option: %s\n", arg);
+                return 1;
+            }
+        }
+        else if (filename == NULL)
+        {
+            filename = arg;
+        }
+    }
+
+    /*if (filename == NULL)
+    {
+        printf("No file specified\n");
+        return 1;
+    }
+    else */
+    if (filename != NULL && filetxt == NULL)
+    {
+        FILE* file = fopen(filename, "r");
+        fseek(file, 0, SEEK_END);
+        long length = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        filetxt = malloc(length + 1);
+        fread(filetxt, 1, length, file);
+        fclose(file);
+        filetxt[length] = '\0';
+    }
+
+    
     
     registerFunction(&state, "add", _add);
     registerFunction(&state, "sub", _sub);
@@ -451,10 +588,19 @@ int main(int argc, char** argv)
     registerFunction(&state, "set", _set);
     registerFunction(&state, "print", _print);
     registerFunction(&state, "interpret", _interpret);
+    registerFunction(&state, "help", _help);
+    registerFunction(&state, "exit", _exit);
 
+    if (filetxt != NULL)
+    {
+        bulkInterpret(&state, filetxt);
+    }
+    else 
+    {
+        repl(&state);
+    }
     
-    
-    bulkInterpret(&state,
+    /*bulkInterpret(&state,
         "set a 103.4;"
         "set b 2;"
         
@@ -469,7 +615,7 @@ int main(int argc, char** argv)
         "print D = $d;"
         "print E = $e;"
         "print F = $f;"
-    );
+    );*/
 
     return 0;
 }
