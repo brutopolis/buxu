@@ -214,12 +214,25 @@ Variable _interpret(State *state, Table* args)
 }
 
 
+
+Variable _unset(State *state, Table* args) 
+{
+    Variable _key = StackShift(*args);
+    HashTableRemove(*state, _key.value.s);
+    return Nil;
+}
+
 // list of core functions
 Variable _set(State *state, Table* args) 
 {
     Variable _key = StackShift(*args);
     Variable _value = StackShift(*args);
+    if (HashTableFind(*state, _key.value.s) != -1) 
+    {
+        HashTableRemove(*state, _key.value.s);
+    }
     HashTableInsert(*state, _key.value.s, _value);
+
     return Nil;
 }
 
@@ -250,7 +263,7 @@ Variable _help(State *state, Table* args)
         switch (state->ValueStack[i].type) 
         {
             case -1:
-                printf("[error] %s\n", state->keys[i]);
+                printf("[error] %s : \n", state->keys[i], state->ValueStack[i].value.s);
                 break;
             case 0:
                 printf("[void] %s\n", state->keys[i]);
@@ -259,13 +272,13 @@ Variable _help(State *state, Table* args)
                 printf("[table] %s\n", state->keys[i]);
                 break;
             case 2:
-                printf("[number] %s\n", state->keys[i]);
+                printf("[number] %s : %f\n", state->keys[i], state->ValueStack[i].value.f);
                 break;
             case 3:
-                printf("[string] %s\n", state->keys[i]);
+                printf("[string] %s : %s\n", state->keys[i], state->ValueStack[i].value.s);
                 break;
             case 4:
-                printf("[function] %s\n", state->keys[i]);
+                printf("[function] %s : %p\n", state->keys[i], state->ValueStack[i].value.p);
                 break;
         } 
     }
@@ -468,6 +481,7 @@ int main(int argc, char** argv)
     
 
     registerFunction(&state, "set", _set);
+    registerFunction(&state, "unset", _unset);
     registerFunction(&state, "print", _print);
     registerFunction(&state, "interpret", _interpret);
     registerFunction(&state, "help", _help);
@@ -482,22 +496,5 @@ int main(int argc, char** argv)
         repl(&state);
     }
     
-    /*bulkInterpret(&state,
-        "set a 103.4;"
-        "set b 2;"
-        
-        "set c ($(print abc;add $a $b;));"
-        "set d ($(sub $a $b;));"
-        "set e ($(mul $a $b;));"
-        "set f ($(div $a $b;));"
-
-        "print A = $a;"
-        "print B = $b;"
-        "print C = $c;"
-        "print D = $d;"
-        "print E = $e;"
-        "print F = $f;"
-    );*/
-
     return 0;
 }

@@ -68,43 +68,54 @@ const enum
 
 
 //hashtables implementation
-#define HashTable(T) struct { char **keys; T *ValueStack; int size; int capacity; }
-#define HashTableInit(h) do { (h).keys = NULL; (h).ValueStack = NULL; (h).size = 0; (h).capacity = 0; } while (0)
-#define HashTableFree(h) do { free((h).keys); free((h).ValueStack); } while (0)
-//verify if key k already exists in the hashtable and re-set the value else insert a new key-value pair
-#define HashTableInsert(h, k, v) do { \
-    for (int i = 0; i < (h).size; i++) { \
-        if (strcmp((h).keys[i], k) == 0) { \
-            (h).ValueStack[i] = (v); \
+#define HashTable(Type) struct { char **keys; Type *ValueStack; int size; int capacity; }
+#define HashTableInit(_table) do { (_table).keys = NULL; (_table).ValueStack = NULL; (_table).size = 0; (_table).capacity = 0; } while (0)
+#define HashTableFree(_table) do { free((_table).keys); free((_table).ValueStack); } while (0)
+//verify if key k already exists in the hashtable and change the value else insert a new key-value pair
+#define HashTableInsert(_table, key, v) do { \
+    for (int i = 0; i < (_table).size; i++) { \
+        if (strcmp((_table).keys[i], key) == 0) { \
+            (_table).ValueStack[i] = (v); \
             break; \
         } \
     } \
-    if ((h).size == (h).capacity) { \
-        (h).capacity = (h).capacity == 0 ? 1 : (h).capacity * 2; \
-        (h).keys = realloc((h).keys, (h).capacity * sizeof(*(h).keys)); \
-        (h).ValueStack = realloc((h).ValueStack, (h).capacity * sizeof(*(h).ValueStack)); \
+    if ((_table).size == (_table).capacity) { \
+        (_table).capacity = (_table).capacity == 0 ? 1 : (_table).capacity * 2; \
+        (_table).keys = realloc((_table).keys, (_table).capacity * sizeof(*(_table).keys)); \
+        (_table).ValueStack = realloc((_table).ValueStack, (_table).capacity * sizeof(*(_table).ValueStack)); \
     } \
-    (h).keys[(h).size] = strdup(k); \
-    (h).ValueStack[(h).size++] = (v); \
+    (_table).keys[(_table).size] = strdup(key); \
+    (_table).ValueStack[(_table).size++] = (v); \
 } while (0)
-#define HashTableRemove(h, k) do { \
-    for (int i = 0; i < (h).size; i++) { \
-        if (strcmp((h).keys[i], k) == 0) { \
-            free((h).keys[i]); \
-            for (int j = i; j < (h).size - 1; j++) { \
-                (h).keys[j] = (h).keys[j + 1]; \
-                (h).ValueStack[j] = (h).ValueStack[j + 1]; \
+
+#define HashTableRemove(_table, key) do { \
+    for (int i = 0; i < (_table).size; i++) { \
+        if (strcmp((_table).keys[i], key) == 0) { \
+            free((_table).keys[i]); \
+            for (int j = i; j < (_table).size - 1; j++) { \
+                (_table).keys[j] = (_table).keys[j + 1]; \
+                (_table).ValueStack[j] = (_table).ValueStack[j + 1]; \
             } \
-            (h).size--; \
+            (_table).size--; \
             break; \
         } \
     } \
 } while (0)
-#define HashTableGet(T, h, k) ({ \
-    T ret = {0}; \
-    for (int i = 0; i < (h).size; i++) { \
-        if (strcmp((h).keys[i], k) == 0) { \
-            ret = (h).ValueStack[i]; \
+#define HashTableGet(Type, _table, key) ({ \
+    Type ret = {0}; \
+    for (int i = 0; i < (_table).size; i++) { \
+        if (strcmp((_table).keys[i], key) == 0) { \
+            ret = (_table).ValueStack[i]; \
+            break; \
+        } \
+    } \
+    ret; \
+})
+#define HashTableFind(_table, key) ({ \
+    int ret = -1; \
+    for (int i = 0; i < (_table).size; i++) { \
+        if (strcmp((_table).keys[i], key) == 0) { \
+            ret = i; \
             break; \
         } \
     } \
