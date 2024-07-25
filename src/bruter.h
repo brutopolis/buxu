@@ -140,10 +140,10 @@ typedef Stack(char*) StringStack;
 
 typedef HashTable(Variable) VariableHashTable;
 
-typedef VariableHashTable State;
-typedef VariableStack Table;
+typedef VariableHashTable Table;
+typedef VariableStack List;
 
-typedef Variable (*Function)(State*, Table*);
+typedef Variable (*Function)(Table*, List*);
 
 const Variable Nil = {.type = 0, .value = {0}};
 

@@ -13,4 +13,6 @@ print D = $d;
 print E = $e;
 print F = $f;
 
+set tbl [](1 2 3 4);
+
 print seems ok! bruter interpreter compiled and located at ./bin/bruter;
