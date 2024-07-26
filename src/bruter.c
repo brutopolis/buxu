@@ -320,7 +320,7 @@ Variable _ls(Table *_state, List* args)
     else
     {
         Variable _ = StackShift(*args);
-        printf("_ type = %d\n", _.type);
+        //printf("_ type = %d\n", _.type);
         //printf("_ value = %s\n", _.value.s);
         if (_.type == 1) 
         {
@@ -337,13 +337,13 @@ Variable _ls(Table *_state, List* args)
         switch (state->ValueStack[i].type) 
         {
             case -1:
-                printf("[error] %s : \n", state->keys[i], state->ValueStack[i].value.s);
+                printf("[error] %s : %s \n", state->keys[i], state->ValueStack[i].value.s);
                 break;
             case 0:
                 printf("[void] %s\n", state->keys[i]);
                 break;
             case 1:
-                printf("[table] %s\n", state->keys[i]);
+                printf("[table] %s\n", state->keys[i], state->ValueStack[i].value.p);
                 break;
             case 2:
                 printf("[number] %s : %f\n", state->keys[i], state->ValueStack[i].value.f);
