@@ -1,6 +1,5 @@
 #include "bruter.h"
 
-// Define the function to create a new table
 Table* createNewTable() {
     Table* newTable = (Table*)malloc(sizeof(Table));
     HashTableInit(*newTable);
@@ -109,9 +108,9 @@ void recursiveSet(Table *state, char* key, Variable value) {
     Variable v = HashTableGet(Variable, *state, currentKey);
 
     while (splited.size > 1) {
-        if (v.type != 1) // Cria uma nova tabela se não for uma tabela
+        if (v.type != 1) 
         {
-            Table *newTable = createNewTable(); // Função fictícia para criar uma nova tabela
+            Table *newTable = createNewTable();
             Variable newVar;
             newVar.type = 1;
             newVar.value.p = newTable;
@@ -164,41 +163,52 @@ void recursiveUnset(Table *state, char* key) {
     }
 }
 
-List parse(Table *state, char *cmd) {
+List parse(Table *state, char *cmd) 
+{
     List result;
     StackInit(result);
 
     StringStack splited = specialSplit(cmd);
 
-    for (int i = 0; i < splited.size; ++i) {
+    for (int i = 0; i < splited.size; ++i) 
+    {
         char* str = splited.data[i];
 
-        if (str[0] == '$') {
+        if (str[0] == '$') 
+        {
             // Variable
             Variable v;
-            if(str[1] == '(') {
+            if(str[1] == '(') 
+            {
                 v.value.s = strndup(str + 2, strlen(str) - 3);
                 v.type = 3;
-            } else {
+            } 
+            else 
+            {
                 v = recursiveGet(state, strdup(str + 1));
             }
-
             StackPush(result, v);
-        } else if (str[0] == '(') {
+        } 
+        else if (str[0] == '(') 
+        {
             // expression
             Variable v;
             Variable expression;
             List args = parse(state, strndup(str + 1, strlen(str) - 2));
 
-            v = ((Function)HashTableGet(Variable, *state, "interpret").value.p)(state, &args);
+            v = ((Function)HashTableGet(Variable, *state, "eval").value.p)(state, &args);
             StackPush(result, v);
-        } else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') {
+        } 
+        else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
+        {
             // Number
             Variable v;
             v.value.f = atof(str);
             v.type = 2;
             StackPush(result, v);
-        } else {
+        } 
+        else 
+        {
             // string
             Variable v;
             v.value.s = strdup(str);
@@ -214,17 +224,24 @@ List parse(Table *state, char *cmd) {
     return result;
 }
 
-Variable interpret(Table *state, char* input) {
+Variable interpret(Table *state, char* input) 
+{
     List args = parse(state, input);
     char* funcName = StackShift(args).value.s;
     Variable result = Nil;
-    if (HashTableGet(Variable, *state, funcName).type == 4) {
-        result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, &args);
+    Variable var = recursiveGet(state, funcName);
+    if (var.type == 4) 
+    {
+        result = ((Function)var.value.p)(state, &args);
         StackFree(args);
         return result;
-    } else {
+    } 
+    else 
+    {
         result.type = -1;
-        result.value.s = strdup("Unknown function");
+        char* ___err = (char*)malloc(19 + strlen(funcName));
+        sprintf(___err, "Unknown function %s", funcName);
+        result.value.s = ___err;
     }
     StackFree(args);
     return result;
@@ -243,24 +260,35 @@ Variable bulkInterpret(Table *state, const char* input) {
     return result;
 }
 
-Variable _interpret(Table *state, List* args) {
+Variable _interpret(Table *state, List* args) 
+{
     Variable result = Nil;
-    if (args->size == 1) {
+    if (args->size == 1) 
+    {
         return bulkInterpret(state, StackShift(*args).value.s);
-    } else {
+    } 
+    else 
+    {
         char* funcName = StackShift(*args).value.s;
-        if (HashTableGet(Variable, *state, funcName).type == 4) {
-            result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, args);
+        Variable var = recursiveGet(state, funcName);
+        if (var.type == 4) 
+        {
+            result = ((Function)var.value.p)(state, args);
             StackFree(*args);
             return result;
-        } else {
+        } 
+        else 
+        {
             result.type = -1;
-            result.value.s = strdup("Unknown function");
+            char* ___err = (char*)malloc(19 + strlen(funcName));
+            sprintf(___err, "Unknown function %s", funcName);
+            result.value.s = ___err;
         }
         StackFree(*args);
         return result;
     }
 }
+
 Variable _table(Table *state, List* args) 
 {
     Table* newTable = (Table*)malloc(sizeof(Table));
@@ -359,6 +387,10 @@ Variable _ls(Table *_state, List* args)
     return Nil;
 }
 
+Variable __exit(Table *state, List* args) 
+{
+    exit(0);
+}
 
 // math functions
 
@@ -434,6 +466,125 @@ Variable _round(Table *state, List* args)
     return result;
 }
 
+// string functions
+Variable _string_concat(Table *state, List* args) 
+{
+    Variable result = Nil;
+    char* str = (char*)malloc(1);
+    Variable _var;
+    while (args->size > 0) 
+    {
+        _var = StackShift(*args);
+        str = (char*)realloc(str, strlen(str) + strlen(_var.value.s) + 1);
+        strcat(str, _var.value.s);
+    }
+    result.value.s = str;
+    result.type = 3;
+    return result;
+}
+
+Variable _string_split(Table *state, List* args) 
+{
+    Variable result = Nil;
+    char* str = StackShift(*args).value.s;
+    char* delim = StackShift(*args).value.s;
+    StringStack splited = stringSplit(str, delim[0]);
+    Table* newTable = createNewTable();
+    for (int i = 0; i < splited.size; i++) 
+    {
+        char* key = (char*)malloc(11);
+        sprintf(key, "%d", i);
+        Variable _var = (Variable){.type = 3, .value = {.s = splited.data[i]}};
+        HashTableInsert(*newTable, key, _var);
+    }
+    result.type = 1;
+    result.value.p = newTable;
+    StackFree(splited);
+    return result;
+}
+
+Variable _string_find(Table *state, List* args) 
+{
+    Variable result = Nil;
+    char* str = StackShift(*args).value.s;
+    char* substr = StackShift(*args).value.s;
+    int index = -1;
+    char* found = strstr(str, substr);
+    if (found != NULL) 
+    {
+        index = found - str;
+    }
+    result.value.f = index;
+    result.type = 2;
+    return result;
+}
+
+Variable _string_replace(Table *state, List* args) 
+{
+    Variable result = Nil;
+    char* str = StackShift(*args).value.s;
+    char* substr = StackShift(*args).value.s;
+    char* replacement = StackShift(*args).value.s;
+    char* found = strstr(str, substr);
+    if (found != NULL) 
+    {
+        char* newStr = (char*)malloc(strlen(str) + strlen(replacement) - strlen(substr) + 1);
+        strncpy(newStr, str, found - str);
+        strcpy(newStr + (found - str), replacement);
+        strcpy(newStr + (found - str) + strlen(replacement), found + strlen(substr));
+        result.value.s = newStr;
+    } 
+    else 
+    {
+        result.value.s = strdup(str);
+    }
+    result.type = 3;
+    return result;
+}
+
+Variable _string_byte(Table *state, List* args) 
+{
+    Variable result = Nil;
+    char* str = StackShift(*args).value.s;
+    int index = (int)StackShift(*args).value.f;
+    result.value.f = str[index];
+    result.type = 2;
+    return result;
+}
+
+Variable _string_char(Table *state, List* args) 
+{
+    Variable result = Nil;
+    char* str = (char*)malloc(2);
+    str[0] = (char)StackShift(*args).value.f;
+    str[1] = '\0';
+    result.value.s = str;
+    result.type = 3;
+    return result;
+}
+
+Variable _string_length(Table *state, List* args) 
+{
+    Variable result = Nil;
+    char* str = StackShift(*args).value.s;
+    result.value.f = strlen(str);
+    result.type = 2;
+    return result;
+}
+
+Variable _string_substring(Table *state, List* args) 
+{
+    Variable result = Nil;
+    char* str = StackShift(*args).value.s;
+    int start = (int)StackShift(*args).value.f;
+    int length = (int)StackShift(*args).value.f;
+    char* newStr = (char*)malloc(length + 1);
+    strncpy(newStr, str + start, length);
+    newStr[length] = '\0';
+    result.value.s = newStr;
+    result.type = 3;
+    return result;
+}
 
 // Table functions
 void registerFunction(Table *state, char* name, Function func) 
@@ -441,7 +592,7 @@ void registerFunction(Table *state, char* name, Function func)
     Variable tempFunc = Nil;
     tempFunc.type = 4;
     tempFunc.value.p = func;
-    HashTableInsert(*state, name, tempFunc);
+    recursiveSet(state, name, tempFunc);
 }
 
 void repl(Table *state) 
@@ -475,8 +626,7 @@ void repl(Table *state)
 int main(int argc, char** argv) 
 {
     
-    Table state;
-    HashTableInit(state);
+    Table state = *createNewTable();
     char* filename = NULL;
     char* filetxt = NULL;
 
@@ -518,13 +668,7 @@ int main(int argc, char** argv)
         }
     }
 
-    /*if (filename == NULL)
-    {
-        printf("No file specified\n");
-        return 1;
-    }
-    else */
-    printf("test %d\n", args.size);
+    
     if (filename != NULL && filetxt == NULL)
     {
         FILE* file = fopen(filename, "r");
@@ -536,8 +680,6 @@ int main(int argc, char** argv)
         fclose(file);
         filetxt[length] = '\0';
     }
-
-    
     
     registerFunction(&state, "add", _add);
     registerFunction(&state, "sub", _sub);
@@ -553,17 +695,29 @@ int main(int argc, char** argv)
     registerFunction(&state, "set", _set);
     registerFunction(&state, "unset", _unset);
     registerFunction(&state, "print", _print);
-    registerFunction(&state, "interpret", _interpret);
+    registerFunction(&state, "eval", _interpret);
     registerFunction(&state, "ls", _ls);
-    //registerFunction(&state, "exit", _exit);
-
+    registerFunction(&state, "exit", __exit);
     registerFunction(&state, "table", _table);
+
+
+    interpret(&state, "set string (table)");
+    registerFunction(&state, "string.concat", _string_concat);
+    registerFunction(&state, "string.split", _string_split);
+    registerFunction(&state, "string.find", _string_find);
+    registerFunction(&state, "string.replace", _string_replace);
+    registerFunction(&state, "string.byte", _string_byte);
+    registerFunction(&state, "string.char", _string_char);
+    registerFunction(&state, "string.len", _string_length);
+    registerFunction(&state, "string.substr", _string_substring);
+
+
 
     if (filetxt != NULL)
     {
         bulkInterpret(&state, filetxt);
     }
-    else 
+    else
     {
         repl(&state);
     }

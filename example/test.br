@@ -1,11 +1,16 @@
+print set test;
 set a 103.4;
 set b 2;
 
+print;
+print expressions test:;
 set c ($(print abc;add $a $b;));
 set d ($(sub $a $b;));
 set e (mul $a $b);
 set f (div $a $b);
 
+print;
+print print test:;
 print A = $a;
 print B = $b;
 print C = $c;
@@ -13,21 +18,65 @@ print D = $d;
 print E = $e;
 print F = $f;
 
+print;
+print test tables recursively:;
 set tbl (table);
 set tbl.a 9999;
 set tbl.b 8888;
 set tbl.c 7777;
-
-
-
 set tbl.d (table);
 set tbl.d.a (table);
 set tbl.d.a.aa 999;
-
 set tbl.d.b 555;
-
 print tbl.a = $tbl.a;
 set _b $tbl.d;
 ls $tbl.d.a;
+
+print;
+print txt split test:;
+set str $(hello world !);
+set splited (string.split $str $( ));
+ls $splited;
+
+print;
+print txt concat test:;
+set str1 $(hello);
+set str2 $(world);
+set str3 (string.concat $str1 $str2);
+print $str3;
+
+print;
+print txt replace test:;
+set str $(hello world !);
+set replaced (string.replace $str $(world) $(bruter));
+print $replaced;
+
+print;
+print txt find test:;
+set str $(hello world !);
+set found (string.find $str $(world));
+print $found;
+
+print;
+print txt substr test:;
+set str $(hello world !);
+set substr (string.substr $str 2 4);
+print $substr;
+
+print;
+print txt char test:;
+set char (string.char 65);
+print $char;
+
+print;
+print txt byte test:;
+set byte (string.byte A);
+print $byte;
+
+print;
+print txt len test:;
+set len (string.len $(hello world !));
+print $len;
+
 
 print seems ok! bruter interpreter compiled and located at ./bin/bruter;

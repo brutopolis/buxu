@@ -1,14 +1,15 @@
 types
 
 0 = void
-1 = int
+1 = table
 2 = float
 3 = string
 4 = function
-5 = table
+
 
 reserved
 
 $var = variable
 $(string) = string
-($(expression)) = expression
+(expression) = expression
+($(expression)) = bulk expression
