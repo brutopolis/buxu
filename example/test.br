@@ -70,7 +70,7 @@ print $char;
 
 print;
 print txt byte test:;
-set byte (string.byte A);
+set byte (string.byte A 0);
 print $byte;
 
 print;
