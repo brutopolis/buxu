@@ -1,7 +1,13 @@
 #include "bruter.h"
 
-StringStack specialSplit(const char* str) 
-{
+// Define the function to create a new table
+Table* createNewTable() {
+    Table* newTable = (Table*)malloc(sizeof(Table));
+    HashTableInit(*newTable);
+    return newTable;
+}
+
+StringStack specialSplit(const char* str) {
     StringStack stack;
     StackInit(stack);
 
@@ -10,30 +16,22 @@ StringStack specialSplit(const char* str)
     int tokenIndex = 0;
     int insideParens = 0;
 
-    for (int i = 0; i <= n; ++i) 
-    {
+    for (int i = 0; i <= n; ++i) {
         char c = str[i];
 
         // Check for delimiters
-        if (c == '(') 
-        {
+        if (c == '(') {
             insideParens++;
-        } 
-        else if (c == ')') 
-        {
-            if (insideParens > 0) 
-            {
+        } else if (c == ')') {
+            if (insideParens > 0) {
                 insideParens--;
             }
         }
 
         // Add character to current token
-        if (i < n && (!isspace(c) || insideParens > 0)) 
-        {
+        if (i < n && (!isspace(c) || insideParens > 0)) {
             token[tokenIndex++] = c;
-        } 
-        else if (tokenIndex > 0) 
-        {
+        } else if (tokenIndex > 0) {
             // End of token
             token[tokenIndex] = '\0';
             char* newToken = (char*)malloc((tokenIndex + 1) * sizeof(char));
@@ -46,33 +44,25 @@ StringStack specialSplit(const char* str)
     return stack;
 }
 
-StringStack stringSplit(const char* str, const char delim) 
-{
+StringStack stringSplit(const char* str, const char delim) {
     StringStack splited;
     StackInit(splited);
     int n = 0;
     //split string by ; but not in parentheses
-    while (n < strlen(str))
-    {
+    while (n < strlen(str)) {
         char token[1024];
         int tokenIndex = 0;
         int insideParens = 0;
-        while (n < strlen(str))
-        {
+        while (n < strlen(str)) {
             char c = str[n];
-            if (c == '(') 
-            {
+            if (c == '(') {
                 insideParens++;
-            } 
-            else if (c == ')') 
-            {
-                if (insideParens > 0) 
-                {
+            } else if (c == ')') {
+                if (insideParens > 0) {
                     insideParens--;
                 }
             }
-            if (c == delim && insideParens == 0)
-            {
+            if (c == delim && insideParens == 0) {
                 break;
             }
             token[tokenIndex++] = c;
@@ -87,177 +77,136 @@ StringStack stringSplit(const char* str, const char delim)
     return splited;
 }
 
-
-Variable recursiveGet(Table *state, char* key) 
-{
+Variable recursiveGet(Table *state, char* key) {
     StringStack splited = stringSplit(key, '.');
-    char* lastKey = StackPop(splited);
-    Variable v = HashTableGet(Variable, *state, StackShift(splited));
-    while (splited.size > 0) 
-    {
-        if (v.type == 1) 
+    char* currentKey = StackShift(splited);
+    Variable v = HashTableGet(Variable, *state, currentKey);
+
+    while (splited.size > 0) {
+        if (v.type == 1) // Verifica se é do tipo tabela
         {
-            v = HashTableGet(Variable, *(Table*)v.value.p, StackShift(splited));
-        } 
-        else 
-        {
-            v.type = -1;
+            currentKey = StackShift(splited);
+            v = HashTableGet(Variable, *(Table*)v.value.p, currentKey);
+        } else {
+            v.type = -1; // Define um tipo de erro se não for uma tabela
             v.value.s = strdup("Not a table");
             break;
         }
     }
-    if (v.type == 1) 
-    {
-        return recursiveGet((Table*)v.value.p, lastKey);
-    } 
-    else 
-    {
-        return HashTableGet(Variable, *state, lastKey);
+
+    return v;
+}
+
+void recursiveSet(Table *state, char* key, Variable value) {
+    StringStack splited = stringSplit(key, '.');
+
+    if (splited.size == 1) {
+        HashTableInsert(*state, key, value);
+        return;
+    }
+
+    char* currentKey = StackShift(splited);
+    Variable v = HashTableGet(Variable, *state, currentKey);
+
+    while (splited.size > 1) {
+        if (v.type != 1) // Cria uma nova tabela se não for uma tabela
+        {
+            Table *newTable = createNewTable(); // Função fictícia para criar uma nova tabela
+            Variable newVar;
+            newVar.type = 1;
+            newVar.value.p = newTable;
+            HashTableInsert(*state, currentKey, newVar);
+            v = newVar;
+        }
+
+        state = (Table*)v.value.p;
+        currentKey = StackShift(splited);
+        v = HashTableGet(Variable, *state, currentKey);
+    }
+
+    if (v.type == 1) {
+        currentKey = StackShift(splited);
+        HashTableInsert(*(Table*)v.value.p, currentKey, value);
+    } else {
+        HashTableInsert(*state, currentKey, value);
     }
 }
 
-
-// recursive set a value in tables inside tables recursively
-void recursiveSet(Table *state, char* key, Variable value) 
-{
+void recursiveUnset(Table *state, char* key) {
     StringStack splited = stringSplit(key, '.');
-    char* lastKey = StackPop(splited);
-    Variable v = HashTableGet(Variable, *state, StackShift(splited));
-    while (splited.size > 0) 
-    {
-        if (v.type == 1) 
+
+    if (splited.size == 1) {
+        HashTableRemove(*state, key);
+        return;
+    }
+
+    char* currentKey = StackShift(splited);
+    Variable v = HashTableGet(Variable, *state, currentKey);
+
+    while (splited.size > 1) {
+        if (v.type == 1) // Verifica se é do tipo tabela
         {
-            v = HashTableGet(Variable, *(Table*)v.value.p, StackShift(splited));
-        } 
-        else 
-        {
-            v.type = -1;
+            state = (Table*)v.value.p;
+            currentKey = StackShift(splited);
+            v = HashTableGet(Variable, *state, currentKey);
+        } else {
+            v.type = -1; // Define um tipo de erro se não for uma tabela
             v.value.s = strdup("Not a table");
-            break;
+            return;
         }
     }
-    if (v.type == 1) 
-    {
-        recursiveSet((Table*)v.value.p, lastKey, value);
-    } 
-    else 
-    {
-        HashTableInsert(*state, lastKey, value);
+
+    if (v.type == 1) {
+        currentKey = StackShift(splited);
+        HashTableRemove(*(Table*)v.value.p, currentKey);
+    } else {
+        HashTableRemove(*state, key);
     }
 }
 
-void recursiveUnset(Table *state, char* key) 
-{
-    StringStack splited = stringSplit(key, '.');
-    char* lastKey = StackPop(splited);
-    Variable v = HashTableGet(Variable, *state, StackShift(splited));
-    while (splited.size > 0) 
-    {
-        if (v.type == 1) 
-        {
-            v = HashTableGet(Variable, *(Table*)v.value.p, StackShift(splited));
-        } 
-        else 
-        {
-            v.type = -1;
-            v.value.s = strdup("Not a table");
-            break;
-        }
-    }
-    if (v.type == 1) 
-    {
-        recursiveUnset((Table*)v.value.p, lastKey);
-    } 
-    else 
-    {
-        HashTableRemove(*state, lastKey);
-    }
-}
-
-List parse(Table state, char *cmd)
-{
+List parse(Table *state, char *cmd) {
     List result;
     StackInit(result);
 
     StringStack splited = specialSplit(cmd);
 
-    for (int i = 0; i < splited.size; ++i) 
-    {
+    for (int i = 0; i < splited.size; ++i) {
         char* str = splited.data[i];
 
-        if (str[0] == '$') 
-        {
+        if (str[0] == '$') {
             // Variable
             Variable v;
-            if(str[1] == '(')
-            {
+            if(str[1] == '(') {
                 v.value.s = strndup(str + 2, strlen(str) - 3);
                 v.type = 3;
+            } else {
+                v = recursiveGet(state, strdup(str + 1));
             }
-            else
-            {
-                v = recursiveGet(&state, strdup(str + 1));
-            }
-            
+
             StackPush(result, v);
-        }
-        else if (str[0] == '[' && str[1] == ']') 
-        {
-            if (strlen(str) == 2) 
-            {
-                // empty table
-                Variable v;
-                v.type = 1;
-                List* t = (List*)malloc(sizeof(List));
-                StackInit(*t);
-                v.value.p = t;
-                StackPush(result, v);
-            }
-            else if(str[2] == '(')
-            {
-                // table
-                Variable v;
-                List* t = (List*)malloc(sizeof(List));
-                StackInit(*t);
-                v.type = 1;
-                v.value.p = t;
-                List args = parse(state, strndup(str + 3, strlen(str) - 4));
-                for (int i = 0; i < args.size; i++) 
-                {
-                    StackPush(*t, StackShift(args));
-                }
-                StackPush(result, v);
-            }
-        }
-        else if (str[0] == '(') 
-        {
+        } else if (str[0] == '(') {
             // expression
             Variable v;
             Variable expression;
             List args = parse(state, strndup(str + 1, strlen(str) - 2));
 
-            v = ((Function)HashTableGet(Variable, state, "interpret").value.p)(&state, &args);
+            v = ((Function)HashTableGet(Variable, *state, "interpret").value.p)(state, &args);
             StackPush(result, v);
-        }
-        else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
-        {
+        } else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') {
             // Number
             Variable v;
             v.value.f = atof(str);
             v.type = 2;
             StackPush(result, v);
-        }
-        else 
-        {
+        } else {
             // string
             Variable v;
             v.value.s = strdup(str);
             v.type = 3;
             StackPush(result, v);
         }
-        
-        free(str);
 
+        free(str);
     }
 
     StackFree(splited);
@@ -265,20 +214,15 @@ List parse(Table state, char *cmd)
     return result;
 }
 
-
-Variable interpret(Table *state, char* input) 
-{
-    List args = parse(*state, input);
+Variable interpret(Table *state, char* input) {
+    List args = parse(state, input);
     char* funcName = StackShift(args).value.s;
     Variable result = Nil;
-    if (HashTableGet(Variable, *state, funcName).type == 4) 
-    {
+    if (HashTableGet(Variable, *state, funcName).type == 4) {
         result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, &args);
         StackFree(args);
         return result;
-    }
-    else
-    {
+    } else {
         result.type = -1;
         result.value.s = strdup("Unknown function");
     }
@@ -286,15 +230,12 @@ Variable interpret(Table *state, char* input)
     return result;
 }
 
-Variable bulkInterpret(Table *state, const char* input) 
-{
+Variable bulkInterpret(Table *state, const char* input) {
     StringStack splited = stringSplit(input, ';');
     Variable result = Nil;
-    while (splited.size > 0)
-    {
+    while (splited.size > 0) {
         result = interpret(state, StackShift(splited));
-        if (result.type != 0)
-        {
+        if (result.type != 0) {
             break;
         }
     }
@@ -302,24 +243,17 @@ Variable bulkInterpret(Table *state, const char* input)
     return result;
 }
 
-Variable _interpret(Table *state, List* args) 
-{
+Variable _interpret(Table *state, List* args) {
     Variable result = Nil;
-    if (args->size == 1)
-    {
+    if (args->size == 1) {
         return bulkInterpret(state, StackShift(*args).value.s);
-    }
-    else
-    {
+    } else {
         char* funcName = StackShift(*args).value.s;
-        if (HashTableGet(Variable, *state, funcName).type == 4) 
-        {
+        if (HashTableGet(Variable, *state, funcName).type == 4) {
             result = ((Function)HashTableGet(Variable, *state, funcName).value.p)(state, args);
             StackFree(*args);
             return result;
-        }
-        else
-        {
+        } else {
             result.type = -1;
             result.value.s = strdup("Unknown function");
         }
@@ -327,7 +261,12 @@ Variable _interpret(Table *state, List* args)
         return result;
     }
 }
-
+Variable _table(Table *state, List* args) 
+{
+    Table* newTable = (Table*)malloc(sizeof(Table));
+    HashTableInit(*newTable);
+    return (Variable){.type = 1, .value = {.p = newTable}};
+}
 
 Variable _unset(Table *state, List* args) 
 {
@@ -371,8 +310,28 @@ Variable _print(Table *state, List* args)
     return Nil;
 }
 
-Variable _help(Table *state, List* args) 
+Variable _ls(Table *_state, List* args) 
 {
+    Table *state;
+    if (args->size == 0) 
+    {
+        state = _state;
+    }
+    else
+    {
+        Variable _ = StackShift(*args);
+        printf("_ type = %d\n", _.type);
+        //printf("_ value = %s\n", _.value.s);
+        if (_.type == 1) 
+        {
+            state = _.value.p;
+        }
+        else
+        {
+            return Nil;
+        }
+    }
+
     for (int i = 0; i < state->size; i++) 
     {
         switch (state->ValueStack[i].type) 
@@ -599,8 +558,10 @@ int main(int argc, char** argv)
     registerFunction(&state, "unset", _unset);
     registerFunction(&state, "print", _print);
     registerFunction(&state, "interpret", _interpret);
-    registerFunction(&state, "help", _help);
+    registerFunction(&state, "ls", _ls);
     registerFunction(&state, "exit", _exit);
+
+    registerFunction(&state, "table", _table);
 
     if (filetxt != NULL)
     {

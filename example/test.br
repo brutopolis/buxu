@@ -13,6 +13,21 @@ print D = $d;
 print E = $e;
 print F = $f;
 
-set tbl [](1 2 3 4);
+set tbl (table);
+set tbl.a 9999;
+set tbl.b 8888;
+set tbl.c 7777;
+
+
+
+set tbl.d (table);
+set tbl.d.a (table);
+set tbl.d.a.aa 999;
+
+set tbl.d.b 555;
+
+print tbl.a = $tbl.a;
+set _b $tbl.d;
+ls $tbl.d.a;
 
 print seems ok! bruter interpreter compiled and located at ./bin/bruter;
