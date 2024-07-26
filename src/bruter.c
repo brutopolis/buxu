@@ -359,11 +359,6 @@ Variable _ls(Table *_state, List* args)
     return Nil;
 }
 
-Variable _exit(Table *state, List* args) 
-{
-    exit(0);
-    return Nil;
-}
 
 // math functions
 
@@ -479,10 +474,11 @@ void repl(Table *state)
 
 int main(int argc, char** argv) 
 {
+    
     Table state;
     HashTableInit(state);
-    char* filename;
-    char* filetxt;
+    char* filename = NULL;
+    char* filetxt = NULL;
 
     //turn args into a string stack
     StringStack args;
@@ -492,7 +488,6 @@ int main(int argc, char** argv)
     {
         StackPush(args, argv[i]);
     }
-
 
     while (args.size > 0)
     {
@@ -529,6 +524,7 @@ int main(int argc, char** argv)
         return 1;
     }
     else */
+    printf("test %d\n", args.size);
     if (filename != NULL && filetxt == NULL)
     {
         FILE* file = fopen(filename, "r");
@@ -559,7 +555,7 @@ int main(int argc, char** argv)
     registerFunction(&state, "print", _print);
     registerFunction(&state, "interpret", _interpret);
     registerFunction(&state, "ls", _ls);
-    registerFunction(&state, "exit", _exit);
+    //registerFunction(&state, "exit", _exit);
 
     registerFunction(&state, "table", _table);
 
