@@ -631,42 +631,6 @@ Variable _round(Table *state, List* args)
 }
 
 // string functions
-Variable _string_concat(Table *state, List* args) 
-{
-    Variable result = Nil;
-    char* str = (char*)malloc(1);
-    Variable _var;
-    while (args->size > 0) 
-    {
-        _var = StackShift(*args);
-        str = (char*)realloc(str, strlen(str) + strlen(_var.value.s) + 1);
-        strcat(str, _var.value.s);
-    }
-    result.value.s = str;
-    result.type = 3;
-    return result;
-}
-
-Variable _string_split(Table *state, List* args) 
-{
-    Variable result = Nil;
-    char* str = StackShift(*args).value.s;
-    char* delim = StackShift(*args).value.s;
-    StringStack splited = stringSplit(str, delim[0]);
-    Table* newTable = createNewTable();
-    for (int i = 0; i < splited.size; i++) 
-    {
-        char* key = (char*)malloc(11);
-        sprintf(key, "%d", i);
-        Variable _var = (Variable){.type = 3, .value = {.s = splited.data[i]}};
-        HashTableInsert(*newTable, key, _var);
-    }
-    result.type = 1;
-    result.value.p = newTable;
-    StackFree(splited);
-    return result;
-}
-
 Variable _string_find(Table *state, List* args) 
 {
     Variable result = Nil;
@@ -868,13 +832,11 @@ int main(int argc, char** argv)
 
 
     interpret(&state, "set string (table)");
-    registerFunction(&state, "string.concat", _string_concat);
-    registerFunction(&state, "string.split", _string_split);
     registerFunction(&state, "string.find", _string_find);
     registerFunction(&state, "string.replace", _string_replace);
     registerFunction(&state, "string.byte", _string_byte);
     registerFunction(&state, "string.char", _string_char);
-    registerFunction(&state, "string.len", _string_length);
+    registerFunction(&state, "string.len", _string_length); // replace by # in the future
     registerFunction(&state, "string.substr", _string_substring);
 
 
