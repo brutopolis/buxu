@@ -392,21 +392,163 @@ Variable __exit(Table *state, List* args)
     exit(0);
 }
 
-// math functions
+// conditions functions
+Variable _equals(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    if (a.type == 2 && b.type == 2) 
+    {
+        result.value.f = a.value.f == b.value.f;
+    } 
+    else if (a.type == 3 && b.type == 3) 
+    {
+        result.value.f = strcmp(a.value.s, b.value.s) == 0;
+    } 
+    else 
+    {
+        result.value.f = 0;
+    }
+    result.type = 2;
+    return result;
+}
 
+Variable _notEquals(Table *state, List* args) 
+{
+    Variable result = _equals(state, args);
+    result.value.f = !result.value.f;
+    return result;
+}
+
+Variable _greaterThan(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    if (a.type == 2 && b.type == 2) 
+    {
+        result.value.f = a.value.f > b.value.f;
+    } 
+    else 
+    {
+        result.value.f = 0;
+    }
+    result.type = 2;
+    return result;
+}
+
+Variable _lessThan(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    if (a.type == 2 && b.type == 2) 
+    {
+        result.value.f = a.value.f < b.value.f;
+    } 
+    else 
+    {
+        result.value.f = 0;
+    }
+    result.type = 2;
+    return result;
+}
+
+Variable _greaterOrEqual(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    if (a.type == 2 && b.type == 2) 
+    {
+        result.value.f = a.value.f >= b.value.f;
+    } 
+    else 
+    {
+        result.value.f = 0;
+    }
+    result.type = 2;
+    return result;
+}
+
+Variable _lessOrEqual(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    if (a.type == 2 && b.type == 2) 
+    {
+        result.value.f = a.value.f <= b.value.f;
+    } 
+    else 
+    {
+        result.value.f = 0;
+    }
+    result.type = 2;
+    return result;
+}
+
+
+
+// math functions
 Variable _add(Table *state, List* args) 
 {
     Variable result = Nil;
-    result.value.f = StackShift(*args).value.f + StackShift(*args).value.f;
-    result.type = 2;
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    if (a.type == 3)// like javascript + operator for strings
+    {
+        if (b.type == 2)
+        {
+            char* str = (char*)malloc(strlen(a.value.s) + 15);
+            sprintf(str, "%s%.2f", a.value.s, b.value.f);
+            result.value.s = str;
+            result.type = 3;
+            return result;
+        }
+        else if (b.type == 3)
+        {
+            char* str = (char*)malloc(strlen(a.value.s) + strlen(b.value.s) + 1);
+            sprintf(str, "%s%s", a.value.s, b.value.s);
+            result.value.s = str;
+            result.type = 3;
+            return result;
+        }
+    }
+    else if (a.type == 2 && b.type == 2) 
+    {
+        result.value.f = a.value.f + b.value.f;
+        result.type = 2;
+        return result;
+    }
     return result;
 }
 
 Variable _sub(Table *state, List* args) 
 {
     Variable result = Nil;
-    result.value.f = StackShift(*args).value.f - StackShift(*args).value.f;
-    result.type = 2;
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    if (a.type == 3 && b.type == 3) // remove b from a
+    {
+        char* str = (char*)malloc(strlen(a.value.s) - strlen(b.value.s) + 1);
+        char* found = strstr(a.value.s, b.value.s);
+        if (found != NULL) 
+        {
+            strncpy(str, a.value.s, found - a.value.s);
+            strcpy(str + (found - a.value.s), found + strlen(b.value.s));
+            result.value.s = str;
+            result.type = 3;
+            return result;
+        }
+    }
+    else if (a.type == 2 && b.type == 2) 
+    {
+        result.value.f = a.value.f - b.value.f;
+        result.type = 2;
+        return result;
+    }
     return result;
 }
 
@@ -421,8 +563,30 @@ Variable _mul(Table *state, List* args)
 Variable _div(Table *state, List* args) 
 {
     Variable result = Nil;
-    result.value.f = StackShift(*args).value.f / StackShift(*args).value.f;
-    result.type = 2;
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    if (a.type == 3 && b.type == 3) // split a by delimiter b
+    {
+        StringStack splited = stringSplit(a.value.s, b.value.s[0]);
+        Table* newTable = createNewTable();
+        for (int i = 0; i < splited.size; i++) 
+        {
+            char* key = (char*)malloc(11);
+            sprintf(key, "%d", i);
+            Variable _var = (Variable){.type = 3, .value = {.s = splited.data[i]}};
+            HashTableInsert(*newTable, key, _var);
+        }
+        result.type = 1;
+        result.value.p = newTable;
+        StackFree(splited);
+        return result;
+    }
+    else
+    {
+        result.value.f = StackShift(*args).value.f / StackShift(*args).value.f;
+        result.type = 2;
+    }
+    
     return result;
 }
 
@@ -622,6 +786,8 @@ void repl(Table *state)
         }
     }
 }
+
+
 
 int main(int argc, char** argv) 
 {

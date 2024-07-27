@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <math.h>
 
-const char* Version = "0.3.6";
+const char* Version = "0.3.6a";
 
 // type -1 is error, it can contain a string with the error message
 const enum 
@@ -127,6 +127,7 @@ typedef union
     float f;
     char* s;
     void* p;
+    int i;
 } Value;
 
 typedef struct 

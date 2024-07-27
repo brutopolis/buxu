@@ -35,14 +35,14 @@ ls $tbl.d.a;
 print;
 print txt split test:;
 set str $(hello world !);
-set splited (string.split $str $( ));
+set splited (div $str $( ));
 ls $splited;
 
 print;
 print txt concat test:;
 set str1 $(hello);
 set str2 $(world);
-set str3 (string.concat $str1 $str2);
+set str3 (add $str1 $str2);
 print $str3;
 
 print;
