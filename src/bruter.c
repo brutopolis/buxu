@@ -522,6 +522,24 @@ Variable _add(Table *state, List* args)
         result.type = 2;
         return result;
     }
+    else if (a.type == 1 && b.type == 1) 
+    {
+        Table* newTable = createNewTable();
+        Table *tableA = a.value.p;
+        Table *tableB = b.value.p;
+        for (int i = 0; i < tableA->size; i++) 
+        {
+            HashTableInsert(*newTable, tableA->keys[i], tableA->ValueStack[i]);
+        }
+
+        for (int i = 0; i < tableB->size; i++) 
+        {
+            HashTableInsert(*newTable, tableB->keys[i], tableB->ValueStack[i]);
+        }
+        result.type = 1;
+        result.value.p = newTable;
+        return result;
+    }
     return result;
 }
 
@@ -543,12 +561,31 @@ Variable _sub(Table *state, List* args)
             return result;
         }
     }
-    else if (a.type == 2 && b.type == 2) 
+    else if (a.type == 2) 
     {
         result.value.f = a.value.f - b.value.f;
         result.type = 2;
         return result;
     }
+    else if (a.type == 1 && b.type == 1) 
+    {
+        Table* newTable = createNewTable();
+        Table *tableA = a.value.p;
+        Table *tableB = b.value.p;
+        for (int i = 0; i < tableA->size; i++) 
+        {
+            HashTableInsert(*newTable, tableA->keys[i], tableA->ValueStack[i]);
+        }
+
+        for (int i = 0; i < tableB->size; i++) 
+        {
+            HashTableRemove(*newTable, tableB->keys[i]);
+        }
+        result.type = 1;
+        result.value.p = newTable;
+        return result;
+    }
+    
     return result;
 }
 
@@ -606,6 +643,28 @@ Variable _pow(Table *state, List* args)
     return result;
 }
 
+Variable _len(Table *state, List* args) 
+{
+    Variable _ = StackShift(*args);
+    if (_.type == 3) 
+    {
+        return (Variable){.type = 2, .value = {.f = strlen(_.value.s)}};
+    } 
+    else if (_.type == 1) 
+    {
+        Table* _table = _.value.p;
+        return (Variable){.type = 2, .value = {.f = _table->size}};
+    }
+    else if (_.type == 2) 
+    {
+        //length of number in string,
+        return (Variable){.type = 2, .value = {.f = floor(log10(_.value.f) + 1)}};
+    }
+    return Nil;
+}
+
+
+// math functions
 Variable _ceil(Table *state, List* args) 
 {
     Variable result = Nil;
@@ -688,15 +747,6 @@ Variable _string_char(Table *state, List* args)
     str[1] = '\0';
     result.value.s = str;
     result.type = 3;
-    return result;
-}
-
-Variable _string_length(Table *state, List* args) 
-{
-    Variable result = Nil;
-    char* str = StackShift(*args).value.s;
-    result.value.f = strlen(str);
-    result.type = 2;
     return result;
 }
 
@@ -811,15 +861,25 @@ int main(int argc, char** argv)
         filetxt[length] = '\0';
     }
     
-    registerFunction(&state, "add", _add);
-    registerFunction(&state, "sub", _sub);
-    registerFunction(&state, "mul", _mul);
-    registerFunction(&state, "div", _div);
-    registerFunction(&state, "mod", _mod);
-    registerFunction(&state, "pow", _pow);
+    registerFunction(&state, "+", _add);
+    registerFunction(&state, "-", _sub);
+    registerFunction(&state, "*", _mul);
+    registerFunction(&state, "/", _div);
+    registerFunction(&state, "\%", _mod);
+    registerFunction(&state, "^", _pow);
+    registerFunction(&state, "#", _len);
+
     registerFunction(&state, "ceil", _ceil);
     registerFunction(&state, "floor", _floor);
     registerFunction(&state, "round", _round);
+
+    registerFunction(&state, "==", _equals);
+    registerFunction(&state, "!=", _notEquals);
+    registerFunction(&state, ">", _greaterThan);
+    registerFunction(&state, "<", _lessThan);
+    registerFunction(&state, ">=", _greaterOrEqual);
+    registerFunction(&state, "<=", _lessOrEqual);
+
     
 
     registerFunction(&state, "set", _set);
@@ -836,10 +896,10 @@ int main(int argc, char** argv)
     registerFunction(&state, "string.replace", _string_replace);
     registerFunction(&state, "string.byte", _string_byte);
     registerFunction(&state, "string.char", _string_char);
-    registerFunction(&state, "string.len", _string_length); // replace by # in the future
     registerFunction(&state, "string.substr", _string_substring);
 
 
+    printf("Table size: %d\n", sizeof(Table));
 
     if (filetxt != NULL)
     {

@@ -13,3 +13,47 @@ $var = variable
 $(string) = string
 (expression) = expression
 ($(expression)) = bulk expression
+
+generic funcions(number, string, table)
+
+add + {
+    number = add,
+    string = concat,
+    table = merge
+}
+
+sub - {
+    number = sub,
+    string = remove,
+    table = remove
+}
+
+mul * {
+    number = mul,
+    string = clone,
+    table = clone
+}
+
+div / {
+    number = div,
+    string = split,
+    table = ?
+}
+
+mod % {
+    number = mod,
+    string = replace,
+    table = ?
+}
+
+pow ^ {
+    number = pow,
+    string = ?,
+    table = ?
+}
+
+len # {
+    number = length of number in string,
+    string = length,
+    table = length
+}

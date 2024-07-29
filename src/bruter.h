@@ -4,7 +4,11 @@
 #include <ctype.h>
 #include <math.h>
 
-const char* Version = "0.3.6b";
+#define MaxSize int
+
+#define FloatSize double
+
+const char* Version = "0.3.7";
 
 // type -1 is error, it can contain a string with the error message
 const enum 
@@ -19,7 +23,7 @@ const enum
 
 
 //stack implementation
-#define Stack(T) struct { T *data; int size; int capacity; }
+#define Stack(T) struct { T *data; MaxSize size; MaxSize capacity; }
 #define StackInit(s) do { (s).data = NULL; (s).size = 0; (s).capacity = 0; } while (0)
 #define StackPush(s, v) do { \
     if ((s).size == (s).capacity) { \
@@ -31,7 +35,7 @@ const enum
 #define StackPop(s) ((s).data[--(s).size])
 #define StackShift(s) ({ \
     typeof((s).data[0]) ret = (s).data[0]; \
-    for (int i = 0; i < (s).size - 1; i++) { \
+    for (MaxSize i = 0; i < (s).size - 1; i++) { \
         (s).data[i] = (s).data[i + 1]; \
     } \
     (s).size--; \
@@ -50,7 +54,7 @@ const enum
         (s).capacity = (s).capacity == 0 ? 1 : (s).capacity * 2; \
         (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
     } \
-    for (int j = (s).size; j > i; j--) { \
+    for (MaxSize j = (s).size; j > i; j--) { \
         (s).data[j] = (s).data[j - 1]; \
     } \
     (s).data[i] = (v); \
@@ -59,7 +63,7 @@ const enum
 //remove element at index i and return it
 #define StackRemove(s, i) ({ \
     typeof((s).data[i]) ret = (s).data[i]; \
-    for (int j = i; j < (s).size - 1; j++) { \
+    for (MaxSize j = i; j < (s).size - 1; j++) { \
         (s).data[j] = (s).data[j + 1]; \
     } \
     (s).size--; \
@@ -68,12 +72,12 @@ const enum
 
 
 //hashtables implementation
-#define HashTable(Type) struct { char **keys; Type *ValueStack; int size; int capacity; }
+#define HashTable(Type) struct { char **keys; Type *ValueStack; MaxSize size; MaxSize capacity; }
 #define HashTableInit(_table) do { (_table).keys = NULL; (_table).ValueStack = NULL; (_table).size = 0; (_table).capacity = 0; } while (0)
 #define HashTableFree(_table) do { free((_table).keys); free((_table).ValueStack); } while (0)
 //verify if key k already exists in the hashtable and change the value else insert a new key-value pair
 #define HashTableInsert(_table, key, v) do { \
-    for (int i = 0; i < (_table).size; i++) { \
+    for (MaxSize i = 0; i < (_table).size; i++) { \
         if (strcmp((_table).keys[i], key) == 0) { \
             (_table).ValueStack[i] = (v); \
             break; \
@@ -89,10 +93,10 @@ const enum
 } while (0)
 
 #define HashTableRemove(_table, key) do { \
-    for (int i = 0; i < (_table).size; i++) { \
+    for (MaxSize i = 0; i < (_table).size; i++) { \
         if (strcmp((_table).keys[i], key) == 0) { \
             free((_table).keys[i]); \
-            for (int j = i; j < (_table).size - 1; j++) { \
+            for (MaxSize j = i; j < (_table).size - 1; j++) { \
                 (_table).keys[j] = (_table).keys[j + 1]; \
                 (_table).ValueStack[j] = (_table).ValueStack[j + 1]; \
             } \
@@ -103,7 +107,7 @@ const enum
 } while (0)
 #define HashTableGet(Type, _table, key) ({ \
     Type ret = {0}; \
-    for (int i = 0; i < (_table).size; i++) { \
+    for (MaxSize i = 0; i < (_table).size; i++) { \
         if (strcmp((_table).keys[i], key) == 0) { \
             ret = (_table).ValueStack[i]; \
             break; \
@@ -112,8 +116,8 @@ const enum
     ret; \
 })
 #define HashTableFind(_table, key) ({ \
-    int ret = -1; \
-    for (int i = 0; i < (_table).size; i++) { \
+    MaxSize ret = -1; \
+    for (MaxSize i = 0; i < (_table).size; i++) { \
         if (strcmp((_table).keys[i], key) == 0) { \
             ret = i; \
             break; \
@@ -124,16 +128,15 @@ const enum
 
 typedef union 
 {
-    float f;
+    FloatSize f;
     char* s;
     void* p;
-    int i;
 } Value;
 
 typedef struct 
 {
     Value value;
-    int type;
+    char type;
 } Variable;
 
 typedef Stack(Variable) VariableStack;
@@ -145,6 +148,12 @@ typedef VariableHashTable Table;
 typedef VariableStack List;
 
 typedef Variable (*Function)(Table*, List*);
+
+typedef struct 
+{
+    Table table;
+    List array;
+} UltraTable; 
 
 const Variable Nil = {.type = 0, .value = {0}};
 
