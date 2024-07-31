@@ -8,19 +8,21 @@
 
 #define FloatSize double
 
-const char* Version = "0.3.8";
+const char* Version = "0.3.9";
 
 // type -1 is error, it can contain a string with the error message
-/*const enum 
+const enum 
 {
-    ERROR = -1,
-    VOID = 0,
-    TABLE = 1,
-    NUMBER = 2,
-    STRING = 3,
-    FUNCTION = 4
-} Types;*/
+    TYPE_ERROR = -1,
+    TYPE_VOID = 0,
+    TYPE_TABLE = 1,
+    TYPE_NUMBER = 2,
+    TYPE_STRING = 3,
+    TYPE_FUNCTION = 4,
+    TYPE_ARRAY = 5
+} Types;
 
+//Value
 typedef union 
 {
     FloatSize f;
@@ -28,29 +30,30 @@ typedef union
     void* p;
 } Value;
 
+//Variable
 typedef struct 
 {
     Value value;
     char type;
 } Variable;
 
-//List
+//Array
 typedef struct 
 {
     Variable *data;
     MaxSize size; 
     MaxSize capacity; 
-} List;
+} Array;
 
 //Table
 typedef struct {
     char **keys;
-    Variable *ValueStack;
+    Variable *data;
     MaxSize size;
     MaxSize capacity;
 } Table;
 
 //Function
-typedef Variable (*Function)(Table*, List*);
+typedef Variable (*Function)(Table*, Array*);
 
 #define Nil (Variable){.type = 0, .value = {0}}

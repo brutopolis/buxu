@@ -1,107 +1,105 @@
 #include "bruter.h"
 
-// List functions
-void ListInit(List *list) {
-    list->data = NULL;
-    list->size = 0;
-    list->capacity = 0;
-}
-
-void ListPush(List *list, Variable value) {
-    if (list->size == list->capacity) {
-        list->capacity = list->capacity == 0 ? 1 : list->capacity * 2;
-        list->data = realloc(list->data, list->capacity * sizeof(*list->data));
+void ArrayPush(Array *array, Variable value) 
+{
+    if (array->size == array->capacity) 
+    {
+        array->capacity = array->capacity == 0 ? 1 : array->capacity * 2;
+        array->data = realloc(array->data, array->capacity * sizeof(*array->data));
     }
-    list->data[list->size++] = value;
+    array->data[array->size++] = value;
 }
 
-Variable ListPop(List *list) {
-    return list->data[--list->size];
+Variable ArrayPop(Array *array) 
+{
+    return array->data[--array->size];
 }
 
-Variable ListShift(List *list) {
-    Variable ret = list->data[0];
-    for (MaxSize i = 0; i < list->size - 1; i++) {
-        list->data[i] = list->data[i + 1];
+Variable ArrayShift(Array *array) 
+{
+    Variable ret = array->data[0];
+    for (MaxSize i = 0; i < array->size - 1; i++) 
+    {
+        array->data[i] = array->data[i + 1];
     }
-    list->size--;
+    array->size--;
     return ret;
 }
 
-Variable ListUnshift(List *list, Variable value) {
-    if (list->size == list->capacity) {
-        list->capacity = list->capacity == 0 ? 1 : list->capacity * 2;
-        list->data = realloc(list->data, list->capacity * sizeof(*list->data));
+void ArrayUnshift(Array *array, Variable value) 
+{
+    if (array->size == array->capacity) 
+    {
+        array->capacity = array->capacity == 0 ? 1 : array->capacity * 2;
+        array->data = realloc(array->data, array->capacity * sizeof(*array->data));
     }
-    for (MaxSize i = list->size; i > 0; i--) {
-        list->data[i] = list->data[i - 1];
+    for (MaxSize i = array->size; i > 0; i--) 
+    {
+        array->data[i] = array->data[i - 1];
     }
-    list->data[0] = value;
-    list->size++;
-    return value;
+    array->data[0] = value;
+    array->size++;
 }
 
-void ListFree(List *list) {
-    free(list->data);
+void ArrayFree(Array *array) 
+{
+    free(array->data);
 }
 
-void ListMove(List *list, MaxSize i1, MaxSize i2) {
-    Variable tmp = list->data[i1];
-    list->data[i1] = list->data[i2];
-    list->data[i2] = tmp;
+void ArrayMove(Array *array, MaxSize i1, MaxSize i2) 
+{
+    Variable tmp = array->data[i1];
+    array->data[i1] = array->data[i2];
+    array->data[i2] = tmp;
 }
 
-void ListInsert(List *list, MaxSize i, Variable value) {
-    if (list->size == list->capacity) {
-        list->capacity = list->capacity == 0 ? 1 : list->capacity * 2;
-        list->data = realloc(list->data, list->capacity * sizeof(*list->data));
+void ArrayInsert(Array *array, MaxSize i, Variable value) {
+    if (array->size == array->capacity) {
+        array->capacity = array->capacity == 0 ? 1 : array->capacity * 2;
+        array->data = realloc(array->data, array->capacity * sizeof(*array->data));
     }
-    for (MaxSize j = list->size; j > i; j--) {
-        list->data[j] = list->data[j - 1];
+    for (MaxSize j = array->size; j > i; j--) {
+        array->data[j] = array->data[j - 1];
     }
-    list->data[i] = value;
-    list->size++;
+    array->data[i] = value;
+    array->size++;
 }
 
-Variable ListRemove(List *list, MaxSize i) {
-    Variable ret = list->data[i];
-    for (MaxSize j = i; j < list->size - 1; j++) {
-        list->data[j] = list->data[j + 1];
+// remove element from array and return it
+Variable ArrayRemove(Array *array, MaxSize i) 
+{
+    Variable ret = array->data[i];
+    for (MaxSize j = i; j < array->size - 1; j++) {
+        array->data[j] = array->data[j + 1];
     }
-    list->size--;
+    array->size--;
     return ret;
 }
 
 // Table functions
-void TableInit(Table *table) {
-    table->keys = NULL;
-    table->ValueStack = NULL;
-    table->size = 0;
-    table->capacity = 0;
-}
 
 void TableFree(Table *table) {
     for (MaxSize i = 0; i < table->size; i++) {
         free(table->keys[i]);
     }
     free(table->keys);
-    free(table->ValueStack);
+    free(table->data);
 }
 
 void TableInsert(Table *table, const char *key, Variable value) {
     for (MaxSize i = 0; i < table->size; i++) {
         if (strcmp(table->keys[i], key) == 0) {
-            table->ValueStack[i] = value;
+            table->data[i] = value;
             return;
         }
     }
     if (table->size == table->capacity) {
         table->capacity = table->capacity == 0 ? 1 : table->capacity * 2;
         table->keys = realloc(table->keys, table->capacity * sizeof(*(table->keys)));
-        table->ValueStack = realloc(table->ValueStack, table->capacity * sizeof(*(table->ValueStack)));
+        table->data = realloc(table->data, table->capacity * sizeof(*(table->data)));
     }
     table->keys[table->size] = strdup(key);
-    table->ValueStack[table->size++] = value;
+    table->data[table->size++] = value;
 }
 
 void TableRemove(Table *table, const char *key) {
@@ -110,7 +108,7 @@ void TableRemove(Table *table, const char *key) {
             free(table->keys[i]);
             for (MaxSize j = i; j < table->size - 1; j++) {
                 table->keys[j] = table->keys[j + 1];
-                table->ValueStack[j] = table->ValueStack[j + 1];
+                table->data[j] = table->data[j + 1];
             }
             table->size--;
             return;
@@ -122,7 +120,7 @@ Variable TableGet(Table *table, const char *key) {
     Variable ret = {0, 0};
     for (MaxSize i = 0; i < table->size; i++) {
         if (strcmp(table->keys[i], key) == 0) {
-            ret = table->ValueStack[i];
+            ret = table->data[i];
             break;
         }
     }
@@ -142,16 +140,27 @@ MaxSize TableFind(Table *table, const char *key) {
 
 Table* createNewTable() 
 {
-    Table* newTable = (Table*)malloc(sizeof(Table));
-    TableInit(newTable);
-    return newTable;
+    Table* table = (Table*)malloc(sizeof(Table));
+    table->keys = NULL;
+    table->data = NULL;
+    table->size = 0;
+    table->capacity = 0;
+    return table;
+}
+
+Array* createNewArray() 
+{
+    Array* array = (Array*)malloc(sizeof(Array));
+    array->data = NULL;
+    array->size = 0;
+    array->capacity = 0;
+    return array;
 }
 
 // Split functions
-List specialSplit(const char* str) 
+Array* specialSplit(const char* str) 
 {
-    List stack;
-    ListInit(&stack);
+    Array *stack = createNewArray();
 
     int n = strlen(str);
     char token[1024];
@@ -185,9 +194,9 @@ List specialSplit(const char* str)
             char* newToken = (char*)malloc((tokenIndex + 1) * sizeof(char));
             strcpy(newToken, token);
             Variable v;
-            v.type = 3;
+            v.type = TYPE_STRING;
             v.value.s = newToken;
-            ListPush(&stack, v);
+            ArrayPush(stack, v);
             tokenIndex = 0;
         }
     }
@@ -195,10 +204,9 @@ List specialSplit(const char* str)
     return stack;
 }
 
-List stringSplit(const char* str, const char delim) 
+Array* stringSplit(const char* str, const char delim) 
 {
-    List splited;
-    ListInit(&splited);
+    Array* splited = createNewArray();
     int n = 0;
     //split string by ; but not in parentheses
     while (n < strlen(str)) 
@@ -231,10 +239,10 @@ List stringSplit(const char* str, const char delim)
         char* newToken = (char*)malloc((tokenIndex + 1) * sizeof(char));
         strcpy(newToken, token);
         Variable v;
-        v.type = 3;
+        v.type = TYPE_STRING;
         v.value.s = newToken;
 
-        ListPush(&splited, v);
+        ArrayPush(splited, v);
         n++;
     }
     return splited;
@@ -243,25 +251,20 @@ List stringSplit(const char* str, const char delim)
 // Recursive functions
 Variable recursiveGet(Table *state, char* key) 
 {
-    List splited = stringSplit(key, '.');
-    char* currentKey = ListShift(&splited).value.s;
+    Array *splited = stringSplit(key, '.');
+    char* currentKey = ArrayShift(splited).value.s;
     Variable v = TableGet(state, currentKey);
 
-    while (splited.size > 0) 
+    while (splited->size > 0) 
     {
-        if (v.type == 1)
+        if (v.type == TYPE_TABLE) // Verifica se é do tipo tabela
         {
-            currentKey = ListShift(&splited).value.s;
+            currentKey = ArrayShift(splited).value.s;
             v = TableGet((Table*)v.value.p, currentKey);
-        }
-        else if (v.type == 5)
-        {
-            currentKey = ListShift(&splited).value.s;
-            v = ((List*)v.value.p)->data[atoi(currentKey)];
-        }
+        } 
         else 
         {
-            v.type = -1; // Define um tipo de erro se não for uma tabela
+            v.type = TYPE_ERROR; // Define um tipo de erro se não for uma tabela
             v.value.s = strdup("Not a table");
             break;
         }
@@ -272,37 +275,37 @@ Variable recursiveGet(Table *state, char* key)
 
 void recursiveSet(Table *state, char* key, Variable value) 
 {
-    List splited = stringSplit(key, '.');
+    Array* splited = stringSplit(key, '.');
 
-    if (splited.size == 1) 
+    if (splited->size == 1) 
     {
         TableInsert(state, key, value);
         return;
     }
 
-    char* currentKey = ListShift(&splited).value.s;
+    char* currentKey = ArrayShift(splited).value.s;
     Variable v = TableGet(state, currentKey);
 
-    while (splited.size > 1) 
+    while (splited->size > 1) 
     {
         if (v.type != 1) 
         {
             Table *newTable = createNewTable();
             Variable newVar;
-            newVar.type = 1;
+            newVar.type = TYPE_TABLE;
             newVar.value.p = newTable;
             TableInsert(state, currentKey, newVar);
             v = newVar;
         }
 
         state = (Table*)v.value.p;
-        currentKey = ListShift(&splited).value.s;
+        currentKey = ArrayShift(splited).value.s;
         v = TableGet(state, currentKey);
     }
 
-    if (v.type == 1) 
+    if (v.type == TYPE_TABLE) 
     {
-        currentKey = ListShift(&splited).value.s;
+        currentKey = ArrayShift(splited).value.s;
         TableInsert((Table*)v.value.p, currentKey, value);
     } 
     else 
@@ -312,36 +315,36 @@ void recursiveSet(Table *state, char* key, Variable value)
 }
 
 void recursiveUnset(Table *state, char* key) {
-    List splited = stringSplit(key, '.');
+    Array* splited = stringSplit(key, '.');
 
-    if (splited.size == 1) 
+    if (splited->size == 1) 
     {
         TableRemove(state, key);
         return;
     }
 
-    char* currentKey = ListShift(&splited).value.s;
+    char* currentKey = ArrayShift(splited).value.s;
     Variable v = TableGet(state, currentKey);
 
-    while (splited.size > 1) 
+    while (splited->size > 1) 
     {
-        if (v.type == 1) // Verifica se é do tipo tabela
+        if (v.type == TYPE_TABLE) // Verifica se é do tipo tabela
         {
             state = (Table*)v.value.p;
-            currentKey = ListShift(&splited).value.s;
+            currentKey = ArrayShift(splited).value.s;
             v = TableGet(state, currentKey);
         } 
         else 
         {
-            v.type = -1; // Define um tipo de erro se não for uma tabela
+            v.type = TYPE_ERROR; // Define um tipo de erro se não for uma tabela
             v.value.s = strdup("Not a table");
             return;
         }
     }
 
-    if (v.type == 1) 
+    if (v.type == TYPE_TABLE) 
     {
-        currentKey = ListShift(&splited).value.s;
+        currentKey = ArrayShift(splited).value.s;
         TableRemove((Table*)v.value.p, currentKey);
     } 
     else 
@@ -351,16 +354,14 @@ void recursiveUnset(Table *state, char* key) {
 }
 
 // Parser functions
-List parse(Table *state, char *cmd) 
+Array* parse(Table *state, char *cmd) 
 {
-    List result;
-    ListInit(&result);
+    Array *result = createNewArray();
+    Array *splited = specialSplit(cmd);
 
-    List splited = specialSplit(cmd);
-
-    for (int i = 0; i < splited.size; ++i) 
+    for (int i = 0; i < splited->size; ++i) 
     {
-        char* str = splited.data[i].value.s;
+        char* str = splited->data[i].value.s;
 
         if (str[0] == '$') 
         {
@@ -369,170 +370,195 @@ List parse(Table *state, char *cmd)
             if(str[1] == '(') 
             {
                 v.value.s = strndup(str + 2, strlen(str) - 3);
-                v.type = 3;
+                v.type = TYPE_STRING;
             } 
             else 
             {
                 v = recursiveGet(state, strdup(str + 1));
             }
-            ListPush(&result, v);
+            ArrayPush(result, v);
         } 
         else if (str[0] == '(') 
         {
             // expression
             Variable v;
             Variable expression;
-            List args = parse(state, strndup(str + 1, strlen(str) - 2));
+            Array* args = parse(state, strndup(str + 1, strlen(str) - 2));
 
-            v = ((Function)TableGet(state, "eval").value.p)(state, &args);
-            ListPush(&result, v);
+            v = ((Function)TableGet(state, "eval").value.p)(state, args);
+            ArrayPush(result, v);
         } 
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
         {
             // Number
             Variable v;
             v.value.f = atof(str);
-            v.type = 2;
-            ListPush(&result, v);
+            v.type = TYPE_NUMBER;
+            ArrayPush(result, v);
         } 
         else 
         {
             // string
             Variable v;
             v.value.s = strdup(str);
-            v.type = 3;
-            ListPush(&result, v);
+            v.type = TYPE_STRING;
+            ArrayPush(result, v);
         }
 
         free(str);
     }
 
-    ListFree(&splited);
+    ArrayFree(splited);
 
     return result;
 }
 
 Variable interpret(Table *state, char* input) 
 {
-    List args = parse(state, input);
-    char* funcName = ListShift(&args).value.s;
+    Array* args = parse(state, input);
+    char* funcName = ArrayShift(args).value.s;
     Variable result = Nil;
     Variable var = recursiveGet(state, funcName);
-    if (var.type == 4) 
+    if (var.type == TYPE_FUNCTION) 
     {
-        result = ((Function)var.value.p)(state, &args);
-        ListFree(&args);
+        result = ((Function)var.value.p)(state, args);
+        ArrayFree(args);
         return result;
     } 
     else 
     {
-        result.type = -1;
+        result.type = TYPE_ERROR;
         char* ___err = (char*)malloc(19 + strlen(funcName));
         sprintf(___err, "Unknown function %s", funcName);
         result.value.s = ___err;
     }
-    ListFree(&args);
+    ArrayFree(args);
     return result;
 }
 
 Variable bulkInterpret(Table *state, const char* input) 
 {
-    List splited = stringSplit(input, ';');
+    Array* splited = stringSplit(input, ';');
     Variable result = Nil;
-    while (splited.size > 0) 
+    while (splited->size > 0) 
     {
-        result = interpret(state, ListShift(&splited).value.s);
+        result = interpret(state, ArrayShift(splited).value.s);
         if (result.type != 0) 
         {
             break;
         }
     }
-    ListFree(&splited);
+    ArrayFree(splited);
     return result;
 }
 
 // Functions
-Variable _interpret(Table *state, List* args) 
+Variable _interpret(Table *state, Array* args) 
 {
     Variable result = Nil;
     if (args->size == 1) 
     {
-        return bulkInterpret(state, ListShift(&*args).value.s);
+        return bulkInterpret(state, ArrayShift(args).value.s);
     }
     else 
     {
-        char* funcName = ListShift(&*args).value.s;
+        char* funcName = ArrayShift(args).value.s;
         Variable var = recursiveGet(state, funcName);
-        if (var.type == 4) 
+        if (var.type == TYPE_FUNCTION) 
         {
             result = ((Function)var.value.p)(state, args);
-            ListFree(&*args);
+            ArrayFree(args);
             return result;
         } 
         else 
         {
-            result.type = -1;
+            result.type = TYPE_ERROR;
             char* ___err = (char*)malloc(19 + strlen(funcName));
             sprintf(___err, "Unknown function %s", funcName);
             result.value.s = ___err;
         }
-        ListFree(&*args);
+        ArrayFree(args);
         return result;
     }
 }
 
-Variable _table(Table *state, List* args) 
+Variable _type(Table *state, Array* args) 
 {
-    Table* newTable = (Table*)malloc(sizeof(Table));
-    TableInit(newTable);
-    return (Variable){.type = 1, .value = {.p = newTable}};
-}
-
-Variable _list(Table *state, List* args) 
-{
-    List array;
-    ListInit(&array);
-    while (args->size > 0) 
+    Variable target = ArrayShift(args);
+    Variable result = Nil;
+    result.type = TYPE_STRING;
+    switch (target.type) 
     {
-        ListPush(&array, ListShift(&*args));
+        case TYPE_ERROR:
+            result.value.s = strdup("error");
+            break;
+        case TYPE_VOID:
+            result.value.s = strdup("void");
+            break;
+        case TYPE_TABLE:
+            result.value.s = strdup("table");
+            break;
+        case TYPE_NUMBER:
+            result.value.s = strdup("number");
+            break;
+        case TYPE_STRING:
+            result.value.s = strdup("string");
+            break;
+        case TYPE_FUNCTION:
+            result.value.s = strdup("function");
+            break;
+        case TYPE_ARRAY:
+            result.value.s = strdup("array");
+            break;
     }
-    return (Variable){.type = 5, .value = {.p = &array}};
+    return result;
 }
 
-Variable _unset(Table *state, List* args) 
+Variable _table(Table *state, Array* args) 
 {
-    Variable _key = ListShift(&*args);
+    Table* newTable = createNewTable();
+    return (Variable){.type = TYPE_TABLE, .value = {.p = newTable}};
+}
+
+Variable _array(Table *state, Array* args) 
+{
+    Array *array = createNewArray();
+    return (Variable){.type = TYPE_ARRAY, .value = {.p = array}};
+}
+
+Variable _unset(Table *state, Array* args) 
+{
+    Variable _key = ArrayShift(args);
     recursiveUnset(state, _key.value.s);
     return Nil;
 }
 
-Variable _set(Table *state, List* args) 
+Variable _set(Table *state, Array* args) 
 {
-    Variable _key = ListShift(&*args);
-    Variable _value = ListShift(&*args);
+    Variable _key = ArrayShift(args);
+    Variable _value = ArrayShift(args);
     recursiveSet(state, _key.value.s, _value);
-
     return Nil;
 }
 
-Variable _print(Table *state, List* args) 
+Variable _print(Table *state, Array* args) 
 {
     while (args->size > 0) 
     {
-        Variable v = ListShift(&*args);
-        if (v.type == 2) 
+        Variable v = ArrayShift(args);
+        if (v.type == TYPE_NUMBER) 
         {
             printf("%f ", v.value.f);
         }
-        else if (v.type == 3) 
+        else if (v.type == TYPE_STRING) 
         {
             printf("%s ", v.value.s);
         }
-        else if (v.type == 1) 
+        else if (v.type == TYPE_TABLE) 
         {
             printf("[table] ");
         }
-        else if (v.type == 4) 
+        else if (v.type == TYPE_FUNCTION) 
         {
             printf("[function] ");
         }
@@ -541,7 +567,7 @@ Variable _print(Table *state, List* args)
     return Nil;
 }
 
-Variable _ls(Table *_state, List* args) 
+Variable _ls(Table *_state, Array* args) 
 {
     Table *state;
     if (args->size == 0) 
@@ -550,12 +576,40 @@ Variable _ls(Table *_state, List* args)
     }
     else
     {
-        Variable _ = ListShift(&*args);
-        //printf("_ type = %d\n", _.type);
-        //printf("_ value = %s\n", _.value.s);
-        if (_.type == 1) 
+        Variable _ = ArrayShift(args);
+        if (_.type == TYPE_TABLE) 
         {
             state = _.value.p;
+        }
+        else if (_.type == TYPE_ARRAY) 
+        {
+            Array *array = _.value.p;
+            for (int i = 0; i < array->size; i++) 
+            {
+                Variable _var = array->data[i];
+                switch (_var.type) 
+                {
+                    case -1:
+                        printf("%d [error] : %s\n", i, _var.value.s);
+                        break;
+                    case 0:
+                        printf("%d [void]\n");
+                        break;
+                    case 1:
+                        printf("%d [table] : %p\n", i, _var.value.p);
+                        break;
+                    case 2:
+                        printf("%d [number] : %f\n", i, _var.value.f);
+                        break;
+                    case 3:
+                        printf("%d [string] : %s\n", i, _var.value.s);
+                        break;
+                    case 4:
+                        printf("%d [function] : %p\n", i, _var.value.p);
+                        break;
+                }
+            }
+            return Nil;
         }
         else
         {
@@ -565,71 +619,75 @@ Variable _ls(Table *_state, List* args)
 
     for (int i = 0; i < state->size; i++) 
     {
-        switch (state->ValueStack[i].type) 
+        switch (state->data[i].type) 
         {
             case -1:
-                printf("[error] %s : %s \n", state->keys[i], state->ValueStack[i].value.s);
+                printf("[error] %s : %s \n", state->keys[i], state->data[i].value.s);
                 break;
             case 0:
                 printf("[void] %s\n", state->keys[i]);
                 break;
             case 1:
-                printf("[table] %s\n", state->keys[i], state->ValueStack[i].value.p);
+                printf("[table] %s\n", state->keys[i], state->data[i].value.p);
                 break;
             case 2:
-                printf("[number] %s : %f\n", state->keys[i], state->ValueStack[i].value.f);
+                printf("[number] %s : %f\n", state->keys[i], state->data[i].value.f);
                 break;
             case 3:
-                printf("[string] %s : %s\n", state->keys[i], state->ValueStack[i].value.s);
+                printf("[string] %s : %s\n", state->keys[i], state->data[i].value.s);
                 break;
             case 4:
-                printf("[function] %s : %p\n", state->keys[i], state->ValueStack[i].value.p);
+                printf("[function] %s : %p\n", state->keys[i], state->data[i].value.p);
                 break;
         } 
     }
     return Nil;
 }
 
-Variable __exit(Table *state, List* args) 
+Variable __exit(Table *state, Array* args) 
 {
     exit(0);
 }
 
 // conditions functions
-Variable _equals(Table *state, List* args) 
+Variable _equals(Table *state, Array* args) 
 {
     Variable result = Nil;
-    Variable a = ListShift(&*args);
-    Variable b = ListShift(&*args);
-    if (a.type == 2 && b.type == 2) 
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
+    if (a.type == TYPE_NUMBER && b.type == TYPE_NUMBER) 
     {
         result.value.f = a.value.f == b.value.f;
     } 
-    else if (a.type == 3 && b.type == 3) 
+    else if (a.type == TYPE_STRING && b.type == TYPE_STRING) 
     {
         result.value.f = strcmp(a.value.s, b.value.s) == 0;
-    } 
-    else 
+    }
+    else if (a.type > 0 && b.type > 0) 
+    {
+        result.value.f = a.value.p == b.value.p;
+    }
+    else
     {
         result.value.f = 0;
     }
-    result.type = 2;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _notEquals(Table *state, List* args) 
+Variable _notEquals(Table *state, Array* args) 
 {
     Variable result = _equals(state, args);
     result.value.f = !result.value.f;
     return result;
 }
 
-Variable _greaterThan(Table *state, List* args) 
+Variable _greaterThan(Table *state, Array* args) 
 {
     Variable result = Nil;
-    Variable a = ListShift(&*args);
-    Variable b = ListShift(&*args);
-    if (a.type == 2 && b.type == 2) 
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
+    if (a.type == TYPE_NUMBER && b.type == TYPE_NUMBER) 
     {
         result.value.f = a.value.f > b.value.f;
     } 
@@ -637,16 +695,16 @@ Variable _greaterThan(Table *state, List* args)
     {
         result.value.f = 0;
     }
-    result.type = 2;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _lessThan(Table *state, List* args) 
+Variable _lessThan(Table *state, Array* args) 
 {
     Variable result = Nil;
-    Variable a = ListShift(&*args);
-    Variable b = ListShift(&*args);
-    if (a.type == 2 && b.type == 2) 
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
+    if (a.type == TYPE_NUMBER && b.type == TYPE_NUMBER) 
     {
         result.value.f = a.value.f < b.value.f;
     } 
@@ -654,16 +712,16 @@ Variable _lessThan(Table *state, List* args)
     {
         result.value.f = 0;
     }
-    result.type = 2;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _greaterOrEqual(Table *state, List* args) 
+Variable _greaterOrEqual(Table *state, Array* args) 
 {
     Variable result = Nil;
-    Variable a = ListShift(&*args);
-    Variable b = ListShift(&*args);
-    if (a.type == 2 && b.type == 2) 
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
+    if (a.type == TYPE_NUMBER && b.type == TYPE_NUMBER) 
     {
         result.value.f = a.value.f >= b.value.f;
     } 
@@ -671,16 +729,16 @@ Variable _greaterOrEqual(Table *state, List* args)
     {
         result.value.f = 0;
     }
-    result.type = 2;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _lessOrEqual(Table *state, List* args) 
+Variable _lessOrEqual(Table *state, Array* args) 
 {
     Variable result = Nil;
-    Variable a = ListShift(&*args);
-    Variable b = ListShift(&*args);
-    if (a.type == 2 && b.type == 2) 
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
+    if (a.type == TYPE_NUMBER && b.type == TYPE_NUMBER) 
     {
         result.value.f = a.value.f <= b.value.f;
     } 
@@ -688,119 +746,119 @@ Variable _lessOrEqual(Table *state, List* args)
     {
         result.value.f = 0;
     }
-    result.type = 2;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
 
 // math functions
-Variable _add(Table *state, List* args) 
+Variable _add(Table *state, Array* args) 
 {
     Variable result = Nil;
-    Variable a = ListShift(&*args);
-    Variable b = ListShift(&*args);
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
     result.value.f = a.value.f + b.value.f;
-    result.type = 2;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _sub(Table *state, List* args) 
+Variable _sub(Table *state, Array* args) 
 {
     Variable result = Nil;
-    Variable a = ListShift(&*args);
-    Variable b = ListShift(&*args);
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
     result.value.f = a.value.f - b.value.f;
-    result.type = 2;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _mul(Table *state, List* args) 
+Variable _mul(Table *state, Array* args) 
 {
     Variable result = Nil;
-    result.value.f = ListShift(&*args).value.f * ListShift(&*args).value.f;
-    result.type = 2;
+    result.value.f = ArrayShift(args).value.f * ArrayShift(args).value.f;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _div(Table *state, List* args) 
+Variable _div(Table *state, Array* args) 
 {
     Variable result = Nil;
-    Variable a = ListShift(&*args);
-    Variable b = ListShift(&*args);
-    result.value.f = ListShift(&*args).value.f / ListShift(&*args).value.f;
-    result.type = 2;
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
+    result.value.f = ArrayShift(args).value.f / ArrayShift(args).value.f;
+    result.type = TYPE_NUMBER;
     
     return result;
 }
 
-Variable _mod(Table *state, List* args) 
+Variable _mod(Table *state, Array* args) 
 {
     Variable result = Nil;
-    result.value.f = (int)ListShift(&*args).value.f % (int)ListShift(&*args).value.f;
-    result.type = 2;
+    result.value.f = (int)ArrayShift(args).value.f % (int)ArrayShift(args).value.f;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _pow(Table *state, List* args) 
+Variable _pow(Table *state, Array* args) 
 {
     Variable result = Nil;
-    result.value.f = pow(ListShift(&*args).value.f, ListShift(&*args).value.f);
-    result.type = 2;
+    result.value.f = pow(ArrayShift(args).value.f, ArrayShift(args).value.f);
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _len(Table *state, List* args) 
+Variable _len(Table *state, Array* args) 
 {
-    Variable _ = ListShift(&*args);
-    if (_.type == 3) 
+    Variable _ = ArrayShift(args);
+    if (_.type == TYPE_STRING) 
     {
-        return (Variable){.type = 2, .value = {.f = strlen(_.value.s)}};
+        return (Variable){.type = TYPE_NUMBER, .value = {.f = strlen(_.value.s)}};
     } 
-    else if (_.type == 1) 
+    else if (_.type == TYPE_TABLE) 
     {
         Table* _table = _.value.p;
-        return (Variable){.type = 2, .value = {.f = _table->size}};
+        return (Variable){.type = TYPE_NUMBER, .value = {.f = _table->size}};
     }
-    else if (_.type == 2) 
+    else if (_.type == TYPE_NUMBER) 
     {
         //length of number in string,
-        return (Variable){.type = 2, .value = {.f = floor(log10(_.value.f) + 1)}};
+        return (Variable){.type = TYPE_NUMBER, .value = {.f = floor(log10(_.value.f) + 1)}};
     }
     return Nil;
 }
 
 
 // math functions
-Variable _ceil(Table *state, List* args) 
+Variable _ceil(Table *state, Array* args) 
 {
     Variable result = Nil;
-    result.value.f = ceil(ListShift(&*args).value.f);
-    result.type = 2;
+    result.value.f = ceil(ArrayShift(args).value.f);
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _floor(Table *state, List* args) 
+Variable _floor(Table *state, Array* args) 
 {
     Variable result = Nil;
-    result.value.f = floor(ListShift(&*args).value.f);
-    result.type = 2;
+    result.value.f = floor(ArrayShift(args).value.f);
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _round(Table *state, List* args) 
+Variable _round(Table *state, Array* args) 
 {
     Variable result = Nil;
-    result.value.f = round(ListShift(&*args).value.f);
-    result.type = 2;
+    result.value.f = round(ArrayShift(args).value.f);
+    result.type = TYPE_NUMBER;
     return result;
 }
 
 // string functions
-Variable _string_find(Table *state, List* args) 
+Variable _string_find(Table *state, Array* args) 
 {
     Variable result = Nil;
-    char* str = ListShift(&*args).value.s;
-    char* substr = ListShift(&*args).value.s;
+    char* str = ArrayShift(args).value.s;
+    char* substr = ArrayShift(args).value.s;
     int index = -1;
     char* found = strstr(str, substr);
     if (found != NULL) 
@@ -808,16 +866,16 @@ Variable _string_find(Table *state, List* args)
         index = found - str;
     }
     result.value.f = index;
-    result.type = 2;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _string_replace(Table *state, List* args) 
+Variable _string_replace(Table *state, Array* args) 
 {
     Variable result = Nil;
-    char* str = ListShift(&*args).value.s;
-    char* substr = ListShift(&*args).value.s;
-    char* replacement = ListShift(&*args).value.s;
+    char* str = ArrayShift(args).value.s;
+    char* substr = ArrayShift(args).value.s;
+    char* replacement = ArrayShift(args).value.s;
     char* found = strstr(str, substr);
     if (found != NULL) 
     {
@@ -831,180 +889,171 @@ Variable _string_replace(Table *state, List* args)
     {
         result.value.s = strdup(str);
     }
-    result.type = 3;
+    result.type = TYPE_STRING;
     return result;
 }
 
-Variable _string_byte(Table *state, List* args) 
+Variable _string_byte(Table *state, Array* args) 
 {
     Variable result = Nil;
-    char* str = ListShift(&*args).value.s;
-    int index = (int)ListShift(&*args).value.f;
+    char* str = ArrayShift(args).value.s;
+    int index = (int)ArrayShift(args).value.f;
     result.value.f = str[index];
-    result.type = 2;
+    result.type = TYPE_NUMBER;
     return result;
 }
 
-Variable _string_char(Table *state, List* args) 
+Variable _string_char(Table *state, Array* args) 
 {
     Variable result = Nil;
     char* str = (char*)malloc(2);
-    str[0] = (char)ListShift(&*args).value.f;
+    str[0] = (char)ArrayShift(args).value.f;
     str[1] = '\0';
     result.value.s = str;
-    result.type = 3;
+    result.type = TYPE_STRING;
     return result;
 }
 
-Variable _string_substring(Table *state, List* args) 
+Variable _string_substring(Table *state, Array* args) 
 {
     Variable result = Nil;
-    char* str = ListShift(&*args).value.s;
-    int start = (int)ListShift(&*args).value.f;
-    int length = (int)ListShift(&*args).value.f;
+    char* str = ArrayShift(args).value.s;
+    int start = (int)ArrayShift(args).value.f;
+    int length = (int)ArrayShift(args).value.f;
     char* newStr = (char*)malloc(length + 1);
     strncpy(newStr, str + start, length);
     newStr[length] = '\0';
     result.value.s = newStr;
-    result.type = 3;
+    result.type = TYPE_STRING;
     return result;
 }
 
-Variable _string_concat(Table *state, List* args)
+Variable _string_concat(Table *state, Array* args)
 {
-    Variable a = ListShift(&*args);
-    Variable b = ListShift(&*args);
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
     Variable result = Nil;
     char* str; 
-    if (b.type == 2)
+    if (b.type == TYPE_NUMBER)
     {
         str = (char*)malloc(strlen(a.value.s) + 15);
         sprintf(str, "%s%.2f", a.value.s, b.value.f);
     }
-    else if (b.type == 3)
+    else if (b.type == TYPE_STRING)
     {
         str = (char*)malloc(strlen(a.value.s) + strlen(b.value.s) + 1);
         sprintf(str, "%s%s", a.value.s, b.value.s);
     }
     result.value.s = str;
-    result.type = 3;
+    result.type = TYPE_STRING;
     return result;
 }
 
-Variable _string_split(Table *state, List* args)
+Variable _string_split(Table *state, Array* args)
 {
-    Variable str = ListShift(&*args);
-    Variable delim = ListShift(&*args);
+    Variable str = ArrayShift(args);
+    Variable delim = ArrayShift(args);
     Variable result = Nil;
-    List splited = stringSplit(str.value.s, delim.value.s[0]);
+    Array* splited = stringSplit(str.value.s, delim.value.s[0]);
     Table* newTable = createNewTable();
-    for (int i = 0; i < splited.size; i++) 
+    for (int i = 0; i < splited->size; i++) 
     {
         char* key = (char*)malloc(11);
         sprintf(key, "%d", i);
-        Variable _var = ListShift(&splited);
+        Variable _var = ArrayShift(splited);
         TableInsert(newTable, key, _var);
     }
-    result.type = 1;
+    result.type = TYPE_TABLE;
     result.value.p = newTable;
-    ListFree(&splited);
+    ArrayFree(splited);
     return result;
 }
 
 // table functions
-Variable _table_keys(Table *state, List* args) 
+
+
+// array functions
+Variable _array_push(Table *state, Array* args) 
 {
-    Variable result = Nil;
-    Variable table = ListShift(&*args);
-    Table* _table = (Table*)table.value.p;
-    Table* newTable = createNewTable();
-    for (int i = 0; i < _table->size; i++) 
-    {
-        char* key = (char*)malloc(strlen(_table->keys[i]) + 1);
-        strcpy(key, _table->keys[i]);
-        Variable _var;
-        _var.type = 3;
-        _var.value.s = key;
-        TableInsert(newTable, key, _var);
-    }
-    result.type = 1;
-    result.value.p = newTable;
-    return result;
+    Variable array = ArrayShift(args);
+    Variable value = ArrayShift(args);
+    ArrayPush((Array*)array.value.p, value);
+    return Nil;
 }
 
-// list functions
-Variable _list_push(Table *state, List* args) 
+Variable _array_pop(Table *state, Array* args) 
 {
-    Variable result = Nil;
-    Variable list = ListShift(&*args);
-    Variable value = ListShift(&*args);
-    ListPush((List*)list.value.p, value);
-    return result;
+    Variable array = ArrayShift(args);
+    return ArrayPop((Array*)array.value.p);
 }
 
-Variable _list_pop(Table *state, List* args) 
+Variable _array_shift(Table *state, Array* args) 
 {
-    Variable result = Nil;
-    Variable list = ListShift(&*args);
-    return ListPop((List*)list.value.p);
+    Variable array = ArrayShift(args);
+    return ArrayShift((Array*)array.value.p);
 }
 
-Variable _list_shift(Table *state, List* args) 
+Variable _array_unshift(Table *state, Array* args) 
 {
-    Variable result = Nil;
-    Variable list = ListShift(&*args);
-    return ListShift((List*)list.value.p);
+    Variable array = ArrayShift(args);
+    Variable value = ArrayShift(args);
+    ArrayUnshift((Array*)array.value.p, value);
+    return Nil;
 }
 
-Variable _list_unshift(Table *state, List* args) 
+Variable _array_free(Table *state, Array* args) 
 {
-    Variable result = Nil;
-    Variable list = ListShift(&*args);
-    Variable value = ListShift(&*args);
-    return ListUnshift((List*)list.value.p, value);
+    Variable array = ArrayShift(args);
+    ArrayFree((Array*)array.value.p);
+    return Nil;
 }
 
-Variable _list_free(Table *state, List* args) 
+Variable _array_move(Table *state, Array* args) 
 {
-    Variable result = Nil;
-    Variable list = ListShift(&*args);
-    ListFree((List*)list.value.p);
-    return result;
+    Variable array = ArrayShift(args);
+    MaxSize i1 = (MaxSize)ArrayShift(args).value.f;
+    MaxSize i2 = (MaxSize)ArrayShift(args).value.f;
+    ArrayMove((Array*)array.value.p, i1, i2);
+    return Nil;
 }
 
-Variable _list_move(Table *state, List* args) 
+Variable _array_insert(Table *state, Array* args) 
 {
-    Variable result = Nil;
-    Variable list = ListShift(&*args);
-    MaxSize i1 = (MaxSize)ListShift(&*args).value.f;
-    MaxSize i2 = (MaxSize)ListShift(&*args).value.f;
-    ListMove((List*)list.value.p, i1, i2);
-    return result;
+    Variable array = ArrayShift(args);
+    MaxSize i = (MaxSize)ArrayShift(args).value.f;
+    Variable value = ArrayShift(args);
+    ArrayInsert((Array*)array.value.p, i, value);
+    return Nil;
 }
 
-Variable _list_insert(Table *state, List* args) 
+Variable _array_remove(Table *state, Array* args) 
 {
-    Variable result = Nil;
-    Variable list = ListShift(&*args);
-    MaxSize i = (MaxSize)ListShift(&*args).value.f;
-    Variable value = ListShift(&*args);
-    ListInsert((List*)list.value.p, i, value);
-    return result;
+    Variable array = ArrayShift(args);
+    MaxSize i = (MaxSize)ArrayShift(args).value.f;
+    return ArrayRemove((Array*)array.value.p, i);
 }
 
-Variable _list_remove(Table *state, List* args) 
+Variable _array_get(Table *state, Array* args) 
 {
-    Variable result = Nil;
-    Variable list = ListShift(&*args);
-    MaxSize i = (MaxSize)ListShift(&*args).value.f;
-    return ListRemove((List*)list.value.p, i);
+    Variable array = ArrayShift(args);
+    MaxSize i = (MaxSize)ArrayShift(args).value.f;
+    return ((Array*)array.value.p)->data[i];
+}
+
+Variable _array_set(Table *state, Array* args) 
+{
+    Variable array = ArrayShift(args);
+    MaxSize i = (MaxSize)ArrayShift(args).value.f;
+    Variable value = ArrayShift(args);
+    ((Array*)array.value.p)->data[i] = value;
+    return Nil;
 }
 
 // Table functions
 void registerFunction(Table *state, char* name, Function func) 
 {
     Variable tempFunc = Nil;
-    tempFunc.type = 4;
+    tempFunc.type = TYPE_FUNCTION;
     tempFunc.value.p = func;
     recursiveSet(state, name, tempFunc);
 }
@@ -1019,18 +1068,18 @@ void repl(Table *state)
         fgets(input, 1024, stdin);
         input[strlen(input) - 1] = '\0';
         Variable result = bulkInterpret(state, input);
-        if (result.type > 0) 
+        if (result.type > 0)
         {
-            if (result.type == 2) 
+            if (result.type == TYPE_NUMBER) 
             {
                 printf("returned: %f\n", result.value.f);
             } 
-            else if (result.type == 3) 
+            else if (result.type == TYPE_STRING) 
             {
                 printf("returned: %s\n", result.value.s);
             }
         }
-        else if(result.type == -1)
+        else if(result.type == TYPE_ERROR)
         {
             printf("Error(%s): %s\n", result.value.s, input);
         }
@@ -1047,20 +1096,17 @@ int main(int argc, char** argv)
     char* filetxt = NULL;
 
     //turn args into a string stack
-    List args;
-    ListInit(&args);
-
-    printf("Table size: %d\n", sizeof(Table));
+    Array *args = createNewArray();
 
     for (int i = 1; i < argc; i++)
     {
-        Variable v = {.type = 3, .value = {.s = argv[i]}};
-        ListPush(&args, v);
+        Variable v = {.type = TYPE_STRING, .value = {.s = argv[i]}};
+        ArrayPush(args, v);
     }
 
-    while (args.size > 0)
+    while (args->size > 0)
     {
-        char* arg = ListShift(&args).value.s;
+        char* arg = ArrayShift(args).value.s;
         if (arg[0] == '-')
         {
             if (strcmp(arg, "-h") == 0)
@@ -1127,12 +1173,13 @@ int main(int argc, char** argv)
     registerFunction(&state, "eval", _interpret);
     registerFunction(&state, "ls", _ls);
     registerFunction(&state, "exit", __exit);
-    registerFunction(&state, "table", _table);
-    registerFunction(&state, "list", _list);
+    registerFunction(&state, "type", _type);
 
+    recursiveSet(&state, "table", (Variable){.type = TYPE_TABLE, .value = {.p = createNewTable()}});
+    registerFunction(&state, "table.new", _table);
+    
 
-
-    interpret(&state, "set string (table)");
+    interpret(&state, "set string (table.new)");
     registerFunction(&state, "string.find", _string_find);
     registerFunction(&state, "string.replace", _string_replace);
     registerFunction(&state, "string.byte", _string_byte);
@@ -1140,7 +1187,19 @@ int main(int argc, char** argv)
     registerFunction(&state, "string.substr", _string_substring);
     registerFunction(&state, "string.concat", _string_concat);
     registerFunction(&state, "string.split", _string_split);
-    
+
+    interpret(&state, "set array (table.new)");
+    registerFunction(&state, "array.new", _array);
+    registerFunction(&state, "array.push", _array_push);
+    registerFunction(&state, "array.pop", _array_pop);
+    registerFunction(&state, "array.shift", _array_shift);
+    registerFunction(&state, "array.unshift", _array_unshift);
+    registerFunction(&state, "array.free", _array_free);
+    registerFunction(&state, "array.move", _array_move);
+    registerFunction(&state, "array.insert", _array_insert);
+    registerFunction(&state, "array.remove", _array_remove);
+    registerFunction(&state, "array.get", _array_get);
+    registerFunction(&state, "array.set", _array_set);
 
 
 

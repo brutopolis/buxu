@@ -20,12 +20,12 @@ print F = $f;
 
 print;
 print test tables recursively:;
-set tbl (table);
+set tbl (table.new);
 set tbl.a 9999;
 set tbl.b 8888;
 set tbl.c 7777;
-set tbl.d (table);
-set tbl.d.a (table);
+set tbl.d (table.new);
+set tbl.d.a (table.new);
 set tbl.d.a.aa 999;
 set tbl.d.b 555;
 print tbl.a = $tbl.a;
@@ -78,5 +78,22 @@ print txt len test:;
 set len (len $(hello world !));
 print $len;
 
+print;
+print array test:;
+set lst (array.new);
+array.push $lst 1;
+array.push $lst 2;
+array.push $lst 3;
+array.push $lst 4;
+array.push $lst $(hello);
+array.push $lst $(world);
+array.push $lst $(bruter);
+array.push $lst $(interpreter);
+set _str (array.get $lst 5);
+print $_str;
+set _str (array.pop $lst);
+print $_str;
+ls $lst;
 
+print;
 print seems ok! bruter interpreter compiled and located at ./bin/bruter;
