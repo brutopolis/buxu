@@ -366,7 +366,7 @@ Array* parse(Table *state, char *cmd)
         if (str[0] == '$') 
         {
             // Variable
-            Variable v;
+            Variable v = Nil;
             if(str[1] == '(') 
             {
                 v.value.s = strndup(str + 2, strlen(str) - 3);
@@ -381,7 +381,7 @@ Array* parse(Table *state, char *cmd)
         else if (str[0] == '(') 
         {
             // expression
-            Variable v;
+            Variable v = Nil;
             Variable expression;
             Array* args = parse(state, strndup(str + 1, strlen(str) - 2));
 
@@ -391,7 +391,7 @@ Array* parse(Table *state, char *cmd)
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
         {
             // Number
-            Variable v;
+            Variable v = Nil;
             v.value.f = atof(str);
             v.type = TYPE_NUMBER;
             ArrayPush(result, v);
@@ -492,8 +492,8 @@ Variable _type(Table *state, Array* args)
         case TYPE_ERROR:
             result.value.s = strdup("error");
             break;
-        case TYPE_VOID:
-            result.value.s = strdup("void");
+        case TYPE_NIL:
+            result.value.s = strdup("");
             break;
         case TYPE_TABLE:
             result.value.s = strdup("table");
@@ -593,7 +593,7 @@ Variable _ls(Table *_state, Array* args)
                         printf("%d [error] : %s\n", i, _var.value.s);
                         break;
                     case 0:
-                        printf("%d [void]\n");
+                        printf("%d []\n");
                         break;
                     case 1:
                         printf("%d [table] : %p\n", i, _var.value.p);
@@ -625,7 +625,7 @@ Variable _ls(Table *_state, Array* args)
                 printf("[error] %s : %s \n", state->keys[i], state->data[i].value.s);
                 break;
             case 0:
-                printf("[void] %s\n", state->keys[i]);
+                printf("[] %s\n", state->keys[i]);
                 break;
             case 1:
                 printf("[table] %s\n", state->keys[i], state->data[i].value.p);
@@ -650,6 +650,22 @@ Variable __exit(Table *state, Array* args)
 }
 
 // conditions functions
+unsigned char isTrue(Variable v) 
+{
+    if (v.type == TYPE_NUMBER && v.value.f == 0) 
+    {
+        return 0;
+    }
+    else if (v.type < 1) 
+    {
+        return 0;
+    }
+    else 
+    {
+        return 1;
+    }
+}
+
 Variable _if(Table *state, Array* args) 
 {
     Variable condition = bulkInterpret(state, ArrayShift(args).value.s);
@@ -668,7 +684,7 @@ Variable _if(Table *state, Array* args)
         }
     } 
     
-    if (condition.type > 0 && condition.value.f != 0) 
+    if (isTrue(condition)) 
     {
         return bulkInterpret(state, block.value.s);
     }
@@ -679,16 +695,25 @@ Variable _if(Table *state, Array* args)
     return Nil;
 }
 
-Variable _ifelse(Table *state, Array* args) 
+Variable _and(Table *state, Array* args) 
 {
-    Variable condition = bulkInterpret(state, ArrayShift(args).value.s);
-    Variable block1 = ArrayShift(args);
-    Variable block2 = ArrayShift(args);
-    if (condition.type > 0 && condition.value.f != 0) 
-    {
-        return bulkInterpret(state, block1.value.s);
-    }
-    return bulkInterpret(state, block2.value.s);
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
+    return (Variable){.type = TYPE_NUMBER, .value = {.f = (isTrue(a) && isTrue(b))}};
+}
+
+Variable _or(Table *state, Array* args) 
+{
+    Variable a = ArrayShift(args);
+    Variable b = ArrayShift(args);
+    return(isTrue(a) ? a : b);
+}
+
+Variable _not(Table *state, Array* args) 
+{
+    Variable a = ArrayShift(args);
+    Variable result = Nil;
+    return (Variable){.type = TYPE_NUMBER, .value = {.f = !isTrue(a)}};
 }
 
 Variable _equals(Table *state, Array* args) 
@@ -789,6 +814,20 @@ Variable _lessOrEqual(Table *state, Array* args)
     }
     result.type = TYPE_NUMBER;
     return result;
+}
+
+// loop functions
+Variable _while(Table *state, Array* args) 
+{
+    char* conditionCode = ArrayShift(args).value.s;
+    Variable block = ArrayShift(args);
+    Variable condition = bulkInterpret(state, conditionCode);
+    while (isTrue(condition)) 
+    {
+        bulkInterpret(state, block.value.s);
+        condition = bulkInterpret(state, conditionCode);
+    }
+    return Nil;
 }
 
 
@@ -1206,6 +1245,10 @@ int main(int argc, char** argv)
     registerFunction(&state, ">=", _greaterOrEqual);
     registerFunction(&state, "<=", _lessOrEqual);
     registerFunction(&state, "if", _if);
+    registerFunction(&state, "and", _and);
+    registerFunction(&state, "or", _or);
+
+    registerFunction(&state, "while", _while);
 
     
 

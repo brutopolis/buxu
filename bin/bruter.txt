@@ -1,7 +1,7 @@
 types
 
 -1 = error
- 0 = void
+ 0 = nil
  1 = table
  2 = float
  3 = string

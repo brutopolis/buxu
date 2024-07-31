@@ -8,13 +8,13 @@
 
 #define FloatSize double
 
-const char* Version = "0.4.0";
+const char* Version = "0.4.1";
 
 // type -1 is error, it can contain a string with the error message
 const enum 
 {
     TYPE_ERROR = -1,
-    TYPE_VOID = 0,
+    TYPE_NIL = 0,
     TYPE_TABLE = 1,
     TYPE_NUMBER = 2,
     TYPE_STRING = 3,

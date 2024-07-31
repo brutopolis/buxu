@@ -105,4 +105,46 @@ else
 $(print $(a is not 1));
 
 print;
+print and test:;
+set a 1;
+set b 2;
+
+if $(and $a $b) 
+$(print $(a and b is true)) 
+else
+$(print $(a and b is false));
+
+print;
+print or test:;
+
+unset a;
+
+set result (or $a $b);
+
+if $(== $result 1)
+$(print $(result is a))
+else
+$(print $(result is ) $result);
+
+print;
+print not test:;
+set a 1;
+
+if $(not $a)
+$(print $(a is false))
+else
+$(print $(a is true));
+
+print;
+print while test:;
+set i 0;
+
+while $(< $i 10)
+$(
+    print $i;
+    set i (add $i 1)
+;);
+
+
+print;
 print seems ok! bruter interpreter compiled and located at ./bin/bruter;
