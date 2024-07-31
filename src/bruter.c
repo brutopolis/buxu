@@ -1,41 +1,193 @@
 #include "bruter.h"
 
-Table* createNewTable() {
+// List functions
+void ListInit(List *list) {
+    list->data = NULL;
+    list->size = 0;
+    list->capacity = 0;
+}
+
+void ListPush(List *list, Variable value) {
+    if (list->size == list->capacity) {
+        list->capacity = list->capacity == 0 ? 1 : list->capacity * 2;
+        list->data = realloc(list->data, list->capacity * sizeof(*list->data));
+    }
+    list->data[list->size++] = value;
+}
+
+Variable ListPop(List *list) {
+    return list->data[--list->size];
+}
+
+Variable ListShift(List *list) {
+    Variable ret = list->data[0];
+    for (MaxSize i = 0; i < list->size - 1; i++) {
+        list->data[i] = list->data[i + 1];
+    }
+    list->size--;
+    return ret;
+}
+
+Variable ListUnshift(List *list, Variable value) {
+    if (list->size == list->capacity) {
+        list->capacity = list->capacity == 0 ? 1 : list->capacity * 2;
+        list->data = realloc(list->data, list->capacity * sizeof(*list->data));
+    }
+    for (MaxSize i = list->size; i > 0; i--) {
+        list->data[i] = list->data[i - 1];
+    }
+    list->data[0] = value;
+    list->size++;
+    return value;
+}
+
+void ListFree(List *list) {
+    free(list->data);
+}
+
+void ListMove(List *list, MaxSize i1, MaxSize i2) {
+    Variable tmp = list->data[i1];
+    list->data[i1] = list->data[i2];
+    list->data[i2] = tmp;
+}
+
+void ListInsert(List *list, MaxSize i, Variable value) {
+    if (list->size == list->capacity) {
+        list->capacity = list->capacity == 0 ? 1 : list->capacity * 2;
+        list->data = realloc(list->data, list->capacity * sizeof(*list->data));
+    }
+    for (MaxSize j = list->size; j > i; j--) {
+        list->data[j] = list->data[j - 1];
+    }
+    list->data[i] = value;
+    list->size++;
+}
+
+Variable ListRemove(List *list, MaxSize i) {
+    Variable ret = list->data[i];
+    for (MaxSize j = i; j < list->size - 1; j++) {
+        list->data[j] = list->data[j + 1];
+    }
+    list->size--;
+    return ret;
+}
+
+// Table functions
+void TableInit(Table *table) {
+    table->keys = NULL;
+    table->ValueStack = NULL;
+    table->size = 0;
+    table->capacity = 0;
+}
+
+void TableFree(Table *table) {
+    for (MaxSize i = 0; i < table->size; i++) {
+        free(table->keys[i]);
+    }
+    free(table->keys);
+    free(table->ValueStack);
+}
+
+void TableInsert(Table *table, const char *key, Variable value) {
+    for (MaxSize i = 0; i < table->size; i++) {
+        if (strcmp(table->keys[i], key) == 0) {
+            table->ValueStack[i] = value;
+            return;
+        }
+    }
+    if (table->size == table->capacity) {
+        table->capacity = table->capacity == 0 ? 1 : table->capacity * 2;
+        table->keys = realloc(table->keys, table->capacity * sizeof(*(table->keys)));
+        table->ValueStack = realloc(table->ValueStack, table->capacity * sizeof(*(table->ValueStack)));
+    }
+    table->keys[table->size] = strdup(key);
+    table->ValueStack[table->size++] = value;
+}
+
+void TableRemove(Table *table, const char *key) {
+    for (MaxSize i = 0; i < table->size; i++) {
+        if (strcmp(table->keys[i], key) == 0) {
+            free(table->keys[i]);
+            for (MaxSize j = i; j < table->size - 1; j++) {
+                table->keys[j] = table->keys[j + 1];
+                table->ValueStack[j] = table->ValueStack[j + 1];
+            }
+            table->size--;
+            return;
+        }
+    }
+}
+
+Variable TableGet(Table *table, const char *key) {
+    Variable ret = {0, 0};
+    for (MaxSize i = 0; i < table->size; i++) {
+        if (strcmp(table->keys[i], key) == 0) {
+            ret = table->ValueStack[i];
+            break;
+        }
+    }
+    return ret;
+}
+
+MaxSize TableFind(Table *table, const char *key) {
+    MaxSize ret = (MaxSize) -1;
+    for (MaxSize i = 0; i < table->size; i++) {
+        if (strcmp(table->keys[i], key) == 0) {
+            ret = i;
+            break;
+        }
+    }
+    return ret;
+}
+
+Table* createNewTable() 
+{
     Table* newTable = (Table*)malloc(sizeof(Table));
-    HashTableInit(*newTable);
+    TableInit(newTable);
     return newTable;
 }
 
-StringStack specialSplit(const char* str) {
-    StringStack stack;
-    StackInit(stack);
+// Split functions
+List specialSplit(const char* str) 
+{
+    List stack;
+    ListInit(&stack);
 
     int n = strlen(str);
     char token[1024];
     int tokenIndex = 0;
     int insideParens = 0;
 
-    for (int i = 0; i <= n; ++i) {
+    for (int i = 0; i <= n; ++i) 
+    {
         char c = str[i];
-
-        // Check for delimiters
-        if (c == '(') {
+        if (c == '(') 
+        {
             insideParens++;
-        } else if (c == ')') {
-            if (insideParens > 0) {
+        } 
+        else if (c == ')') 
+        {
+            if (insideParens > 0) 
+            {
                 insideParens--;
             }
         }
 
         // Add character to current token
-        if (i < n && (!isspace(c) || insideParens > 0)) {
+        if (i < n && (!isspace(c) || insideParens > 0)) 
+        {
             token[tokenIndex++] = c;
-        } else if (tokenIndex > 0) {
+        } 
+        else if (tokenIndex > 0) 
+        {
             // End of token
             token[tokenIndex] = '\0';
             char* newToken = (char*)malloc((tokenIndex + 1) * sizeof(char));
             strcpy(newToken, token);
-            StackPush(stack, newToken);
+            Variable v;
+            v.type = 3;
+            v.value.s = newToken;
+            ListPush(&stack, v);
             tokenIndex = 0;
         }
     }
@@ -43,25 +195,33 @@ StringStack specialSplit(const char* str) {
     return stack;
 }
 
-StringStack stringSplit(const char* str, const char delim) {
-    StringStack splited;
-    StackInit(splited);
+List stringSplit(const char* str, const char delim) 
+{
+    List splited;
+    ListInit(&splited);
     int n = 0;
     //split string by ; but not in parentheses
-    while (n < strlen(str)) {
+    while (n < strlen(str)) 
+    {
         char token[1024];
         int tokenIndex = 0;
         int insideParens = 0;
-        while (n < strlen(str)) {
+        while (n < strlen(str)) 
+        {
             char c = str[n];
-            if (c == '(') {
+            if (c == '(') 
+            {
                 insideParens++;
-            } else if (c == ')') {
-                if (insideParens > 0) {
+            } 
+            else if (c == ')') 
+            {
+                if (insideParens > 0) 
+                {
                     insideParens--;
                 }
             }
-            if (c == delim && insideParens == 0) {
+            if (c == delim && insideParens == 0) 
+            {
                 break;
             }
             token[tokenIndex++] = c;
@@ -70,23 +230,37 @@ StringStack stringSplit(const char* str, const char delim) {
         token[tokenIndex] = '\0';
         char* newToken = (char*)malloc((tokenIndex + 1) * sizeof(char));
         strcpy(newToken, token);
-        StackPush(splited, newToken);
+        Variable v;
+        v.type = 3;
+        v.value.s = newToken;
+
+        ListPush(&splited, v);
         n++;
     }
     return splited;
 }
 
-Variable recursiveGet(Table *state, char* key) {
-    StringStack splited = stringSplit(key, '.');
-    char* currentKey = StackShift(splited);
-    Variable v = HashTableGet(Variable, *state, currentKey);
+// Recursive functions
+Variable recursiveGet(Table *state, char* key) 
+{
+    List splited = stringSplit(key, '.');
+    char* currentKey = ListShift(&splited).value.s;
+    Variable v = TableGet(state, currentKey);
 
-    while (splited.size > 0) {
-        if (v.type == 1) // Verifica se é do tipo tabela
+    while (splited.size > 0) 
+    {
+        if (v.type == 1)
         {
-            currentKey = StackShift(splited);
-            v = HashTableGet(Variable, *(Table*)v.value.p, currentKey);
-        } else {
+            currentKey = ListShift(&splited).value.s;
+            v = TableGet((Table*)v.value.p, currentKey);
+        }
+        else if (v.type == 5)
+        {
+            currentKey = ListShift(&splited).value.s;
+            v = ((List*)v.value.p)->data[atoi(currentKey)];
+        }
+        else 
+        {
             v.type = -1; // Define um tipo de erro se não for uma tabela
             v.value.s = strdup("Not a table");
             break;
@@ -96,83 +270,97 @@ Variable recursiveGet(Table *state, char* key) {
     return v;
 }
 
-void recursiveSet(Table *state, char* key, Variable value) {
-    StringStack splited = stringSplit(key, '.');
+void recursiveSet(Table *state, char* key, Variable value) 
+{
+    List splited = stringSplit(key, '.');
 
-    if (splited.size == 1) {
-        HashTableInsert(*state, key, value);
+    if (splited.size == 1) 
+    {
+        TableInsert(state, key, value);
         return;
     }
 
-    char* currentKey = StackShift(splited);
-    Variable v = HashTableGet(Variable, *state, currentKey);
+    char* currentKey = ListShift(&splited).value.s;
+    Variable v = TableGet(state, currentKey);
 
-    while (splited.size > 1) {
+    while (splited.size > 1) 
+    {
         if (v.type != 1) 
         {
             Table *newTable = createNewTable();
             Variable newVar;
             newVar.type = 1;
             newVar.value.p = newTable;
-            HashTableInsert(*state, currentKey, newVar);
+            TableInsert(state, currentKey, newVar);
             v = newVar;
         }
 
         state = (Table*)v.value.p;
-        currentKey = StackShift(splited);
-        v = HashTableGet(Variable, *state, currentKey);
+        currentKey = ListShift(&splited).value.s;
+        v = TableGet(state, currentKey);
     }
 
-    if (v.type == 1) {
-        currentKey = StackShift(splited);
-        HashTableInsert(*(Table*)v.value.p, currentKey, value);
-    } else {
-        HashTableInsert(*state, currentKey, value);
+    if (v.type == 1) 
+    {
+        currentKey = ListShift(&splited).value.s;
+        TableInsert((Table*)v.value.p, currentKey, value);
+    } 
+    else 
+    {
+        TableInsert(state, currentKey, value);
     }
 }
 
 void recursiveUnset(Table *state, char* key) {
-    StringStack splited = stringSplit(key, '.');
+    List splited = stringSplit(key, '.');
 
-    if (splited.size == 1) {
-        HashTableRemove(*state, key);
+    if (splited.size == 1) 
+    {
+        TableRemove(state, key);
         return;
     }
 
-    char* currentKey = StackShift(splited);
-    Variable v = HashTableGet(Variable, *state, currentKey);
+    char* currentKey = ListShift(&splited).value.s;
+    Variable v = TableGet(state, currentKey);
 
-    while (splited.size > 1) {
+    while (splited.size > 1) 
+    {
         if (v.type == 1) // Verifica se é do tipo tabela
         {
             state = (Table*)v.value.p;
-            currentKey = StackShift(splited);
-            v = HashTableGet(Variable, *state, currentKey);
-        } else {
+            currentKey = ListShift(&splited).value.s;
+            v = TableGet(state, currentKey);
+        } 
+        else 
+        {
             v.type = -1; // Define um tipo de erro se não for uma tabela
             v.value.s = strdup("Not a table");
             return;
         }
     }
 
-    if (v.type == 1) {
-        currentKey = StackShift(splited);
-        HashTableRemove(*(Table*)v.value.p, currentKey);
-    } else {
-        HashTableRemove(*state, key);
+    if (v.type == 1) 
+    {
+        currentKey = ListShift(&splited).value.s;
+        TableRemove((Table*)v.value.p, currentKey);
+    } 
+    else 
+    {
+        TableRemove(state, key);
     }
 }
 
+// Parser functions
 List parse(Table *state, char *cmd) 
 {
     List result;
-    StackInit(result);
+    ListInit(&result);
 
-    StringStack splited = specialSplit(cmd);
+    List splited = specialSplit(cmd);
 
     for (int i = 0; i < splited.size; ++i) 
     {
-        char* str = splited.data[i];
+        char* str = splited.data[i].value.s;
 
         if (str[0] == '$') 
         {
@@ -187,7 +375,7 @@ List parse(Table *state, char *cmd)
             {
                 v = recursiveGet(state, strdup(str + 1));
             }
-            StackPush(result, v);
+            ListPush(&result, v);
         } 
         else if (str[0] == '(') 
         {
@@ -196,8 +384,8 @@ List parse(Table *state, char *cmd)
             Variable expression;
             List args = parse(state, strndup(str + 1, strlen(str) - 2));
 
-            v = ((Function)HashTableGet(Variable, *state, "eval").value.p)(state, &args);
-            StackPush(result, v);
+            v = ((Function)TableGet(state, "eval").value.p)(state, &args);
+            ListPush(&result, v);
         } 
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
         {
@@ -205,7 +393,7 @@ List parse(Table *state, char *cmd)
             Variable v;
             v.value.f = atof(str);
             v.type = 2;
-            StackPush(result, v);
+            ListPush(&result, v);
         } 
         else 
         {
@@ -213,13 +401,13 @@ List parse(Table *state, char *cmd)
             Variable v;
             v.value.s = strdup(str);
             v.type = 3;
-            StackPush(result, v);
+            ListPush(&result, v);
         }
 
         free(str);
     }
 
-    StackFree(splited);
+    ListFree(&splited);
 
     return result;
 }
@@ -227,13 +415,13 @@ List parse(Table *state, char *cmd)
 Variable interpret(Table *state, char* input) 
 {
     List args = parse(state, input);
-    char* funcName = StackShift(args).value.s;
+    char* funcName = ListShift(&args).value.s;
     Variable result = Nil;
     Variable var = recursiveGet(state, funcName);
     if (var.type == 4) 
     {
         result = ((Function)var.value.p)(state, &args);
-        StackFree(args);
+        ListFree(&args);
         return result;
     } 
     else 
@@ -243,38 +431,42 @@ Variable interpret(Table *state, char* input)
         sprintf(___err, "Unknown function %s", funcName);
         result.value.s = ___err;
     }
-    StackFree(args);
+    ListFree(&args);
     return result;
 }
 
-Variable bulkInterpret(Table *state, const char* input) {
-    StringStack splited = stringSplit(input, ';');
+Variable bulkInterpret(Table *state, const char* input) 
+{
+    List splited = stringSplit(input, ';');
     Variable result = Nil;
-    while (splited.size > 0) {
-        result = interpret(state, StackShift(splited));
-        if (result.type != 0) {
+    while (splited.size > 0) 
+    {
+        result = interpret(state, ListShift(&splited).value.s);
+        if (result.type != 0) 
+        {
             break;
         }
     }
-    StackFree(splited);
+    ListFree(&splited);
     return result;
 }
 
+// Functions
 Variable _interpret(Table *state, List* args) 
 {
     Variable result = Nil;
     if (args->size == 1) 
     {
-        return bulkInterpret(state, StackShift(*args).value.s);
-    } 
+        return bulkInterpret(state, ListShift(&*args).value.s);
+    }
     else 
     {
-        char* funcName = StackShift(*args).value.s;
+        char* funcName = ListShift(&*args).value.s;
         Variable var = recursiveGet(state, funcName);
         if (var.type == 4) 
         {
             result = ((Function)var.value.p)(state, args);
-            StackFree(*args);
+            ListFree(&*args);
             return result;
         } 
         else 
@@ -284,7 +476,7 @@ Variable _interpret(Table *state, List* args)
             sprintf(___err, "Unknown function %s", funcName);
             result.value.s = ___err;
         }
-        StackFree(*args);
+        ListFree(&*args);
         return result;
     }
 }
@@ -292,21 +484,32 @@ Variable _interpret(Table *state, List* args)
 Variable _table(Table *state, List* args) 
 {
     Table* newTable = (Table*)malloc(sizeof(Table));
-    HashTableInit(*newTable);
+    TableInit(newTable);
     return (Variable){.type = 1, .value = {.p = newTable}};
+}
+
+Variable _list(Table *state, List* args) 
+{
+    List array;
+    ListInit(&array);
+    while (args->size > 0) 
+    {
+        ListPush(&array, ListShift(&*args));
+    }
+    return (Variable){.type = 5, .value = {.p = &array}};
 }
 
 Variable _unset(Table *state, List* args) 
 {
-    Variable _key = StackShift(*args);
+    Variable _key = ListShift(&*args);
     recursiveUnset(state, _key.value.s);
     return Nil;
 }
 
 Variable _set(Table *state, List* args) 
 {
-    Variable _key = StackShift(*args);
-    Variable _value = StackShift(*args);
+    Variable _key = ListShift(&*args);
+    Variable _value = ListShift(&*args);
     recursiveSet(state, _key.value.s, _value);
 
     return Nil;
@@ -316,7 +519,7 @@ Variable _print(Table *state, List* args)
 {
     while (args->size > 0) 
     {
-        Variable v = StackShift(*args);
+        Variable v = ListShift(&*args);
         if (v.type == 2) 
         {
             printf("%f ", v.value.f);
@@ -347,7 +550,7 @@ Variable _ls(Table *_state, List* args)
     }
     else
     {
-        Variable _ = StackShift(*args);
+        Variable _ = ListShift(&*args);
         //printf("_ type = %d\n", _.type);
         //printf("_ value = %s\n", _.value.s);
         if (_.type == 1) 
@@ -396,8 +599,8 @@ Variable __exit(Table *state, List* args)
 Variable _equals(Table *state, List* args) 
 {
     Variable result = Nil;
-    Variable a = StackShift(*args);
-    Variable b = StackShift(*args);
+    Variable a = ListShift(&*args);
+    Variable b = ListShift(&*args);
     if (a.type == 2 && b.type == 2) 
     {
         result.value.f = a.value.f == b.value.f;
@@ -424,8 +627,8 @@ Variable _notEquals(Table *state, List* args)
 Variable _greaterThan(Table *state, List* args) 
 {
     Variable result = Nil;
-    Variable a = StackShift(*args);
-    Variable b = StackShift(*args);
+    Variable a = ListShift(&*args);
+    Variable b = ListShift(&*args);
     if (a.type == 2 && b.type == 2) 
     {
         result.value.f = a.value.f > b.value.f;
@@ -441,8 +644,8 @@ Variable _greaterThan(Table *state, List* args)
 Variable _lessThan(Table *state, List* args) 
 {
     Variable result = Nil;
-    Variable a = StackShift(*args);
-    Variable b = StackShift(*args);
+    Variable a = ListShift(&*args);
+    Variable b = ListShift(&*args);
     if (a.type == 2 && b.type == 2) 
     {
         result.value.f = a.value.f < b.value.f;
@@ -458,8 +661,8 @@ Variable _lessThan(Table *state, List* args)
 Variable _greaterOrEqual(Table *state, List* args) 
 {
     Variable result = Nil;
-    Variable a = StackShift(*args);
-    Variable b = StackShift(*args);
+    Variable a = ListShift(&*args);
+    Variable b = ListShift(&*args);
     if (a.type == 2 && b.type == 2) 
     {
         result.value.f = a.value.f >= b.value.f;
@@ -475,8 +678,8 @@ Variable _greaterOrEqual(Table *state, List* args)
 Variable _lessOrEqual(Table *state, List* args) 
 {
     Variable result = Nil;
-    Variable a = StackShift(*args);
-    Variable b = StackShift(*args);
+    Variable a = ListShift(&*args);
+    Variable b = ListShift(&*args);
     if (a.type == 2 && b.type == 2) 
     {
         result.value.f = a.value.f <= b.value.f;
@@ -490,109 +693,31 @@ Variable _lessOrEqual(Table *state, List* args)
 }
 
 
-
 // math functions
 Variable _add(Table *state, List* args) 
 {
     Variable result = Nil;
-    Variable a = StackShift(*args);
-    Variable b = StackShift(*args);
-    if (a.type == 3)// like javascript + operator for strings
-    {
-        if (b.type == 2)
-        {
-            char* str = (char*)malloc(strlen(a.value.s) + 15);
-            sprintf(str, "%s%.2f", a.value.s, b.value.f);
-            result.value.s = str;
-            result.type = 3;
-            return result;
-        }
-        else if (b.type == 3)
-        {
-            char* str = (char*)malloc(strlen(a.value.s) + strlen(b.value.s) + 1);
-            sprintf(str, "%s%s", a.value.s, b.value.s);
-            result.value.s = str;
-            result.type = 3;
-            return result;
-        }
-    }
-    else if (a.type == 2 && b.type == 2) 
-    {
-        result.value.f = a.value.f + b.value.f;
-        result.type = 2;
-        return result;
-    }
-    else if (a.type == 1 && b.type == 1) 
-    {
-        Table* newTable = createNewTable();
-        Table *tableA = a.value.p;
-        Table *tableB = b.value.p;
-        for (int i = 0; i < tableA->size; i++) 
-        {
-            HashTableInsert(*newTable, tableA->keys[i], tableA->ValueStack[i]);
-        }
-
-        for (int i = 0; i < tableB->size; i++) 
-        {
-            HashTableInsert(*newTable, tableB->keys[i], tableB->ValueStack[i]);
-        }
-        result.type = 1;
-        result.value.p = newTable;
-        return result;
-    }
+    Variable a = ListShift(&*args);
+    Variable b = ListShift(&*args);
+    result.value.f = a.value.f + b.value.f;
+    result.type = 2;
     return result;
 }
 
 Variable _sub(Table *state, List* args) 
 {
     Variable result = Nil;
-    Variable a = StackShift(*args);
-    Variable b = StackShift(*args);
-    if (a.type == 3 && b.type == 3) // remove b from a
-    {
-        char* str = (char*)malloc(strlen(a.value.s) - strlen(b.value.s) + 1);
-        char* found = strstr(a.value.s, b.value.s);
-        if (found != NULL) 
-        {
-            strncpy(str, a.value.s, found - a.value.s);
-            strcpy(str + (found - a.value.s), found + strlen(b.value.s));
-            result.value.s = str;
-            result.type = 3;
-            return result;
-        }
-    }
-    else if (a.type == 2) 
-    {
-        result.value.f = a.value.f - b.value.f;
-        result.type = 2;
-        return result;
-    }
-    else if (a.type == 1 && b.type == 1) 
-    {
-        Table* newTable = createNewTable();
-        Table *tableA = a.value.p;
-        Table *tableB = b.value.p;
-        for (int i = 0; i < tableA->size; i++) 
-        {
-            HashTableInsert(*newTable, tableA->keys[i], tableA->ValueStack[i]);
-        }
-
-        for (int i = 0; i < tableB->size; i++) 
-        {
-            HashTableRemove(*newTable, tableB->keys[i]);
-        }
-        result.type = 1;
-        result.value.p = newTable;
-        return result;
-    }
-    
+    Variable a = ListShift(&*args);
+    Variable b = ListShift(&*args);
+    result.value.f = a.value.f - b.value.f;
+    result.type = 2;
     return result;
 }
 
 Variable _mul(Table *state, List* args) 
 {
     Variable result = Nil;
-    result.value.f = StackShift(*args).value.f * StackShift(*args).value.f;
+    result.value.f = ListShift(&*args).value.f * ListShift(&*args).value.f;
     result.type = 2;
     return result;
 }
@@ -600,29 +725,10 @@ Variable _mul(Table *state, List* args)
 Variable _div(Table *state, List* args) 
 {
     Variable result = Nil;
-    Variable a = StackShift(*args);
-    Variable b = StackShift(*args);
-    if (a.type == 3 && b.type == 3) // split a by delimiter b
-    {
-        StringStack splited = stringSplit(a.value.s, b.value.s[0]);
-        Table* newTable = createNewTable();
-        for (int i = 0; i < splited.size; i++) 
-        {
-            char* key = (char*)malloc(11);
-            sprintf(key, "%d", i);
-            Variable _var = (Variable){.type = 3, .value = {.s = splited.data[i]}};
-            HashTableInsert(*newTable, key, _var);
-        }
-        result.type = 1;
-        result.value.p = newTable;
-        StackFree(splited);
-        return result;
-    }
-    else
-    {
-        result.value.f = StackShift(*args).value.f / StackShift(*args).value.f;
-        result.type = 2;
-    }
+    Variable a = ListShift(&*args);
+    Variable b = ListShift(&*args);
+    result.value.f = ListShift(&*args).value.f / ListShift(&*args).value.f;
+    result.type = 2;
     
     return result;
 }
@@ -630,7 +736,7 @@ Variable _div(Table *state, List* args)
 Variable _mod(Table *state, List* args) 
 {
     Variable result = Nil;
-    result.value.f = (int)StackShift(*args).value.f % (int)StackShift(*args).value.f;
+    result.value.f = (int)ListShift(&*args).value.f % (int)ListShift(&*args).value.f;
     result.type = 2;
     return result;
 }
@@ -638,14 +744,14 @@ Variable _mod(Table *state, List* args)
 Variable _pow(Table *state, List* args) 
 {
     Variable result = Nil;
-    result.value.f = pow(StackShift(*args).value.f, StackShift(*args).value.f);
+    result.value.f = pow(ListShift(&*args).value.f, ListShift(&*args).value.f);
     result.type = 2;
     return result;
 }
 
 Variable _len(Table *state, List* args) 
 {
-    Variable _ = StackShift(*args);
+    Variable _ = ListShift(&*args);
     if (_.type == 3) 
     {
         return (Variable){.type = 2, .value = {.f = strlen(_.value.s)}};
@@ -668,7 +774,7 @@ Variable _len(Table *state, List* args)
 Variable _ceil(Table *state, List* args) 
 {
     Variable result = Nil;
-    result.value.f = ceil(StackShift(*args).value.f);
+    result.value.f = ceil(ListShift(&*args).value.f);
     result.type = 2;
     return result;
 }
@@ -676,7 +782,7 @@ Variable _ceil(Table *state, List* args)
 Variable _floor(Table *state, List* args) 
 {
     Variable result = Nil;
-    result.value.f = floor(StackShift(*args).value.f);
+    result.value.f = floor(ListShift(&*args).value.f);
     result.type = 2;
     return result;
 }
@@ -684,7 +790,7 @@ Variable _floor(Table *state, List* args)
 Variable _round(Table *state, List* args) 
 {
     Variable result = Nil;
-    result.value.f = round(StackShift(*args).value.f);
+    result.value.f = round(ListShift(&*args).value.f);
     result.type = 2;
     return result;
 }
@@ -693,8 +799,8 @@ Variable _round(Table *state, List* args)
 Variable _string_find(Table *state, List* args) 
 {
     Variable result = Nil;
-    char* str = StackShift(*args).value.s;
-    char* substr = StackShift(*args).value.s;
+    char* str = ListShift(&*args).value.s;
+    char* substr = ListShift(&*args).value.s;
     int index = -1;
     char* found = strstr(str, substr);
     if (found != NULL) 
@@ -709,9 +815,9 @@ Variable _string_find(Table *state, List* args)
 Variable _string_replace(Table *state, List* args) 
 {
     Variable result = Nil;
-    char* str = StackShift(*args).value.s;
-    char* substr = StackShift(*args).value.s;
-    char* replacement = StackShift(*args).value.s;
+    char* str = ListShift(&*args).value.s;
+    char* substr = ListShift(&*args).value.s;
+    char* replacement = ListShift(&*args).value.s;
     char* found = strstr(str, substr);
     if (found != NULL) 
     {
@@ -732,8 +838,8 @@ Variable _string_replace(Table *state, List* args)
 Variable _string_byte(Table *state, List* args) 
 {
     Variable result = Nil;
-    char* str = StackShift(*args).value.s;
-    int index = (int)StackShift(*args).value.f;
+    char* str = ListShift(&*args).value.s;
+    int index = (int)ListShift(&*args).value.f;
     result.value.f = str[index];
     result.type = 2;
     return result;
@@ -743,7 +849,7 @@ Variable _string_char(Table *state, List* args)
 {
     Variable result = Nil;
     char* str = (char*)malloc(2);
-    str[0] = (char)StackShift(*args).value.f;
+    str[0] = (char)ListShift(&*args).value.f;
     str[1] = '\0';
     result.value.s = str;
     result.type = 3;
@@ -753,15 +859,145 @@ Variable _string_char(Table *state, List* args)
 Variable _string_substring(Table *state, List* args) 
 {
     Variable result = Nil;
-    char* str = StackShift(*args).value.s;
-    int start = (int)StackShift(*args).value.f;
-    int length = (int)StackShift(*args).value.f;
+    char* str = ListShift(&*args).value.s;
+    int start = (int)ListShift(&*args).value.f;
+    int length = (int)ListShift(&*args).value.f;
     char* newStr = (char*)malloc(length + 1);
     strncpy(newStr, str + start, length);
     newStr[length] = '\0';
     result.value.s = newStr;
     result.type = 3;
     return result;
+}
+
+Variable _string_concat(Table *state, List* args)
+{
+    Variable a = ListShift(&*args);
+    Variable b = ListShift(&*args);
+    Variable result = Nil;
+    char* str; 
+    if (b.type == 2)
+    {
+        str = (char*)malloc(strlen(a.value.s) + 15);
+        sprintf(str, "%s%.2f", a.value.s, b.value.f);
+    }
+    else if (b.type == 3)
+    {
+        str = (char*)malloc(strlen(a.value.s) + strlen(b.value.s) + 1);
+        sprintf(str, "%s%s", a.value.s, b.value.s);
+    }
+    result.value.s = str;
+    result.type = 3;
+    return result;
+}
+
+Variable _string_split(Table *state, List* args)
+{
+    Variable str = ListShift(&*args);
+    Variable delim = ListShift(&*args);
+    Variable result = Nil;
+    List splited = stringSplit(str.value.s, delim.value.s[0]);
+    Table* newTable = createNewTable();
+    for (int i = 0; i < splited.size; i++) 
+    {
+        char* key = (char*)malloc(11);
+        sprintf(key, "%d", i);
+        Variable _var = ListShift(&splited);
+        TableInsert(newTable, key, _var);
+    }
+    result.type = 1;
+    result.value.p = newTable;
+    ListFree(&splited);
+    return result;
+}
+
+// table functions
+Variable _table_keys(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable table = ListShift(&*args);
+    Table* _table = (Table*)table.value.p;
+    Table* newTable = createNewTable();
+    for (int i = 0; i < _table->size; i++) 
+    {
+        char* key = (char*)malloc(strlen(_table->keys[i]) + 1);
+        strcpy(key, _table->keys[i]);
+        Variable _var;
+        _var.type = 3;
+        _var.value.s = key;
+        TableInsert(newTable, key, _var);
+    }
+    result.type = 1;
+    result.value.p = newTable;
+    return result;
+}
+
+// list functions
+Variable _list_push(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable list = ListShift(&*args);
+    Variable value = ListShift(&*args);
+    ListPush((List*)list.value.p, value);
+    return result;
+}
+
+Variable _list_pop(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable list = ListShift(&*args);
+    return ListPop((List*)list.value.p);
+}
+
+Variable _list_shift(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable list = ListShift(&*args);
+    return ListShift((List*)list.value.p);
+}
+
+Variable _list_unshift(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable list = ListShift(&*args);
+    Variable value = ListShift(&*args);
+    return ListUnshift((List*)list.value.p, value);
+}
+
+Variable _list_free(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable list = ListShift(&*args);
+    ListFree((List*)list.value.p);
+    return result;
+}
+
+Variable _list_move(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable list = ListShift(&*args);
+    MaxSize i1 = (MaxSize)ListShift(&*args).value.f;
+    MaxSize i2 = (MaxSize)ListShift(&*args).value.f;
+    ListMove((List*)list.value.p, i1, i2);
+    return result;
+}
+
+Variable _list_insert(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable list = ListShift(&*args);
+    MaxSize i = (MaxSize)ListShift(&*args).value.f;
+    Variable value = ListShift(&*args);
+    ListInsert((List*)list.value.p, i, value);
+    return result;
+}
+
+Variable _list_remove(Table *state, List* args) 
+{
+    Variable result = Nil;
+    Variable list = ListShift(&*args);
+    MaxSize i = (MaxSize)ListShift(&*args).value.f;
+    return ListRemove((List*)list.value.p, i);
 }
 
 // Table functions
@@ -811,17 +1047,20 @@ int main(int argc, char** argv)
     char* filetxt = NULL;
 
     //turn args into a string stack
-    StringStack args;
-    StackInit(args);
+    List args;
+    ListInit(&args);
+
+    printf("Table size: %d\n", sizeof(Table));
 
     for (int i = 1; i < argc; i++)
     {
-        StackPush(args, argv[i]);
+        Variable v = {.type = 3, .value = {.s = argv[i]}};
+        ListPush(&args, v);
     }
 
     while (args.size > 0)
     {
-        char* arg = StackShift(args);
+        char* arg = ListShift(&args).value.s;
         if (arg[0] == '-')
         {
             if (strcmp(arg, "-h") == 0)
@@ -861,13 +1100,13 @@ int main(int argc, char** argv)
         filetxt[length] = '\0';
     }
     
-    registerFunction(&state, "+", _add);
-    registerFunction(&state, "-", _sub);
-    registerFunction(&state, "*", _mul);
-    registerFunction(&state, "/", _div);
-    registerFunction(&state, "\%", _mod);
-    registerFunction(&state, "^", _pow);
-    registerFunction(&state, "#", _len);
+    registerFunction(&state, "add", _add);
+    registerFunction(&state, "sub", _sub);
+    registerFunction(&state, "mul", _mul);
+    registerFunction(&state, "div", _div);
+    registerFunction(&state, "mod", _mod);
+    registerFunction(&state, "pow", _pow);
+    registerFunction(&state, "len", _len);
 
     registerFunction(&state, "ceil", _ceil);
     registerFunction(&state, "floor", _floor);
@@ -889,6 +1128,8 @@ int main(int argc, char** argv)
     registerFunction(&state, "ls", _ls);
     registerFunction(&state, "exit", __exit);
     registerFunction(&state, "table", _table);
+    registerFunction(&state, "list", _list);
+
 
 
     interpret(&state, "set string (table)");
@@ -897,9 +1138,11 @@ int main(int argc, char** argv)
     registerFunction(&state, "string.byte", _string_byte);
     registerFunction(&state, "string.char", _string_char);
     registerFunction(&state, "string.substr", _string_substring);
+    registerFunction(&state, "string.concat", _string_concat);
+    registerFunction(&state, "string.split", _string_split);
+    
 
 
-    printf("Table size: %d\n", sizeof(Table));
 
     if (filetxt != NULL)
     {
