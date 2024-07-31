@@ -650,6 +650,47 @@ Variable __exit(Table *state, Array* args)
 }
 
 // conditions functions
+Variable _if(Table *state, Array* args) 
+{
+    Variable condition = bulkInterpret(state, ArrayShift(args).value.s);
+    Variable block = ArrayShift(args);
+    Variable block2 = Nil;
+    if (args->size > 0) 
+    {
+        Variable _else = ArrayShift(args);
+        if (_else.type == TYPE_STRING && strcmp(_else.value.s, "else") == 0) 
+        {
+            block2 = ArrayShift(args);
+        }
+        else 
+        {
+            block2 = _else;
+        }
+    } 
+    
+    if (condition.type > 0 && condition.value.f != 0) 
+    {
+        return bulkInterpret(state, block.value.s);
+    }
+    else if (block2.type == TYPE_STRING) 
+    {
+        return bulkInterpret(state, block2.value.s);
+    }
+    return Nil;
+}
+
+Variable _ifelse(Table *state, Array* args) 
+{
+    Variable condition = bulkInterpret(state, ArrayShift(args).value.s);
+    Variable block1 = ArrayShift(args);
+    Variable block2 = ArrayShift(args);
+    if (condition.type > 0 && condition.value.f != 0) 
+    {
+        return bulkInterpret(state, block1.value.s);
+    }
+    return bulkInterpret(state, block2.value.s);
+}
+
 Variable _equals(Table *state, Array* args) 
 {
     Variable result = Nil;
@@ -1164,6 +1205,7 @@ int main(int argc, char** argv)
     registerFunction(&state, "<", _lessThan);
     registerFunction(&state, ">=", _greaterOrEqual);
     registerFunction(&state, "<=", _lessOrEqual);
+    registerFunction(&state, "if", _if);
 
     
 

@@ -96,4 +96,13 @@ print $_str;
 ls $lst;
 
 print;
+print if test:;
+set a 2;
+
+if $(== $a 1) 
+$(print $(a is 1)) 
+else
+$(print $(a is not 1));
+
+print;
 print seems ok! bruter interpreter compiled and located at ./bin/bruter;

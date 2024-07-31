@@ -8,7 +8,7 @@
 
 #define FloatSize double
 
-const char* Version = "0.3.9";
+const char* Version = "0.4.0";
 
 // type -1 is error, it can contain a string with the error message
 const enum 
@@ -28,6 +28,7 @@ typedef union
     FloatSize f;
     char* s;
     void* p;
+    int i;
 } Value;
 
 //Variable
