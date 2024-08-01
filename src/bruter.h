@@ -8,7 +8,7 @@
 
 #define FloatSize double
 
-const char* Version = "0.4.1";
+const char* Version = "0.4.1a";
 
 // type -1 is error, it can contain a string with the error message
 const enum 

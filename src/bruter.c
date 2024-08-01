@@ -830,6 +830,50 @@ Variable _while(Table *state, Array* args)
     return Nil;
 }
 
+// each:
+// each key value in (table or array)
+Variable _each(Table *state, Array* args) 
+{
+    Variable key = ArrayShift(args);
+    Variable value = ArrayShift(args);
+    Variable in = ArrayShift(args);
+    Variable obj = ArrayShift(args);
+    Variable block = ArrayShift(args);
+    
+    if (in.type == TYPE_STRING) 
+    {
+        if (obj.type == TYPE_TABLE) 
+        {
+            Table* _table = obj.value.p;
+            for (int i = 0; i < _table->size; i++) 
+            {
+                Variable _key = (Variable){.type = TYPE_STRING, .value = {.s = _table->keys[i]}};
+                Variable _value = _table->data[i];
+                recursiveSet(state, key.value.s, _key);
+                recursiveSet(state, value.value.s, _value);
+                bulkInterpret(state, block.value.s);
+            }
+        } 
+        else if (obj.type == TYPE_ARRAY) 
+        {
+            Array* _array = obj.value.p;
+            for (int i = 0; i < _array->size; i++) 
+            {
+                Variable _key = (Variable){.type = TYPE_NUMBER, .value = {.f = i}};
+                Variable _value = _array->data[i];
+                recursiveSet(state, key.value.s, _key);
+                recursiveSet(state, value.value.s, _value);
+                bulkInterpret(state, block.value.s);
+            }
+        }
+    }
+
+    recursiveUnset(state, key.value.s);
+    recursiveUnset(state, value.value.s);
+
+    return Nil;
+}
+
 
 // math functions
 Variable _add(Table *state, Array* args) 
@@ -1035,17 +1079,8 @@ Variable _string_split(Table *state, Array* args)
     Variable delim = ArrayShift(args);
     Variable result = Nil;
     Array* splited = stringSplit(str.value.s, delim.value.s[0]);
-    Table* newTable = createNewTable();
-    for (int i = 0; i < splited->size; i++) 
-    {
-        char* key = (char*)malloc(11);
-        sprintf(key, "%d", i);
-        Variable _var = ArrayShift(splited);
-        TableInsert(newTable, key, _var);
-    }
-    result.type = TYPE_TABLE;
-    result.value.p = newTable;
-    ArrayFree(splited);
+    result.type = TYPE_ARRAY;
+    result.value.p = splited;
     return result;
 }
 
@@ -1249,6 +1284,7 @@ int main(int argc, char** argv)
     registerFunction(&state, "or", _or);
 
     registerFunction(&state, "while", _while);
+    registerFunction(&state, "each", _each);
 
     
 

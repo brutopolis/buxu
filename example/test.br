@@ -145,6 +145,14 @@ $(
     set i (add $i 1)
 ;);
 
+print;
+print each test:;
+each key value in $lst
+$(
+    print key = $key;
+    print value = $value
+;); 
+
 
 print;
 print seems ok! bruter interpreter compiled and located at ./bin/bruter;
