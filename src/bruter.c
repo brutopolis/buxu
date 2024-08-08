@@ -4,9 +4,24 @@
 #include <ctype.h>
 #include <math.h>
 
-#define MaxSize int
+#define Int long
+#define Float double
 
-#define FloatSize double
+
+
+const char* Version = "0.4.2a";
+
+// type -1 is error, it can contain a string with the error message
+const enum 
+{
+    TYPE_ERROR = -1,
+    TYPE_NIL = 0,
+    TYPE_REFERENCE = 1,
+    TYPE_NUMBER = 2,
+    TYPE_STRING = 3,
+    TYPE_FUNCTION = 4,
+    TYPE_LIST = 5,
+} Types;
 
 
 //stack implementation
@@ -75,26 +90,13 @@
     ret; \
 })
 
-const char* Version = "0.4.2";
-
-// type -1 is error, it can contain a string with the error message
-const enum 
-{
-    TYPE_ERROR = -1,
-    TYPE_NIL = 0,
-    TYPE_REFERENCE = 1,
-    TYPE_NUMBER = 2,
-    TYPE_STRING = 3,
-    TYPE_FUNCTION = 4,
-    TYPE_LIST = 5,
-} Types;
-
 
 
 //Value
 typedef union 
 {
-    FloatSize number;
+    Float number;
+    //Int index;
     char* string;
     void* pointer;
 } Value;
@@ -110,20 +112,14 @@ typedef struct
 typedef struct 
 {
     char *key;
-    MaxSize index;
+    Int index;
 } Hash;
 
 //List
 typedef Stack(Variable*) List;
 typedef Stack(Hash*) HashList;
-typedef Stack(int) IntList;
+typedef Stack(Int) IntList;
 typedef Stack(char*) StringList;
-
-typedef struct
-{
-    IntList *array;
-    HashList *hashes;
-} PseudoList;
 
 typedef struct
 {
@@ -133,7 +129,7 @@ typedef struct
 } VirtualMachine;
 
 //Function
-typedef MaxSize (*Function)(VirtualMachine*, List*);
+typedef Int (*Function)(VirtualMachine*, List*);
 
 Variable* createVariable(char type, Value value)
 {
@@ -143,7 +139,7 @@ Variable* createVariable(char type, Value value)
     return var;
 }
 
-List* createList(VirtualMachine *vm)
+List* createList()
 {
     List *list = (List*)malloc(sizeof(List));
     StackInit(*list);
@@ -153,7 +149,7 @@ List* createList(VirtualMachine *vm)
 VirtualMachine* createVM()
 {
     VirtualMachine *vm = (VirtualMachine*)malloc(sizeof(VirtualMachine));
-    vm->stack = createList(vm);
+    vm->stack = createList();
     vm->hashes = (HashList*)malloc(sizeof(HashList));
     StackInit(*vm->hashes);
     vm->empty = (IntList*)malloc(sizeof(IntList));
@@ -168,13 +164,13 @@ StringList* specialSplit(char *str)
     splited = (StringList*)malloc(sizeof(StringList));
     StackInit(*splited);
     
-    int i = 0;
+    Int i = 0;
     while (str[i] != '\0')
     {
         if (str[i] == '(')
         {
-            int j = i;
-            int count = 1;
+            Int j = i;
+            Int count = 1;
             while (count != 0)
             {
                 j++;
@@ -197,7 +193,7 @@ StringList* specialSplit(char *str)
         }
         else
         {
-            int j = i;
+            Int j = i;
             while (str[j] != ' ' && str[j] != '\0' && str[j] != '(' && str[j] != ')')
             {
                 j++;
@@ -210,67 +206,46 @@ StringList* specialSplit(char *str)
     return splited;
 }
 
-// Parser functions
-List* parse(VirtualMachine *vm, char *cmd) 
+StringList* splitString(char *str, char *delim)
 {
-    List *result = createList(vm);
-    StringList *splited = specialSplit(cmd);
-
-    for (int i = 0; i < splited->size; ++i) 
+    StringList *splited = (StringList*)malloc(sizeof(StringList));
+    StackInit(*splited);
+    
+    char *token = strtok(str, delim);
+    while (token != NULL)
     {
-        char* str = StackShift(*splited);
-
-        if (str[0] == '$') 
-        {
-            // Variable
-            if(str[1] == '(') 
-            {
-                StackPush(*result, createVariable(TYPE_STRING, (Value){string: strndup(str + 2, strlen(str) - 3)}));
-            } 
-            else 
-            {
-                
-            }
-        } 
-        else if (str[0] == '(') 
-        {
-            // expression
-            
-        } 
-        else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
-        {
-            
-        } 
-        else 
-        {
-            
-        }
-
-        free(str);
+        StackPush(*splited, strdup(token));
+        token = strtok(NULL, delim);
     }
 
-    return result;
+    return splited;
 }
 
 void freeVM(VirtualMachine *vm)
 {
-    for (int i = 0; i < vm->stack->size; i++)
+    while (vm->stack->size > 0)
     {
-        if (vm->stack->data[i] != NULL)
+        Variable * temp = StackPop(*vm->stack);
+        if (temp != NULL)
         {
-            /*if (vm->stack->data[i]->type == TYPE_STRING || vm->stack->data[i]->type == TYPE_ERROR)
+            if (temp->type == TYPE_STRING || temp->type == TYPE_ERROR)
             {
-                free(vm->stack->data[i]->value.string);
+                free(temp->value.string);
             }
-            else */
-            if (vm->stack->data[i]->type == TYPE_LIST)
+            else if (temp->type == TYPE_LIST)
             {
-                StackFree(*((PseudoList*)vm->stack->data[i]->value.pointer)->array);
-                StackFree(*((PseudoList*)vm->stack->data[i]->value.pointer)->hashes);
-                free(vm->stack->data[i]->value.pointer);
+                StackFree(*((IntList*)temp->value.pointer));
+                free(temp->value.pointer);
+                
             }
-            free(vm->stack->data[i]);
+            free(temp);
         }
+    }
+    while (vm->hashes->size > 0)
+    {
+        Hash *temp = StackPop(*vm->hashes);
+        free(temp->key);
+        free(temp);
     }
     StackFree(*vm->stack);
     StackFree(*vm->hashes);
@@ -278,11 +253,11 @@ void freeVM(VirtualMachine *vm)
     free(vm);
 }
 
-int newvar(VirtualMachine *vm)
+Int newVar(VirtualMachine *vm)
 {
     if (vm->empty->size > 0)
     {
-        int id = StackShift(*vm->empty);
+        Int id = StackShift(*vm->empty);
         if (vm->stack->data[id] != NULL)
         {
             free(vm->stack->data[id]);
@@ -298,27 +273,34 @@ int newvar(VirtualMachine *vm)
     }
 }
 
-void freevar(VirtualMachine *vm, int index)
+void freeVar(VirtualMachine *vm, Int index)
 {
     StackPush(*vm->empty, index);
-    /*if (vm->stack->data[index]->type == TYPE_STRING || vm->stack->data[index]->type == TYPE_ERROR)
-    {
-        free(vm->stack->data[index]->value.string);
-    }
-    else */
+
     if (vm->stack->data[index]->type == TYPE_LIST)
     {
-        StackFree(*((PseudoList*)vm->stack->data[index]->value.pointer)->array);
-        StackFree(*((PseudoList*)vm->stack->data[index]->value.pointer)->hashes);
-        free(vm->stack->data[index]->value.pointer);
+        StackFree(*((IntList*)vm->stack->data[index]->value.pointer));
+    }
+    else if (vm->stack->data[index]->type == TYPE_STRING || 
+             vm->stack->data[index]->type == TYPE_ERROR)
+    {
+        free(vm->stack->data[index]->value.string);
     }
     free(vm->stack->data[index]);
     vm->stack->data[index] = NULL;
 }
 
-void setvar(VirtualMachine *vm, int index, char type, Value value)
+void setVar(VirtualMachine *vm, Int index, char type, Value value)
 {
-    if (vm->stack->data[index]->type == TYPE_STRING || vm->stack->data[index]->type == TYPE_ERROR)
+    if (vm->stack->data[index] == NULL)
+    {
+        vm->stack->data[index] = createVariable(type, value);
+    }
+    else
+    if (vm->stack->data[index]->type == TYPE_STRING || 
+        vm->stack->data[index]->type == TYPE_ERROR ||
+        
+        vm->stack->data[index]->type == TYPE_LIST)
     {
         free(vm->stack->data[index]->value.string);
     }
@@ -326,101 +308,349 @@ void setvar(VirtualMachine *vm, int index, char type, Value value)
     vm->stack->data[index]->value = value;
 }
 
-// by types
-int newNumber(VirtualMachine *vm, FloatSize number)
+
+
+
+Int hashfind(VirtualMachine *vm, char *varname)
 {
-    int index = newvar(vm);
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        if (strcmp(vm->hashes->data[i]->key, varname) == 0)
+        {
+            return vm->hashes->data[i]->index;
+        }
+    }
+    return -1;
+}
+
+void hashset(VirtualMachine *vm, char* varname, Int index)
+{
+    Hash *hash = (Hash*)malloc(sizeof(Hash));
+    hash->key = strdup(varname);
+    hash->index = index;
+    StackPush(*vm->hashes, hash);
+}
+
+
+// by types
+Int newNumber(VirtualMachine *vm, Float number)
+{
+    Int index = newVar(vm);
     vm->stack->data[index]->type = TYPE_NUMBER;
     vm->stack->data[index]->value.number = number;
     return index;
 }
 
-int newString(VirtualMachine *vm, char *string)
+Int newString(VirtualMachine *vm, char *string)
 {
-    int index = newvar(vm);
-    setvar(vm, index, TYPE_STRING, (Value){string: string});
+    Int index = newVar(vm);
+    vm->stack->data[index]->type = TYPE_STRING;
+    vm->stack->data[index]->value.string = strdup(string);
     return index;
 }
 
-int newFunction(VirtualMachine *vm, Function function)
+Int newFunction(VirtualMachine *vm, Function function)
 {
-    int index = newvar(vm);
-    setvar(vm, index, TYPE_FUNCTION, (Value){pointer: function});
+    Int index = newVar(vm);
+    vm->stack->data[index]->type = TYPE_FUNCTION;
+    vm->stack->data[index]->value.pointer = function;
     return index;
 }
 
-int newList(VirtualMachine *vm)
+Int newList(VirtualMachine *vm)
 {
-    int index = newvar(vm);
-    PseudoList *list = (PseudoList*)malloc(sizeof(PseudoList));
-    list->array = (IntList*)malloc(sizeof(IntList));
-    StackInit(*list->array);
-    list->hashes = (HashList*)malloc(sizeof(HashList));
-    StackInit(*list->hashes);
-    setvar(vm, index, TYPE_LIST, (Value){pointer: list});
+    Int index = newVar(vm);
+    IntList *list = (IntList*)malloc(sizeof(IntList));
+    StackInit(*list);
+
+    setVar(vm, index, TYPE_LIST, (Value){pointer: list});
     return index;
 }
 
-int newReference(VirtualMachine *vm, int index)
+Int newReference(VirtualMachine *vm, Int index)
 {
-    int ref = newvar(vm);
-    setvar(vm, ref, TYPE_REFERENCE, (Value){number: index});
+    Int ref = newVar(vm);
+    setVar(vm, ref, TYPE_REFERENCE, (Value){number: index});
     return ref;
 }
 
-MaxSize _set(VirtualMachine *vm, List *args)
+Int newError(VirtualMachine *vm, char *string)
 {
-    Variable* varname = args->data[0];
-    Variable* value = args->data[1];
+    Int index = newVar(vm);
+    setVar(vm, index, TYPE_ERROR, (Value){string: string});
+    return index;
+}
 
+//create (just like new but for hash)
+
+Int spawnNumber(VirtualMachine *vm, char *varname, Float number)
+{
+    Int index = newNumber(vm, number);
+    hashset(vm, varname, index);
+    return index;
+}
+
+Int spawnString(VirtualMachine *vm, char *varname, char *string)
+{
+    Int index = newString(vm, string);
+    hashset(vm, varname, index);
+    return index;
+}
+
+Int spawnFunction(VirtualMachine *vm, char *varname, Function function)
+{
+    Int index = newFunction(vm, function);
+    hashset(vm, varname, index);
+    return index;
+}
+
+Int spawnList(VirtualMachine *vm, char *varname)
+{
+    Int index = newList(vm);
+    hashset(vm, varname, index);
+    return index;
+}
+
+Int spawnReference(VirtualMachine *vm, char *varname, Int index)
+{
+    Int ref = newReference(vm, index);
+    hashset(vm, varname, ref);
+    return ref;
+}
+
+Int spawnError(VirtualMachine *vm, char *varname, char *string)
+{
+    Int index = newError(vm, string);
+    hashset(vm, varname, index);
+    return index;
 }
 
 
-void main()
+//list
+//list
+//list
+
+void listpush(VirtualMachine *vm, Int list, Int value)
 {
-    VirtualMachine *vm = createVM();
-    int a = newNumber(vm, 5);
-    int b = newNumber(vm, 10);
-    int c = newNumber(vm, 15);
-    int d = newNumber(vm, 20);
-    int e = newNumber(vm, 25);
+    StackPush(*((IntList*)vm->stack->data[list]->value.pointer), value);
+}
 
-    int abc = newString(vm, "abc");
+void listunshift(VirtualMachine *vm, Int list, Int value)
+{
+    StackInsert(*((IntList*)vm->stack->data[list]->value.pointer), 0, value);
+}
 
-    int tbl = newList(vm);
+Int listpop(VirtualMachine *vm, Int list)
+{
+    return StackPop(*((IntList*)vm->stack->data[list]->value.pointer));
+}
 
-    int func = newFunction(vm, _set);
+Int listshift(VirtualMachine *vm, Int list)
+{
+    return StackShift(*((IntList*)vm->stack->data[list]->value.pointer));
+}
 
-    StackPush(*((PseudoList*)vm->stack->data[tbl]->value.pointer)->array, a);
-    StackPush(*((PseudoList*)vm->stack->data[tbl]->value.pointer)->array, b);
-    StackPush(*((PseudoList*)vm->stack->data[tbl]->value.pointer)->array, c);
+void listinsert(VirtualMachine *vm, Int list, Int index, Int value)
+{
+    StackInsert(*((IntList*)vm->stack->data[list]->value.pointer), index, value);
+}
 
-    printf("%f\n", vm->stack->data[a]->value.number);
-    printf("%f\n", vm->stack->data[b]->value.number);
-    printf("%f\n", vm->stack->data[c]->value.number);
-    printf("%f\n", vm->stack->data[d]->value.number);
-    printf("%f\n", vm->stack->data[e]->value.number);
-    printf("%s\n", vm->stack->data[abc]->value.string);
+Int listremove(VirtualMachine *vm, Int list, Int index)
+{
+    return StackRemove(*((IntList*)vm->stack->data[list]->value.pointer), index);
+}
 
-    freevar(vm, a);
-    freevar(vm, b);
-    freevar(vm, c);
-    freevar(vm, d);
-    freevar(vm, e);
-    freevar(vm, abc);
-    freevar(vm, tbl);
-    freevar(vm, func);
-    
-    char* cmd = "(+ 1 2) adsdasda 11asdasd -dasdasd -a8d5as asdasdasd(asdasd asda aa aa ( dasda 1 ) (dadasdd(dsadas)));";
+Int listsize(VirtualMachine *vm, Int list)
+{
+    return ((IntList*)vm->stack->data[list]->value.pointer)->size;
+}
+
+// Parser functions
+List* parse(VirtualMachine *vm, char *cmd) 
+{
+    List *result = createList();
     StringList *splited = specialSplit(cmd);
-    while (splited->size > 0)
+
+    while (splited->size > 0) 
     {
-        char * str = StackShift(*splited);
-        printf("%s\n", str);
+        char* str = StackShift(*splited);
+        if (str[0] == '(') 
+        {
+            // string
+            if(str[1] == '$') 
+            {
+                StackPush(*result, createVariable(TYPE_STRING, (Value){string: strndup(str + 2, strlen(str) - 3)}));
+            } 
+            else //expression 
+            {
+                
+            }
+        } 
+        else if (str[0] == '$') 
+        {
+            Int index = hashfind(vm, str + 1);
+            if (index == -1) 
+            {
+                StackPush(*result, createVariable(TYPE_ERROR, (Value){string: strdup("Variable not found")}));
+            }
+            else 
+            {
+                if ((str[1] >= '0' && str[1] <= '9')) 
+                {
+                    StackPush(*result, vm->stack->data[atoi(str+1)]);
+                }
+                else 
+                {
+                    StackPush(*result, vm->stack->data[index]);
+                }
+            }
+        }
+        else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
+        {
+            printf("number\n");
+            StackPush(*result, vm->stack->data[newNumber(vm, atof(str))]);
+        } 
+        else //string 
+        {
+            StackPush(*result, vm->stack->data[newString(vm, str)]);
+        }
+
         free(str);
     }
     StackFree(*splited);
-    //free(splited);
+    return result;
+}
 
+int eval(VirtualMachine *vm, char* str) 
+{    
+    Int result;
+    List *args = parse(vm, str);
+    
+    Variable *funcname = StackShift(*args);
+    if (funcname->type == TYPE_ERROR) 
+    {
+        printf("%s\n", funcname->value.string);
+        return -1;
+    }
+    if (funcname->type != TYPE_STRING) 
+    {
+        printf("First argument must be a string\n");
+        return -1;
+    }
+    Int index = hashfind(vm, funcname->value.string);
+    if (index == -1 ) 
+    {
+        printf("Function not found\n");
+        return -1;
+    }
+
+    if (vm->stack->data[index] == NULL) 
+    {
+        printf("function seems null\n");
+        return -1;
+    }
+
+    if (vm->stack->data[index]->type != TYPE_FUNCTION) 
+    {
+        printf("Variable is not a function\n");
+        return -1;
+    }
+
+    printf("aoba\n");
+    Function func = (Function)vm->stack->data[index]->value.pointer;
+    result = func(vm, args);
+
+    StackFree(*args);
+
+    return result;
+}
+
+//print
+
+void print(VirtualMachine *vm, Int index)
+{
+    if (vm->stack->data[index]->type == TYPE_NUMBER)
+    {
+        printf("%f\n", vm->stack->data[index]->value.number);
+    }
+    else if (vm->stack->data[index]->type == TYPE_STRING)
+    {
+        printf("%s\n", vm->stack->data[index]->value.string);
+    }
+    else if (vm->stack->data[index]->type == TYPE_LIST)
+    {
+        printf("[");
+        IntList *list = (IntList*)vm->stack->data[index]->value.pointer;
+        for (Int i = 0; i < (list->size-1); i++)
+        {
+            printf("%d, ", list->data[i]);
+        }
+        printf("%d", list->data[list->size-1]);
+        printf("]\n");
+    }
+    else if (vm->stack->data[index]->type == TYPE_REFERENCE)
+    {
+        print(vm, vm->stack->data[index]->value.number);
+    }
+}
+
+//functions
+
+Int _set(VirtualMachine *vm, List *args)
+{
+    Variable* varname = args->data[0];
+    Variable* value = args->data[1];
+    hashset(vm, varname->value.string, value->value.number);
+}
+
+
+//main
+void main()
+{
+    VirtualMachine *vm = createVM();
+
+    Int a = newNumber(vm, 5);
+    Int b = newNumber(vm, 10);
+    Int c = newNumber(vm, 15);
+    Int d = newNumber(vm, 20);
+    Int e = newNumber(vm, 25);
+
+    Int abc = newString(vm, "example string");
+
+    Int __list = newList(vm);
+
+    Int func = spawnFunction(vm, "set", _set);
+
+    listpush(vm, __list, a);
+    listpush(vm, __list, b);
+    listpush(vm, __list, c);
+    
+    print(vm, __list);
+    print(vm, func);
+
+    print(vm, a);
+    print(vm, b);
+    print(vm, c);
+    print(vm, d);
+    print(vm, e);
+    print(vm, abc);
+
+    freeVar(vm, a);
+    freeVar(vm, b);
+    freeVar(vm, c);
+    freeVar(vm, d);
+    freeVar(vm, e);
+    freeVar(vm, abc);
+    freeVar(vm, __list);
+    //freeVar(vm, func);
+
+
+    // split test
+
+    char* cmd = "set a 4";
+    
+    eval(vm, cmd);
+    
+    // free
     freeVM(vm);
 }   
