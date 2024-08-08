@@ -9,14 +9,14 @@
 
 
 
-const char* Version = "0.4.2a";
+const char* Version = "0.4.2b";
 
 // type -1 is error, it can contain a string with the error message
 const enum 
 {
     TYPE_ERROR = -1,
     TYPE_NIL = 0,
-    TYPE_REFERENCE = 1,
+    //TYPE_REFERENCE = 1,
     TYPE_NUMBER = 2,
     TYPE_STRING = 3,
     TYPE_FUNCTION = 4,
@@ -367,13 +367,6 @@ Int newList(VirtualMachine *vm)
     return index;
 }
 
-Int newReference(VirtualMachine *vm, Int index)
-{
-    Int ref = newVar(vm);
-    setVar(vm, ref, TYPE_REFERENCE, (Value){number: index});
-    return ref;
-}
-
 Int newError(VirtualMachine *vm, char *string)
 {
     Int index = newVar(vm);
@@ -409,13 +402,6 @@ Int spawnList(VirtualMachine *vm, char *varname)
     Int index = newList(vm);
     hashset(vm, varname, index);
     return index;
-}
-
-Int spawnReference(VirtualMachine *vm, char *varname, Int index)
-{
-    Int ref = newReference(vm, index);
-    hashset(vm, varname, ref);
-    return ref;
 }
 
 Int spawnError(VirtualMachine *vm, char *varname, char *string)
@@ -588,9 +574,13 @@ void print(VirtualMachine *vm, Int index)
         printf("%d", list->data[list->size-1]);
         printf("]\n");
     }
-    else if (vm->stack->data[index]->type == TYPE_REFERENCE)
+    else if (vm->stack->data[index]->type == TYPE_ERROR)
     {
-        print(vm, vm->stack->data[index]->value.number);
+        printf("Error: %s\n", vm->stack->data[index]->value.string);
+    }
+    else
+    {
+        printf("Unknown type\n");
     }
 }
 
