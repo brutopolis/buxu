@@ -1,15 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <math.h>
 
 #define Int long
 #define Float double
 
-
-
-const char* Version = "0.4.2b";
+const char* Version = "0.4.2c";
 
 // type -1 is error, it can contain a string with the error message
 const enum 
@@ -23,6 +20,7 @@ const enum
     TYPE_LIST = 5,
 } Types;
 
+#define isSpace(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
 
 //stack implementation
 #define Stack(T) struct \
@@ -187,14 +185,14 @@ StringList* specialSplit(char *str)
             StackPush(*splited, tmp);
             i = j + 1;
         }
-        else if (str[i] == ' ')
+        else if (isSpace(str[i]))
         {
             i++;
         }
         else
         {
             Int j = i;
-            while (str[j] != ' ' && str[j] != '\0' && str[j] != '(' && str[j] != ')')
+            while (!isSpace(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')')
             {
                 j++;
             }
@@ -325,10 +323,17 @@ Int hashfind(VirtualMachine *vm, char *varname)
 
 void hashset(VirtualMachine *vm, char* varname, Int index)
 {
-    Hash *hash = (Hash*)malloc(sizeof(Hash));
-    hash->key = strdup(varname);
-    hash->index = index;
-    StackPush(*vm->hashes, hash);
+    if (hashfind(vm, varname) != -1)
+    {
+        vm->hashes->data[hashfind(vm, varname)]->index = index;
+    }
+    else 
+    {
+        Hash *hash = (Hash*)malloc(sizeof(Hash));
+        hash->key = strdup(varname);
+        hash->index = index;
+        StackPush(*vm->hashes, hash);
+    }
 }
 
 
@@ -469,7 +474,10 @@ List* parse(VirtualMachine *vm, char *cmd)
             } 
             else //expression 
             {
-                
+                Function __eval = (Function)vm->stack->data[hashfind(vm, "eval")]->value.pointer;
+                // fix this, idea: parse use indexes of the args on the stack instead of the args themselves 
+                //StackPush(*result, createVariable(TYPE_NUMBER, (Value){number: __eval(vm, parse(vm, strndup(str + 1, strlen(str) - 2)))}));
+                //printf("expression\n");
             }
         } 
         else if (str[0] == '$') 
@@ -542,12 +550,27 @@ int eval(VirtualMachine *vm, char* str)
         return -1;
     }
 
-    printf("aoba\n");
     Function func = (Function)vm->stack->data[index]->value.pointer;
     result = func(vm, args);
 
     StackFree(*args);
 
+    return result;
+}
+
+Int bulkEval(VirtualMachine *vm, char *str)
+{
+    StringList *splited = splitString(str, ";");
+    Int result = 0;
+    for (Int i = 0; i < splited->size; i++)
+    {
+        result = eval(vm, splited->data[i]);
+        if (result > 0)
+        {
+            break;
+        }
+    }
+    StackFree(*splited);
     return result;
 }
 
@@ -578,6 +601,10 @@ void print(VirtualMachine *vm, Int index)
     {
         printf("Error: %s\n", vm->stack->data[index]->value.string);
     }
+    else if (vm->stack->data[index]->type == TYPE_FUNCTION)
+    {
+        printf("Function : [%d] %p\n", index, vm->stack->data[index]->value.pointer);
+    }
     else
     {
         printf("Unknown type\n");
@@ -593,6 +620,13 @@ Int _set(VirtualMachine *vm, List *args)
     hashset(vm, varname->value.string, value->value.number);
 }
 
+Int _eval(VirtualMachine *vm, List *args)
+{
+    Variable* str = StackShift(*args);
+    Int result = bulkEval(vm, str->value.string);
+    free(str);
+    return result;
+}
 
 //main
 void main()
@@ -610,6 +644,7 @@ void main()
     Int __list = newList(vm);
 
     Int func = spawnFunction(vm, "set", _set);
+    spawnFunction(vm, "eval", _eval);
 
     listpush(vm, __list, a);
     listpush(vm, __list, b);
@@ -637,7 +672,7 @@ void main()
 
     // split test
 
-    char* cmd = "set a 4";
+    char* cmd = "set a 4;\nset b 8;(set c 4)";
     
     eval(vm, cmd);
     

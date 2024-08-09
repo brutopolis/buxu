@@ -15,7 +15,7 @@ $(string) = string
 (expression) = expression
 ($(expression)) = bulk expression
 
-len # {
+len {
     number = length of number in string,
     string = length,
     table = length
