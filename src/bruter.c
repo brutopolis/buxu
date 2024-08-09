@@ -6,7 +6,7 @@
 #define Int long
 #define Float double
 
-const char* Version = "0.4.2c";
+const char* Version = "0.4.2d";
 
 // type -1 is error, it can contain a string with the error message
 const enum 
@@ -468,17 +468,16 @@ List* parse(VirtualMachine *vm, char *cmd)
         if (str[0] == '(') 
         {
             // string
-            if(str[1] == '$') 
-            {
-                StackPush(*result, createVariable(TYPE_STRING, (Value){string: strndup(str + 2, strlen(str) - 3)}));
-            } 
-            else //expression 
-            {
-                Function __eval = (Function)vm->stack->data[hashfind(vm, "eval")]->value.pointer;
-                // fix this, idea: parse use indexes of the args on the stack instead of the args themselves 
-                //StackPush(*result, createVariable(TYPE_NUMBER, (Value){number: __eval(vm, parse(vm, strndup(str + 1, strlen(str) - 2)))}));
-                //printf("expression\n");
-            }
+            Function __eval = (Function)vm->stack->data[hashfind(vm, "eval")]->value.pointer;
+            // idea: parse could use indexes of the args on the stack instead of the args themselves 
+            char* _str = strndup(str + 1, strlen(str) - 2);
+            List *args = createList();
+            StackPush(*args, createVariable(TYPE_STRING, (Value){string: _str}));
+            Int _res = __eval(vm, args);
+            StackPush(*result, vm->stack->data[_res]);
+            freeVar(vm, _res);
+            StackFree(*args);
+            free(_str);
         } 
         else if (str[0] == '$') 
         {
@@ -562,13 +561,11 @@ Int bulkEval(VirtualMachine *vm, char *str)
 {
     StringList *splited = splitString(str, ";");
     Int result = 0;
-    for (Int i = 0; i < splited->size; i++)
+    while (splited->size > 0)
     {
-        result = eval(vm, splited->data[i]);
-        if (result > 0)
-        {
-            break;
-        }
+        char *cmd = StackShift(*splited);
+        result = eval(vm, cmd);
+        free(cmd);
     }
     StackFree(*splited);
     return result;
@@ -623,6 +620,7 @@ Int _set(VirtualMachine *vm, List *args)
 Int _eval(VirtualMachine *vm, List *args)
 {
     Variable* str = StackShift(*args);
+    char* _str = str->value.string;
     Int result = bulkEval(vm, str->value.string);
     free(str);
     return result;
@@ -632,7 +630,7 @@ Int _eval(VirtualMachine *vm, List *args)
 void main()
 {
     VirtualMachine *vm = createVM();
-
+    spawnFunction(vm, "eval", _eval);
     Int a = newNumber(vm, 5);
     Int b = newNumber(vm, 10);
     Int c = newNumber(vm, 15);
@@ -644,7 +642,7 @@ void main()
     Int __list = newList(vm);
 
     Int func = spawnFunction(vm, "set", _set);
-    spawnFunction(vm, "eval", _eval);
+    
 
     listpush(vm, __list, a);
     listpush(vm, __list, b);
