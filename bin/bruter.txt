@@ -20,3 +20,14 @@ len {
     string = length,
     table = length
 }
+
+make = create a empty variable outside the vm and return a pointer to it
+new = create a variable in the vm and return it index
+spawn = create a variable in the vm, set a hash and return it index
+create = create a variable in the vm and return a pointer to it
+
+
+Variable*   makeT       ();
+int         newT        (VM vm, T value);
+int         spawnT      (VM vm, char* hashkey, T value);
+Variable*   createT     (VM vm, T value);

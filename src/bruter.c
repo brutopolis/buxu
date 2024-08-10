@@ -6,7 +6,7 @@
 #define Int long
 #define Float double
 
-const char* Version = "0.4.2d";
+const char* Version = "0.4.2e";
 
 // type -1 is error, it can contain a string with the error message
 const enum 
@@ -129,7 +129,7 @@ typedef struct
 //Function
 typedef Int (*Function)(VirtualMachine*, List*);
 
-Variable* createVariable(char type, Value value)
+Variable* makeVariable(char type, Value value)
 {
     Variable *var = (Variable*)malloc(sizeof(Variable));
     var->type = type;
@@ -137,17 +137,17 @@ Variable* createVariable(char type, Value value)
     return var;
 }
 
-List* createList()
+List* makeList()
 {
     List *list = (List*)malloc(sizeof(List));
     StackInit(*list);
     return list;
 }
 
-VirtualMachine* createVM()
+VirtualMachine* makeVM()
 {
     VirtualMachine *vm = (VirtualMachine*)malloc(sizeof(VirtualMachine));
-    vm->stack = createList();
+    vm->stack = makeList();
     vm->hashes = (HashList*)malloc(sizeof(HashList));
     StackInit(*vm->hashes);
     vm->empty = (IntList*)malloc(sizeof(IntList));
@@ -206,14 +206,27 @@ StringList* specialSplit(char *str)
 
 StringList* splitString(char *str, char *delim)
 {
-    StringList *splited = (StringList*)malloc(sizeof(StringList));
+    StringList *splited;
+    splited = (StringList*)malloc(sizeof(StringList));
     StackInit(*splited);
     
-    char *token = strtok(str, delim);
-    while (token != NULL)
+    Int i = 0;
+    while (str[i] != '\0')
     {
-        StackPush(*splited, strdup(token));
-        token = strtok(NULL, delim);
+        if (str[i] == delim[0])
+        {
+            i++;
+        }
+        else
+        {
+            Int j = i;
+            while (str[j] != delim[0] && str[j] != '\0')
+            {
+                j++;
+            }
+            StackPush(*splited, strndup(str + i, j - i));
+            i = j;
+        }
     }
 
     return splited;
@@ -261,12 +274,12 @@ Int newVar(VirtualMachine *vm)
             free(vm->stack->data[id]);
             vm->stack->data[id] = NULL;
         }
-        vm->stack->data[id] = createVariable(TYPE_NIL, (Value){0});
+        vm->stack->data[id] = makeVariable(TYPE_NIL, (Value){0});
         return id;
     }
     else 
     {
-        StackPush(*vm->stack, createVariable(TYPE_NIL, (Value){0}));
+        StackPush(*vm->stack, makeVariable(TYPE_NIL, (Value){0}));
         return vm->stack->size-1;
     }
 }
@@ -292,7 +305,7 @@ void setVar(VirtualMachine *vm, Int index, char type, Value value)
 {
     if (vm->stack->data[index] == NULL)
     {
-        vm->stack->data[index] = createVariable(type, value);
+        vm->stack->data[index] = makeVariable(type, value);
     }
     else
     if (vm->stack->data[index]->type == TYPE_STRING || 
@@ -337,6 +350,8 @@ void hashset(VirtualMachine *vm, char* varname, Int index)
 }
 
 
+
+
 // by types
 Int newNumber(VirtualMachine *vm, Float number)
 {
@@ -379,7 +394,8 @@ Int newError(VirtualMachine *vm, char *string)
     return index;
 }
 
-//create (just like new but for hash)
+
+//spawn (just like new but for hash)
 
 Int spawnNumber(VirtualMachine *vm, char *varname, Float number)
 {
@@ -415,6 +431,40 @@ Int spawnError(VirtualMachine *vm, char *varname, char *string)
     hashset(vm, varname, index);
     return index;
 }
+
+//create, just like new but return a pointer to the variable instead of the index
+
+Variable* createNumber(VirtualMachine *vm, Float number)
+{
+    Int index = newNumber(vm, number);
+    return vm->stack->data[index];
+}
+
+Variable* createString(VirtualMachine *vm, char *string)
+{
+    Int index = newString(vm, string);
+    return vm->stack->data[index];
+}
+
+Variable* createFunction(VirtualMachine *vm, Function function)
+{
+    Int index = newFunction(vm, function);
+    return vm->stack->data[index];
+}
+
+Variable* createList(VirtualMachine *vm)
+{
+    Int index = newList(vm);
+    return vm->stack->data[index];
+}
+
+Variable* createError(VirtualMachine *vm, char *string)
+{
+    Int index = newError(vm, string);
+    return vm->stack->data[index];
+}
+
+
 
 
 //list
@@ -459,7 +509,7 @@ Int listsize(VirtualMachine *vm, Int list)
 // Parser functions
 List* parse(VirtualMachine *vm, char *cmd) 
 {
-    List *result = createList();
+    List *result = makeList();
     StringList *splited = specialSplit(cmd);
 
     while (splited->size > 0) 
@@ -471,8 +521,8 @@ List* parse(VirtualMachine *vm, char *cmd)
             Function __eval = (Function)vm->stack->data[hashfind(vm, "eval")]->value.pointer;
             // idea: parse could use indexes of the args on the stack instead of the args themselves 
             char* _str = strndup(str + 1, strlen(str) - 2);
-            List *args = createList();
-            StackPush(*args, createVariable(TYPE_STRING, (Value){string: _str}));
+            List *args = makeList();
+            StackPush(*args, makeVariable(TYPE_STRING, (Value){string: _str}));
             Int _res = __eval(vm, args);
             StackPush(*result, vm->stack->data[_res]);
             freeVar(vm, _res);
@@ -482,20 +532,15 @@ List* parse(VirtualMachine *vm, char *cmd)
         else if (str[0] == '$') 
         {
             Int index = hashfind(vm, str + 1);
+            printf("str: %s %d\n", str + 1, index);
             if (index == -1) 
             {
-                StackPush(*result, createVariable(TYPE_ERROR, (Value){string: strdup("Variable not found")}));
+                printf("Variable not found\n");
+                StackPush(*result, makeVariable(TYPE_ERROR, (Value){string: strdup("Variable not found")}));
             }
             else 
             {
-                if ((str[1] >= '0' && str[1] <= '9')) 
-                {
-                    StackPush(*result, vm->stack->data[atoi(str+1)]);
-                }
-                else 
-                {
-                    StackPush(*result, vm->stack->data[index]);
-                }
+                StackPush(*result, vm->stack->data[index]);
             }
         }
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
@@ -505,6 +550,7 @@ List* parse(VirtualMachine *vm, char *cmd)
         } 
         else //string 
         {
+            printf("string\n");
             StackPush(*result, vm->stack->data[newString(vm, str)]);
         }
 
@@ -612,9 +658,15 @@ void print(VirtualMachine *vm, Int index)
 
 Int _set(VirtualMachine *vm, List *args)
 {
-    Variable* varname = args->data[0];
-    Variable* value = args->data[1];
-    hashset(vm, varname->value.string, value->value.number);
+    Variable* varname = StackShift(*args);
+    Variable* value = StackShift(*args);
+    printf("Setting %s to %f\n", varname->value.string, value->value.number);
+    Int varid = newVar(vm);
+    setVar(vm, varid, TYPE_NUMBER, value->value);
+    hashset(vm, varname->value.string, varid);
+    //free(varname);
+    //free(value);
+    return -1;
 }
 
 Int _eval(VirtualMachine *vm, List *args)
@@ -626,11 +678,22 @@ Int _eval(VirtualMachine *vm, List *args)
     return result;
 }
 
+Int _print(VirtualMachine *vm, List *args)
+{
+    Variable* var = StackShift(*args);
+    print(vm, hashfind(vm, var->value.string));
+    //free(var);
+}
+
 //main
 void main()
 {
-    VirtualMachine *vm = createVM();
+    VirtualMachine *vm = makeVM();
+    
     spawnFunction(vm, "eval", _eval);
+    spawnFunction(vm, "print", _print);
+    spawnFunction(vm, "set", _set);
+
     Int a = newNumber(vm, 5);
     Int b = newNumber(vm, 10);
     Int c = newNumber(vm, 15);
@@ -641,15 +704,11 @@ void main()
 
     Int __list = newList(vm);
 
-    Int func = spawnFunction(vm, "set", _set);
-    
-
     listpush(vm, __list, a);
     listpush(vm, __list, b);
     listpush(vm, __list, c);
     
     print(vm, __list);
-    print(vm, func);
 
     print(vm, a);
     print(vm, b);
@@ -669,11 +728,12 @@ void main()
 
 
     // split test
+    spawnNumber(vm, "a", 5);
+    char* cmd = "set b 59;"
+    "print b;";
 
-    char* cmd = "set a 4;\nset b 8;(set c 4)";
     
-    eval(vm, cmd);
-    
+    bulkEval(vm, cmd);
     // free
     freeVM(vm);
 }   
