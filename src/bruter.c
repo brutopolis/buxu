@@ -180,7 +180,6 @@ void main()
     listpush(vm, __list, a);
     listpush(vm, __list, b);
     listpush(vm, __list, c);
-    scanf("%d", &a);
     freeVar(vm, a);
     freeVar(vm, b);
     freeVar(vm, c);
@@ -199,7 +198,6 @@ void main()
     
     eval(vm, cmd);
     eval(vm, cmd2);
-    scanf("%d", &a);
     // free
     freeVM(vm);
 }
