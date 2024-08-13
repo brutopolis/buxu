@@ -47,23 +47,26 @@ IntList* parse(VirtualMachine *vm, char *cmd)
         char* str = StackShift(*splited);
         if (str[0] == '(') 
         {
-            // string
-            Function __eval = (Function)vm->stack->data[hashfind(vm, "interpret")]->value.pointer;
-            char* _str = strndup(str + 1, strlen(str) - 2);
-            Int argsid = newList(vm);
-            IntList *args = (IntList*)vm->stack->data[argsid]->value.pointer;
-
-            StackPush(*args, newString(vm, _str));
+            Function __eval = (Function)vm->stack->data[hashfind(vm, "eval")]->value.pointer;
             
-            Int _res = __eval(vm, args);
-            StackPush(*result, _res);
-            freeVar(vm, _res);
-            while (args->size > 0) 
+            char* _str = strndup(str + 1, strlen(str) - 2);
+            //free(_str);
+
+            IntList *args = makeIntList();
+            StackPush(*args, newString(vm, _str));
+            Int res = __eval(vm, args);
+            printf("res: %f\n", vm->stack->data[res]->value.number);
+            if (res == -1) 
             {
-                freeVar(vm, StackShift(*args));
+                StackPush(*result, newError(vm, "Error in eval"));
+            } 
+            else 
+            {
+                StackPush(*result, res);
             }
-            StackFree(*args);
+            //freeVar(vm, res);
             free(_str);
+            StackFree(*args);
         } 
         else if (str[0] == '$') 
         {
@@ -192,7 +195,7 @@ void main()
     // split test
     spawnNumber(vm, "a", 5);
     char* cmd = "set b 59;set c 44;set d 99;";
-    char *cmd2 = "print $b;help;ls;";
+    char *cmd2 = "print $b;help;ls;set c (add 1 2)";
     
     printf("sizeof Variable: %ld\n", sizeof(Variable));
     

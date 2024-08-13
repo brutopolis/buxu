@@ -18,12 +18,16 @@ Int _set(VirtualMachine *vm, IntList *args)
     }
 
     Int index = hashfind(vm, varname.variable->value.string);
+
+    printf("Set %s to %d\n", varname.variable->value.string, index);
+    
     if (index == -1)
     {
         index = newVar(vm);
         hashset(vm, varname.variable->value.string, index);
     }
     setVar(vm, index, value.variable->type, value.variable->value, Nil);
+
 
     freeref(vm, varname);
     freeref(vm, value);
@@ -169,6 +173,30 @@ Int ___exit(VirtualMachine *vm, IntList *args)
     exit(0);
 }
 
+//math
+
+Int _add(VirtualMachine *vm, IntList *args)
+{
+    Reference a = argshift(vm, args);
+    Reference b = argshift(vm, args);
+
+    if (a.variable->type == TYPE_NUMBER && b.variable->type == TYPE_NUMBER)
+    {
+        Int index = newVar(vm);
+        vm->stack->data[index]->type = TYPE_NUMBER;
+        vm->stack->data[index]->value.number = a.variable->value.number + b.variable->value.number;
+        freeref(vm, a);
+        freeref(vm, b);
+        return index;
+    }
+    else
+    {
+        freeref(vm, a);
+        freeref(vm, b);
+        return newError(vm, "Both arguments must be numbers");
+    }
+}
+
 void initStd(VirtualMachine *vm)
 {
     spawnFunction(vm, "eval", _eval);
@@ -177,4 +205,6 @@ void initStd(VirtualMachine *vm)
     spawnFunction(vm, "help", _help);
     spawnFunction(vm, "ls", _ls);
     spawnFunction(vm, "exit", ___exit);
+
+    spawnFunction(vm, "add", _add);
 }

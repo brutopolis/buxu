@@ -9,7 +9,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.2i"
+#define VERSION "0.4.2k"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
