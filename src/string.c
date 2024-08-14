@@ -30,6 +30,46 @@ StringList* specialSplit(char *str)
             StackPush(*splited, tmp);
             i = j + 1;
         }
+        else if (str[i] == '@' && str[i + 1] == '(')
+        {
+            Int j = i + 1;
+            Int count = 1;
+            while (count != 0)
+            {
+                j++;
+                if (str[j] == '(')
+                {
+                    count++;
+                }
+                else if (str[j] == ')')
+                {
+                    count--;
+                }
+            }
+            char *tmp = strndup(str + i, j - i + 1);
+            StackPush(*splited, tmp);
+            i = j + 1;
+        }
+        else if (str[i] == '!' && str[i + 1] == '(')
+        {
+            Int j = i + 1;
+            Int count = 1;
+            while (count != 0)
+            {
+                j++;
+                if (str[j] == '(')
+                {
+                    count++;
+                }
+                else if (str[j] == ')')
+                {
+                    count--;
+                }
+            }
+            char *tmp = strndup(str + i, j - i + 1);
+            StackPush(*splited, tmp);
+            i = j + 1;
+        }
         else if (isSpace(str[i]))
         {
             i++;

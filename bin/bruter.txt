@@ -1,27 +1,17 @@
-types
-
--1 = error
- 0 = nil
- 1 = table
- 2 = float
- 3 = string
- 4 = function
- 5 = list
-
 reserved
 
-$var = variable
-$(string) = string
 (expression) = expression
-($(expression)) = bulk expression
+!(string) = string
+@key = variable
+@number = get a variable from pointer(int)
+@(expression) = use expression result as key for search a variable
+@!(string) = use literal string as key for search a variable
+@@key = get a variable key from @key varaible value
 
-len {
-    number = length of number in string,
-    string = length,
-    table = length
-}
+(list) = list
 
-make = create a empty variable outside the vm and return a pointer to it
+
+make = create a empty object outside the vm and return a pointer to it
 new = create a variable in the vm and return it index
 spawn = create a variable in the vm, set a hash and return it index
 create = create a variable in the vm and return a pointer to it

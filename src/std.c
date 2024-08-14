@@ -7,6 +7,9 @@ Int _set(VirtualMachine *vm, IntList *args)
     Reference varname = argshift(vm, args);
     Reference value = argshift(vm, args);
 
+    //printf("Set %d to %d\n", varname.index, value.index);
+
+
     if (varname.variable->type != TYPE_STRING)
     {
         return newError(vm, "First argument must be a string");
@@ -19,7 +22,6 @@ Int _set(VirtualMachine *vm, IntList *args)
 
     Int index = hashfind(vm, varname.variable->value.string);
 
-    printf("Set %s to %d\n", varname.variable->value.string, index);
     
     if (index == -1)
     {

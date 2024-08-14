@@ -41,7 +41,6 @@ IntList* parse(VirtualMachine *vm, char *cmd)
 {
     IntList *result = makeIntList();
     StringList *splited = specialSplit(cmd);
-
     while (splited->size > 0) 
     {
         char* str = StackShift(*splited);
@@ -67,20 +66,93 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             //freeVar(vm, res);
             free(_str);
             StackFree(*args);
-        } 
-        else if (str[0] == '$') 
+        }
+        else if (str[0] == '!' && str[1] == '(') // literal string
         {
-            Int index = hashfind(vm, str + 1);
+            char* _str = strndup(str + 2, strlen(str) - 3);
+            StackPush(*result, newString(vm, _str));
+            free(_str);
+        }
+        else if (str[0] == '@') 
+        {
+            if (strlen(str) == 1) 
+            {
+                StackPush(*result, newError(vm, "Variable name not found"));
+            }
+            else if (str[1] == '(') 
+            {
+                Function __eval = (Function)vm->stack->data[hashfind(vm, "eval")]->value.pointer;
+                char* _str = strndup(str + 2, strlen(str) - 3);
+                IntList *args = makeIntList();
+                StackPush(*args, newString(vm, _str));
+                Int res = __eval(vm, args);
+                if (res == -1) 
+                {
+                    StackPush(*result, newError(vm, "Error in eval"));
+                } 
+                else 
+                {
+                    StackPush(*result, res);
+                    res = __eval(vm, args);
+                    if (res == -1) 
+                    {
+                        StackPush(*result, newError(vm, "Error in eval"));
+                    } 
+                    else 
+                    {
+                        StackPush(*result, res);
+                    }
+                }
+                free(_str);
+                StackFree(*args);
+            }
+            else if(str[1] == '@') // @@varname, get variable @varname and use its result as the key to get the correct variable
+            {
+                Int index = hashfind(vm, str + 2);
+                Variable *var1 = vm->stack->data[index];
+                Int index2 = hashfind(vm, var1->value.string);
 
-            if (index == -1) 
+                if (index2 == -1) 
+                {
+                    StackPush(*result, newError(vm, "Variable not found"));
+                } 
+                else 
+                {
+                    StackPush(*result, index2);
+                }
+            }
+            else if(str[1] >= '0' && str[1] <= '9') 
             {
-                StackPush(*result, newError(vm, "Variable not found"));
-            } 
-            else 
+                StackPush(*result, atoi(str + 1));
+            }
+            else if(str[1] == '!' && str[2] == '(')
             {
-                Int var = newVar(vm);
-                setVar(vm, var, vm->stack->data[index]->type, vm->stack->data[index]->value, Nil);
-                StackPush(*result, var);
+                char * _str = strndup(str + 3, strlen(str) - 4);
+                Int index = hashfind(vm, _str);
+                if (index == -1) 
+                {
+                    StackPush(*result, newError(vm, "Variable not found"));
+                } 
+                else 
+                {
+                    StackPush(*result, index);
+                }
+                free(_str);
+            }
+            else
+            {
+                Int index = hashfind(vm, str + 1);
+
+                if (index == -1) 
+                {
+                    StackPush(*result, newError(vm, "Variable not found"));
+                } 
+                else 
+                {
+                    Int var = newVar(vm);
+                    setVar(vm, var, vm->stack->data[index]->type, vm->stack->data[index]->value, Nil);
+                    StackPush(*result, var);
+                }
             }
         }
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
@@ -148,59 +220,95 @@ Int interpret(VirtualMachine *vm, char* str)
 Int eval(VirtualMachine *vm, char *str)
 {
     StringList *splited = splitString(str, ";");
-    Int result = 0;
+    Int result = -1;
     while (splited->size > 0)
     {
         char *cmd = StackShift(*splited);
         result = interpret(vm, cmd);
         free(cmd);
+        if (result != -1)
+        {
+            break;
+        }
     }
     StackFree(*splited);
     return result;
 }
 
-//print
-
-
-
 //main
-void main()
+int main(int argc, char *argv[])
 {
+    char* filename = NULL;
+    char* filetxt = NULL;
+
+    //turn args into a string stack
+    StringList *args = (StringList*)malloc(sizeof(StringList));
+    StackInit(*args);
+
+    for (int i = 1; i < argc; i++)
+    {
+        StackPush(*args, argv[i]);
+    }
+
+    while (args->size > 0)
+    {
+        char* arg = StackShift(*args);
+        if (arg[0] == '-')
+        {
+            if (strcmp(arg, "-h") == 0)
+            {
+                printf("Usage: bruter [options] [file]\n");
+                printf("Options:\n");
+                printf("  -h  Show this help message\n");
+                return 0;
+            }
+            else if (strcmp(arg, "-v") == 0)
+            {
+                printf("bruter %s\n", VERSION);
+                return 0;
+            }
+            else
+            {
+                printf("Unknown option: %s\n", arg);
+                return 1;
+            }
+        }
+        else if (filename == NULL)
+        {
+            filename = arg;
+        }
+    }
+
+    
+    if (filename != NULL && filetxt == NULL)
+    {
+        FILE* file = fopen(filename, "r");
+        fseek(file, 0, SEEK_END);
+        long length = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        filetxt = malloc(length + 1);
+        fread(filetxt, 1, length, file);
+        fclose(file);
+        filetxt[length] = '\0';
+    }
+
+    free(args);
+    
+
     VirtualMachine *vm = makeVM();
     
     initStd(vm);
 
-    Int a = newNumber(vm, 5555);
-    Int b = newNumber(vm, 10);
-    Int c = newNumber(vm, 15);
-    Int d = newNumber(vm, 20);
-    Int e = newNumber(vm, 25);
-
-    Int abc = newString(vm, "example string");
-
-    Int __list = newList(vm);
-
-    listpush(vm, __list, a);
-    listpush(vm, __list, b);
-    listpush(vm, __list, c);
-    freeVar(vm, a);
-    freeVar(vm, b);
-    freeVar(vm, c);
-    freeVar(vm, d);
-    freeVar(vm, e);
-    freeVar(vm, abc);
-    freeVar(vm, __list);
-
-
-    // split test
-    spawnNumber(vm, "a", 5);
-    char* cmd = "set b 59;set c 44;set d 99;";
-    char *cmd2 = "print $b;help;ls;set c (add 1 2)";
-    
-    printf("sizeof Variable: %ld\n", sizeof(Variable));
-    
-    eval(vm, cmd);
-    eval(vm, cmd2);
+    if (filetxt != NULL)
+    {
+        eval(vm, filetxt);
+    }
+    else 
+    {
+        printf("bruter %s\n", VERSION);
+        printf("repl yet to be implemented\n");
+    }
     // free
     freeVM(vm);
 }
+

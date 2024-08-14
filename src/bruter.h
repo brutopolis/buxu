@@ -224,7 +224,7 @@ void initStd(VirtualMachine *vm);
 void freeVM(VirtualMachine *vm);
 Int interpret(VirtualMachine *vm, char *str);
 Int eval(VirtualMachine *vm, char *str);
-void main();
+int main(int argc, char *argv[]);
 
 
 #endif

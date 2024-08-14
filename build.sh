@@ -8,7 +8,7 @@ gcc src/bruter.c \
     src/args.c \
     src/list.c \
     src/std.c \
-    -o bin/bruter \
+    -o bin/bruter\
     -lm -Os
 
 valgrind \
@@ -16,4 +16,4 @@ valgrind \
     --show-leak-kinds=all \
     --track-origins=yes \
     --log-file=valgrind-out.txt \
-    --verbose bin/bruter
+    --verbose bin/bruter example/test1.br

@@ -1,0 +1,20 @@
+set a 50;
+set b 100;
+set c 150;
+set d 200;
+set e 250;
+set f 300;
+set g 350;
+set h 400;
+set i 450;
+set j 500;
+set k 550;
+set l 600;
+
+set abc !(string test test ste);
+
+print @abc
+print @22;
+print @!(abc); // not working;
+
+ls;
