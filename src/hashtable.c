@@ -33,7 +33,9 @@ void hashunset(VirtualMachine *vm, char* varname)
     if (index != -1)
     {
         free(vm->hashes->data[index]->key);
+        vm->hashes->data[index]->key = NULL;
         free(vm->hashes->data[index]);
+        vm->hashes->data[index] = NULL;
         StackRemove(*vm->hashes, index);
     }
 }

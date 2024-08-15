@@ -155,6 +155,7 @@ VirtualMachine* makeVM();
 Int newVar(VirtualMachine *vm);
 void freeVar(VirtualMachine *vm, Int index);
 void setVar(VirtualMachine *vm, Int index, char type, Value value, char isRef);
+Int dupVar(VirtualMachine *vm, Int index);
 
 // new 
 Int newNumber(VirtualMachine *vm, Float number);
@@ -218,13 +219,15 @@ Int _eval(VirtualMachine *vm, IntList *args);
 Int _help(VirtualMachine *vm, IntList *args);
 Int _ls(VirtualMachine *vm, IntList *args);
 Int ___exit(VirtualMachine *vm, IntList *args);
+
+void print(VirtualMachine *vm, Int index);
+
 void initStd(VirtualMachine *vm);
 
 //bruter(.c) a.k.a. main
 void freeVM(VirtualMachine *vm);
 Int interpret(VirtualMachine *vm, char *str);
 Int eval(VirtualMachine *vm, char *str);
-int main(int argc, char *argv[]);
 
 
 #endif

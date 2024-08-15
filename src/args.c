@@ -54,4 +54,5 @@ void argfree(VirtualMachine *vm, IntList *args)
     }
     StackFree(*args);
     free(args);
+    args = NULL;
 }

@@ -11,10 +11,5 @@ set j 500;
 set k 550;
 set l 600;
 
-set abc !(string test test ste);
-
-print @abc
-print @22;
-print @!(abc); // not working;
-
-ls;
+set abc dasdasdasd;
+exit;

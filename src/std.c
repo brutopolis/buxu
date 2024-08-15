@@ -113,7 +113,14 @@ Int _help(VirtualMachine *vm, IntList *args)
                 {
                     printf("%d, ", list->data[j]);
                 }
-                printf("%d]\n", list->data[list->size-1]);
+                if (list->size > 0)
+                {
+                    printf("%d]\n", list->data[list->size-1]);
+                }
+                else
+                {
+                    printf("]\n");
+                }
             }
             else if (vm->stack->data[vm->hashes->data[i]->index]->type == TYPE_ERROR)
             {
@@ -144,7 +151,17 @@ Int _ls(VirtualMachine *vm, IntList *args)
             }
             else if (vm->stack->data[i]->type == TYPE_STRING)
             {
-                printf("[%d] {string}: %s\n", i, vm->stack->data[i]->value.string);
+                char str[8] = "";
+                if (strlen(vm->stack->data[i]->value.string) > 8)
+                {
+                    strncpy(str, vm->stack->data[i]->value.string, 8);
+                    str[7] = '\0';
+                }
+                else
+                {
+                    strcat(str, vm->stack->data[i]->value.string);
+                }
+                printf("[%d] {string}: %s\n", i, str);
             }
             else if (vm->stack->data[i]->type == TYPE_LIST)
             {
@@ -154,7 +171,14 @@ Int _ls(VirtualMachine *vm, IntList *args)
                 {
                     printf("%d, ", list->data[j]);
                 }
-                printf("%d]\n", list->data[list->size-1]);
+                if (list->size > 0)
+                {
+                    printf("%d]\n", list->data[list->size-1]);
+                }
+                else
+                {
+                    printf("]\n");
+                }
             }
             else if (vm->stack->data[i]->type == TYPE_ERROR)
             {
@@ -199,6 +223,17 @@ Int _add(VirtualMachine *vm, IntList *args)
     }
 }
 
+//list
+
+Int _list(VirtualMachine *vm, IntList *args)
+{
+    Int index = newVar(vm);
+    vm->stack->data[index]->type = TYPE_LIST;
+    vm->stack->data[index]->value.pointer = malloc(sizeof(IntList));
+    StackInit(*(IntList*)vm->stack->data[index]->value.pointer);
+    return index;
+}
+
 void initStd(VirtualMachine *vm)
 {
     spawnFunction(vm, "eval", _eval);
@@ -209,4 +244,6 @@ void initStd(VirtualMachine *vm)
     spawnFunction(vm, "exit", ___exit);
 
     spawnFunction(vm, "add", _add);
+
+    spawnFunction(vm, "list", _list);
 }

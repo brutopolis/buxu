@@ -108,15 +108,12 @@ void setVar(VirtualMachine *vm, Int index, char type, Value value, char isRef)
             vm->stack->data[index]->type == TYPE_LIST)
     {
         free(vm->stack->data[index]->value.string);
+        vm->stack->data[index]->value.string = NULL;
     }
     vm->stack->data[index]->type = type;
     vm->stack->data[index]->value = value;
     vm->stack->data[index]->isRef = isRef;
 }
-
-
-
-
 
 
 

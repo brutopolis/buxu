@@ -5,34 +5,26 @@
 
 void freeVM(VirtualMachine *vm)
 {
-    while (vm->stack->size > 0)
+    for (Int i = 0; i < vm->stack->size; i++)
     {
-        Variable * temp = StackPop(*vm->stack);
-        if (temp != NULL)
+        if (vm->stack->data[i] != NULL)
         {
-            if (temp->type == TYPE_STRING || temp->type == TYPE_ERROR)
-            {
-                free(temp->value.string);
-            }
-            else if (temp->type == TYPE_LIST)
-            {
-                StackFree(*((IntList*)temp->value.pointer));
-                free(temp->value.pointer);
-                
-            }
-            free(temp);
+            freeVar(vm, i);
         }
     }
     while (vm->hashes->size > 0)
     {
         Hash *temp = StackPop(*vm->hashes);
         free(temp->key);
+        temp->key = NULL;
         free(temp);
+        temp = NULL;
     }
     StackFree(*vm->stack);
     StackFree(*vm->hashes);
     StackFree(*vm->empty);
     free(vm);
+    vm = NULL;
 }
 
 // Parser functions
@@ -54,7 +46,6 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             IntList *args = makeIntList();
             StackPush(*args, newString(vm, _str));
             Int res = __eval(vm, args);
-            printf("res: %f\n", vm->stack->data[res]->value.number);
             if (res == -1) 
             {
                 StackPush(*result, newError(vm, "Error in eval"));
@@ -65,6 +56,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             }
             //freeVar(vm, res);
             free(_str);
+            _str = NULL;
             StackFree(*args);
         }
         else if (str[0] == '!' && str[1] == '(') // literal string
@@ -72,6 +64,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             char* _str = strndup(str + 2, strlen(str) - 3);
             StackPush(*result, newString(vm, _str));
             free(_str);
+            _str = NULL;
         }
         else if (str[0] == '@') 
         {
@@ -104,6 +97,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                     }
                 }
                 free(_str);
+                _str = NULL;
                 StackFree(*args);
             }
             else if(str[1] == '@') // @@varname, get variable @varname and use its result as the key to get the correct variable
@@ -138,6 +132,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                     StackPush(*result, index);
                 }
                 free(_str);
+                _str = NULL;
             }
             else
             {
@@ -165,6 +160,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
         }
 
         free(str);
+        str = NULL;
     }
     StackFree(*splited);
     return result;
@@ -226,6 +222,7 @@ Int eval(VirtualMachine *vm, char *str)
         char *cmd = StackShift(*splited);
         result = interpret(vm, cmd);
         free(cmd);
+        cmd = NULL;
         if (result != -1)
         {
             break;
@@ -235,80 +232,71 @@ Int eval(VirtualMachine *vm, char *str)
     return result;
 }
 
-//main
-int main(int argc, char *argv[])
+char *read_file(const char *filename) 
 {
-    char* filename = NULL;
-    char* filetxt = NULL;
-
-    //turn args into a string stack
-    StringList *args = (StringList*)malloc(sizeof(StringList));
-    StackInit(*args);
-
-    for (int i = 1; i < argc; i++)
+    FILE *file = fopen(filename, "r");
+    if (!file) 
     {
-        StackPush(*args, argv[i]);
+        return NULL;
     }
 
-    while (args->size > 0)
-    {
-        char* arg = StackShift(*args);
-        if (arg[0] == '-')
-        {
-            if (strcmp(arg, "-h") == 0)
-            {
-                printf("Usage: bruter [options] [file]\n");
-                printf("Options:\n");
-                printf("  -h  Show this help message\n");
-                return 0;
-            }
-            else if (strcmp(arg, "-v") == 0)
-            {
-                printf("bruter %s\n", VERSION);
-                return 0;
-            }
-            else
-            {
-                printf("Unknown option: %s\n", arg);
-                return 1;
-            }
-        }
-        else if (filename == NULL)
-        {
-            filename = arg;
-        }
-    }
+    fseek(file, 0, SEEK_END);
+    long length = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
-    
-    if (filename != NULL && filetxt == NULL)
+    char *content = (char *)malloc(length + 1);
+    if (!content) 
     {
-        FILE* file = fopen(filename, "r");
-        fseek(file, 0, SEEK_END);
-        long length = ftell(file);
-        fseek(file, 0, SEEK_SET);
-        filetxt = malloc(length + 1);
-        fread(filetxt, 1, length, file);
         fclose(file);
-        filetxt[length] = '\0';
+        return NULL;
     }
 
-    free(args);
-    
+    fread(content, 1, length, file);
+    content[length] = '\0';
 
+    fclose(file);
+    return content;
+}
+
+int write_file(const char *filename, const char *content) 
+{
+    FILE *file = fopen(filename, "w");
+    if (!file) 
+    {
+        return -1;
+    }
+
+    size_t length = strlen(content);
+    size_t written = fwrite(content, 1, length, file);
+    
+    fclose(file);
+    return (written == length) ? 0 : -1;
+}
+
+//main
+//main
+void main()
+{
     VirtualMachine *vm = makeVM();
     
     initStd(vm);
 
-    if (filetxt != NULL)
-    {
-        eval(vm, filetxt);
-    }
-    else 
-    {
-        printf("bruter %s\n", VERSION);
-        printf("repl yet to be implemented\n");
-    }
+    char* cmd = "set a 50;"
+                "set b 100;"
+                "set c 150;"
+                "set d 200;"
+                "set e 250;"
+                "set f 300;"
+                "set g 350;"
+                "set h 400;"
+                "set i 450;"
+                "set j 500;"
+                "set k 550;"
+                "set l 600;"
+                "set lst (list);"
+                "set abc dasdasdasd;";
+
+    eval(vm, cmd);
     // free
     freeVM(vm);
 }
-
