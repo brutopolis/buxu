@@ -21,10 +21,9 @@ void freeVM(VirtualMachine *vm)
         temp = NULL;
     }
     StackFree(*vm->stack);
-    StackFree(*vm->hashes);
     StackFree(*vm->empty);
+    StackFree(*vm->hashes);
     free(vm);
-    vm = NULL;
 }
 
 // Parser functions
@@ -48,7 +47,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             Int res = __eval(vm, args);
             if (res == -1) 
             {
-                StackPush(*result, newError(vm, "Error in eval"));
+                //StackPush(*result, newError(vm, "Error in eval"));
             } 
             else 
             {
@@ -70,7 +69,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
         {
             if (strlen(str) == 1) 
             {
-                StackPush(*result, newError(vm, "Variable name not found"));
+                //StackPush(*result, newError(vm, "Variable name not found"));
             }
             else if (str[1] == '(') 
             {
@@ -81,7 +80,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                 Int res = __eval(vm, args);
                 if (res == -1) 
                 {
-                    StackPush(*result, newError(vm, "Error in eval"));
+                    //StackPush(*result, newError(vm, "Error in eval"));
                 } 
                 else 
                 {
@@ -89,7 +88,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                     res = __eval(vm, args);
                     if (res == -1) 
                     {
-                        StackPush(*result, newError(vm, "Error in eval"));
+                        //StackPush(*result, newError(vm, "Error in eval"));
                     } 
                     else 
                     {
@@ -104,11 +103,13 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             {
                 Int index = hashfind(vm, str + 2);
                 Variable *var1 = vm->stack->data[index];
-                Int index2 = hashfind(vm, var1->value.string);
-
+                char * name = toString(var1->value.pointer);
+                Int index2 = hashfind(vm, name);
+                free(name);
+                
                 if (index2 == -1) 
                 {
-                    StackPush(*result, newError(vm, "Variable not found"));
+                    //StackPush(*result, newError(vm, "Variable not found"));
                 } 
                 else 
                 {
@@ -125,7 +126,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                 Int index = hashfind(vm, _str);
                 if (index == -1) 
                 {
-                    StackPush(*result, newError(vm, "Variable not found"));
+                    //StackPush(*result, newError(vm, "Variable not found"));
                 } 
                 else 
                 {
@@ -140,7 +141,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
 
                 if (index == -1) 
                 {
-                    StackPush(*result, newError(vm, "Variable not found"));
+                    //StackPush(*result, newError(vm, "Variable not found"));
                 } 
                 else 
                 {
@@ -173,11 +174,11 @@ Int interpret(VirtualMachine *vm, char* str)
 
     Reference funcname = refget(vm, StackShift(*args));
 
-    if (funcname.variable->type == TYPE_ERROR) 
+    /*if (funcname.variable->type == TYPE_ERROR) 
     {
-        printf("%s\n", funcname.variable->value.string);
+        printf("%s\n", toString(funcname.variable->value.pointer));
         return -1;
-    }
+    }*/
 
     if (funcname.variable->type != TYPE_STRING) 
     {
@@ -185,7 +186,8 @@ Int interpret(VirtualMachine *vm, char* str)
         return -1;
     }
 
-    Int index = hashfind(vm, funcname.variable->value.string);
+    char *name = toString(funcname.variable->value.pointer);
+    Int index = hashfind(vm, name);
     if (index == -1 ) 
     {
         printf("Function not found\n");
@@ -209,7 +211,7 @@ Int interpret(VirtualMachine *vm, char* str)
     
     freeref(vm, funcname);
     StackFree(*args);
-
+    free(name);
     return result;
 }
 
@@ -293,8 +295,7 @@ void main()
                 "set j 500;"
                 "set k 550;"
                 "set l 600;"
-                "set lst (list);"
-                "set abc dasdasdasd;";
+                "set abc abuble;";
 
     eval(vm, cmd);
     // free

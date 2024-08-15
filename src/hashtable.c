@@ -45,7 +45,7 @@ Variable* hashget(VirtualMachine *vm, char* varname)
     Int index = hashfind(vm, varname);
     if (index == -1)
     {
-        return makeVariable(TYPE_ERROR, (Value){string: strdup("Variable not found")});
+        return makeVariable(TYPE_ERROR, (Value){number: 3});//3 is the error code for variable not found
     }
     return vm->stack->data[index];
 }

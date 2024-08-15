@@ -12,38 +12,38 @@ Int _set(VirtualMachine *vm, IntList *args)
 
     if (varname.variable->type != TYPE_STRING)
     {
-        return newError(vm, "First argument must be a string");
+        //return newError(vm, 2);//"First argument must be a string"
     }
 
     if (value.variable->type == TYPE_ERROR)
     {
-        return newError(vm, value.variable->value.string);
+        //return newError(vm, 1);//"Second argument must be a value"
     }
 
-    Int index = hashfind(vm, varname.variable->value.string);
-
+    char * name = toString(varname.variable->value.pointer);
+    Int index = hashfind(vm, name);
     
     if (index == -1)
     {
         index = newVar(vm);
-        hashset(vm, varname.variable->value.string, index);
+        hashset(vm, name, index);
     }
     setVar(vm, index, value.variable->type, value.variable->value, Nil);
 
 
     freeref(vm, varname);
     freeref(vm, value);
-    
+    free(name);
     return -1;
 }
 
 Int _eval(VirtualMachine *vm, IntList *args)
 {
     Reference str = argshift(vm, args);
-    char* _str = str.variable->value.string;
-    Int result = eval(vm, str.variable->value.string);
-    
+    char* _str = toString(str.variable->value.pointer);
+    Int result = eval(vm, _str);
     freeref(vm, str);
+    free(_str);
     return result;
 }
 
@@ -57,7 +57,9 @@ Int _print(VirtualMachine *vm, IntList *args)
     }
     else if (vm->stack->data[_ref.index]->type == TYPE_STRING)
     {
-        printf("%s\n", vm->stack->data[_ref.index]->value.string);
+        char * temp = toString(vm->stack->data[_ref.index]->value.pointer);
+        printf("%s\n", temp);
+        free(temp);
     }
     else if (vm->stack->data[_ref.index]->type == TYPE_LIST)
     {
@@ -70,10 +72,10 @@ Int _print(VirtualMachine *vm, IntList *args)
         printf("%d", list->data[list->size-1]);
         printf("]\n");
     }
-    else if (vm->stack->data[_ref.index]->type == TYPE_ERROR)
+    /*else if (vm->stack->data[_ref.index]->type == TYPE_ERROR)
     {
-        printf("Error: %s\n", vm->stack->data[_ref.index]->value.string);
-    }
+        printf("Error: %s\n", toString(vm->stack->data[_ref.index]->value.pointer));
+    }*/
     else if (vm->stack->data[_ref.index]->type == TYPE_FUNCTION)
     {
         printf("Function : [%d] %p\n", _ref.index, vm->stack->data[_ref.index]->value.pointer);
@@ -103,7 +105,9 @@ Int _help(VirtualMachine *vm, IntList *args)
             }
             else if (vm->stack->data[vm->hashes->data[i]->index]->type == TYPE_STRING)
             {
-                printf("[%d] {string} @%s: %s\n", i, vm->hashes->data[i]->key, vm->stack->data[vm->hashes->data[i]->index]->value.string);
+                char * temp = toString(vm->stack->data[vm->hashes->data[i]->index]->value.pointer);
+                printf("[%d] {string} @%s: %s\n", i, vm->hashes->data[i]->key, temp);
+                free(temp);
             }
             else if (vm->stack->data[vm->hashes->data[i]->index]->type == TYPE_LIST)
             {
@@ -124,7 +128,7 @@ Int _help(VirtualMachine *vm, IntList *args)
             }
             else if (vm->stack->data[vm->hashes->data[i]->index]->type == TYPE_ERROR)
             {
-                printf("[%d] {error} @%s: %s\n", i, vm->hashes->data[i]->key, vm->stack->data[vm->hashes->data[i]->index]->value.string);
+                printf("[%d] {error} @%s: %s\n", i, vm->hashes->data[i]->key, toString(vm->stack->data[vm->hashes->data[i]->index]->value.pointer));
             }
             else
             {
@@ -151,17 +155,7 @@ Int _ls(VirtualMachine *vm, IntList *args)
             }
             else if (vm->stack->data[i]->type == TYPE_STRING)
             {
-                char str[8] = "";
-                if (strlen(vm->stack->data[i]->value.string) > 8)
-                {
-                    strncpy(str, vm->stack->data[i]->value.string, 8);
-                    str[7] = '\0';
-                }
-                else
-                {
-                    strcat(str, vm->stack->data[i]->value.string);
-                }
-                printf("[%d] {string}: %s\n", i, str);
+                
             }
             else if (vm->stack->data[i]->type == TYPE_LIST)
             {
@@ -180,10 +174,10 @@ Int _ls(VirtualMachine *vm, IntList *args)
                     printf("]\n");
                 }
             }
-            else if (vm->stack->data[i]->type == TYPE_ERROR)
+            /*else if (vm->stack->data[i]->type == TYPE_ERROR)
             {
-                printf("[%d] {error}: %s\n", i, vm->stack->data[i]->value.string);
-            }
+                printf("[%d] {error}: %s\n", i, toString(vm->stack->data[i]->value.pointer));
+            }*/
             else
             {
                 printf("[%d] {unknown type}\n", i);
@@ -219,7 +213,7 @@ Int _add(VirtualMachine *vm, IntList *args)
     {
         freeref(vm, a);
         freeref(vm, b);
-        return newError(vm, "Both arguments must be numbers");
+        //return newError(vm, "Both arguments must be numbers");
     }
 }
 

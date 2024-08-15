@@ -1,5 +1,19 @@
 #include "bruter.h"
 
+char* toString(CharList *list)
+{
+    if (list->size == 0)
+    {
+        return "";
+    }
+    char *str = (char*)malloc(list->size + 1);
+    for (Int i = 0; i < list->size; i++)
+    {
+        str[i] = list->data[i];
+    }
+    str[list->size] = '\0';
+    return str;
+}
 
 StringList* specialSplit(char *str)
 {

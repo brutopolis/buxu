@@ -27,6 +27,13 @@ IntList* makeIntList()
     return list;
 }
 
+CharList* makeCharList()
+{
+    CharList *list = (CharList*)malloc(sizeof(CharList));
+    StackInit(*list);
+    return list;
+}
+
 VirtualMachine* makeVM()
 {
     VirtualMachine *vm = (VirtualMachine*)malloc(sizeof(VirtualMachine));
@@ -75,6 +82,20 @@ Int newVar(VirtualMachine *vm)
     }
 }
 
+void freeString(VirtualMachine *vm, CharList *list)
+{
+    CharList *tmp = list;
+    free(tmp->data);
+    free(tmp);
+}
+
+void freeList(VirtualMachine *vm, IntList *list)
+{
+    IntList *tmp = list;
+    free(tmp->data);
+    //free(tmp);
+}
+
 void freeVar(VirtualMachine *vm, Int index)
 {
     StackPush(*vm->empty, index);
@@ -85,17 +106,18 @@ void freeVar(VirtualMachine *vm, Int index)
     }
     else if (vm->stack->data[index]->type == TYPE_LIST)
     {
-        StackFree(*((IntList*)vm->stack->data[index]->value.pointer));
+        freeList(vm, (IntList*)vm->stack->data[index]->value.pointer);
     }
-    else if (vm->stack->data[index]->type == TYPE_STRING || 
-             vm->stack->data[index]->type == TYPE_ERROR)
+    else if (vm->stack->data[index]->type == TYPE_STRING)
     {
-        free(vm->stack->data[index]->value.string);
+        freeString(vm, (CharList*)vm->stack->data[index]->value.pointer);
     }
 
     free(vm->stack->data[index]);
     vm->stack->data[index] = NULL;
 }
+
+
 
 void setVar(VirtualMachine *vm, Int index, char type, Value value, char isRef)
 {
@@ -104,11 +126,10 @@ void setVar(VirtualMachine *vm, Int index, char type, Value value, char isRef)
         vm->stack->data[index] = makeVariable(type, value);
     }
     else if(vm->stack->data[index]->type == TYPE_STRING || 
-            vm->stack->data[index]->type == TYPE_ERROR ||
             vm->stack->data[index]->type == TYPE_LIST)
     {
-        free(vm->stack->data[index]->value.string);
-        vm->stack->data[index]->value.string = NULL;
+        free(vm->stack->data[index]->value.pointer);
+        vm->stack->data[index]->value.pointer = NULL;
     }
     vm->stack->data[index]->type = type;
     vm->stack->data[index]->value = value;
@@ -142,7 +163,12 @@ Int newString(VirtualMachine *vm, char *string)
 {
     Int index = newVar(vm);
     vm->stack->data[index]->type = TYPE_STRING;
-    vm->stack->data[index]->value.string = strdup(string);
+    vm->stack->data[index]->value.pointer = makeCharList();
+    for (int i = 0; string[i] != '\0'; i++)
+    {
+        StackPush(*((CharList*)vm->stack->data[index]->value.pointer), string[i]);
+    }
+    
     return index;
 }
 
@@ -162,13 +188,13 @@ Int newList(VirtualMachine *vm)
     return index;
 }
 
-Int newError(VirtualMachine *vm, char *string)
+/*Int newError(VirtualMachine *vm, int errorid)
 {
     Int index = newVar(vm);
-    setVar(vm, index, TYPE_ERROR, (Value){string: string}, Nil);
+    setVar(vm, index, TYPE_ERROR, (Value){number: errorid}, Nil);
     return index;
 }
-
+*/
 
 
 
@@ -214,13 +240,12 @@ Int spawnList(VirtualMachine *vm, char *varname)
     return index;
 }
 
-Int spawnError(VirtualMachine *vm, char *varname, char *string)
+/*Int spawnError(VirtualMachine *vm, char *varname, int errorid)
 {
-    Int index = newError(vm, string);
+    Int index = newError(vm, errorid);
     hashset(vm, varname, index);
     return index;
-}
-
+}*/
 
 
 
@@ -265,12 +290,11 @@ Variable* createList(VirtualMachine *vm)
     return vm->stack->data[index];
 }
 
-Variable* createError(VirtualMachine *vm, char *string)
+/*Variable* createError(VirtualMachine *vm, int errorid)
 {
-    Int index = newError(vm, string);
+    Int index = newError(vm, errorid);
     return vm->stack->data[index];
-}
-
+}*/
 
 
 

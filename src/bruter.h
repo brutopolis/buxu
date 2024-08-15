@@ -90,14 +90,11 @@
     ret; \
 })
 
-
-
 //Value
 typedef union 
 {
     Float number;
     //Int index;
-    char* string;
     void* pointer;
 } Value;
 
@@ -123,11 +120,14 @@ typedef struct
     Int index;
 } Hash;
 
+
+
 //List
 typedef Stack(Variable*) List;
 typedef Stack(Hash*) HashList;
 typedef Stack(Int) IntList;
 typedef Stack(char*) StringList;
+typedef Stack(char) CharList;
 
 typedef struct
 {
@@ -155,7 +155,6 @@ VirtualMachine* makeVM();
 Int newVar(VirtualMachine *vm);
 void freeVar(VirtualMachine *vm, Int index);
 void setVar(VirtualMachine *vm, Int index, char type, Value value, char isRef);
-Int dupVar(VirtualMachine *vm, Int index);
 
 // new 
 Int newNumber(VirtualMachine *vm, Float number);
@@ -163,7 +162,7 @@ Int newString(VirtualMachine *vm, char* string);
 Int newReference(VirtualMachine *vm, Int index);
 Int newFunction(VirtualMachine *vm, Function function);
 Int newList(VirtualMachine *vm);
-Int newError(VirtualMachine *vm, char* string);
+//Int newError(VirtualMachine *vm, int errorid);
 
 // spawn
 Int spawnNumber(VirtualMachine *vm, char *varname, Float number);
@@ -171,7 +170,7 @@ Int spawnString(VirtualMachine *vm, char *varname, char* string);
 Int spawnReference(VirtualMachine *vm, char *varname, Int index);
 Int spawnFunction(VirtualMachine *vm, char *varname, Function function);
 Int spawnList(VirtualMachine *vm, char *varname);
-Int spawnError(VirtualMachine *vm, char *varname, char* string);
+//Int spawnError(VirtualMachine *vm, char *varname, int errorid);
 
 // create
 Variable* createNumber(VirtualMachine *vm, Float number);
@@ -179,7 +178,7 @@ Variable* createString(VirtualMachine *vm, char* string);
 Variable* createReference(VirtualMachine *vm, Int index);
 Variable* createFunction(VirtualMachine *vm, Function function);
 Variable* createList(VirtualMachine *vm);
-Variable* createError(VirtualMachine *vm, char* string);
+//Variable* createError(VirtualMachine *vm, char* string);
 
 // ref
 Reference refget(VirtualMachine *vm, Int index);
@@ -229,5 +228,7 @@ void freeVM(VirtualMachine *vm);
 Int interpret(VirtualMachine *vm, char *str);
 Int eval(VirtualMachine *vm, char *str);
 
+char* toString(CharList *list);
+void freeString(VirtualMachine *vm, CharList *string);
 
 #endif
