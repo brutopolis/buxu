@@ -94,7 +94,7 @@ Int _help(VirtualMachine *vm, IntList *args)
             {
                 char * temp = toString(vm->stack->data[vm->hashes->data[i]->index]->value.pointer);
                 printf("[%d] {string} @%s: %s\n", i, vm->hashes->data[i]->key, temp);
-                //free(temp);
+                free(temp);
             }
             else if (vm->stack->data[vm->hashes->data[i]->index]->type == TYPE_LIST)
             {
@@ -142,7 +142,9 @@ Int _ls(VirtualMachine *vm, IntList *args)
             }
             else if (vm->stack->data[i]->type == TYPE_STRING)
             {
-                
+                char * temp = toString(vm->stack->data[i]->value.pointer);
+                printf("[%d] {string}: %s\n", i, temp);
+                free(temp);
             }
             else if (vm->stack->data[i]->type == TYPE_LIST)
             {
