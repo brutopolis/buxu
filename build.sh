@@ -9,7 +9,7 @@ gcc src/bruter.c \
     src/list.c \
     src/std.c \
     -o bin/bruter\
-    -lm -Os
+    -lm -Os -g
 
 valgrind \
     --leak-check=full \

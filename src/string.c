@@ -6,10 +6,20 @@ char* toString(CharList *list)
     {
         return "";
     }
-    char *str = (char*)malloc(list->size + 1);
+    char *str = (char*)malloc(list->size + 2);
     for (Int i = 0; i < list->size; i++)
     {
-        str[i] = list->data[i];
+        if(list->data != NULL)
+        {
+            if (list->data[i] == '\0')
+            {
+                str[i] = ' ';
+            }
+            else
+            {
+                str[i] = list->data[i];
+            }
+        }
     }
     str[list->size] = '\0';
     return str;

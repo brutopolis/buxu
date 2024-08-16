@@ -99,23 +99,6 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                 _str = NULL;
                 StackFree(*args);
             }
-            else if(str[1] == '@') // @@varname, get variable @varname and use its result as the key to get the correct variable
-            {
-                Int index = hashfind(vm, str + 2);
-                Variable *var1 = vm->stack->data[index];
-                char * name = toString(var1->value.pointer);
-                Int index2 = hashfind(vm, name);
-                free(name);
-                
-                if (index2 == -1) 
-                {
-                    //StackPush(*result, newError(vm, "Variable not found"));
-                } 
-                else 
-                {
-                    StackPush(*result, index2);
-                }
-            }
             else if(str[1] >= '0' && str[1] <= '9') 
             {
                 StackPush(*result, atoi(str + 1));
@@ -295,7 +278,11 @@ void main()
                 "set j 500;"
                 "set k 550;"
                 "set l 600;"
-                "set abc abuble;";
+                "set abc abuble;"
+                "set abcd !(opa iae);"
+                "set lst (list);"
+                "print @abc;"
+                "ls;";
 
     eval(vm, cmd);
     // free

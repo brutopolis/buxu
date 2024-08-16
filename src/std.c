@@ -7,18 +7,6 @@ Int _set(VirtualMachine *vm, IntList *args)
     Reference varname = argshift(vm, args);
     Reference value = argshift(vm, args);
 
-    //printf("Set %d to %d\n", varname.index, value.index);
-
-
-    if (varname.variable->type != TYPE_STRING)
-    {
-        //return newError(vm, 2);//"First argument must be a string"
-    }
-
-    if (value.variable->type == TYPE_ERROR)
-    {
-        //return newError(vm, 1);//"Second argument must be a value"
-    }
 
     char * name = toString(varname.variable->value.pointer);
     Int index = hashfind(vm, name);
@@ -29,7 +17,6 @@ Int _set(VirtualMachine *vm, IntList *args)
         hashset(vm, name, index);
     }
     setVar(vm, index, value.variable->type, value.variable->value, Nil);
-
 
     freeref(vm, varname);
     freeref(vm, value);
@@ -107,7 +94,7 @@ Int _help(VirtualMachine *vm, IntList *args)
             {
                 char * temp = toString(vm->stack->data[vm->hashes->data[i]->index]->value.pointer);
                 printf("[%d] {string} @%s: %s\n", i, vm->hashes->data[i]->key, temp);
-                free(temp);
+                //free(temp);
             }
             else if (vm->stack->data[vm->hashes->data[i]->index]->type == TYPE_LIST)
             {

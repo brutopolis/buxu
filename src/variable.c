@@ -93,7 +93,7 @@ void freeList(VirtualMachine *vm, IntList *list)
 {
     IntList *tmp = list;
     free(tmp->data);
-    //free(tmp);
+    free(tmp);
 }
 
 void freeVar(VirtualMachine *vm, Int index)
