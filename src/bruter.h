@@ -21,6 +21,14 @@
 
 #define Nil -1
 
+#ifndef __null
+#define __null 0
+#endif
+
+#ifndef NULL
+#define NULL 0
+#endif
+
 
 #define isSpace(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
 
@@ -114,7 +122,7 @@ typedef struct
 } Reference;
 
 //Hash
-typedef struct 
+typedef struct
 {
     char *key;
     Int index;
@@ -134,6 +142,7 @@ typedef struct
     List *stack;
     HashList *hashes;
     IntList *empty;
+    Int bytesInUse;
 } VirtualMachine;
 
 //Function
@@ -222,6 +231,7 @@ Int ___exit(VirtualMachine *vm, IntList *args);
 void print(VirtualMachine *vm, Int index);
 
 void initStd(VirtualMachine *vm);
+int main();
 
 //bruter(.c) a.k.a. main
 void freeVM(VirtualMachine *vm);
@@ -230,5 +240,6 @@ Int eval(VirtualMachine *vm, char *str);
 
 char* toString(CharList *list);
 void freeString(VirtualMachine *vm, CharList *string);
+
 
 #endif

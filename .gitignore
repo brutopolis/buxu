@@ -10,3 +10,4 @@ example/test.txt
 .vscode
 bin/bruter
 valgrind-out.txt
+build

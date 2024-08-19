@@ -26,6 +26,11 @@ void freeVM(VirtualMachine *vm)
     free(vm);
 }
 
+void printMemUsage(VirtualMachine *vm)
+{
+    printf("Memory usage: %ld bytes\n", vm->bytesInUse);
+}
+
 // Parser functions
 // idea: parse could use indexes of the args on the stack instead of the args themselves 
 IntList* parse(VirtualMachine *vm, char *cmd) 
@@ -163,6 +168,8 @@ Int interpret(VirtualMachine *vm, char* str)
         return -1;
     }*/
 
+    //printMemUsage(vm);
+
     if (funcname.variable->type != TYPE_STRING) 
     {
         printf("First argument must be a string\n");
@@ -217,53 +224,11 @@ Int eval(VirtualMachine *vm, char *str)
     return result;
 }
 
-char *read_file(const char *filename) 
-{
-    FILE *file = fopen(filename, "r");
-    if (!file) 
-    {
-        return NULL;
-    }
-
-    fseek(file, 0, SEEK_END);
-    long length = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char *content = (char *)malloc(length + 1);
-    if (!content) 
-    {
-        fclose(file);
-        return NULL;
-    }
-
-    fread(content, 1, length, file);
-    content[length] = '\0';
-
-    fclose(file);
-    return content;
-}
-
-int write_file(const char *filename, const char *content) 
-{
-    FILE *file = fopen(filename, "w");
-    if (!file) 
-    {
-        return -1;
-    }
-
-    size_t length = strlen(content);
-    size_t written = fwrite(content, 1, length, file);
-    
-    fclose(file);
-    return (written == length) ? 0 : -1;
-}
-
 //main
 //main
-void main()
+int main()
 {
     VirtualMachine *vm = makeVM();
-    
     initStd(vm);
 
     char* cmd = "set a 50;"
@@ -283,8 +248,9 @@ void main()
                 "set lst (list);"
                 "print @abc;"
                 "ls;";
-
+    
     eval(vm, cmd);
     // free
     freeVM(vm);
+    return 0;
 }

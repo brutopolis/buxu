@@ -73,11 +73,13 @@ Int newVar(VirtualMachine *vm)
             vm->stack->data[id] = NULL;
         }
         vm->stack->data[id] = makeVariable(TYPE_NIL, (Value){0});
+        vm->bytesInUse += sizeof(Variable);
         return id;
     }
     else
     {
         StackPush(*vm->stack, makeVariable(TYPE_NIL, (Value){0}));
+        vm->bytesInUse += sizeof(Variable);
         return vm->stack->size-1;
     }
 }
@@ -115,6 +117,7 @@ void freeVar(VirtualMachine *vm, Int index)
 
     free(vm->stack->data[index]);
     vm->stack->data[index] = NULL;
+    vm->bytesInUse -= sizeof(Variable);
 }
 
 
@@ -324,3 +327,4 @@ void freeref(VirtualMachine *vm, Reference ref)
 {
     freeVar(vm, ref.index);
 }
+
