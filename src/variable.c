@@ -8,7 +8,6 @@ Variable* makeVariable(char type, Value value)
     Variable *var = (Variable*)malloc(sizeof(Variable));
     var->type = type;
     var->value = value;
-    var->isTemp = 0;
     var->isRef = 0;
     return var;
 }

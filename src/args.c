@@ -17,9 +17,16 @@ Reference argshift(VirtualMachine *vm, IntList *args)
     //if a string do a copy
     if (vm->stack->data[ref.index]->type == TYPE_STRING)
     {
-        char * temp = toString(vm->stack->data[ref.index]->value.pointer);
-        ref.variable = createString(vm, temp);
-        free(temp);
+        if (vm->stack->data[ref.index]->isRef)
+        {
+            char * temp = toString(vm->stack->data[ref.index]->value.pointer);
+            ref.variable = createString(vm, temp);
+            free(temp);
+        }
+        else
+        {
+            ref.variable = vm->stack->data[ref.index];
+        }
     }
     else if (vm->stack->data[ref.index]->type == TYPE_LIST)
     {
