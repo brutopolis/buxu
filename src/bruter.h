@@ -9,7 +9,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.3"
+#define VERSION "0.4.3a"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -227,6 +227,7 @@ Int _eval(VirtualMachine *vm, IntList *args);
 Int _help(VirtualMachine *vm, IntList *args);
 Int _ls(VirtualMachine *vm, IntList *args);
 Int ___exit(VirtualMachine *vm, IntList *args);
+Int _teste(VirtualMachine *vm, IntList *args);
 
 void print(VirtualMachine *vm, Int index);
 

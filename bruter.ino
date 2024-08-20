@@ -1,6 +1,7 @@
 extern "C"
 {
-#include "./src/bruter.h"
+    #include "./src/bruter.h"
+    
 }
 
 Int _ino_print(VirtualMachine *vm, IntList *args)
@@ -27,9 +28,8 @@ Int _ino_print(VirtualMachine *vm, IntList *args)
             Serial.print(", ");
         }
         Serial.print(list->data[list->size-1]);
-        Serial.println("]");
+        Serial.print("]\n");
     }
-    freeref(vm, _ref);
     return -1;
 }
 
@@ -42,7 +42,7 @@ class Bruter
     };
     void registerFunction(char *name, Function func)
     {
-        hashset(this->vm, name, (Int)func);
+        spawnFunction(this->vm, name, func);
     };
     Int run(char *str)
     {
@@ -57,16 +57,19 @@ class Bruter
     }
 };
 
+Bruter *session = new Bruter();
+
 void setup()
 {
     Serial.begin(115200);
-    Bruter *session = new Bruter();
-    session->run((char*)"inoprint !(Hello, World!;)");
-    session->free();
-    delete session;
+    session->run((char*)"set str !(looping);");
+    //session->free();
+    //delete session;
 }
 
 void loop()
 {
+    delay(1000);
 
+    session->run((char*)"inoprint @str;");
 }
