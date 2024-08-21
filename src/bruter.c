@@ -68,7 +68,6 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             char* _str = strndup(str + 2, strlen(str) - 3);
             StackPush(*result, newString(vm, _str));
             free(_str);
-            _str = NULL;
         }
         else if (str[0] == '@') 
         {
@@ -101,7 +100,6 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                     }
                 }
                 free(_str);
-                _str = NULL;
                 StackFree(*args);
             }
             else if(str[1] >= '0' && str[1] <= '9') 
@@ -121,7 +119,6 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                     StackPush(*result, index);
                 }
                 free(_str);
-                _str = NULL;
             }
             else
             {
@@ -134,7 +131,8 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                 else 
                 {
                     Int var = newVar(vm);
-                    setVar(vm, var, vm->stack->data[index]->type, vm->stack->data[index]->value, Nil);
+                    setVar(vm, var, vm->stack->data[index]->type, vm->stack->data[index]->value, 1);
+                    vm->stack->data[var]->isRef = 1;
                     StackPush(*result, var);
                 }
             }
@@ -147,9 +145,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
         {
             StackPush(*result, newString(vm, str));
         }
-
         free(str);
-        str = NULL;
     }
     StackFree(*splited);
     return result;
@@ -178,7 +174,7 @@ Int interpret(VirtualMachine *vm, char* str)
 
     char *name = toString(funcname.variable->value.pointer);
     Int index = hashfind(vm, name);
-    if (index == -1 ) 
+    if (index == -1 )
     {
         printf("Function not found\n");
         return -1;

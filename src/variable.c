@@ -108,17 +108,18 @@ void freeVar(VirtualMachine *vm, Int index)
     else if (vm->stack->data[index]->type == TYPE_LIST)
     {
         freeList(vm, (IntList*)vm->stack->data[index]->value.pointer);
+        vm->stack->data[index]->value.pointer = NULL;
     }
     else if (vm->stack->data[index]->type == TYPE_STRING)
     {
         freeString(vm, (CharList*)vm->stack->data[index]->value.pointer);
+        vm->stack->data[index]->value.pointer = NULL;
     }
 
     free(vm->stack->data[index]);
     vm->stack->data[index] = NULL;
     vm->bytesInUse -= sizeof(Variable);
 }
-
 
 
 void setVar(VirtualMachine *vm, Int index, char type, Value value, char isRef)

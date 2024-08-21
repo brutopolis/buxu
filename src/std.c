@@ -16,7 +16,9 @@ Int _set(VirtualMachine *vm, IntList *args)
         index = newVar(vm);
         hashset(vm, name, index);
     }
-    setVar(vm, index, value.variable->type, value.variable->value, Nil);
+    setVar(vm, index, value.variable->type, value.variable->value, value.variable->isRef);
+
+    value.variable->isRef = 1;
 
     freeref(vm, varname);
     freeref(vm, value);

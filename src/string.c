@@ -2,10 +2,12 @@
 
 char* toString(CharList *list)
 {
+
     if (list->size == 0)
     {
         return "";
     }
+    
     char *str = (char*)malloc(list->size + 2);
     for (Int i = 0; i < list->size; i++)
     {

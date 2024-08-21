@@ -11,8 +11,8 @@
 
 #define VERSION "0.4.3b"
 
-#define TYPE_ERROR -1
-#define TYPE_NIL 0
+#define TYPE_ERROR -2
+#define TYPE_NIL -1
 //#define TYPE_REFERENCE 1
 #define TYPE_NUMBER 2
 #define TYPE_STRING 3
@@ -226,8 +226,10 @@ Int _eval(VirtualMachine *vm, IntList *args);
 Int _help(VirtualMachine *vm, IntList *args);
 Int _ls(VirtualMachine *vm, IntList *args);
 Int ___exit(VirtualMachine *vm, IntList *args);
+Int _teste(VirtualMachine *vm, IntList *args);
 
 void print(VirtualMachine *vm, Int index);
+
 void initStd(VirtualMachine *vm);
 int main();
 

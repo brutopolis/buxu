@@ -17,8 +17,9 @@ Reference argshift(VirtualMachine *vm, IntList *args)
     //if a string do a copy
     if (vm->stack->data[ref.index]->type == TYPE_STRING)
     {
-        if (vm->stack->data[ref.index]->isRef)
+        if (vm->stack->data[ref.index]->isRef == 1)
         {
+            printf("isRef\n");
             char * temp = toString(vm->stack->data[ref.index]->value.pointer);
             ref.variable = createString(vm, temp);
             free(temp);
