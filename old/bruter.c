@@ -101,7 +101,7 @@ void TableInsert(Table *table, const char *key, Variable value) {
         table->keys = realloc(table->keys, table->capacity * sizeof(*(table->keys)));
         table->data = realloc(table->data, table->capacity * sizeof(*(table->data)));
     }
-    table->keys[table->size] = strdup(key);
+    table->keys[table->size] = strduplicate(key);
     table->data[table->size++] = value;
 }
 
@@ -268,7 +268,7 @@ Variable recursiveGet(Table *state, char* key)
         else 
         {
             v.type = TYPE_ERROR;
-            v.value.s = strdup("Not a table");
+            v.value.s = strduplicate("Not a table");
             break;
         }
     }
@@ -358,7 +358,7 @@ void recursiveUnset(Table *state, char* key)
             else 
             {
                 v.type = TYPE_ERROR;
-                v.value.s = strdup("Index out of bounds");
+                v.value.s = strduplicate("Index out of bounds");
                 ArrayFree(splited);
                 free(currentKey);
                 return;
@@ -367,7 +367,7 @@ void recursiveUnset(Table *state, char* key)
         else 
         {
             v.type = TYPE_ERROR; // Define um tipo de erro se não for uma tabela
-            v.value.s = strdup("Not a table");
+            v.value.s = strduplicate("Not a table");
             ArrayFree(splited);
             return;
         }
@@ -400,12 +400,12 @@ Array* parse(Table *state, char *cmd)
             Variable v = Nil;
             if(str[1] == '(') 
             {
-                v.value.s = strndup(str + 2, strlen(str) - 3);
+                v.value.s = strnduplicate(str + 2, strlen(str) - 3);
                 v.type = TYPE_STRING;
             } 
             else 
             {
-                v = recursiveGet(state, strdup(str + 1));
+                v = recursiveGet(state, strduplicate(str + 1));
             }
             ArrayPush(result, v);
         } 
@@ -414,7 +414,7 @@ Array* parse(Table *state, char *cmd)
             // expression
             Variable v = Nil;
             Variable expression;
-            Array* args = parse(state, strndup(str + 1, strlen(str) - 2));
+            Array* args = parse(state, strnduplicate(str + 1, strlen(str) - 2));
 
             v = ((Function)TableGet(state, "eval").value.p)(state, args);
             ArrayPush(result, v);
@@ -431,7 +431,7 @@ Array* parse(Table *state, char *cmd)
         {
             // string
             Variable v;
-            v.value.s = strdup(str);
+            v.value.s = strduplicate(str);
             v.type = TYPE_STRING;
             ArrayPush(result, v);
         }
@@ -524,25 +524,25 @@ Variable _type(Table *state, Array* args)
     switch (target.type) 
     {
         case TYPE_ERROR:
-            result.value.s = strdup("error");
+            result.value.s = strduplicate("error");
             break;
         case TYPE_NIL:
-            result.value.s = strdup("");
+            result.value.s = strduplicate("");
             break;
         case TYPE_TABLE:
-            result.value.s = strdup("table");
+            result.value.s = strduplicate("table");
             break;
         case TYPE_NUMBER:
-            result.value.s = strdup("number");
+            result.value.s = strduplicate("number");
             break;
         case TYPE_STRING:
-            result.value.s = strdup("string");
+            result.value.s = strduplicate("string");
             break;
         case TYPE_FUNCTION:
-            result.value.s = strdup("function");
+            result.value.s = strduplicate("function");
             break;
         case TYPE_ARRAY:
-            result.value.s = strdup("array");
+            result.value.s = strduplicate("array");
             break;
     }
     return result;
@@ -1045,7 +1045,7 @@ Variable _string_replace(Table *state, Array* args)
     } 
     else 
     {
-        result.value.s = strdup(str);
+        result.value.s = strduplicate(str);
     }
     result.type = TYPE_STRING;
     return result;

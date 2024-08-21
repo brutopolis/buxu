@@ -9,7 +9,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.3b"
+#define VERSION "0.4.3c"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -241,5 +241,7 @@ Int eval(VirtualMachine *vm, char *str);
 char* toString(CharList *list);
 void freeString(VirtualMachine *vm, CharList *string);
 
+char* strduplicate(const char *str);
+char* strnduplicate(const char *str, Int n);
 
 #endif

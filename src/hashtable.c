@@ -21,7 +21,7 @@ void hashset(VirtualMachine *vm, char* varname, Int index)
     else 
     {
         Hash *hash = (Hash*)malloc(sizeof(Hash));
-        hash->key = strdup(varname);
+        hash->key = strduplicate(varname);
         hash->index = index;
         StackPush(*vm->hashes, hash);
     }

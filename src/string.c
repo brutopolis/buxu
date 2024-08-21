@@ -1,5 +1,23 @@
 #include "bruter.h"
 
+char* strduplicate(const char *str)
+{
+    char *dup = (char*)malloc(strlen(str) + 1);
+    strcpy(dup, str);
+    return dup;
+}
+
+char* strnduplicate(const char *str, Int n)
+{
+    char *dup = (char*)malloc(n + 1);
+    for (Int i = 0; i < n; i++)
+    {
+        dup[i] = str[i];
+    }
+    dup[n] = '\0';
+    return dup;
+}
+
 char* toString(CharList *list)
 {
 
@@ -52,7 +70,7 @@ StringList* specialSplit(char *str)
                     count--;
                 }
             }
-            char *tmp = strndup(str + i, j - i + 1);
+            char *tmp = strnduplicate(str + i, j - i + 1);
             StackPush(*splited, tmp);
             i = j + 1;
         }
@@ -72,7 +90,7 @@ StringList* specialSplit(char *str)
                     count--;
                 }
             }
-            char *tmp = strndup(str + i, j - i + 1);
+            char *tmp = strnduplicate(str + i, j - i + 1);
             StackPush(*splited, tmp);
             i = j + 1;
         }
@@ -92,7 +110,7 @@ StringList* specialSplit(char *str)
                     count--;
                 }
             }
-            char *tmp = strndup(str + i, j - i + 1);
+            char *tmp = strnduplicate(str + i, j - i + 1);
             StackPush(*splited, tmp);
             i = j + 1;
         }
@@ -107,7 +125,7 @@ StringList* specialSplit(char *str)
             {
                 j++;
             }
-            StackPush(*splited, strndup(str + i, j - i));
+            StackPush(*splited, strnduplicate(str + i, j - i));
             i = j;
         }
     }
@@ -135,7 +153,7 @@ StringList* splitString(char *str, char *delim)
             {
                 j++;
             }
-            StackPush(*splited, strndup(str + i, j - i));
+            StackPush(*splited, strnduplicate(str + i, j - i));
             i = j;
         }
     }

@@ -44,7 +44,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
         {
             Function __eval = (Function)vm->stack->data[hashfind(vm, "eval")]->value.pointer;
             
-            char* _str = strndup(str + 1, strlen(str) - 2);
+            char* _str = strnduplicate(str + 1, strlen(str) - 2);
             //free(_str);
 
             IntList *args = makeIntList();
@@ -65,7 +65,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
         }
         else if (str[0] == '!' && str[1] == '(') // literal string
         {
-            char* _str = strndup(str + 2, strlen(str) - 3);
+            char* _str = strnduplicate(str + 2, strlen(str) - 3);
             StackPush(*result, newString(vm, _str));
             free(_str);
         }
@@ -78,7 +78,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             else if (str[1] == '(') 
             {
                 Function __eval = (Function)vm->stack->data[hashfind(vm, "eval")]->value.pointer;
-                char* _str = strndup(str + 2, strlen(str) - 3);
+                char* _str = strnduplicate(str + 2, strlen(str) - 3);
                 IntList *args = makeIntList();
                 StackPush(*args, newString(vm, _str));
                 Int res = __eval(vm, args);
@@ -108,7 +108,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             }
             else if(str[1] == '!' && str[2] == '(')
             {
-                char * _str = strndup(str + 3, strlen(str) - 4);
+                char * _str = strnduplicate(str + 3, strlen(str) - 4);
                 Int index = hashfind(vm, _str);
                 if (index == -1) 
                 {
