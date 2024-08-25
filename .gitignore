@@ -11,3 +11,5 @@ example/test.txt
 bin/bruter
 valgrind-out.txt
 build
+src/old
+old2

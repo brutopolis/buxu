@@ -1,5 +1,5 @@
 #ifndef BRUTER_H
-#define BRUTER_H
+#define BRUTER_H 1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,11 +9,12 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.3d"
+#define VERSION "0.4.4"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
-//#define TYPE_REFERENCE 1
+#define TYPE_UNUSED 0
+#define TYPE_REFERENCE 1
 #define TYPE_NUMBER 2
 #define TYPE_STRING 3
 #define TYPE_FUNCTION 4
@@ -102,23 +103,9 @@
 typedef union 
 {
     Float number;
-    //Int index;
+    char* string;
     void* pointer;
 } Value;
-
-//Variable
-typedef struct 
-{
-    Value value;
-    char type;
-    char isRef;
-} Variable;
-
-typedef struct
-{
-    Int index;
-    Variable *variable;
-} Reference;
 
 //Hash
 typedef struct
@@ -127,121 +114,82 @@ typedef struct
     Int index;
 } Hash;
 
+typedef struct 
+{
+    Value value;
+    char type;
+} Variable;
 
 
 //List
-typedef Stack(Variable*) List;
-typedef Stack(Hash*) HashList;
-typedef Stack(Int) IntList;
+typedef Stack(Value) List;
+typedef Stack(Variable) VariableList; 
+typedef Stack(Hash) HashList;
 typedef Stack(char*) StringList;
+typedef Stack(Int) IntList;
 typedef Stack(char) CharList;
 
 typedef struct
 {
     List *stack;
+    CharList *typestack;
     HashList *hashes;
     IntList *empty;
-    Int bytesInUse;
+    //Int bytesInUse;
 } VirtualMachine;
 
 //Function
-typedef Int (*Function)(VirtualMachine*, IntList*);
+typedef Int (*Function)(VirtualMachine*, VariableList*);
 
 //String
 StringList* splitString(char *str, char *delim);
 StringList* specialSplit(char *str);
 
-//Variable(.c)
+// variable
 
-//make
-Variable* makeVariable(char type, Value value);
 List* makeList();
 IntList* makeIntList();
+CharList* makeCharList();
+VariableList* makeVariableList();
 VirtualMachine* makeVM();
-
-//Var
-Int newVar(VirtualMachine *vm);
+void freevm(VirtualMachine *vm);
 void freeVar(VirtualMachine *vm, Int index);
-void setVar(VirtualMachine *vm, Int index, char type, Value value, char isRef);
-
-// new 
+void freerawvar(Variable var);
+void unusevar(VirtualMachine *vm, Int index);
+void registerVar(VirtualMachine *vm, char *varname, Variable var);
 Int newNumber(VirtualMachine *vm, Float number);
-Int newString(VirtualMachine *vm, char* string);
-Int newReference(VirtualMachine *vm, Int index);
+Int newString(VirtualMachine *vm, char *str);
 Int newFunction(VirtualMachine *vm, Function function);
-Int newList(VirtualMachine *vm);
-//Int newError(VirtualMachine *vm, int errorid);
+Int newReference(VirtualMachine *vm, Int index);
+Int newError(VirtualMachine *vm, char *error);
+Int newVar(VirtualMachine *vm);
 
-// spawn
-Int spawnNumber(VirtualMachine *vm, char *varname, Float number);
-Int spawnString(VirtualMachine *vm, char *varname, char* string);
-Int spawnReference(VirtualMachine *vm, char *varname, Int index);
-Int spawnFunction(VirtualMachine *vm, char *varname, Function function);
-Int spawnList(VirtualMachine *vm, char *varname);
-//Int spawnError(VirtualMachine *vm, char *varname, int errorid);
+void spawnVar(VirtualMachine *vm, char* varname);
+void spawnString(VirtualMachine *vm, char* varname, char* string);
+void spawnNumber(VirtualMachine *vm, char* varname, Float number);
+void spawnFunction(VirtualMachine *vm, char* varname, Function function);
+void spawnError(VirtualMachine *vm, char* varname, char* error);
+void spawnReference(VirtualMachine *vm, char* varname, Int index);
+void spawnList(VirtualMachine *vm, char* varname);
 
-// create
-Variable* createNumber(VirtualMachine *vm, Float number);
-Variable* createString(VirtualMachine *vm, char* string);
-Variable* createReference(VirtualMachine *vm, Int index);
-Variable* createFunction(VirtualMachine *vm, Function function);
-Variable* createList(VirtualMachine *vm);
-//Variable* createError(VirtualMachine *vm, char* string);
-
-// ref
-Reference refget(VirtualMachine *vm, Int index);
-void freeref(VirtualMachine *vm, Reference ref);
+Int hashfind(VirtualMachine *vm, char *key);
+void hashset(VirtualMachine *vm, char *key, Int index);
 
 
-//Hash(.c)
-Int hashfind(VirtualMachine *vm, char *varname);
-void hashset(VirtualMachine *vm, char* varname, Int index);
-void hashunset(VirtualMachine *vm, char* varname);
-Variable* hashget(VirtualMachine *vm, char* varname);
 
-//Args(.c)
-Reference argget(VirtualMachine *vm, IntList *args, Int index);
-Reference argshift(VirtualMachine *vm, IntList *args);
-void argpush(VirtualMachine *vm, IntList *args, Int index);
-void argunshift(VirtualMachine *vm, IntList *args, Int index);
-void arginsert(VirtualMachine *vm, IntList *args, Int index, Int value);
-Reference argremove(VirtualMachine *vm, IntList *args, Int index);
-Int argsize(VirtualMachine *vm, IntList *args);
-void argfree(VirtualMachine *vm, IntList *args);
+// eval
+Int eval(VirtualMachine *vm, char *cmd);
+Int interpret(VirtualMachine *vm, char* cmd);
+VariableList* parse(VirtualMachine *vm, char *cmd);
 
-//List(.c)
-void listpush(VirtualMachine *vm, Int list, Int value);
-void listunshift(VirtualMachine *vm, Int list, Int value);
-Int listpop(VirtualMachine *vm, Int list);
-Int listshift(VirtualMachine *vm, Int list);
-void listinsert(VirtualMachine *vm, Int list, Int index, Int value);
-Int listremove(VirtualMachine *vm, Int list, Int index);
-Int listsize(VirtualMachine *vm, Int list);
 
-//stc(.c) functions
-Int _set(VirtualMachine *vm, IntList *args);
-//Int _get(VirtualMachine *vm, IntList *args);
-Int _print(VirtualMachine *vm, IntList *args);
-Int _eval(VirtualMachine *vm, IntList *args);
-Int _help(VirtualMachine *vm, IntList *args);
-Int _ls(VirtualMachine *vm, IntList *args);
-Int ___exit(VirtualMachine *vm, IntList *args);
-Int _teste(VirtualMachine *vm, IntList *args);
-
-void print(VirtualMachine *vm, Int index);
+//std
+Int _set(VirtualMachine *vm, VariableList *args);
+Int _print(VirtualMachine *vm, VariableList *args);
+Int _ls(VirtualMachine *vm, VariableList *args);
+Int _help(VirtualMachine *vm, VariableList *args);
+Int _eval(VirtualMachine *vm, VariableList *args);
 
 void initStd(VirtualMachine *vm);
-int main();
-
-//bruter(.c) a.k.a. main
-void freeVM(VirtualMachine *vm);
-Int interpret(VirtualMachine *vm, char *str);
-Int eval(VirtualMachine *vm, char *str);
-
-char* toString(CharList *list);
-void freeString(VirtualMachine *vm, CharList *string);
-
-char* strduplicate(const char *str);
-char* strnduplicate(const char *str, Int n);
 
 #endif

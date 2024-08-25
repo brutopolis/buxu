@@ -4,117 +4,138 @@ extern "C"
     
 }
 
-Int _ino_serial_begin(VirtualMachine *vm, IntList *args)
+Int _ino_serial_begin(VirtualMachine *vm, VariableList *args)
 {
-    Reference _ref = argshift(vm, args);
-    Serial.begin((Int)vm->stack->data[_ref.index]->value.number);
-    freeref(vm, _ref);
+    Variable _ref = StackShift(*args);
+    Serial.begin((Int)_ref.value.number);
+    freerawvar(_ref);
     return -1;
 }
 
-Int _ino_print(VirtualMachine *vm, IntList *args)
+Int _ino_print(VirtualMachine *vm, VariableList *args)
 {
-    Reference _ref = argshift(vm, args);
-    //print(vm, _ref.index);
-    if (vm->stack->data[_ref.index]->type == TYPE_NUMBER)
+    while (args->size > 0)
     {
-        Serial.println(vm->stack->data[_ref.index]->value.number);
-    }
-    else if (vm->stack->data[_ref.index]->type == TYPE_STRING)
-    {
-        char * temp = toString(static_cast<CharList*>(vm->stack->data[_ref.index]->value.pointer));
-        Serial.println(temp);
-        free(temp);
-    }
-    else if (vm->stack->data[_ref.index]->type == TYPE_LIST)
-    {
-        Serial.print("[");
-        IntList *list = (IntList*)vm->stack->data[_ref.index]->value.pointer;
-        for (Int i = 0; i < (list->size-1); i++)
+        Variable var = StackShift(*args);
+        Int _type = -1;
+        printf("Type: %d\n", var.type);
+
+        Value temp = var.value;
+        _type = var.type;
+
+        if (var.type == TYPE_REFERENCE)
         {
-            Serial.print(list->data[i]);
-            Serial.print(", ");
+            _type = vm->typestack->data[(Int)var.value.number];
+            temp = vm->stack->data[(Int)var.value.number];
         }
-        Serial.print(list->data[list->size-1]);
-        Serial.print("]\n");
+        
+        if (_type == TYPE_NUMBER)
+        {
+            printf("number: %f\n", temp.number);
+        }
+        else if (_type == TYPE_STRING)
+        {
+            printf("%s\n", temp.string);
+        }
+        else if (_type == TYPE_LIST)
+        {
+            printf("[");
+            IntList *list = (IntList*)temp.pointer;
+            for (Int i = 0; i < (list->size-1); i++)
+            {
+                printf("%d, ", list->data[i]);
+            }
+            printf("%d", list->data[list->size-1]);
+            printf("]\n");
+        }
+        else if (_type == TYPE_ERROR)
+        {
+            printf("Error: %s\n", temp.string);
+        }
+        else if (_type == TYPE_FUNCTION)
+        {
+            printf("Function : %p\n", temp.pointer);
+        }
+        else
+        {
+            printf("Unknown type\n");
+        }
+        freerawvar(var);
     }
-    freeref(vm, _ref);
     return -1;
 }
 
-Int _ino_delay(VirtualMachine *vm, IntList *args)
+Int _ino_delay(VirtualMachine *vm, VariableList *args)
 {
-    Reference _ref = argshift(vm, args);
-    delay(vm->stack->data[_ref.index]->value.number);
-    freeref(vm, _ref);
+    Variable _ref = StackShift(*args);
+    delay((Int)_ref.value.number);
     return -1;
 }
 
-Int _ino_millis(VirtualMachine *vm, IntList *args)
+Int _ino_millis(VirtualMachine *vm, VariableList *args)
 {
-    return newNumber(vm, millis());
+    return millis();
 }
 
-Int _ino_tone(VirtualMachine *vm, IntList *args)
+Int _ino_tone(VirtualMachine *vm, VariableList *args)
 {
-    Reference _ref = argshift(vm, args);
-    Reference _ref2 = argshift(vm, args);
-    Reference _ref3 = argshift(vm, args);
-    tone(vm->stack->data[_ref.index]->value.number, vm->stack->data[_ref2.index]->value.number, vm->stack->data[_ref3.index]->value.number);
-    freeref(vm, _ref);
-    freeref(vm, _ref2);
-    freeref(vm, _ref3);
+    Variable _ref = StackShift(*args);
+    Variable _ref2 = StackShift(*args);
+    tone((int)_ref.value.number, (int)_ref2.value.number);
+    freerawvar(_ref);
+    freerawvar(_ref2);
     return -1;
 }
 
-Int _ino_noTone(VirtualMachine *vm, IntList *args)
+
+Int _ino_noTone(VirtualMachine *vm, VariableList *args)
 {
-    Reference _ref = argshift(vm, args);
-    noTone(vm->stack->data[_ref.index]->value.number);
-    freeref(vm, _ref);
+    Variable _ref = StackShift(*args);
+    noTone((Int)_ref.value.number);
+    freerawvar(_ref);
     return -1;
 }
 
-Int _ino_pinmode(VirtualMachine *vm, IntList *args)
+Int _ino_pinmode(VirtualMachine *vm, VariableList *args)
 {
-    Reference _ref = argshift(vm, args);
-    Reference _ref2 = argshift(vm, args);
-    pinMode(vm->stack->data[_ref.index]->value.number, vm->stack->data[_ref2.index]->value.number);
-    freeref(vm, _ref);
-    freeref(vm, _ref2);
+    Variable _ref = StackShift(*args);
+    Variable _ref2 = StackShift(*args);
+    pinMode((Int)_ref.value.number, (Int)_ref2.value.number);
+    freerawvar(_ref);
+    freerawvar(_ref2);
     return -1;
 }
 
-Int _ino_digitalwrite(VirtualMachine *vm, IntList *args)
+Int _ino_digitalwrite(VirtualMachine *vm, VariableList *args)
 {
-    Reference _ref = argshift(vm, args);
-    Reference _ref2 = argshift(vm, args);
-    digitalWrite(vm->stack->data[_ref.index]->value.number, vm->stack->data[_ref2.index]->value.number);
-    freeref(vm, _ref);
-    freeref(vm, _ref2);
+    Variable _ref = StackShift(*args);
+    Variable _ref2 = StackShift(*args);
+    digitalWrite((Int)_ref.value.number, (Int)_ref2.value.number);
+    freerawvar(_ref);
+    freerawvar(_ref2);
     return -1;
 }
 
-Int _ino_digitalread(VirtualMachine *vm, IntList *args)
+Int _ino_digitalread(VirtualMachine *vm, VariableList *args)
 {
-    Reference _ref = argshift(vm, args);
-    return digitalRead((Int)vm->stack->data[_ref.index]->value.number);
+    Variable _ref = StackShift(*args);
+    return digitalRead((Int)_ref.value.number);
 }
 
-Int _ino_analogwrite(VirtualMachine *vm, IntList *args)
+Int _ino_analogwrite(VirtualMachine *vm, VariableList *args)
 {
-    Reference _ref = argshift(vm, args);
-    Reference _ref2 = argshift(vm, args);
-    analogWrite(vm->stack->data[_ref.index]->value.number, vm->stack->data[_ref2.index]->value.number);
-    freeref(vm, _ref);
-    freeref(vm, _ref2);
+    Variable _ref = StackShift(*args);
+    Variable _ref2 = StackShift(*args);
+    analogWrite((Int)_ref.value.number, (Int)_ref2.value.number);
+    freerawvar(_ref);
+    freerawvar(_ref2);
     return -1;
 }
 
-Int _ino_analogread(VirtualMachine *vm, IntList *args)
+Int _ino_analogread(VirtualMachine *vm, VariableList *args)
 {
-    Reference _ref = argshift(vm, args);
-    return analogRead((Int)vm->stack->data[_ref.index]->value.number);
+    Variable _ref = StackShift(*args);
+    return analogRead((Int)_ref.value.number);
 }
 
 
@@ -124,7 +145,7 @@ class Bruter
     public:
     void free()
     {
-        freeVM(this->vm);
+        freevm(this->vm);
     };
     void registerFunction(char *name, Function func)
     {
@@ -159,7 +180,9 @@ Bruter *session = new Bruter();
 void setup()
 {
     Serial.begin(115200);
-    session->run((char*)"set str !(looping);");
+    session->run((char*)"@set str !(looping);");
+    session->run((char*)"@Serial.println @str;");
+    session->run((char*)"@Serial.println @str;");
     //session->free();
     //delete session;
 }
@@ -168,5 +191,5 @@ void loop()
 {
     delay(1000);
 
-    session->run((char*)"Serial.println @str;");
+    session->run((char*)"@Serial.println @str;");
 }
