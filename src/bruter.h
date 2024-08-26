@@ -56,6 +56,7 @@
     (s).data[(s).size++] = (v); \
 } while (0)
 
+
 #define StackPop(s) ((s).data[--(s).size])
 
 #define StackShift(s) ({ \
@@ -189,6 +190,10 @@ Int _print(VirtualMachine *vm, VariableList *args);
 Int _ls(VirtualMachine *vm, VariableList *args);
 Int _help(VirtualMachine *vm, VariableList *args);
 Int _eval(VirtualMachine *vm, VariableList *args);
+Int _unset(VirtualMachine *vm, VariableList *args);
+Int _add(VirtualMachine *vm, VariableList *args);
+Int _list(VirtualMachine *vm, VariableList *args);
+Int _push(VirtualMachine *vm, VariableList *args);
 
 void initStd(VirtualMachine *vm);
 
