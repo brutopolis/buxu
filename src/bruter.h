@@ -5,12 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdarg.h>
 
 #define Int long
 #define Float double
 
-#define VERSION "0.4.4"
+#define VERSION "0.4.4a"
 
+#define TYPE_TEMPREFERENCE -3
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
 #define TYPE_UNUSED 0
