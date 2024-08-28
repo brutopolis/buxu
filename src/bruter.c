@@ -460,6 +460,15 @@ void unusevar(VirtualMachine *vm, Int index)
         StackFree(*((IntList*)vm->stack->data[index].pointer));
     }
     vm->typestack->data[index] = TYPE_UNUSED;
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        if (vm->hashes->data[i].index == index)
+        {
+            free(vm->hashes->data[i].key);
+            StackRemove(*vm->hashes, i);
+            //break;
+        }
+    }
     StackPush(*vm->empty, index);
 }
 
@@ -485,7 +494,7 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
     while (splited->size > 0)
     {
         char* str = StackShift(*splited);
-        if (str[0] == '(') 
+        if (str[0] == '(')
         {
             if (str[1] == ')')
             {
@@ -500,9 +509,10 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
                 Int index = eval(vm, temp);
                 free(temp);
                 Variable var;
-                var.type = TYPE_REFERENCE;
-                var.value.number = index;
+                var.type = vm->typestack->data[index];
+                var.value = valueDuplicate(vm->stack->data[index], var.type);
                 StackPush(*result, var);
+                unusevar(vm, index);
             }
         }
         else if (str[0] == '!' && str[1] == '(') // literal string
@@ -518,6 +528,16 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
             if (strlen(str) == 1) 
             {
                 //StackPush(*result, newError(vm, "Variable name not found"));
+            }
+            else if(str[1] == '(')
+            {
+                char* temp = strnduplicate(str + 1, strlen(str) - 2);
+                Int index = eval(vm, temp);
+                free(temp);
+                Variable var;
+                var.type = TYPE_REFERENCE;
+                var.value.number = index;
+                StackPush(*result, var);
             }
             else if(str[1] >= '0' && str[1] <= '9') 
             {
@@ -544,44 +564,30 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
         }
         else if (str[0] == '#') //like @ but return the variable itself instead a reference, use with caution, do not try to free or modify the variable
         {
-            if (str[1] == '(')
+            if (strlen(str) == 1) 
             {
-                char* temp = strnduplicate(str + 2, strlen(str) - 3);
-                Int index = eval(vm, temp);
-                free(temp);
+                //StackPush(*result, newError(vm, "Variable name not found"));
+            }
+            else if(str[1] >= '0' && str[1] <= '9') 
+            {
                 Variable var;
-                var.type = vm->typestack->data[index];
-                var.value = valueDuplicate(vm->stack->data[index], var.type);
+                var.value = (Value){atoi(str + 1)};
+                var.type = vm->typestack->data[(Int)var.value.number];
                 StackPush(*result, var);
-                unusevar(vm, index);
             }
             else
             {
-                if (strlen(str) == 1) 
+                Int index = hashfind(vm, str + 1);
+                if (index == -1) 
                 {
                     //StackPush(*result, newError(vm, "Variable name not found"));
                 }
-                else if(str[1] >= '0' && str[1] <= '9') 
+                else 
                 {
                     Variable var;
-                    var.value = (Value){atoi(str + 1)};
-                    var.type = vm->typestack->data[(Int)var.value.number];
+                    var.type = vm->typestack->data[index];
+                    var.value = vm->stack->data[index];
                     StackPush(*result, var);
-                }
-                else
-                {
-                    Int index = hashfind(vm, str + 1);
-                    if (index == -1) 
-                    {
-                        //StackPush(*result, newError(vm, "Variable name not found"));
-                    }
-                    else 
-                    {
-                        Variable var;
-                        var.type = vm->typestack->data[index];
-                        var.value = vm->stack->data[index];
-                        StackPush(*result, var);
-                    }
                 }
             }
         }
@@ -713,7 +719,6 @@ Int _print(VirtualMachine *vm, VariableList *args)
     {
         Variable var = StackShift(*args);
         Int _type = -1;
-        printf("Type: %d\n", var.type);
 
         Value temp = var.value;
         _type = var.type;
@@ -976,7 +981,7 @@ void main()
     initStd(vm);
 
     
-    eval(vm,"@set a #(@add 50 11);"
+    eval(vm,"@set a (@add 50 11);"
             "@set b 100;"
             "@set c 150;"
             "@set d 200;"
@@ -994,7 +999,7 @@ void main()
             "@print @abc;"
             "@print @abcd;"
             "@unset abc;"
-            "@set tbl #(@list 1 2);"
+            "@set tbl (1 2 3 4 5 6);"
             "@push @tbl 1;"
             "@print !(dsadas dsadas);"
             "@ls;"
