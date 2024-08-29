@@ -11,7 +11,9 @@ rm -rf bin/bruter
 #    -o bin/bruter\
 #    -lm -Os -g
 
-gcc src/bruter.c -o bin/bruter -lm -Os -g
+gcc src/bruter.c\
+    src/std.c\
+ -o bin/bruter -lm -Os -g
 
 valgrind \
     --leak-check=full \

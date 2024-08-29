@@ -179,7 +179,7 @@ Value valueDuplicate(Value value, char type)
     {
         dup.pointer = value.pointer;
     }
-    else if (type == TYPE_REFERENCE)
+    else if (type == TYPE_POINTER)
     {
         dup.number = value.number;
     }
@@ -321,11 +321,11 @@ Int newError(VirtualMachine *vm, char *error)
     return id;
 }
 
-Int newReference(VirtualMachine *vm, Int index)
+Int newPointer(VirtualMachine *vm, Int index)
 {
     Int id = newvar(vm);
     vm->stack->data[id].number = index;
-    vm->typestack->data[id] = TYPE_REFERENCE;
+    vm->typestack->data[id] = TYPE_POINTER;
     return id;
 }
 
@@ -369,9 +369,9 @@ void spawnError(VirtualMachine *vm, char* varname, char* error)
     hashset(vm, varname, index);
 }
 
-void spawnReference(VirtualMachine *vm, char* varname, Int index)
+void spawnPointer(VirtualMachine *vm, char* varname, Int index)
 {
-    Int id = newReference(vm, index);
+    Int id = newPointer(vm, index);
     hashset(vm, varname, id);
 }
 
@@ -535,7 +535,7 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
                 Int index = eval(vm, temp);
                 free(temp);
                 Variable var;
-                var.type = TYPE_REFERENCE;
+                var.type = TYPE_POINTER;
                 var.value.number = index;
                 StackPush(*result, var);
             }
@@ -543,7 +543,7 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
             {
                 Variable var;
                 var.value = (Value){atoi(str + 1)};
-                var.type = TYPE_REFERENCE;
+                var.type = TYPE_POINTER;
                 StackPush(*result, var);
             }
             else
@@ -556,13 +556,13 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
                 else 
                 {
                     Variable var;
-                    var.type = TYPE_REFERENCE;
+                    var.type = TYPE_POINTER;
                     var.value.number = index;
                     StackPush(*result, var);
                 }
             }
         }
-        else if (str[0] == '#') //like @ but return the variable itself instead a reference, use with caution, do not try to free or modify the variable
+        else if (str[0] == '#') //like @ but return the variable itself instead a pointer, use with caution, do not try to free or modify the variable
         {
             if (strlen(str) == 1) 
             {
@@ -618,7 +618,7 @@ Int interpret(VirtualMachine *vm, char* cmd)
     Int result = -1;
     
 
-    if (func.type == TYPE_REFERENCE)
+    if (func.type == TYPE_POINTER)
     {
         if (vm->typestack->data[(Int)func.value.number] == TYPE_FUNCTION)
         {
@@ -670,326 +670,25 @@ Int eval(VirtualMachine *vm, char *cmd)
     return result;
 }
 
-Int _set(VirtualMachine *vm, VariableList *args)
-{
-    Variable varname = StackShift(*args);
-    Variable value = StackShift(*args);
 
-
-    if (varname.type == TYPE_STRING)
-    {
-        char * name = varname.value.string;
-        Int index = hashfind(vm, name);
-
-        if (index == -1)
-        {
-            index = newvar(vm);
-            hashset(vm, name, index);
-        }
-        vm->stack->data[index] = valueDuplicate(value.value, value.type);
-        vm->typestack->data[index] = value.type;
-    }
-    else if (varname.type == TYPE_NUMBER)
-    {
-        Int index = (Int)varname.value.number;
-        if (index >= 0 && index < vm->stack->size)
-        {
-            unusevar(vm, index);
-            vm->stack->data[index] = valueDuplicate(value.value, value.type);
-            vm->typestack->data[index] = value.type;
-        }
-        else 
-        {
-            //create a new variable
-            index = newvar(vm);
-            vm->stack->data[index] = valueDuplicate(value.value, value.type);
-            vm->typestack->data[index] = value.type;
-        }
-    }
-
-
-    freerawvar(varname);
-    freerawvar(value);
-    return -1;
-}
-
-Int _print(VirtualMachine *vm, VariableList *args)
-{
-    while (args->size > 0)
-    {
-        Variable var = StackShift(*args);
-        Int _type = -1;
-
-        Value temp = var.value;
-        _type = var.type;
-
-        if (var.type == TYPE_REFERENCE)
-        {
-            _type = vm->typestack->data[(Int)var.value.number];
-            temp = vm->stack->data[(Int)var.value.number];
-        }
-        
-        if (_type == TYPE_NUMBER)
-        {
-            printf("number: %f\n", temp.number);
-        }
-        else if (_type == TYPE_STRING)
-        {
-            printf("%s\n", temp.string);
-        }
-        else if (_type == TYPE_LIST)
-        {
-            printf("[");
-            IntList *list = (IntList*)temp.pointer;
-            for (Int i = 0; i < (list->size-1); i++)
-            {
-                printf("%d, ", list->data[i]);
-            }
-            printf("%d", list->data[list->size-1]);
-            printf("]\n");
-        }
-        else if (_type == TYPE_ERROR)
-        {
-            printf("Error: %s\n", temp.string);
-        }
-        else if (_type == TYPE_FUNCTION)
-        {
-            printf("Function : %p\n", temp.pointer);
-        }
-        else
-        {
-            printf("Unknown type\n");
-        }
-        freerawvar(var);
-    }
-    return -1;
-}
-
-Int _ls(VirtualMachine *vm, VariableList *args)
-{
-    for (Int i = 0; i < vm->stack->size; i++)
-    {
-        if (vm->typestack->data[i] == TYPE_FUNCTION)
-        {
-            printf("[%d] {function}: %p\n", i, vm->stack->data[i].pointer);
-        }
-        else if (vm->typestack->data[i] == TYPE_NUMBER)
-        {
-            printf("[%d] {number}: %f\n", i, vm->stack->data[i].number);
-        }
-        else if (vm->typestack->data[i] == TYPE_STRING)
-        {
-            char * temp = vm->stack->data[i].string;
-            printf("[%d] {string}: %s\n", i, temp);
-        }
-        else if (vm->typestack->data[i] == TYPE_LIST)
-        {
-            printf("[%d] {list}: [", i);
-            IntList *list = (IntList*)vm->stack->data[i].pointer;
-            for (Int j = 0; j < (list->size-1); j++)
-            {
-                printf("%d, ", list->data[j]);
-            }
-            if (list->size > 0)
-            {
-                printf("%d]\n", list->data[list->size-1]);
-            }
-            else
-            {
-                printf("]\n");
-            }
-        }
-        else if (vm->typestack->data[i] == TYPE_ERROR)
-        {
-            printf("[%d] {error}: %s\n", i, vm->stack->data[i].string);
-        }
-        else if (vm->typestack->data[i] == TYPE_REFERENCE)
-        {
-            printf("[%d] {reference}: %d\n", i, (Int)vm->stack->data[i].number);
-        }
-        else if (vm->typestack->data[i] == TYPE_UNUSED)
-        {
-            printf("[%d] {free slot}\n", i);
-        }
-        else
-        {
-            printf("[%d] {unknown type}\n", i);
-        }
-    }
-    return -1;
-}
-
-Int _help(VirtualMachine *vm, VariableList *args)
-{
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {//[name] {type} @index: content
-        Int index = vm->hashes->data[i].index;
-        char *name = vm->hashes->data[i].key;
-        if (vm->typestack->data[index] == TYPE_FUNCTION)
-        {
-            printf("[%s] {function} @%d: %p\n", name, index, vm->stack->data[index].pointer);
-        }
-        else if (vm->typestack->data[index] == TYPE_NUMBER)
-        {
-            printf("[%s] {number} @%d: %f\n", name, index, vm->stack->data[index].number);
-        }
-        else if (vm->typestack->data[index] == TYPE_STRING)
-        {
-            printf("[%s] {string} @%d: %s\n", name, index, vm->stack->data[index].string);
-        }
-        else if (vm->typestack->data[index] == TYPE_LIST)
-        {
-            printf("[%s] {list} @%d: [", name, index);
-            IntList *list = (IntList*)vm->stack->data[index].pointer;
-            for (Int j = 0; j < (list->size-1); j++)
-            {
-                printf("%d, ", list->data[j]);
-            }
-            if (list->size > 0)
-            {
-                printf("%d]\n", list->data[list->size-1]);
-            }
-            else
-            {
-                printf("]\n");
-            }
-        }
-        else if (vm->typestack->data[index] == TYPE_ERROR)
-        {
-            printf("[%s] {error} @%d: %s\n", name, index, vm->stack->data[index].string);
-        }
-        else if (vm->typestack->data[index] == TYPE_REFERENCE)
-        {
-            printf("[%s] {reference} @%d: %d\n", name, index, (Int)vm->stack->data[index].number);
-        }
-        else if (vm->typestack->data[index] == TYPE_UNUSED)
-        {
-            printf("[%s] {free slot}\n", name);
-        }
-        else
-        {
-            printf("[%s] {unknown type}\n", name);
-        }
-    }
-    return -1;
-}
-
-Int _eval(VirtualMachine *vm, VariableList *args)
-{
-    Variable str = StackShift(*args);
-    char* _str = str.value.string;
-    Int result = eval(vm, _str);
-    freerawvar(str);
-    return result;
-}
-
-Int _unset(VirtualMachine *vm, VariableList *args)
-{
-    Variable varname = StackShift(*args);
-    if (varname.type == TYPE_REFERENCE)
-    {
-        unusevar(vm, varname.value.number);
-    }
-    else if (varname.type == TYPE_NUMBER)
-    {
-        unusevar(vm, varname.value.number);
-    }
-    else
-    {
-        Int index = hashfind(vm, varname.value.string);
-        if (index != -1)
-        {
-            unusevar(vm, index);
-        }
-    }
-    hashunset(vm, varname.value.string);
-    freerawvar(varname);
-    return -1;
-}
-
-Int _add(VirtualMachine *vm, VariableList *args)
-{
-    Variable a = StackShift(*args);
-    Variable b = StackShift(*args);
-    Int result = newNumber(vm, a.value.number + b.value.number);
-    freerawvar(a);
-    freerawvar(b);
-    return result;
-}
-
-// list functions
-
-Int _list(VirtualMachine *vm, VariableList *args) 
-{
-    Int index = newList(vm);
-    IntList *list = (IntList*)vm->stack->data[index].pointer;
-    while (args->size > 0)
-    {
-        Variable var = StackShift(*args);
-        if (var.type == TYPE_REFERENCE)
-        {
-            StackPush(*list, (Int)var.value.number);
-        }
-        else 
-        {
-            Int tmp = newvar(vm);
-            vm->stack->data[tmp] = valueDuplicate(var.value, var.type);
-            vm->typestack->data[tmp] = var.type;
-            StackPush(*list, tmp);
-        }
-        freerawvar(var);
-    }
-    return index;
-}
-
-Int _push(VirtualMachine *vm, VariableList *args)
-{
-    Variable list = StackShift(*args);
-    Variable value = StackShift(*args);
-
-    if (list.type == TYPE_REFERENCE)
-    {
-        if (vm->typestack->data[(Int)list.value.number] == TYPE_LIST)
-        {
-            IntList *lst = (IntList*)vm->stack->data[(Int)list.value.number].pointer;
-            StackPush(*lst, (Int)value.value.number);
-        }
-    }
-    
-    //freerawvar(list);
-    freerawvar(value);
-    return -1;
-}
-
-void initStd(VirtualMachine *vm)
-{
-    spawnFunction(vm, "set", _set);
-    spawnFunction(vm, "print", _print);
-    spawnFunction(vm, "eval", _eval);
-    spawnFunction(vm, "ls", _ls);
-    spawnFunction(vm, "help", _help);
-    spawnFunction(vm, "unset", _unset);
-    spawnFunction(vm, "add", _add);
-    spawnFunction(vm, "list", _list);
-    spawnFunction(vm, "push", _push);
-}
 
 void main()
 {
     VirtualMachine *vm = makeVM();
 
-    initStd(vm);
+    initAll(vm);
 
     
     eval(vm,"@set a (@add 50 11);"
-            "@set b 100;"
-            "@set c 150;"
-            "@set d 200;"
-            "@set e 250;"
-            "@set f 300;"
-            "@set g 350;"
-            "@set h 400;"
-            "@set i 450;"
+            "@set b (@mul 10 20);"
+            "@set c (@div 100 2);"
+            "@set d (@sub 100 50);"
+            "@set e (@round 3.141592);"
+            "@set f (@ceil 3.141);"
+            "@set g (@floor 3.141592659);"
+            "@set h (@sqrt 100);"
+            "@seed 1234;"
+            "@set i (@random 5 9);"
             "@set j 500;"
             "@set k 550;"
             "@set l 600;"

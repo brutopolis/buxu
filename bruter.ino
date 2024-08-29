@@ -23,7 +23,7 @@ Int _ino_print(VirtualMachine *vm, VariableList *args)
         Value temp = var.value;
         _type = var.type;
 
-        if (var.type == TYPE_REFERENCE)
+        if (var.type == TYPE_POINTER)
         {
             _type = vm->typestack->data[(Int)var.value.number];
             temp = vm->stack->data[(Int)var.value.number];

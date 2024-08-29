@@ -10,13 +10,12 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.4b"
+#define VERSION "0.4.4c"
 
-#define TYPE_TEMPREFERENCE -3
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
 #define TYPE_UNUSED 0
-#define TYPE_REFERENCE 1
+#define TYPE_POINTER 1
 #define TYPE_NUMBER 2
 #define TYPE_STRING 3
 #define TYPE_FUNCTION 4
@@ -163,20 +162,24 @@ void registerVar(VirtualMachine *vm, char *varname, Variable var);
 Int newNumber(VirtualMachine *vm, Float number);
 Int newString(VirtualMachine *vm, char *str);
 Int newFunction(VirtualMachine *vm, Function function);
-Int newReference(VirtualMachine *vm, Int index);
+Int newPointer(VirtualMachine *vm, Int index);
 Int newError(VirtualMachine *vm, char *error);
-Int newVar(VirtualMachine *vm);
+Int newList(VirtualMachine *vm);
+Int newvar(VirtualMachine *vm);
+
+Value valueDuplicate(Value value, char type);
 
 void spawnVar(VirtualMachine *vm, char* varname);
 void spawnString(VirtualMachine *vm, char* varname, char* string);
 void spawnNumber(VirtualMachine *vm, char* varname, Float number);
 void spawnFunction(VirtualMachine *vm, char* varname, Function function);
 void spawnError(VirtualMachine *vm, char* varname, char* error);
-void spawnReference(VirtualMachine *vm, char* varname, Int index);
+void spawnPointer(VirtualMachine *vm, char* varname, Int index);
 void spawnList(VirtualMachine *vm, char* varname);
 
 Int hashfind(VirtualMachine *vm, char *key);
 void hashset(VirtualMachine *vm, char *key, Int index);
+void hashunset(VirtualMachine *vm, char *key);
 
 
 
@@ -192,11 +195,30 @@ Int _print(VirtualMachine *vm, VariableList *args);
 Int _ls(VirtualMachine *vm, VariableList *args);
 Int _help(VirtualMachine *vm, VariableList *args);
 Int _eval(VirtualMachine *vm, VariableList *args);
-Int _unset(VirtualMachine *vm, VariableList *args);
+Int ___delete(VirtualMachine *vm, VariableList *args);
+
+//math
 Int _add(VirtualMachine *vm, VariableList *args);
+Int _sub(VirtualMachine *vm, VariableList *args);
+Int _mul(VirtualMachine *vm, VariableList *args);
+Int _div(VirtualMachine *vm, VariableList *args);
+Int _mod(VirtualMachine *vm, VariableList *args);
+Int _pow(VirtualMachine *vm, VariableList *args);
+Int _sqrt(VirtualMachine *vm, VariableList *args);
+Int _abs(VirtualMachine *vm, VariableList *args);
+Int _random(VirtualMachine *vm, VariableList *args);
+Int _floor(VirtualMachine *vm, VariableList *args);
+Int _ceil(VirtualMachine *vm, VariableList *args);
+Int _round(VirtualMachine *vm, VariableList *args);
+
+
+//list
 Int _list(VirtualMachine *vm, VariableList *args);
 Int _push(VirtualMachine *vm, VariableList *args);
 
 void initStd(VirtualMachine *vm);
+void initMath(VirtualMachine *vm);
+void initList(VirtualMachine *vm);
+void initAll(VirtualMachine *vm);
 
 #endif
