@@ -628,13 +628,13 @@ Int interpret(VirtualMachine *vm, char* cmd)
         else // make a list
         {
             StackInsert(*parsed, 0, func);
-            result = _list(vm, parsed);
+            result = std_list(vm, parsed);
         }
     }
     else 
     {
         StackInsert(*parsed, 0, func);
-        result = _list(vm, parsed);
+        result = std_list(vm, parsed);
     }
 
     while (parsed->size > 0)

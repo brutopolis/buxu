@@ -10,7 +10,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.4c"
+#define VERSION "0.4.4d"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -190,31 +190,31 @@ VariableList* parse(VirtualMachine *vm, char *cmd);
 
 
 //std
-Int _set(VirtualMachine *vm, VariableList *args);
-Int _print(VirtualMachine *vm, VariableList *args);
-Int _ls(VirtualMachine *vm, VariableList *args);
-Int _help(VirtualMachine *vm, VariableList *args);
-Int _eval(VirtualMachine *vm, VariableList *args);
-Int ___delete(VirtualMachine *vm, VariableList *args);
+Int std_set(VirtualMachine *vm, VariableList *args);
+Int std_print(VirtualMachine *vm, VariableList *args);
+Int std_ls(VirtualMachine *vm, VariableList *args);
+Int std_help(VirtualMachine *vm, VariableList *args);
+Int std_eval(VirtualMachine *vm, VariableList *args);
+Int std_delete(VirtualMachine *vm, VariableList *args);
 
 //math
-Int _add(VirtualMachine *vm, VariableList *args);
-Int _sub(VirtualMachine *vm, VariableList *args);
-Int _mul(VirtualMachine *vm, VariableList *args);
-Int _div(VirtualMachine *vm, VariableList *args);
-Int _mod(VirtualMachine *vm, VariableList *args);
-Int _pow(VirtualMachine *vm, VariableList *args);
-Int _sqrt(VirtualMachine *vm, VariableList *args);
-Int _abs(VirtualMachine *vm, VariableList *args);
-Int _random(VirtualMachine *vm, VariableList *args);
-Int _floor(VirtualMachine *vm, VariableList *args);
-Int _ceil(VirtualMachine *vm, VariableList *args);
-Int _round(VirtualMachine *vm, VariableList *args);
+Int std_math_add(VirtualMachine *vm, VariableList *args);
+Int std_math_sub(VirtualMachine *vm, VariableList *args);
+Int std_math_mul(VirtualMachine *vm, VariableList *args);
+Int std_math_div(VirtualMachine *vm, VariableList *args);
+Int std_math_mod(VirtualMachine *vm, VariableList *args);
+Int std_math_pow(VirtualMachine *vm, VariableList *args);
+Int std_math_sqrt(VirtualMachine *vm, VariableList *args);
+Int std_math_abs(VirtualMachine *vm, VariableList *args);
+Int std_math_random(VirtualMachine *vm, VariableList *args);
+Int std_math_floor(VirtualMachine *vm, VariableList *args);
+Int std_math_ceil(VirtualMachine *vm, VariableList *args);
+Int std_math_round(VirtualMachine *vm, VariableList *args);
 
 
 //list
-Int _list(VirtualMachine *vm, VariableList *args);
-Int _push(VirtualMachine *vm, VariableList *args);
+Int std_list(VirtualMachine *vm, VariableList *args);
+Int std_push(VirtualMachine *vm, VariableList *args);
 
 void initStd(VirtualMachine *vm);
 void initMath(VirtualMachine *vm);

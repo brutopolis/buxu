@@ -1,7 +1,7 @@
 #include "bruter.h"
 
 
-Int _set(VirtualMachine *vm, VariableList *args)
+Int std_set(VirtualMachine *vm, VariableList *args)
 {
     Variable varname = StackShift(*args);
     Variable value = StackShift(*args);
@@ -44,7 +44,7 @@ Int _set(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
-Int _print(VirtualMachine *vm, VariableList *args)
+Int std_print(VirtualMachine *vm, VariableList *args)
 {
     while (args->size > 0)
     {
@@ -96,7 +96,7 @@ Int _print(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
-Int _ls(VirtualMachine *vm, VariableList *args)
+Int std_ls(VirtualMachine *vm, VariableList *args)
 {
     for (Int i = 0; i < vm->stack->size; i++)
     {
@@ -150,7 +150,7 @@ Int _ls(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
-Int _help(VirtualMachine *vm, VariableList *args)
+Int std_help(VirtualMachine *vm, VariableList *args)
 {
     for (Int i = 0; i < vm->hashes->size; i++)
     {//[name] {type} @index: content
@@ -205,7 +205,7 @@ Int _help(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
-Int _eval(VirtualMachine *vm, VariableList *args)
+Int std_eval(VirtualMachine *vm, VariableList *args)
 {
     Variable str = StackShift(*args);
     char* _str = str.value.string;
@@ -221,7 +221,7 @@ Int _eval(VirtualMachine *vm, VariableList *args)
 // math functions
 
 
-Int _add(VirtualMachine *vm, VariableList *args)
+Int std_math_add(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Variable b = StackShift(*args);
@@ -231,7 +231,7 @@ Int _add(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int _sub(VirtualMachine *vm, VariableList *args)
+Int std_math_sub(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Variable b = StackShift(*args);
@@ -241,7 +241,7 @@ Int _sub(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int _mul(VirtualMachine *vm, VariableList *args)
+Int std_math_mul(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Variable b = StackShift(*args);
@@ -251,7 +251,7 @@ Int _mul(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int _div(VirtualMachine *vm, VariableList *args)
+Int std_math_div(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Variable b = StackShift(*args);
@@ -261,7 +261,7 @@ Int _div(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int _mod(VirtualMachine *vm, VariableList *args)
+Int std_math_mod(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Variable b = StackShift(*args);
@@ -271,7 +271,7 @@ Int _mod(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int _pow(VirtualMachine *vm, VariableList *args)
+Int std_math_pow(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Variable b = StackShift(*args);
@@ -282,7 +282,7 @@ Int _pow(VirtualMachine *vm, VariableList *args)
 }
 
 
-Int _sqrt(VirtualMachine *vm, VariableList *args)
+Int std_math_sqrt(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Int result = newNumber(vm, sqrt(a.value.number));
@@ -290,7 +290,7 @@ Int _sqrt(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int _abs(VirtualMachine *vm, VariableList *args)
+Int std_math_abs(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Int result = newNumber(vm, fabs(a.value.number));
@@ -298,7 +298,7 @@ Int _abs(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int _random(VirtualMachine *vm, VariableList *args)
+Int std_math_random(VirtualMachine *vm, VariableList *args)
 {
     Variable ___min = StackShift(*args);
     Variable ___max = StackShift(*args);
@@ -308,7 +308,7 @@ Int _random(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int _seed(VirtualMachine *vm, VariableList *args)
+Int std_math_seed(VirtualMachine *vm, VariableList *args)
 {
     Variable seed = StackShift(*args);
     srand((Int)seed.value.number);
@@ -316,7 +316,7 @@ Int _seed(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
-Int _floor(VirtualMachine *vm, VariableList *args)
+Int std_math_floor(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Int result = newNumber(vm, floor(a.value.number));
@@ -324,7 +324,7 @@ Int _floor(VirtualMachine *vm, VariableList *args)
     return result;;
 }
 
-Int _ceil(VirtualMachine *vm, VariableList *args)
+Int std_math_ceil(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Int result = newNumber(vm, ceil(a.value.number));
@@ -332,7 +332,7 @@ Int _ceil(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int _round(VirtualMachine *vm, VariableList *args)
+Int std_math_round(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Int result = newNumber(vm, round(a.value.number));
@@ -346,7 +346,7 @@ Int _round(VirtualMachine *vm, VariableList *args)
 // list functions
 // list functions
 
-Int _list(VirtualMachine *vm, VariableList *args) 
+Int std_list(VirtualMachine *vm, VariableList *args) 
 {
     Int index = newList(vm);
     IntList *list = (IntList*)vm->stack->data[index].pointer;
@@ -369,7 +369,7 @@ Int _list(VirtualMachine *vm, VariableList *args)
     return index;
 }
 
-Int _push(VirtualMachine *vm, VariableList *args)
+Int std_push(VirtualMachine *vm, VariableList *args)
 {
     Variable list = StackShift(*args);
     Variable value = StackShift(*args);
@@ -388,7 +388,7 @@ Int _push(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
-Int ___delete(VirtualMachine *vm, VariableList *args)
+Int std_delete(VirtualMachine *vm, VariableList *args)
 {
     Variable index;
     while (args->size > 0)
@@ -416,36 +416,36 @@ Int ___delete(VirtualMachine *vm, VariableList *args)
 
 void initStd(VirtualMachine *vm)
 {
-    spawnFunction(vm, "set", _set);
-    spawnFunction(vm, "print", _print);
-    spawnFunction(vm, "eval", _eval);
-    spawnFunction(vm, "ls", _ls);
-    spawnFunction(vm, "help", _help);
-    spawnFunction(vm, "delete", ___delete);
+    spawnFunction(vm, "set", std_set);
+    spawnFunction(vm, "print", std_print);
+    spawnFunction(vm, "eval", std_eval);
+    spawnFunction(vm, "ls", std_ls);
+    spawnFunction(vm, "help", std_help);
+    spawnFunction(vm, "delete", std_delete);
 
 }
 
 void initMath(VirtualMachine *vm)
 {
-    spawnFunction(vm, "add", _add);
-    spawnFunction(vm, "sub", _sub);
-    spawnFunction(vm, "mul", _mul);
-    spawnFunction(vm, "div", _div);
-    spawnFunction(vm, "mod", _mod);
-    spawnFunction(vm, "pow", _pow);
-    spawnFunction(vm, "sqrt", _sqrt);
-    spawnFunction(vm, "abs", _abs);
-    spawnFunction(vm, "random", _random);
-    spawnFunction(vm, "seed", _seed);
-    spawnFunction(vm, "floor", _floor);
-    spawnFunction(vm, "ceil", _ceil);
-    spawnFunction(vm, "round", _round);
+    spawnFunction(vm, "add", std_math_add);
+    spawnFunction(vm, "sub", std_math_sub);
+    spawnFunction(vm, "mul", std_math_mul);
+    spawnFunction(vm, "div", std_math_div);
+    spawnFunction(vm, "mod", std_math_mod);
+    spawnFunction(vm, "pow", std_math_pow);
+    spawnFunction(vm, "sqrt", std_math_sqrt);
+    spawnFunction(vm, "abs", std_math_abs);
+    spawnFunction(vm, "random", std_math_random);
+    spawnFunction(vm, "seed", std_math_seed);
+    spawnFunction(vm, "floor", std_math_floor);
+    spawnFunction(vm, "ceil", std_math_ceil);
+    spawnFunction(vm, "round", std_math_round);
 }
 
 void initList(VirtualMachine *vm)
 {
-    spawnFunction(vm, "list", _list);
-    spawnFunction(vm, "push", _push);
+    spawnFunction(vm, "list.new", std_list);
+    spawnFunction(vm, "list.push", std_push);
 }
 
 void initAll(VirtualMachine *vm)
