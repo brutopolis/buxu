@@ -10,7 +10,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.4e"
+#define VERSION "0.4.5"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -166,7 +166,7 @@ CharList* makeCharList();
 VariableList* makeVariableList();
 VirtualMachine* makeVM();
 void freevm(VirtualMachine *vm);
-void freeVar(VirtualMachine *vm, Int index);
+void freevar(VirtualMachine *vm, Int index);
 void freerawvar(Variable var);
 void unusevar(VirtualMachine *vm, Int index);
 void registerVar(VirtualMachine *vm, char *varname, Variable var);
@@ -224,8 +224,14 @@ Int std_math_round(VirtualMachine *vm, VariableList *args);
 
 
 //list
-Int std_list(VirtualMachine *vm, VariableList *args);
-Int std_push(VirtualMachine *vm, VariableList *args);
+Int std_list_new(VirtualMachine *vm, VariableList *args);
+Int std_list_insert(VirtualMachine *vm, VariableList *args);
+Int std_list_push(VirtualMachine *vm, VariableList *args);
+Int std_list_pop(VirtualMachine *vm, VariableList *args);
+Int std_list_shift(VirtualMachine *vm, VariableList *args);
+Int std_list_unshift(VirtualMachine *vm, VariableList *args);
+Int std_list_remove(VirtualMachine *vm, VariableList *args);
+
 
 void initStd(VirtualMachine *vm);
 void initMath(VirtualMachine *vm);

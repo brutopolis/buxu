@@ -662,47 +662,143 @@ Int eval(VirtualMachine *vm, char *cmd)
     Int result = -1;
     while (splited->size > 0)
     {
+        
         char *str = StackShift(*splited);
         result = interpret(vm, str);
         free(str);
+        if (result > 0)
+        {
+            while (splited->size > 0)
+            {
+                free(StackShift(*splited));
+            }
+            break;
+        }
     }
     StackFree(*splited);
     return result;
 }
 
+// if arduino, do not include file functions
+#ifndef ARDUINO
 
+char* readfile(char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        return NULL;
+    }
+    char *code = (char*)malloc(1);
+    code[0] = '\0';
+    char *line = NULL;
+    size_t len = 0;
+    while (getline(&line, &len, file) != -1)
+    {
+        code = (char*)realloc(code, strlen(code) + strlen(line) + 1);
+        strcat(code, line);
+    }
+    free(line);
+    fclose(file);
+    return code;
+};
 
-void main()
+void writefile(char *filename, char *code)
+{
+    FILE *file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        return;
+    }
+    fprintf(file, "%s", code);
+    fclose(file);
+}
+
+Int std_file_read(VirtualMachine *vm, VariableList *args)
+{
+    Variable filename = StackShift(*args);
+    char *code = readfile(filename.value.string);
+    Int result = -1;
+    if (code == NULL)
+    {
+        result = newError(vm, "File not found");
+    }
+    else
+    {
+        result = eval(vm, code);
+        free(code);
+    }
+    freerawvar(filename);
+    return result;
+}
+
+Int std_file_write(VirtualMachine *vm, VariableList *args)
+{
+    Variable filename = StackShift(*args);
+    Variable code = StackShift(*args);
+    writefile(filename.value.string, code.value.string);
+    freerawvar(filename);
+    freerawvar(code);
+    return -1;
+}
+
+Int std_exit(VirtualMachine *vm, VariableList *args)
+{
+    return 0;
+}
+
+Int std_repl(VirtualMachine *vm, VariableList *args)
+{
+    printf("bruter v%s\n", VERSION);
+    if (hashfind(vm, "exit") == -1)
+    {
+        spawnFunction(vm, "exit", std_exit);
+    }
+    char *cmd;
+    Int result = -1;
+    while (result == -1)
+    {
+        cmd = (char*)malloc(1024);
+        printf("@> ");
+        scanf("%[^\n]%*c", cmd);
+        result = eval(vm, cmd);
+        free(cmd);
+    }
+    printf("repl exited with code %d;\n", result);
+    return result;
+}
+
+int main(int argv, char **argc)
 {
     VirtualMachine *vm = makeVM();
 
     initAll(vm);
 
-    
-    eval(vm,"@set a (@add 50 11);"
-            "@set b (@mul 10 20);"
-            "@set c (@div 100 2);"
-            "@set d (@sub 100 50);"
-            "@set e (@round 3.141592);"
-            "@set f (@ceil 3.141);"
-            "@set g (@floor 3.141592659);"
-            "@set h (@sqrt 100);"
-            "@seed 1234;"
-            "@set i (@random 5 9);"
-            "@set j 500;"
-            "@set k 550;"
-            "@set l 600;"
-            "@set abc abuble;"
-            "@set abcd !(opa iae);"
-            //"@set lst (1 2);"
-            "@print @abc;"
-            "@print @abcd;"
-            "@unset abc;"
-            "@set tbl (1 2 3 4 5 6);"
-            "@push @tbl 1;"
-            "@print !(dsadas dsadas);"
-            "@ls;"
-            "@help;");
-    
+    spawnFunction(vm, "file.read", std_file_read);
+    spawnFunction(vm, "file.write", std_file_write);
+
+    spawnFunction(vm, "repl", std_repl);
+
+
+    // read file pointed by argv[1]
+    if (argv == 1)
+    {
+        VariableList *varlist = makeVariableList();
+        std_repl(vm, varlist);
+        StackFree(*varlist);
+    }
+    else 
+    {
+        char *_code = readfile(argc[1]);
+        if (_code == NULL)
+        {
+            printf("File not found\n");
+            return 1;
+        }
+        Int result = eval(vm, _code);
+        free(_code);
+        printf("exited with code %d;\n", result);
+    }
     freevm(vm);
 }
+#endif

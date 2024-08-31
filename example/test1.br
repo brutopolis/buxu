@@ -1,12 +1,47 @@
-set a 50;
-set b 100;
-set c 150;
-set d 200;
-set e 250;
-set f 300;
-set g 350;
-set h 400;
-set i 450;
-set j 500;
-set k 550;
-set l 600;
+@set a (@add 50 11);
+@set b (@mul 10 20);
+@set c (@div 100 2);
+@set d (@sub 100 50);
+@set e (@round 3.141592);
+@set f (@ceil 3.141);
+@set g (@floor 3.141592659);
+@set h (@sqrt 100);
+@seed 1234;
+@set i (@random 5 9);
+@set j 500;
+@set k 550;
+@set l 600;
+@set abc abuble;
+@set abcd !(opa iae);
+@print @abc;
+@print @abcd;
+@delete abc;
+
+
+@set tbl (1 2 3 4 5 6);
+@print !(dsadas dsadas);
+
+@comment lists tests;
+
+@set tstlist ();
+@delete @tstlist;
+@set tstlist (@list.new);
+
+
+@list.push @tstlist @a;
+@list.unshift @tstlist @b;
+@list.insert @tstlist 1 @c;
+@print aoba:;
+@print @tstlist;
+
+@set rret (@list.remove @tstlist 1);
+@print @rret;
+@set rret (@list.pop @tstlist);
+@print @rret;
+@set rret (@list.shift @tstlist);
+@print @rret;
+
+@ls;
+@help;
+@return 123;
+@repl;
