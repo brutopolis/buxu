@@ -214,6 +214,32 @@ Int std_eval(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
+Int std_delete(VirtualMachine *vm, VariableList *args)
+{
+    Variable index;
+    while (args->size > 0)
+    {
+        index = StackShift(*args);
+        if (index.type == TYPE_POINTER || index.type == TYPE_NUMBER)
+        {
+            unusevar(vm, index.value.number);
+        }
+        else if (index.type == TYPE_STRING)
+        {
+            Int _index = hashfind(vm, index.value.string);
+            if (_index != -1)
+            {
+                unusevar(vm, _index);
+            }
+        }
+        else
+        {
+            printf("invalid free!\n");
+        }
+        freerawvar(index);
+    }
+}
+
 
 // math functions
 // math functions
@@ -346,7 +372,7 @@ Int std_math_round(VirtualMachine *vm, VariableList *args)
 // list functions
 // list functions
 
-Int std_list(VirtualMachine *vm, VariableList *args) 
+Int std_list_new(VirtualMachine *vm, VariableList *args) 
 {
     Int index = newList(vm);
     IntList *list = (IntList*)vm->stack->data[index].pointer;
@@ -369,7 +395,23 @@ Int std_list(VirtualMachine *vm, VariableList *args)
     return index;
 }
 
-Int std_push(VirtualMachine *vm, VariableList *args)
+Int std_list_insert(VirtualMachine *vm, Variable list, Variable value, Variable index)
+{
+    if (list.type == TYPE_POINTER)
+    {
+        if (vm->typestack->data[(Int)list.value.number] == TYPE_LIST)
+        {
+            IntList *lst = (IntList*)vm->stack->data[(Int)list.value.number].pointer;
+            if (index.type == TYPE_NUMBER)
+            {
+                StackInsert(*lst, (Int)value.value.number, (Int)index.value.number);
+            }
+        }
+    }
+    return -1;
+}
+
+Int std_list_push(VirtualMachine *vm, VariableList *args)
 {
     Variable list = StackShift(*args);
     Variable value = StackShift(*args);
@@ -388,30 +430,66 @@ Int std_push(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
-Int std_delete(VirtualMachine *vm, VariableList *args)
+Int std_list_unshift(VirtualMachine *vm, VariableList *args) // returns the removed element
 {
-    Variable index;
-    while (args->size > 0)
+    Variable list = StackShift(*args);
+    Variable value = StackShift(*args);
+    if (list.type == TYPE_POINTER)
     {
-        index = StackShift(*args);
-        if (index.type == TYPE_POINTER || index.type == TYPE_NUMBER)
+        if (vm->typestack->data[(Int)list.value.number] == TYPE_LIST)
         {
-            unusevar(vm, index.value.number);
+            IntList *lst = (IntList*)vm->stack->data[(Int)list.value.number].pointer;
+            StackUnshift(*lst, (Int)value.value.number);
         }
-        else if (index.type == TYPE_STRING)
-        {
-            Int _index = hashfind(vm, index.value.string);
-            if (_index != -1)
-            {
-                unusevar(vm, _index);
-            }
-        }
-        else
-        {
-            printf("invalid free!\n");
-        }
-        freerawvar(index);
     }
+    freerawvar(value);
+    return -1;   
+}
+
+Int std_list_remove(VirtualMachine *vm, VariableList *args)// returns the removed element
+{
+    Variable list = StackShift(*args);
+    Variable index = StackShift(*args);
+    if (list.type == TYPE_POINTER)
+    {
+        if (vm->typestack->data[(Int)list.value.number] == TYPE_LIST)
+        {
+            IntList *lst = (IntList*)vm->stack->data[(Int)list.value.number].pointer;
+            Int result = StackRemove(*lst, (Int)index.value.number);
+            return result;
+        }
+    }
+    return -1;
+}
+
+Int std_list_pop(VirtualMachine *vm, VariableList *args) // returns the removed element
+{
+    Variable list = StackShift(*args);
+    if (list.type == TYPE_POINTER)
+    {
+        if (vm->typestack->data[(Int)list.value.number] == TYPE_LIST)
+        {
+            IntList *lst = (IntList*)vm->stack->data[(Int)list.value.number].pointer;
+            Int result = StackPop(*lst);
+            return result;
+        }
+    }
+    return -1;
+}
+
+Int std_list_shift(VirtualMachine *vm, VariableList *args)
+{
+    Variable list = StackShift(*args);
+    if (list.type == TYPE_POINTER)
+    {
+        if (vm->typestack->data[(Int)list.value.number] == TYPE_LIST)
+        {
+            IntList *lst = (IntList*)vm->stack->data[(Int)list.value.number].pointer;
+            Int result = StackShift(*lst);
+            return result;
+        }
+    }
+    return -1;
 }
 
 void initStd(VirtualMachine *vm)
@@ -422,7 +500,6 @@ void initStd(VirtualMachine *vm)
     spawnFunction(vm, "ls", std_ls);
     spawnFunction(vm, "help", std_help);
     spawnFunction(vm, "delete", std_delete);
-
 }
 
 void initMath(VirtualMachine *vm)
@@ -433,19 +510,26 @@ void initMath(VirtualMachine *vm)
     spawnFunction(vm, "div", std_math_div);
     spawnFunction(vm, "mod", std_math_mod);
     spawnFunction(vm, "pow", std_math_pow);
-    spawnFunction(vm, "sqrt", std_math_sqrt);
     spawnFunction(vm, "abs", std_math_abs);
-    spawnFunction(vm, "random", std_math_random);
+    spawnFunction(vm, "sqrt", std_math_sqrt);
+    spawnFunction(vm, "ceil", std_math_ceil);
     spawnFunction(vm, "seed", std_math_seed);
     spawnFunction(vm, "floor", std_math_floor);
-    spawnFunction(vm, "ceil", std_math_ceil);
     spawnFunction(vm, "round", std_math_round);
+    spawnFunction(vm, "random", std_math_random);
 }
 
 void initList(VirtualMachine *vm)
 {
-    spawnFunction(vm, "list.new", std_list);
-    spawnFunction(vm, "list.push", std_push);
+    spawnFunction(vm, "list.new", std_list_new);
+
+    spawnFunction(vm, "list.insert", std_list_insert);
+    spawnFunction(vm, "list.push", std_list_push);
+    spawnFunction(vm, "list.unshift", std_list_unshift);
+    
+    spawnFunction(vm, "list.remove", std_list_remove);
+    spawnFunction(vm, "list.pop", std_list_pop);
+    spawnFunction(vm, "list.shift", std_list_shift);
 }
 
 void initAll(VirtualMachine *vm)

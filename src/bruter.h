@@ -10,7 +10,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.4d"
+#define VERSION "0.4.4e"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -57,6 +57,17 @@
     (s).data[(s).size++] = (v); \
 } while (0)
 
+#define StackUnshift(s, v) do { \
+    if ((s).size == (s).capacity) { \
+        (s).capacity = (s).capacity == 0 ? 1 : (s).capacity * 2; \
+        (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
+    } \
+    for (int i = (s).size; i > 0; i--) { \
+        (s).data[i] = (s).data[i - 1]; \
+    } \
+    (s).data[0] = (v); \
+    (s).size++; \
+} while (0)
 
 #define StackPop(s) ((s).data[--(s).size])
 
