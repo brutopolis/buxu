@@ -62,11 +62,18 @@ Int std_print(VirtualMachine *vm, VariableList *args)
         
         if (_type == TYPE_NUMBER)
         {
-            printf("number: %f\n", temp.number);
+            if(round(temp.number) == temp.number)
+            {
+                printf("%d ", (Int)temp.number);
+            }
+            else
+            {
+                printf("%f ", temp.number);
+            }
         }
         else if (_type == TYPE_STRING)
         {
-            printf("%s\n", temp.string);
+            printf("%s ", temp.string);
         }
         else if (_type == TYPE_LIST)
         {
@@ -77,130 +84,215 @@ Int std_print(VirtualMachine *vm, VariableList *args)
                 printf("%d, ", list->data[i]);
             }
             printf("%d", list->data[list->size-1]);
-            printf("]\n");
+            printf("] ");
         }
         else if (_type == TYPE_ERROR)
         {
-            printf("Error: %s\n", temp.string);
+            printf("(error)%s ", temp.string);
         }
         else if (_type == TYPE_FUNCTION)
         {
-            printf("Function : %p\n", temp.pointer);
+            printf("(function)%p ", temp.pointer);
         }
         else
         {
-            printf("Unknown type\n");
+            printf("(unknown) ");
         }
         freerawvar(var);
+        printf("\n");
     }
     return -1;
 }
 
 Int std_ls(VirtualMachine *vm, VariableList *args)
 {
-    for (Int i = 0; i < vm->stack->size; i++)
+    if (args->size == 0)
     {
-        if (vm->typestack->data[i] == TYPE_FUNCTION)
+        for (Int i = 0; i < vm->stack->size; i++)
         {
-            printf("[%d] {function}: %p\n", i, vm->stack->data[i].pointer);
-        }
-        else if (vm->typestack->data[i] == TYPE_NUMBER)
-        {
-            printf("[%d] {number}: %f\n", i, vm->stack->data[i].number);
-        }
-        else if (vm->typestack->data[i] == TYPE_STRING)
-        {
-            char * temp = vm->stack->data[i].string;
-            printf("[%d] {string}: %s\n", i, temp);
-        }
-        else if (vm->typestack->data[i] == TYPE_LIST)
-        {
-            printf("[%d] {list}: [", i);
-            IntList *list = (IntList*)vm->stack->data[i].pointer;
-            for (Int j = 0; j < (list->size-1); j++)
+            if (vm->typestack->data[i] == TYPE_FUNCTION)
             {
-                printf("%d, ", list->data[j]);
+                printf("[%d] {function}: %p\n", i, vm->stack->data[i].pointer);
             }
-            if (list->size > 0)
+            else if (vm->typestack->data[i] == TYPE_NUMBER)
             {
-                printf("%d]\n", list->data[list->size-1]);
+                if (round(vm->stack->data[i].number) == vm->stack->data[i].number)
+                {
+                    printf("[%d] {number}: %d\n", i, (Int)vm->stack->data[i].number);
+                }
+                else
+                {
+                    printf("[%d] {number}: %f\n", i, vm->stack->data[i].number);
+                }
+            }
+            else if (vm->typestack->data[i] == TYPE_STRING)
+            {
+                char * temp = vm->stack->data[i].string;
+                printf("[%d] {string}: %s\n", i, temp);
+            }
+            else if (vm->typestack->data[i] == TYPE_LIST)
+            {
+                printf("[%d] {list}: [", i);
+                IntList *list = (IntList*)vm->stack->data[i].pointer;
+                for (Int j = 0; j < (list->size-1); j++)
+                {
+                    printf("%d, ", list->data[j]);
+                }
+                if (list->size > 0)
+                {
+                    printf("%d]\n", list->data[list->size-1]);
+                }
+                else
+                {
+                    printf("]\n");
+                }
+            }
+            else if (vm->typestack->data[i] == TYPE_ERROR)
+            {
+                printf("[%d] {error}: %s\n", i, vm->stack->data[i].string);
+            }
+            else if (vm->typestack->data[i] == TYPE_POINTER)
+            {
+                printf("[%d] {pointer}: %d\n", i, (Int)vm->stack->data[i].number);
+            }
+            else if (vm->typestack->data[i] == TYPE_UNUSED)
+            {
+                printf("[%d] {free slot}\n", i);
             }
             else
             {
-                printf("]\n");
+                printf("[%d] {unknown type}\n", i);
             }
-        }
-        else if (vm->typestack->data[i] == TYPE_ERROR)
-        {
-            printf("[%d] {error}: %s\n", i, vm->stack->data[i].string);
-        }
-        else if (vm->typestack->data[i] == TYPE_POINTER)
-        {
-            printf("[%d] {pointer}: %d\n", i, (Int)vm->stack->data[i].number);
-        }
-        else if (vm->typestack->data[i] == TYPE_UNUSED)
-        {
-            printf("[%d] {free slot}\n", i);
-        }
-        else
-        {
-            printf("[%d] {unknown type}\n", i);
         }
     }
-    return -1;
-}
-
-Int std_help(VirtualMachine *vm, VariableList *args)
-{
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {//[name] {type} @index: content
-        Int index = vm->hashes->data[i].index;
-        char *name = vm->hashes->data[i].key;
-        if (vm->typestack->data[index] == TYPE_FUNCTION)
+    else
+    {
+        Variable _var = StackShift(*args);
+        if (_var.type == TYPE_STRING)
         {
-            printf("[%s] {function} @%d: %p\n", name, index, vm->stack->data[index].pointer);
-        }
-        else if (vm->typestack->data[index] == TYPE_NUMBER)
-        {
-            printf("[%s] {number} @%d: %f\n", name, index, vm->stack->data[index].number);
-        }
-        else if (vm->typestack->data[index] == TYPE_STRING)
-        {
-            printf("[%s] {string} @%d: %s\n", name, index, vm->stack->data[index].string);
-        }
-        else if (vm->typestack->data[index] == TYPE_LIST)
-        {
-            printf("[%s] {list} @%d: [", name, index);
-            IntList *list = (IntList*)vm->stack->data[index].pointer;
-            for (Int j = 0; j < (list->size-1); j++)
+            if(strcmp("hashes", _var.value.string) == 0 ||
+               strcmp("hash", _var.value.string) == 0) 
             {
-                printf("%d, ", list->data[j]);
+                for (Int i = 0; i < vm->hashes->size; i++)
+                {//[name] {type} @index: content
+                    Int index = vm->hashes->data[i].index;
+                    char *name = vm->hashes->data[i].key;
+                    if (vm->typestack->data[index] == TYPE_FUNCTION)
+                    {
+                        printf("[%s] {function} @%d: %p\n", name, index, vm->stack->data[index].pointer);
+                    }
+                    else if (vm->typestack->data[index] == TYPE_NUMBER)
+                    {
+                        if (round(vm->stack->data[index].number) == vm->stack->data[index].number)
+                        {
+                            printf("[%s] {number} @%d: %d\n", name, index, (Int)vm->stack->data[index].number);
+                        }
+                        else
+                        {
+                            printf("[%s] {number} @%d: %f\n", name, index, vm->stack->data[index].number);
+                        }
+                    }
+                    else if (vm->typestack->data[index] == TYPE_STRING)
+                    {
+                        printf("[%s] {string} @%d: %s\n", name, index, vm->stack->data[index].string);
+                    }
+                    else if (vm->typestack->data[index] == TYPE_LIST)
+                    {
+                        printf("[%s] {list} @%d: [", name, index);
+                        IntList *list = (IntList*)vm->stack->data[index].pointer;
+                        for (Int j = 0; j < (list->size-1); j++)
+                        {
+                            printf("%d, ", list->data[j]);
+                        }
+                        if (list->size > 0)
+                        {
+                            printf("%d]\n", list->data[list->size-1]);
+                        }
+                        else
+                        {
+                            printf("]\n");
+                        }
+                    }
+                    else if (vm->typestack->data[index] == TYPE_ERROR)
+                    {
+                        printf("[%s] {error} @%d: %s\n", name, index, vm->stack->data[index].string);
+                    }
+                    else if (vm->typestack->data[index] == TYPE_POINTER)
+                    {
+                        printf("[%s] {pointer} @%d: %d\n", name, index, (Int)vm->stack->data[index].number);
+                    }
+                    else if (vm->typestack->data[index] == TYPE_UNUSED)
+                    {
+                        printf("[%s] {free slot}\n", name);
+                    }
+                    else
+                    {
+                        printf("[%s] {unknown type}\n", name);
+                    }
+                }
             }
-            if (list->size > 0)
+        }
+        else if ((_var.type == TYPE_POINTER && vm->typestack->data[(Int)_var.value.number] == TYPE_LIST)
+        ||       _var.type == TYPE_LIST)
+        {
+            IntList *list = (IntList*)vm->stack->data[(Int)_var.value.number].pointer;
+            for (Int i = 0; i < list->size; i++)
             {
-                printf("%d]\n", list->data[list->size-1]);
+                if (vm->typestack->data[list->data[i]] == TYPE_FUNCTION)
+                {
+                    printf("[%d] (%d) {function}: %p\n", i, list->data[i], vm->stack->data[list->data[i]].pointer);
+                }
+                else if (vm->typestack->data[list->data[i]] == TYPE_NUMBER)
+                {
+                    if (round(vm->stack->data[list->data[i]].number) == vm->stack->data[list->data[i]].number)
+                    {
+                        printf("[%d] (%d) {number}: %d\n", i, list->data[i], (Int)vm->stack->data[list->data[i]].number);
+                    }
+                    else
+                    {
+                        printf("[%d] (%d) {number}: %f\n", i, list->data[i], vm->stack->data[list->data[i]].number);
+                    }
+                }
+                else if (vm->typestack->data[list->data[i]] == TYPE_STRING)
+                {
+                    printf("[%d] (%d) {string}: %s\n", i, list->data[i], vm->stack->data[list->data[i]].string);
+                }
+                else if (vm->typestack->data[list->data[i]] == TYPE_LIST)
+                {
+                    printf("[%d] (%d) {list}: [", i, list->data[i]);
+                    IntList *list2 = (IntList*)vm->stack->data[list->data[i]].pointer;
+                    for (Int j = 0; j < (list2->size-1); j++)
+                    {
+                        printf("%d, ", list2->data[j]);
+                    }
+                    if (list2->size > 0)
+                    {
+                        printf("%d]\n", list2->data[list2->size-1]);
+                    }
+                    else
+                    {
+                        printf("]\n");
+                    }
+                }
+                else if (vm->typestack->data[list->data[i]] == TYPE_ERROR)
+                {
+                    printf("[%d] (%d) {error}: %s\n", i, list->data[i], vm->stack->data[list->data[i]].string);
+                }
+                else if (vm->typestack->data[list->data[i]] == TYPE_POINTER)
+                {
+                    printf("[%d] (%d) {pointer}: %d\n", i, list->data[i], (Int)vm->stack->data[list->data[i]].number);
+                }
+                else if (vm->typestack->data[list->data[i]] == TYPE_UNUSED)
+                {
+                    printf("[%d] (%d) {free slot}\n", i, list->data[i]);
+                }
+                else
+                {
+                    printf("[%d] (%d) {unknown type}\n", list->data[i]);
+                }
             }
-            else
-            {
-                printf("]\n");
-            }
         }
-        else if (vm->typestack->data[index] == TYPE_ERROR)
-        {
-            printf("[%s] {error} @%d: %s\n", name, index, vm->stack->data[index].string);
-        }
-        else if (vm->typestack->data[index] == TYPE_POINTER)
-        {
-            printf("[%s] {pointer} @%d: %d\n", name, index, (Int)vm->stack->data[index].number);
-        }
-        else if (vm->typestack->data[index] == TYPE_UNUSED)
-        {
-            printf("[%s] {free slot}\n", name);
-        }
-        else
-        {
-            printf("[%s] {unknown type}\n", name);
-        }
+        freerawvar(_var);
     }
     return -1;
 }
@@ -563,7 +655,6 @@ void initStd(VirtualMachine *vm)
     spawnFunction(vm, "print", std_print);
     spawnFunction(vm, "eval", std_eval);
     spawnFunction(vm, "ls", std_ls);
-    spawnFunction(vm, "help", std_help);
     spawnFunction(vm, "delete", std_delete);
     spawnFunction(vm, "comment", std_comment);
     spawnFunction(vm, "return", std_return);
