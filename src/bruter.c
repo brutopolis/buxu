@@ -158,7 +158,7 @@ Value valueDuplicate(Value value, char type)
     {
         dup.number = value.number;
     }
-    else if (type == TYPE_STRING)
+    else if (type == TYPE_STRING || type == TYPE_ERROR)
     {
         dup.string = strduplicate(value.string);
     }
@@ -170,10 +170,6 @@ Value valueDuplicate(Value value, char type)
         {
             StackPush(*((IntList*)dup.pointer), list->data[i]);
         }
-    }
-    else if (type == TYPE_ERROR)
-    {
-        dup.string = strduplicate(value.string);
     }
     else if (type == TYPE_FUNCTION)
     {
@@ -381,11 +377,68 @@ void spawnList(VirtualMachine *vm, char* varname)
     hashset(vm, varname, index);
 }
 
+// var create
+
+Variable createNumber(Float number)
+{
+    Variable var;
+    var.type = TYPE_NUMBER;
+    var.value.number = number;
+    return var;
+}
+
+Variable createString(char *str)
+{
+    Variable var;
+    var.type = TYPE_STRING;
+    var.value.string = strduplicate(str);
+    return var;
+}
+
+Variable createNil()
+{
+    Variable var;
+    var.type = TYPE_NIL;
+    return var;
+}
+
+Variable createList()
+{
+    Variable var;
+    var.type = TYPE_LIST;
+    var.value.pointer = makeIntList();
+    return var;
+}
+
+Variable createFunction(Function function)
+{
+    Variable var;
+    var.type = TYPE_FUNCTION;
+    var.value.pointer = function;
+    return var;
+}
+
+Variable createPointer(Int index)
+{
+    Variable var;
+    var.type = TYPE_POINTER;
+    var.value.number = index;
+    return var;
+}
+
+Variable createError(char *error)
+{
+    Variable var;
+    var.type = TYPE_ERROR;
+    var.value.string = strduplicate(error);
+    return var;
+}
+
 
 
 void freevar(VirtualMachine *vm, Int index)
 {
-    if (vm->typestack->data[index] == TYPE_STRING)
+    if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_ERROR)
     {
         free(vm->stack->data[index].string);
     }
@@ -403,7 +456,7 @@ void freevar(VirtualMachine *vm, Int index)
 
 void freerawvar(Variable var)
 {
-    if (var.type == TYPE_STRING)
+    if (var.type == TYPE_STRING || var.type == TYPE_ERROR)
     {
         free(var.value.string);
     }
@@ -447,7 +500,7 @@ void freevm(VirtualMachine *vm)
 void unusevar(VirtualMachine *vm, Int index)
 {
     //if type is string free the string, if type is list free the list
-    if (vm->typestack->data[index] == TYPE_STRING)
+    if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_ERROR)
     {
         free(vm->stack->data[index].string);
     }
@@ -515,19 +568,29 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
                 unusevar(vm, index);
             }
         }
-        else if (str[0] == '!' && str[1] == '(') // literal string
+        else if (str[0] == '!') // literal string
         {
-            Variable var;
-            var.type = TYPE_STRING;
-            var.value.string = strnduplicate(str + 2, strlen(str) - 3);
-            //printf("%s\n", var.value.string);
-            StackPush(*result, var);
+            if (str[1] == '(')
+            {
+                Variable var;
+                var.type = TYPE_STRING;
+                var.value.string = strnduplicate(str + 2, strlen(str) - 3);
+                //printf("%s\n", var.value.string);
+                StackPush(*result, var);
+            }
+            else
+            {
+                Variable var;
+                var.type = TYPE_STRING;
+                var.value.string = strduplicate(str + 1);
+                StackPush(*result, var);
+            }
         }
         else if (str[0] == '@') 
         {
             if (strlen(str) == 1) 
             {
-                //StackPush(*result, newError(vm, "Variable name not found"));
+                StackPush(*result, createError("Variable not found"));
             }
             else if(str[1] == '(')
             {
@@ -551,7 +614,7 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
                 Int index = hashfind(vm, str + 1);
                 if (index == -1) 
                 {
-                    //StackPush(*result, newError(vm, "Variable name not found"));
+                    StackPush(*result, createError(strf("Variable \"%s\" not found", str + 1)));
                 }
                 else 
                 {
@@ -566,7 +629,7 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
         {
             if (strlen(str) == 1) 
             {
-                //StackPush(*result, newError(vm, "Variable name not found"));
+                StackPush(*result, createError("Variable name not found"));
             }
             else if(str[1] >= '0' && str[1] <= '9') 
             {
@@ -580,7 +643,7 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
                 Int index = hashfind(vm, str + 1);
                 if (index == -1) 
                 {
-                    //StackPush(*result, newError(vm, "Variable name not found"));
+                    StackPush(*result, createError("Variable name not found"));
                 }
                 else 
                 {
@@ -631,6 +694,11 @@ Int interpret(VirtualMachine *vm, char* cmd)
             result = std_list_new(vm, parsed);
         }
     }
+    else if (func.type == TYPE_FUNCTION)
+    {
+        Function function = func.value.pointer;
+        result = function(vm, parsed);
+    }
     else 
     {
         StackInsert(*parsed, 0, func);
@@ -639,16 +707,7 @@ Int interpret(VirtualMachine *vm, char* cmd)
 
     while (parsed->size > 0)
     {
-        Variable var = StackShift(*parsed);
-        if (var.type == TYPE_NUMBER)
-        {
-            printf("%f\n", var.value.number);
-        }
-        else if (var.type == TYPE_STRING)
-        {
-            printf("%s\n", var.value.string);
-        }
-        freerawvar(var);
+        freerawvar(StackShift(*parsed));
     }
 
     
@@ -764,7 +823,11 @@ Int std_repl(VirtualMachine *vm, VariableList *args)
         result = eval(vm, cmd);
         free(cmd);
     }
-    printf("repl exited with code %d;\n", result);
+    //printf("repl exited with code %d;\n", result);
+    printf("repl returned: @%d ", result);
+    char * str = strf("@print @%d", result);
+    eval(vm, str);
+    free(str);
     return result;
 }
 
@@ -797,7 +860,36 @@ int main(int argv, char **argc)
         }
         Int result = eval(vm, _code);
         free(_code);
-        printf("exited with code %d;\n", result);
+        
+        printf("returned: [%d]", result);
+        switch (vm->typestack->data[result])
+        {
+            case TYPE_NUMBER:
+                printf("{number}");
+                break;
+            case TYPE_STRING:
+                printf("{string}");
+                break;
+            case TYPE_LIST:
+                printf("{list}");
+                break;
+            case TYPE_ERROR:
+                printf("{error}");
+                break;
+            case TYPE_FUNCTION:
+                printf("{function}");
+                break;
+            case TYPE_POINTER:
+                printf("{pointer}");
+                break;
+            default:
+                printf("{unknown}");
+                break;
+        }
+        printf(" : ");
+        char * str = strf("@print @%d", result);
+        eval(vm, str);
+        free(str);
     }
     freevm(vm);
 }

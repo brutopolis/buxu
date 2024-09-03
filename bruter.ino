@@ -18,7 +18,7 @@ Int _ino_print(VirtualMachine *vm, VariableList *args)
     {
         Variable var = StackShift(*args);
         Int _type = -1;
-        printf("Type: %d\n", var.type);
+        //printf("Type: %d\n", var.type);
 
         Value temp = var.value;
         _type = var.type;
@@ -31,11 +31,11 @@ Int _ino_print(VirtualMachine *vm, VariableList *args)
         
         if (_type == TYPE_NUMBER)
         {
-            printf("number: %f\n", temp.number);
+            printf("%f", temp.number);
         }
         else if (_type == TYPE_STRING)
         {
-            printf("%s\n", temp.string);
+            printf("%s", temp.string);
         }
         else if (_type == TYPE_LIST)
         {
@@ -46,22 +46,27 @@ Int _ino_print(VirtualMachine *vm, VariableList *args)
                 printf("%d, ", list->data[i]);
             }
             printf("%d", list->data[list->size-1]);
-            printf("]\n");
+            printf("]");
         }
         else if (_type == TYPE_ERROR)
         {
-            printf("Error: %s\n", temp.string);
+            printf("(error)%s", temp.string);
         }
         else if (_type == TYPE_FUNCTION)
         {
-            printf("Function : %p\n", temp.pointer);
+            printf("(function)%p", temp.pointer);
         }
         else
         {
-            printf("Unknown type\n");
+            printf("(unknown)");
         }
         freerawvar(var);
+        if (args->size > 0)
+        {
+            printf(" ");
+        }
     }
+    printf("\n");
     return -1;
 }
 

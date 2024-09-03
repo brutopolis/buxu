@@ -63,8 +63,8 @@ library search path:
 
 ## Reserved
 
-- `()` = expression
-- `!()` = string delimiter
+- `()` = expression/delimiter
+- `!` = string indicator
 - `@` = pointer indicator
 - `#` = reference indicator
 - `;` = end of command

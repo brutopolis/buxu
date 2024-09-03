@@ -41,6 +41,8 @@
 @set rret (@list.shift @tstlist);
 @print @rret;
 
-@ls @tbl;
+@set aaaaa @non-existent;
+
+#ls hash;
 @return 123;
 @repl;

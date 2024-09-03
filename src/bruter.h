@@ -10,7 +10,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.5a"
+#define VERSION "0.4.5b"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -188,6 +188,14 @@ void spawnError(VirtualMachine *vm, char* varname, char* error);
 void spawnPointer(VirtualMachine *vm, char* varname, Int index);
 void spawnList(VirtualMachine *vm, char* varname);
 
+Variable createNil();
+Variable createString(char *str);
+Variable createNumber(Float number);
+Variable createFunction(Function function);
+Variable createError(char *error);
+Variable createPointer(Int index);
+Variable createList();
+
 Int hashfind(VirtualMachine *vm, char *key);
 void hashset(VirtualMachine *vm, char *key, Int index);
 void hashunset(VirtualMachine *vm, char *key);
@@ -233,6 +241,7 @@ Int std_list_unshift(VirtualMachine *vm, VariableList *args);
 Int std_list_remove(VirtualMachine *vm, VariableList *args);
 
 
+void initDefaultVars(VirtualMachine *vm);
 void initStd(VirtualMachine *vm);
 void initMath(VirtualMachine *vm);
 void initList(VirtualMachine *vm);

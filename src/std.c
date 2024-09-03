@@ -64,16 +64,16 @@ Int std_print(VirtualMachine *vm, VariableList *args)
         {
             if(round(temp.number) == temp.number)
             {
-                printf("%d ", (Int)temp.number);
+                printf("%d", (Int)temp.number);
             }
             else
             {
-                printf("%f ", temp.number);
+                printf("%f", temp.number);
             }
         }
         else if (_type == TYPE_STRING)
         {
-            printf("%s ", temp.string);
+            printf("%s", temp.string);
         }
         else if (_type == TYPE_LIST)
         {
@@ -88,19 +88,23 @@ Int std_print(VirtualMachine *vm, VariableList *args)
         }
         else if (_type == TYPE_ERROR)
         {
-            printf("(error)%s ", temp.string);
+            printf("%s", temp.string);
         }
         else if (_type == TYPE_FUNCTION)
         {
-            printf("(function)%p ", temp.pointer);
+            printf("%p", temp.pointer);
         }
         else
         {
-            printf("(unknown) ");
+            printf("?");
         }
         freerawvar(var);
-        printf("\n");
+        if (args->size > 0)
+        {
+            printf(" ");
+        }
     }
+    printf("\n");
     return -1;
 }
 
@@ -127,8 +131,7 @@ Int std_ls(VirtualMachine *vm, VariableList *args)
             }
             else if (vm->typestack->data[i] == TYPE_STRING)
             {
-                char * temp = vm->stack->data[i].string;
-                printf("[%d] {string}: %s\n", i, temp);
+                printf("[%d] {string}: %s\n", i, vm->stack->data[i].string);
             }
             else if (vm->typestack->data[i] == TYPE_LIST)
             {
@@ -157,11 +160,11 @@ Int std_ls(VirtualMachine *vm, VariableList *args)
             }
             else if (vm->typestack->data[i] == TYPE_UNUSED)
             {
-                printf("[%d] {free slot}\n", i);
+                printf("[%d] {free}\n", i);
             }
             else
             {
-                printf("[%d] {unknown type}\n", i);
+                printf("[%d] {unknown}\n", i);
             }
         }
     }
@@ -223,11 +226,11 @@ Int std_ls(VirtualMachine *vm, VariableList *args)
                     }
                     else if (vm->typestack->data[index] == TYPE_UNUSED)
                     {
-                        printf("[%s] {free slot}\n", name);
+                        printf("[%s] {free}\n", name);
                     }
                     else
                     {
-                        printf("[%s] {unknown type}\n", name);
+                        printf("[%s] {unknown}\n", name);
                     }
                 }
             }
@@ -284,11 +287,11 @@ Int std_ls(VirtualMachine *vm, VariableList *args)
                 }
                 else if (vm->typestack->data[list->data[i]] == TYPE_UNUSED)
                 {
-                    printf("[%d] (%d) {free slot}\n", i, list->data[i]);
+                    printf("[%d] (%d) {free}\n", i, list->data[i]);
                 }
                 else
                 {
-                    printf("[%d] (%d) {unknown type}\n", list->data[i]);
+                    printf("[%d] (%d) {unknown}\n", list->data[i]);
                 }
             }
         }
@@ -316,7 +319,7 @@ Int std_delete(VirtualMachine *vm, VariableList *args)
         {
             unusevar(vm, index.value.number);
         }
-        else if (index.type == TYPE_STRING)
+        else if (index.type == TYPE_STRING || index.type == TYPE_ERROR)
         {
             Int _index = hashfind(vm, index.value.string);
             if (_index != -1)
@@ -347,9 +350,19 @@ Int std_comment(VirtualMachine *vm, VariableList *args)
 Int std_return(VirtualMachine *vm, VariableList *args)
 {
     Variable var = StackShift(*args);
-    return var.value.number;
+    Int result = newvar(vm);
+    vm->stack->data[result] = var.value;
+    vm->typestack->data[result] = var.type;
+    return result;
 }
 
+Int std_type(VirtualMachine *vm, VariableList *args)
+{
+    Variable var = StackShift(*args);
+    Int result = newNumber(vm, var.type);
+    freerawvar(var);
+    return result;
+}
 
 // math functions
 // math functions
@@ -693,9 +706,25 @@ void initList(VirtualMachine *vm)
     spawnFunction(vm, "list.find", std_list_find);
 }
 
+void initDefaultVars(VirtualMachine *vm)
+{
+    spawnNumber(vm, "PI", 3.14159265358979323846);// PI number
+    spawnNumber(vm, "ERROR", TYPE_ERROR);// error type
+    spawnNumber(vm, "NIL", TYPE_NIL);// nil type
+    spawnNumber(vm, "UNUSED", TYPE_UNUSED);// unused type
+    spawnNumber(vm, "POINTER", TYPE_POINTER);// pointer type
+    spawnNumber(vm, "NUMBER", TYPE_NUMBER);// number type
+    spawnNumber(vm, "STRING", TYPE_STRING);// string type
+    spawnNumber(vm, "FUNCTION", TYPE_FUNCTION);// function type
+    spawnNumber(vm, "LIST", TYPE_LIST);// list type
+
+    spawnString(vm, "VERSION", VERSION);// version
+}
+
 void initAll(VirtualMachine *vm)
 {
     initStd(vm);
     initMath(vm);
     initList(vm);
+    initDefaultVars(vm);
 }
