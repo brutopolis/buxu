@@ -662,6 +662,201 @@ Int std_list_find(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
+// std string
+
+Int str_string_concat(VirtualMachine *vm, VariableList *args)
+{
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    Int result = -1;
+    if (a.type == TYPE_NUMBER)
+    {
+        if (round(a.value.number) == a.value.number)
+        {
+            char _a[(int)log10(a.value.number)+2];
+            sprintf(_a, "%d", (Int)a.value.number);
+            a.value.string = strduplicate(_a);
+            a.type = TYPE_STRING;
+        }
+        else
+        {
+            char _a[(int)log10(a.value.number)+8];
+            sprintf(_a, "%f", a.value.number);
+            a.value.string = strduplicate(_a);
+            a.type = TYPE_STRING;
+        }
+    }
+    else if (a.type == TYPE_POINTER)
+    {
+        if (vm->typestack->data[(Int)a.value.number] == TYPE_STRING)
+        {
+            a.value.string = strduplicate(vm->stack->data[(Int)a.value.number].string);
+            a.type = TYPE_STRING;
+        }
+        else if (vm->typestack->data[(Int)a.value.number] == TYPE_NUMBER)
+        {
+            if (round(vm->stack->data[(Int)a.value.number].number) == vm->stack->data[(Int)a.value.number].number)
+            {
+                char _a[(int)log10(vm->stack->data[(Int)a.value.number].number)+2];
+                sprintf(_a, "%d", (Int)vm->stack->data[(Int)a.value.number].number);
+                a.value.string = strduplicate(_a);
+                a.type = TYPE_STRING;
+            }
+            else
+            {
+                char _a[(int)log10(vm->stack->data[(Int)a.value.number].number)+8];
+                sprintf(_a, "%f", vm->stack->data[(Int)a.value.number].number);
+                a.value.string = strduplicate(_a);
+                a.type = TYPE_STRING;
+            }
+        }
+    }
+    else if (a.type == TYPE_ERROR)
+    {
+        a.value.string = strduplicate(a.value.string);
+        a.type = TYPE_STRING;
+    }
+    else if (a.type == TYPE_FUNCTION)
+    {
+        char _a[20];
+        sprintf(_a, "%p", a.value.pointer);
+        a.value.string = strduplicate(_a);
+        a.type = TYPE_STRING;
+    }
+    
+    if (b.type == TYPE_NUMBER)
+    {
+        if (round(b.value.number) == b.value.number)
+        {
+            char _b[(int)log10(b.value.number)+2];
+            sprintf(_b, "%d", (Int)b.value.number);
+            b.value.string = strduplicate(_b);
+            b.type = TYPE_STRING;
+        }
+        else
+        {
+            char _b[(int)log10(b.value.number)+8];
+            sprintf(_b, "%f", b.value.number);
+            b.value.string = strduplicate(_b);
+            b.type = TYPE_STRING;
+        }
+    }
+    else if (b.type == TYPE_POINTER)
+    {
+        if (vm->typestack->data[(Int)b.value.number] == TYPE_STRING)
+        {
+            b.value.string = strduplicate(vm->stack->data[(Int)b.value.number].string);
+            b.type = TYPE_STRING;
+        }
+        else if (vm->typestack->data[(Int)b.value.number] == TYPE_NUMBER)
+        {
+            if (round(vm->stack->data[(Int)b.value.number].number) == vm->stack->data[(Int)b.value.number].number)
+            {
+                char _b[(int)log10(vm->stack->data[(Int)b.value.number].number)+2];
+                sprintf(_b, "%d", (Int)vm->stack->data[(Int)b.value.number].number);
+                b.value.string = strduplicate(_b);
+                b.type = TYPE_STRING;
+            }
+            else
+            {
+                char _b[(int)log10(vm->stack->data[(Int)b.value.number].number)+8];
+                sprintf(_b, "%f", vm->stack->data[(Int)b.value.number].number);
+                b.value.string = strduplicate(_b);
+                b.type = TYPE_STRING;
+            }
+        }
+    }
+    else if (b.type == TYPE_ERROR)
+    {
+        b.value.string = strduplicate(b.value.string);
+        b.type = TYPE_STRING;
+    }
+    else if (b.type == TYPE_FUNCTION)
+    {
+        char _b[20];
+        sprintf(_b, "%p", b.value.pointer);
+        b.value.string = strduplicate(_b);
+        b.type = TYPE_STRING;
+    }
+
+    char* _newstr = strconcat(a.value.string, b.value.string);
+    result = newString(vm, _newstr);
+    free(_newstr);
+    
+
+    freerawvar(a);
+    freerawvar(b);
+    return result;
+}
+
+Int str_string_find(VirtualMachine *vm, VariableList *args)
+{
+    Variable str = StackShift(*args);
+    Variable substr = StackShift(*args);
+    Int result = -1;
+    if (str.type == TYPE_STRING && substr.type == TYPE_STRING)
+    {
+        char* _str = strstr(str.value.string, substr.value.string);
+        if (_str != NULL)
+        {
+            result = _str - str.value.string;
+        }
+    }
+    freerawvar(str);
+    freerawvar(substr);
+    return result;
+}
+
+Int str_string_split(VirtualMachine *vm, VariableList *args)
+{
+    Variable str = StackShift(*args);
+    Variable substr = StackShift(*args);
+    StringList *splited = splitString(str.value.string, substr.value.string);
+    Int result = newList(vm);
+    IntList *list = (IntList*)vm->stack->data[result].pointer;
+    for (Int i = 0; i < splited->size; i++)
+    {
+        Int _str = newString(vm, splited->data[i]);
+        StackPush(*list, _str);
+    }
+    freerawvar(str);
+    freerawvar(substr);
+    return result;
+}
+
+Int str_string_replace(VirtualMachine *vm, VariableList *args)
+{
+    Variable str = StackShift(*args);
+    Variable substr = StackShift(*args);
+    Variable replacement = StackShift(*args);
+    Int result = -1;
+    if (str.type == TYPE_STRING && substr.type == TYPE_STRING && replacement.type == TYPE_STRING)
+    {
+        char* _str = str.value.string;
+        char* _substr = substr.value.string;
+        char* _replacement = replacement.value.string;
+        char* _newstr = strreplace(_str, _substr, _replacement);
+        result = newString(vm, _newstr);
+        free(_newstr);
+    }
+    freerawvar(str);
+    freerawvar(substr);
+    freerawvar(replacement);
+    return result;
+}
+
+Int str_string_length(VirtualMachine *vm, VariableList *args)
+{
+    Variable str = StackShift(*args);
+    Int result = -1;
+    if (str.type == TYPE_STRING)
+    {
+        result = newNumber(vm, strlen(str.value.string));
+    }
+    freerawvar(str);
+    return result;
+}
+
 void initStd(VirtualMachine *vm)
 {
     spawnFunction(vm, "set", std_set);
@@ -706,6 +901,16 @@ void initList(VirtualMachine *vm)
     spawnFunction(vm, "list.find", std_list_find);
 }
 
+void initString(VirtualMachine *vm)
+{
+    //spawnFunction(vm, "string.format", str_string_new);
+    spawnFunction(vm, "string.concat", str_string_concat);
+    spawnFunction(vm, "string.find", str_string_find);
+    spawnFunction(vm, "string.split", str_string_split);
+    spawnFunction(vm, "string.replace", str_string_replace);
+    spawnFunction(vm, "string.length", str_string_length);
+}
+
 void initDefaultVars(VirtualMachine *vm)
 {
     spawnNumber(vm, "PI", 3.14159265358979323846);// PI number
@@ -726,5 +931,6 @@ void initAll(VirtualMachine *vm)
     initStd(vm);
     initMath(vm);
     initList(vm);
+    initString(vm);
     initDefaultVars(vm);
 }

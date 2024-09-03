@@ -10,7 +10,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.5b"
+#define VERSION "0.4.5c"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -155,6 +155,14 @@ typedef struct
 typedef Int (*Function)(VirtualMachine*, VariableList*);
 
 //String
+char* strduplicate(const char *str);
+char* strnduplicate(const char *str, Int n);
+char* strf(const char *fmt, ...);
+char* strformat(const char *fmt, VariableList *args);
+char* strconcat(const char *str1, const char *str2);
+Int strfind(const char *str, const char *substr);
+char* strreplace(const char *str, const char *substr, const char *replacement);
+
 StringList* splitString(char *str, char *delim);
 StringList* specialSplit(char *str);
 
@@ -239,6 +247,17 @@ Int std_list_pop(VirtualMachine *vm, VariableList *args);
 Int std_list_shift(VirtualMachine *vm, VariableList *args);
 Int std_list_unshift(VirtualMachine *vm, VariableList *args);
 Int std_list_remove(VirtualMachine *vm, VariableList *args);
+
+Int std_list_concat(VirtualMachine *vm, VariableList *args);
+Int std_list_find(VirtualMachine *vm, VariableList *args);
+
+//string
+Int str_string_length(VirtualMachine *vm, VariableList *args);
+Int str_string_concat(VirtualMachine *vm, VariableList *args);
+Int str_string_find(VirtualMachine *vm, VariableList *args);
+Int str_string_replace(VirtualMachine *vm, VariableList *args);
+Int str_string_split(VirtualMachine *vm, VariableList *args);
+Int str_string_new(VirtualMachine *vm, VariableList *args);
 
 
 void initDefaultVars(VirtualMachine *vm);

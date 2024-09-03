@@ -33,6 +33,96 @@ char* strf(const char *format, ...)
     return str;
 }
 
+char* strconcat(const char *str1, const char *str2)
+{
+    char *str = (char*)malloc(strlen(str1) + strlen(str2) + 1);
+    strcpy(str, str1);
+    strcat(str, str2);
+    return str;
+}
+
+char* strreplace(const char *str, const char *substr, const char *replacement)
+{
+    Int len = strlen(str);
+    Int sublen = strlen(substr);
+    Int replen = strlen(replacement);
+    Int count = 0;
+    for (Int i = 0; i < len; i++)
+    {
+        if (str[i] == substr[0])
+        {
+            Int j = 0;
+            while (j < sublen && str[i + j] == substr[j])
+            {
+                j++;
+            }
+            if (j == sublen)
+            {
+                count++;
+            }
+        }
+    }
+    char *newstr = (char*)malloc(len + count * (replen - sublen) + 1);
+    Int i = 0;
+    Int k = 0;
+    while (str[i] != '\0')
+    {
+        if (str[i] == substr[0])
+        {
+            Int j = 0;
+            while (j < sublen && str[i + j] == substr[j])
+            {
+                j++;
+            }
+            if (j == sublen)
+            {
+                for (Int l = 0; l < replen; l++)
+                {
+                    newstr[k] = replacement[l];
+                    k++;
+                }
+                i += sublen;
+            }
+            else
+            {
+                newstr[k] = str[i];
+                k++;
+                i++;
+            }
+        }
+        else
+        {
+            newstr[k] = str[i];
+            k++;
+            i++;
+        }
+    }
+    newstr[k] = '\0';
+    return newstr;
+}
+
+Int strfind(const char *str, const char *substr)
+{
+    Int len = strlen(str);
+    Int sublen = strlen(substr);
+    for (Int i = 0; i < len; i++)
+    {
+        if (str[i] == substr[0])
+        {
+            Int j = 0;
+            while (j < sublen && str[i + j] == substr[j])
+            {
+                j++;
+            }
+            if (j == sublen)
+            {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
 StringList* specialSplit(char *str)
 {
     StringList *splited;
@@ -614,7 +704,9 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
                 Int index = hashfind(vm, str + 1);
                 if (index == -1) 
                 {
-                    StackPush(*result, createError(strf("Variable \"%s\" not found", str + 1)));
+                    char *error = strf("Variable %s not found", str + 1);
+                    StackPush(*result, createError(error));
+                    free(error);
                 }
                 else 
                 {
@@ -886,7 +978,7 @@ int main(int argv, char **argc)
                 printf("{unknown}");
                 break;
         }
-        printf(" : ");
+        printf(": ");
         char * str = strf("@print @%d", result);
         eval(vm, str);
         free(str);

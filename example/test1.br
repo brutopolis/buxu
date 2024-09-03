@@ -43,6 +43,9 @@
 
 @set aaaaa @non-existent;
 
-#ls hash;
+@set stringtst !(a = );
+@set acd 123;
+@set stringtst (@string.concat @stringtst #d);
+@ls hash;
 @return 123;
 @repl;
