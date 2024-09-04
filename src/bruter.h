@@ -10,7 +10,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.5c"
+#define VERSION "0.4.5d"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -158,7 +158,7 @@ typedef Int (*Function)(VirtualMachine*, VariableList*);
 char* strduplicate(const char *str);
 char* strnduplicate(const char *str, Int n);
 char* strf(const char *fmt, ...);
-char* strformat(const char *fmt, VariableList *args);
+char* strsubstring(const char *str, Int start, Int end);
 char* strconcat(const char *str1, const char *str2);
 Int strfind(const char *str, const char *substr);
 char* strreplace(const char *str, const char *substr, const char *replacement);
@@ -223,6 +223,8 @@ Int std_ls(VirtualMachine *vm, VariableList *args);
 Int std_help(VirtualMachine *vm, VariableList *args);
 Int std_eval(VirtualMachine *vm, VariableList *args);
 Int std_delete(VirtualMachine *vm, VariableList *args);
+Int std_type(VirtualMachine *vm, VariableList *args);
+Int std_get(VirtualMachine *vm, VariableList *args);
 
 //math
 Int std_math_add(VirtualMachine *vm, VariableList *args);
@@ -251,13 +253,17 @@ Int std_list_remove(VirtualMachine *vm, VariableList *args);
 Int std_list_concat(VirtualMachine *vm, VariableList *args);
 Int std_list_find(VirtualMachine *vm, VariableList *args);
 
+Int std_list_get(VirtualMachine *vm, VariableList *args);
+
 //string
-Int str_string_length(VirtualMachine *vm, VariableList *args);
-Int str_string_concat(VirtualMachine *vm, VariableList *args);
-Int str_string_find(VirtualMachine *vm, VariableList *args);
-Int str_string_replace(VirtualMachine *vm, VariableList *args);
-Int str_string_split(VirtualMachine *vm, VariableList *args);
-Int str_string_new(VirtualMachine *vm, VariableList *args);
+Int std_string_length(VirtualMachine *vm, VariableList *args);
+Int std_string_concat(VirtualMachine *vm, VariableList *args);
+Int std_string_find(VirtualMachine *vm, VariableList *args);
+Int std_string_replace(VirtualMachine *vm, VariableList *args);
+Int std_string_split(VirtualMachine *vm, VariableList *args);
+Int std_string_new(VirtualMachine *vm, VariableList *args);
+Int std_string_substring(VirtualMachine *vm, VariableList *args);
+
 
 
 void initDefaultVars(VirtualMachine *vm);

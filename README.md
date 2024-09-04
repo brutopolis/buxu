@@ -66,5 +66,4 @@ library search path:
 - `()` = expression/delimiter
 - `!` = string indicator
 - `@` = pointer indicator
-- `#` = reference indicator
 - `;` = end of command

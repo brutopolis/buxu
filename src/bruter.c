@@ -20,6 +20,17 @@ char* strnduplicate(const char *str, Int n)
     return dup;
 }
 
+char* strsubstring(const char *str, Int start, Int end)
+{
+    char *sub = (char*)malloc(end - start + 1);
+    for (Int i = start; i < end; i++)
+    {
+        sub[i - start] = str[i];
+    }
+    sub[end - start] = '\0';
+    return sub;
+}
+
 char* strf(const char *format, ...)
 {
     va_list args;
@@ -153,26 +164,6 @@ StringList* specialSplit(char *str)
             i = j + 1;
         }
         else if (str[i] == '!' && str[i + 1] == '(')
-        {
-            Int j = i + 1;
-            Int count = 1;
-            while (count != 0)
-            {
-                j++;
-                if (str[j] == '(')
-                {
-                    count++;
-                }
-                else if (str[j] == ')')
-                {
-                    count--;
-                }
-            }
-            char *tmp = strnduplicate(str + i, j - i + 1);
-            StackPush(*splited, tmp);
-            i = j + 1;
-        }
-        else if (str[i] == '#' && str[i + 1] == '(')
         {
             Int j = i + 1;
             Int count = 1;
@@ -520,7 +511,7 @@ Variable createError(char *error)
 {
     Variable var;
     var.type = TYPE_ERROR;
-    var.value.string = strduplicate(error);
+    var.value.string = error;
     return var;
 }
 
@@ -704,44 +695,13 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
                 Int index = hashfind(vm, str + 1);
                 if (index == -1) 
                 {
-                    char *error = strf("Variable %s not found", str + 1);
-                    StackPush(*result, createError(error));
-                    free(error);
+                    StackPush(*result, createError(strf("Variable %s not found", str + 1)));
                 }
                 else 
                 {
                     Variable var;
                     var.type = TYPE_POINTER;
                     var.value.number = index;
-                    StackPush(*result, var);
-                }
-            }
-        }
-        else if (str[0] == '#') //like @ but return the variable itself instead a pointer, use with caution, do not try to free or modify the variable
-        {
-            if (strlen(str) == 1) 
-            {
-                StackPush(*result, createError("Variable name not found"));
-            }
-            else if(str[1] >= '0' && str[1] <= '9') 
-            {
-                Variable var;
-                var.value = (Value){atoi(str + 1)};
-                var.type = vm->typestack->data[(Int)var.value.number];
-                StackPush(*result, var);
-            }
-            else
-            {
-                Int index = hashfind(vm, str + 1);
-                if (index == -1) 
-                {
-                    StackPush(*result, createError("Variable name not found"));
-                }
-                else 
-                {
-                    Variable var;
-                    var.type = vm->typestack->data[index];
-                    var.value = vm->stack->data[index];
                     StackPush(*result, var);
                 }
             }
@@ -755,10 +715,18 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
         }
         else //string 
         {
-            Variable var;
-            var.type = TYPE_STRING;
-            var.value.string = strduplicate(str);
-            StackPush(*result, var);
+            Int index = hashfind(vm, str);
+            if (index == -1) 
+            {
+                StackPush(*result, createError(strf("Variable %s not found", str)));
+            }
+            else 
+            {
+                Variable var;
+                var.type = vm->typestack->data[index];
+                var.value = vm->stack->data[index];
+                StackPush(*result, var);
+            }
         }
         free(str);
     }
@@ -813,7 +781,6 @@ Int eval(VirtualMachine *vm, char *cmd)
     Int result = -1;
     while (splited->size > 0)
     {
-        
         char *str = StackShift(*splited);
         result = interpret(vm, str);
         free(str);
@@ -917,7 +884,7 @@ Int std_repl(VirtualMachine *vm, VariableList *args)
     }
     //printf("repl exited with code %d;\n", result);
     printf("repl returned: @%d ", result);
-    char * str = strf("@print @%d", result);
+    char * str = strf("print @%d", result);
     eval(vm, str);
     free(str);
     return result;
@@ -979,7 +946,7 @@ int main(int argv, char **argc)
                 break;
         }
         printf(": ");
-        char * str = strf("@print @%d", result);
+        char * str = strf("print @%d", result);
         eval(vm, str);
         free(str);
     }

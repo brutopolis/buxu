@@ -17,6 +17,10 @@ Int std_set(VirtualMachine *vm, VariableList *args)
             index = newvar(vm);
             hashset(vm, name, index);
         }
+        else
+        {
+            unusevar(vm, index);
+        }
         vm->stack->data[index] = valueDuplicate(value.value, value.type);
         vm->typestack->data[index] = value.type;
     }
@@ -53,6 +57,7 @@ Int std_print(VirtualMachine *vm, VariableList *args)
 
         Value temp = var.value;
         _type = var.type;
+
 
         if (var.type == TYPE_POINTER)
         {
@@ -364,6 +369,42 @@ Int std_type(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
+Int std_get(VirtualMachine *vm, VariableList *args)
+{
+    Variable var = StackShift(*args);
+    Int result = -1;
+    if (var.type == TYPE_STRING)
+    {
+        Int index = hashfind(vm, var.value.string);
+        if (index == -1)
+        {
+            char *error = strf("Variable %s not found", var.value.string);
+            result = newError(vm, error);
+            free(error);
+        }
+        else
+        {
+            result = index;
+        }
+    }
+    else if (var.type == TYPE_NUMBER || var.type == TYPE_POINTER)
+    {
+        Int index = (Int)var.value.number;
+        if (index >= 0 && index < vm->stack->size)
+        {
+            result = index;
+        }
+        else 
+        {
+            char *error = strf("Variable %d not found", index);
+            result = newError(vm, error);
+            free(error);
+        }
+    }
+    freerawvar(var);
+    return result;
+}
+
 // math functions
 // math functions
 // math functions
@@ -662,9 +703,30 @@ Int std_list_find(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
+Int std_list_get(VirtualMachine *vm, VariableList *args)
+{
+    Variable list = StackShift(*args);
+    Variable index = StackShift(*args);
+    if (list.type == TYPE_POINTER)
+    {
+        if (vm->typestack->data[(Int)list.value.number] == TYPE_LIST)
+        {
+            IntList *lst = (IntList*)vm->stack->data[(Int)list.value.number].pointer;
+            if (index.type == TYPE_NUMBER)
+            {
+                if (index.value.number >= 0 && index.value.number < lst->size)
+                {
+                    return lst->data[(Int)index.value.number];
+                }
+            }
+        }
+    }
+    return -1;
+}
+
 // std string
 
-Int str_string_concat(VirtualMachine *vm, VariableList *args)
+Int std_string_concat(VirtualMachine *vm, VariableList *args)
 {
     Variable a = StackShift(*args);
     Variable b = StackShift(*args);
@@ -782,14 +844,14 @@ Int str_string_concat(VirtualMachine *vm, VariableList *args)
     char* _newstr = strconcat(a.value.string, b.value.string);
     result = newString(vm, _newstr);
     free(_newstr);
-    
+
 
     freerawvar(a);
     freerawvar(b);
     return result;
 }
 
-Int str_string_find(VirtualMachine *vm, VariableList *args)
+Int std_string_find(VirtualMachine *vm, VariableList *args)
 {
     Variable str = StackShift(*args);
     Variable substr = StackShift(*args);
@@ -807,24 +869,39 @@ Int str_string_find(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int str_string_split(VirtualMachine *vm, VariableList *args)
+Int std_string_substring(VirtualMachine *vm, VariableList *args)
 {
     Variable str = StackShift(*args);
-    Variable substr = StackShift(*args);
-    StringList *splited = splitString(str.value.string, substr.value.string);
-    Int result = newList(vm);
-    IntList *list = (IntList*)vm->stack->data[result].pointer;
-    for (Int i = 0; i < splited->size; i++)
+    Variable start = StackShift(*args);
+    Variable end = StackShift(*args);
+    Int result = -1;
+    if (str.type == TYPE_STRING && start.type == TYPE_NUMBER && end.type == TYPE_NUMBER)
     {
-        Int _str = newString(vm, splited->data[i]);
-        StackPush(*list, _str);
+        char* _str = str.value.string;
+        Int _start = (Int)start.value.number;
+        Int _end = (Int)end.value.number;
+        if (_start < 0)
+        {
+            _start = 0;
+        }
+        if (_end > strlen(_str))
+        {
+            _end = strlen(_str);
+        }
+        if (_start < _end)
+        {
+            char* _newstr = strsubstring(_str, _start, _end);
+            result = newString(vm, _newstr);
+            free(_newstr);
+        }
     }
     freerawvar(str);
-    freerawvar(substr);
+    freerawvar(start);
+    freerawvar(end);
     return result;
 }
 
-Int str_string_replace(VirtualMachine *vm, VariableList *args)
+Int std_string_replace(VirtualMachine *vm, VariableList *args)
 {
     Variable str = StackShift(*args);
     Variable substr = StackShift(*args);
@@ -845,7 +922,7 @@ Int str_string_replace(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int str_string_length(VirtualMachine *vm, VariableList *args)
+Int std_string_length(VirtualMachine *vm, VariableList *args)
 {
     Variable str = StackShift(*args);
     Int result = -1;
@@ -866,6 +943,8 @@ void initStd(VirtualMachine *vm)
     spawnFunction(vm, "delete", std_delete);
     spawnFunction(vm, "comment", std_comment);
     spawnFunction(vm, "return", std_return);
+    spawnFunction(vm, "type", std_type);
+    spawnFunction(vm, "get", std_get);
 }
 
 void initMath(VirtualMachine *vm)
@@ -899,16 +978,18 @@ void initList(VirtualMachine *vm)
 
     spawnFunction(vm, "list.concat", std_list_concat);
     spawnFunction(vm, "list.find", std_list_find);
+
+    spawnFunction(vm, "list.get", std_list_get);
 }
 
 void initString(VirtualMachine *vm)
 {
-    //spawnFunction(vm, "string.format", str_string_new);
-    spawnFunction(vm, "string.concat", str_string_concat);
-    spawnFunction(vm, "string.find", str_string_find);
-    spawnFunction(vm, "string.split", str_string_split);
-    spawnFunction(vm, "string.replace", str_string_replace);
-    spawnFunction(vm, "string.length", str_string_length);
+    //spawnFunction(vm, "string.format", std_string_new);
+    spawnFunction(vm, "string.concat", std_string_concat);
+    spawnFunction(vm, "string.find", std_string_find);
+    spawnFunction(vm, "string.sub", std_string_substring);
+    spawnFunction(vm, "string.replace", std_string_replace);
+    spawnFunction(vm, "string.length", std_string_length);
 }
 
 void initDefaultVars(VirtualMachine *vm)
