@@ -17,10 +17,7 @@ Int std_set(VirtualMachine *vm, VariableList *args)
             index = newvar(vm);
             hashset(vm, name, index);
         }
-        else
-        {
-            unusevar(vm, index);
-        }
+        
         vm->stack->data[index] = valueDuplicate(value.value, value.type);
         vm->typestack->data[index] = value.type;
     }
@@ -58,16 +55,25 @@ Int std_print(VirtualMachine *vm, VariableList *args)
         Value temp = var.value;
         _type = var.type;
 
-
         if (var.type == TYPE_POINTER)
         {
             _type = vm->typestack->data[(Int)var.value.number];
             temp = vm->stack->data[(Int)var.value.number];
         }
-        
-        if (_type == TYPE_NUMBER)
+        else 
         {
-            if(round(temp.number) == temp.number)
+            freerawvar(var);
+            
+            return -1;
+        }
+        
+        if (_type == TYPE_FUNCTION)
+        {
+            printf("%p", temp.pointer);
+        }
+        else if (_type == TYPE_NUMBER)
+        {
+            if (round(temp.number) == temp.number)
             {
                 printf("%d", (Int)temp.number);
             }
@@ -88,22 +94,33 @@ Int std_print(VirtualMachine *vm, VariableList *args)
             {
                 printf("%d, ", list->data[i]);
             }
-            printf("%d", list->data[list->size-1]);
-            printf("] ");
+            if (list->size > 0)
+            {
+                printf("%d]", list->data[list->size-1]);
+            }
+            else
+            {
+                printf("]");
+            }
         }
         else if (_type == TYPE_ERROR)
         {
             printf("%s", temp.string);
         }
-        else if (_type == TYPE_FUNCTION)
+        else if (_type == TYPE_POINTER)
         {
-            printf("%p", temp.pointer);
+            printf("%d", (Int)temp.number);
+        }
+        else if (_type == TYPE_UNUSED)
+        {
+            printf("{free}");
         }
         else
         {
-            printf("?");
+            printf("{unknown}");
         }
         freerawvar(var);
+        
         if (args->size > 0)
         {
             printf(" ");
@@ -856,12 +873,14 @@ Int std_string_find(VirtualMachine *vm, VariableList *args)
     Variable str = StackShift(*args);
     Variable substr = StackShift(*args);
     Int result = -1;
-    if (str.type == TYPE_STRING && substr.type == TYPE_STRING)
+    if ((str.type == TYPE_STRING || str.type == TYPE_ERROR) && (substr.type == TYPE_STRING || substr.type == TYPE_ERROR))
     {
-        char* _str = strstr(str.value.string, substr.value.string);
-        if (_str != NULL)
+        char* _str = str.value.string;
+        char* _substr = substr.value.string;
+        char* _result = strstr(_str, _substr);
+        if (_result != NULL)
         {
-            result = _str - str.value.string;
+            result = newNumber(vm, _result - _str);
         }
     }
     freerawvar(str);
@@ -869,35 +888,49 @@ Int std_string_find(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
-Int std_string_substring(VirtualMachine *vm, VariableList *args)
+Int std_string_ndup(VirtualMachine *vm, VariableList *args)
 {
     Variable str = StackShift(*args);
     Variable start = StackShift(*args);
     Variable end = StackShift(*args);
     Int result = -1;
-    if (str.type == TYPE_STRING && start.type == TYPE_NUMBER && end.type == TYPE_NUMBER)
+    if ((str.type == TYPE_STRING || str.type == TYPE_ERROR) && start.type == TYPE_NUMBER && end.type == TYPE_NUMBER)
     {
-        char* _str = str.value.string;
-        Int _start = (Int)start.value.number;
-        Int _end = (Int)end.value.number;
-        if (_start < 0)
-        {
-            _start = 0;
-        }
-        if (_end > strlen(_str))
-        {
-            _end = strlen(_str);
-        }
-        if (_start < _end)
-        {
-            char* _newstr = strsubstring(_str, _start, _end);
-            result = newString(vm, _newstr);
-            free(_newstr);
-        }
+        char* _str = strndup(str.value.string + (Int)start.value.number, (Int)end.value.number - (Int)start.value.number);
+        printf("%s\n", _str);
+        result = newString(vm, _str);
+        printf("STRING:%s\n", _str);
+        free(_str);
     }
     freerawvar(str);
     freerawvar(start);
     freerawvar(end);
+    return result;
+}
+
+Int std_string_split(VirtualMachine *vm, VariableList *args)
+{
+    Variable str = StackShift(*args);
+    Variable delim = StackShift(*args);
+    Int result = -1;
+    if ((str.type == TYPE_STRING || str.type == TYPE_ERROR) && (delim.type == TYPE_STRING || delim.type == TYPE_ERROR))
+    {
+        StringList *list = splitString(str.value.string, delim.value.string);
+        result = newList(vm);
+        IntList *newlist = (IntList*)vm->stack->data[result].pointer;
+        while (list->size > 0)
+        {
+            char* _str = StackShift(*list);
+            printf("STRING:%s\n", _str);
+            char* cmd = strf("list.push @%d @%d", result, newString(vm, _str));
+            eval(vm, cmd);
+            free(cmd);
+            free(_str);
+        }
+        StackFree(*list);
+    }
+    freerawvar(str);
+    freerawvar(delim);
     return result;
 }
 
@@ -987,9 +1020,10 @@ void initString(VirtualMachine *vm)
     //spawnFunction(vm, "string.format", std_string_new);
     spawnFunction(vm, "string.concat", std_string_concat);
     spawnFunction(vm, "string.find", std_string_find);
-    spawnFunction(vm, "string.sub", std_string_substring);
+    spawnFunction(vm, "string.sub", std_string_ndup);
+    spawnFunction(vm, "string.split", std_string_split);
     spawnFunction(vm, "string.replace", std_string_replace);
-    spawnFunction(vm, "string.length", std_string_length);
+    spawnFunction(vm, "string.len", std_string_length);
 }
 
 void initDefaultVars(VirtualMachine *vm)

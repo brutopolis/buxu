@@ -20,7 +20,7 @@ char* strnduplicate(const char *str, Int n)
     return dup;
 }
 
-char* strsubstring(const char *str, Int start, Int end)
+char* strsub(const char *str, Int start, Int end)
 {
     char *sub = (char*)malloc(end - start + 1);
     for (Int i = start; i < end; i++)
@@ -511,7 +511,7 @@ Variable createError(char *error)
 {
     Variable var;
     var.type = TYPE_ERROR;
-    var.value.string = error;
+    var.value.string = strduplicate(error);
     return var;
 }
 
@@ -695,7 +695,9 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
                 Int index = hashfind(vm, str + 1);
                 if (index == -1) 
                 {
-                    StackPush(*result, createError(strf("Variable %s not found", str + 1)));
+                    char* error = strf("Variable %s not found", str + 1);
+                    StackPush(*result, createError(error));
+                    free(error);
                 }
                 else 
                 {
@@ -718,7 +720,9 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
             Int index = hashfind(vm, str);
             if (index == -1) 
             {
-                StackPush(*result, createError(strf("Variable %s not found", str)));
+                char* error = strf("Variable %s not found", str);
+                StackPush(*result, createError(error));
+                free(error);
             }
             else 
             {

@@ -10,7 +10,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.5d"
+#define VERSION "0.4.5e"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -158,7 +158,7 @@ typedef Int (*Function)(VirtualMachine*, VariableList*);
 char* strduplicate(const char *str);
 char* strnduplicate(const char *str, Int n);
 char* strf(const char *fmt, ...);
-char* strsubstring(const char *str, Int start, Int end);
+char* strsub(const char *str, Int start, Int end);
 char* strconcat(const char *str1, const char *str2);
 Int strfind(const char *str, const char *substr);
 char* strreplace(const char *str, const char *substr, const char *replacement);
@@ -262,7 +262,7 @@ Int std_string_find(VirtualMachine *vm, VariableList *args);
 Int std_string_replace(VirtualMachine *vm, VariableList *args);
 Int std_string_split(VirtualMachine *vm, VariableList *args);
 Int std_string_new(VirtualMachine *vm, VariableList *args);
-Int std_string_substring(VirtualMachine *vm, VariableList *args);
+Int std_string_ndup(VirtualMachine *vm, VariableList *args);
 
 
 

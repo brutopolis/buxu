@@ -42,10 +42,13 @@ print @rret;
 
 set !aaaaa @non-existent;
 
-set !stringtst !(a = );
+set !a1 !(a dsada, asda eqwe, qweqweqwe ,q, eqweqweqwe,r rrrrrrr,rrrrrrr rrrqwe, = );
 set !acd 123;
-set !stringtst (string.concat @stringtst d);
+set !a1 (string.concat a1 d);
+print @a1;
+set !a1 (string.split a1 !,);
 ls !hash;
+print (list.get @a1 2);
 set !ccc (get @acd);
 print @ccc;
 return 123;
