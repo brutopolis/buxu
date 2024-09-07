@@ -10,7 +10,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.5e"
+#define VERSION "0.4.6"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -166,6 +166,8 @@ char* strreplace(const char *str, const char *substr, const char *replacement);
 StringList* splitString(char *str, char *delim);
 StringList* specialSplit(char *str);
 
+char isTrue(Variable var);
+
 // variable
 
 List* makeList();
@@ -218,6 +220,7 @@ VariableList* parse(VirtualMachine *vm, char *cmd);
 
 //std
 Int std_set(VirtualMachine *vm, VariableList *args);
+Int std_new(VirtualMachine *vm, VariableList *args);
 Int std_print(VirtualMachine *vm, VariableList *args);
 Int std_ls(VirtualMachine *vm, VariableList *args);
 Int std_help(VirtualMachine *vm, VariableList *args);
@@ -263,6 +266,21 @@ Int std_string_replace(VirtualMachine *vm, VariableList *args);
 Int std_string_split(VirtualMachine *vm, VariableList *args);
 Int std_string_new(VirtualMachine *vm, VariableList *args);
 Int std_string_ndup(VirtualMachine *vm, VariableList *args);
+Int std_string_split(VirtualMachine *vm, VariableList *args);
+
+//conditions
+Int std_condition_equals(VirtualMachine *vm, VariableList *args);
+Int std_condition_not_equals(VirtualMachine *vm, VariableList *args);
+Int std_condition_greater(VirtualMachine *vm, VariableList *args);
+Int std_condition_greater_equals(VirtualMachine *vm, VariableList *args);
+Int std_condition_less(VirtualMachine *vm, VariableList *args);
+Int std_condition_less_equals(VirtualMachine *vm, VariableList *args);
+Int std_condition_and(VirtualMachine *vm, VariableList *args);
+Int std_condition_or(VirtualMachine *vm, VariableList *args);
+Int std_condition_not(VirtualMachine *vm, VariableList *args);
+Int std_condition_if(VirtualMachine *vm, VariableList *args);
+Int std_condition_ifelse(VirtualMachine *vm, VariableList *args);
+
 
 
 
@@ -270,6 +288,8 @@ void initDefaultVars(VirtualMachine *vm);
 void initStd(VirtualMachine *vm);
 void initMath(VirtualMachine *vm);
 void initList(VirtualMachine *vm);
+void initString(VirtualMachine *vm);
+void initConditions(VirtualMachine *vm);
 void initAll(VirtualMachine *vm);
 
 #endif

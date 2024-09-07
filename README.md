@@ -67,3 +67,18 @@ library search path:
 - `!` = string indicator
 - `@` = pointer indicator
 - `;` = end of command
+
+## TO DO
+
+- `variables` = ok
+- `types` = ok
+- `operators` = ok
+- `expressions` = ok
+- `math lib` = ok
+- `string lib` = ok
+- `list lib` = ok
+- `conditons lib` = ok/testing
+- `loops` = depends on conditions
+- `functions` = not yet
+- `libraries` = not yet
+- `expect` = a function that expects a type and returns a boolean, not yet

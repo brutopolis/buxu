@@ -45,6 +45,16 @@ Int std_set(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
+Int std_new(VirtualMachine *vm, VariableList *args)
+{
+    Variable var = StackShift(*args);
+    Int result = newvar(vm);
+    vm->stack->data[result] = valueDuplicate(var.value, var.type);
+    vm->typestack->data[result] = var.type;
+    freerawvar(var);
+    return result;
+}
+
 Int std_print(VirtualMachine *vm, VariableList *args)
 {
     while (args->size > 0)
@@ -967,14 +977,304 @@ Int std_string_length(VirtualMachine *vm, VariableList *args)
     return result;
 }
 
+// std conditions
+// std conditions
+// std conditions
+
+Int std_condition_equals(VirtualMachine *vm, VariableList *args)
+{
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    Int result = -1;
+    if (a.type == b.type)
+    {
+        if (a.type == TYPE_NUMBER)
+        {
+            result = newNumber(vm, a.value.number == b.value.number);
+        }
+        else if (a.type == TYPE_STRING)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) == 0);
+        }
+        else if (a.type == TYPE_POINTER)
+        {
+            result = newNumber(vm, a.value.number == b.value.number);
+        }
+        else if (a.type == TYPE_ERROR)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) == 0);
+        }
+    }
+    freerawvar(a);
+    freerawvar(b);
+    return result;
+}
+
+Int std_condition_not_equals(VirtualMachine *vm, VariableList *args)
+{
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    Int result = -1;
+    if (a.type == b.type)
+    {
+        if (a.type == TYPE_NUMBER)
+        {
+            result = newNumber(vm, a.value.number != b.value.number);
+        }
+        else if (a.type == TYPE_STRING)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) != 0);
+        }
+        else if (a.type == TYPE_POINTER)
+        {
+            result = newNumber(vm, a.value.number != b.value.number);
+        }
+        else if (a.type == TYPE_ERROR)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) != 0);
+        }
+    }
+    freerawvar(a);
+    freerawvar(b);
+    return result;
+}
+
+Int std_condition_greater(VirtualMachine *vm, VariableList *args)
+{
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    Int result = -1;
+    if (a.type == b.type)
+    {
+        if (a.type == TYPE_NUMBER)
+        {
+            result = newNumber(vm, a.value.number > b.value.number);
+        }
+        else if (a.type == TYPE_STRING)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) > 0);
+        }
+        else if (a.type == TYPE_POINTER)
+        {
+            result = newNumber(vm, a.value.number > b.value.number);
+        }
+        else if (a.type == TYPE_ERROR)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) > 0);
+        }
+    }
+    freerawvar(a);
+    freerawvar(b);
+    return result;
+}
+
+Int std_condition_less(VirtualMachine *vm, VariableList *args)
+{
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    Int result = -1;
+    if (a.type == b.type)
+    {
+        if (a.type == TYPE_NUMBER)
+        {
+            result = newNumber(vm, a.value.number < b.value.number);
+        }
+        else if (a.type == TYPE_STRING)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) < 0);
+        }
+        else if (a.type == TYPE_POINTER)
+        {
+            result = newNumber(vm, a.value.number < b.value.number);
+        }
+        else if (a.type == TYPE_ERROR)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) < 0);
+        }
+    }
+    freerawvar(a);
+    freerawvar(b);
+    return result;
+}
+
+Int std_condition_greater_equals(VirtualMachine *vm, VariableList *args)
+{
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    Int result = -1;
+    if (a.type == b.type)
+    {
+        if (a.type == TYPE_NUMBER)
+        {
+            result = newNumber(vm, a.value.number >= b.value.number);
+        }
+        else if (a.type == TYPE_STRING)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) >= 0);
+        }
+        else if (a.type == TYPE_POINTER)
+        {
+            result = newNumber(vm, a.value.number >= b.value.number);
+        }
+        else if (a.type == TYPE_ERROR)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) >= 0);
+        }
+    }
+    freerawvar(a);
+    freerawvar(b);
+    return result;
+}
+
+Int std_condition_less_equals(VirtualMachine *vm, VariableList *args)
+{
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    Int result = -1;
+    if (a.type == b.type)
+    {
+        if (a.type == TYPE_NUMBER)
+        {
+            result = newNumber(vm, a.value.number <= b.value.number);
+        }
+        else if (a.type == TYPE_STRING)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) <= 0);
+        }
+        else if (a.type == TYPE_POINTER)
+        {
+            result = newNumber(vm, a.value.number <= b.value.number);
+        }
+        else if (a.type == TYPE_ERROR)
+        {
+            result = newNumber(vm, strcmp(a.value.string, b.value.string) <= 0);
+        }
+    }
+    freerawvar(a);
+    freerawvar(b);
+    return result;
+}
+
+Int std_condition_and(VirtualMachine *vm, VariableList *args)
+{
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    Int result = -1;
+    result = newNumber(vm, (isTrue(a) && isTrue(b)));
+    freerawvar(a);
+    freerawvar(b);
+    return result;
+}
+
+Int std_condition_or(VirtualMachine *vm, VariableList *args)
+{
+    Variable a = StackShift(*args);
+    Variable b = StackShift(*args);
+    Int result = -1;
+    if (isTrue(a))
+    {
+        Int index = newvar(vm);
+        if (a.type == TYPE_LIST || a.type == TYPE_STRING)
+        {
+            vm->stack->data[index] = a.value;
+            freerawvar(b);
+        }
+        else
+        {
+            vm->stack->data[index] = valueDuplicate(a.value, a.type);
+            freerawvar(a);
+            freerawvar(b);
+        }
+        vm->typestack->data[index] = a.type;
+        result = index;
+    }
+    else
+    {
+        Int index = newvar(vm);
+        if (b.type == TYPE_LIST || b.type == TYPE_STRING)
+        {
+            vm->stack->data[index] = b.value;
+            freerawvar(a);
+        }
+        else
+        {
+            vm->stack->data[index] = valueDuplicate(b.value, b.type);
+            freerawvar(a);
+            freerawvar(b);
+        }
+    }
+    return result;
+}
+
+Int std_condition_not(VirtualMachine *vm, VariableList *args)
+{
+    Variable a = StackShift(*args);
+    Int result = -1;
+    if (a.type == TYPE_NUMBER)
+    {
+        result = newNumber(vm, !a.value.number);
+    }
+    else if (isTrue(a))
+    {
+        result = newNumber(vm, 0);
+    }
+    else
+    {
+        result = newNumber(vm, 1);
+    }
+    
+    if (a.type != TYPE_LIST || a.type != TYPE_STRING)
+    {
+        freerawvar(a);
+    }
+
+    return result;
+}
+
+Int std_condition_if(VirtualMachine *vm, VariableList *args)
+{
+    Variable condition = StackShift(*args);
+    Variable _then = StackShift(*args);
+    Int result = -1;
+    if (isTrue(condition))
+    {
+        result = eval(vm, _then.value.string);
+    }
+    freerawvar(condition);
+    freerawvar(_then);
+    return result;
+}
+
+Int std_condition_ifelse(VirtualMachine *vm, VariableList *args)
+{
+    Variable condition = StackShift(*args);
+    Variable _then = StackShift(*args);
+    Variable _else = StackShift(*args);
+    Int result = -1;
+    if (isTrue(condition))
+    {
+        result = eval(vm, _then.value.string);
+    }
+    else
+    {
+        result = eval(vm, _else.value.string);
+    }
+    freerawvar(condition);
+    freerawvar(_then);
+    freerawvar(_else);
+    return result;
+}
+
+
 void initStd(VirtualMachine *vm)
 {
     spawnFunction(vm, "set", std_set);
+    spawnFunction(vm, "new", std_new);
     spawnFunction(vm, "print", std_print);
     spawnFunction(vm, "eval", std_eval);
     spawnFunction(vm, "ls", std_ls);
     spawnFunction(vm, "delete", std_delete);
-    spawnFunction(vm, "comment", std_comment);
+    spawnFunction(vm, "//", std_comment);
     spawnFunction(vm, "return", std_return);
     spawnFunction(vm, "type", std_type);
     spawnFunction(vm, "get", std_get);
@@ -1026,6 +1326,21 @@ void initString(VirtualMachine *vm)
     spawnFunction(vm, "string.len", std_string_length);
 }
 
+void initConditions(VirtualMachine *vm)
+{
+    spawnFunction(vm, "==", std_condition_equals);
+    spawnFunction(vm, "~=", std_condition_not_equals);
+    spawnFunction(vm, ">", std_condition_greater);
+    spawnFunction(vm, "<", std_condition_less);
+    spawnFunction(vm, ">=", std_condition_greater_equals);
+    spawnFunction(vm, "<=", std_condition_less_equals);
+    spawnFunction(vm, "and", std_condition_and);
+    spawnFunction(vm, "or", std_condition_or);
+    spawnFunction(vm, "not", std_condition_not);
+    spawnFunction(vm, "if", std_condition_if);
+    spawnFunction(vm, "ifelse", std_condition_ifelse);
+}
+
 void initDefaultVars(VirtualMachine *vm)
 {
     spawnNumber(vm, "PI", 3.14159265358979323846);// PI number
@@ -1047,5 +1362,6 @@ void initAll(VirtualMachine *vm)
     initMath(vm);
     initList(vm);
     initString(vm);
+    initConditions(vm);
     initDefaultVars(vm);
 }

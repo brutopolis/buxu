@@ -1,5 +1,44 @@
 #include "bruter.h"
 
+// bools
+
+char isTrue(Variable var)
+{
+    if (var.type == TYPE_NUMBER)
+    {
+        return var.value.number != 0;
+    }
+    else if (var.type == TYPE_STRING)
+    {
+        return 1;
+    }
+    else if (var.type == TYPE_LIST)
+    {
+        return 1;
+    }
+    else if (var.type == TYPE_ERROR)
+    {
+        return 0;
+    }
+    else if (var.type == TYPE_NIL)
+    {
+        return 0;
+    }
+    else if (var.type == TYPE_UNUSED)
+    {
+        return 0;
+    }
+    else if (var.type == TYPE_FUNCTION)
+    {
+        return 1;
+    }
+    else if (var.type == TYPE_POINTER)
+    {
+        return var.value.number != -1;
+    }
+    return 0;
+}
+
 //string functions
 
 char* strduplicate(const char *str)

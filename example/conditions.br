@@ -1,0 +1,56 @@
+set !a (add 50 11);
+set !b (mul 10 20);
+set !c (div 100 2);
+set !d (sub 100 50);
+set !e (round 3.141592);
+set !f (ceil 3.141);
+set !g (floor 3.141592659);
+set !h (sqrt 100);
+seed 1234;
+set !i (random 5 9);
+set !j 500;
+set !k 550;
+set !l 600;
+set !abc !abuble;
+set !abcd !(opa iae);
+
+print @abc;
+
+// conditions test;
+
+
+set !txt !(a and b are different);
+if (~= a b) !(print @txt);
+delete @txt;
+
+
+set !txt1 !(a is greater than b);
+set !txt2 !(a is less than b);
+ifelse (> a b) !(print @txt1) !(print @txt2);
+
+set !txt1 !(c is less than d);
+set !txt2 !(c is greater than d);
+ifelse (< c d) !(print @txt1) !(print @txt2);
+
+set !txt1 !(e is greater or equal to f);
+set !txt2 !(e is less or equal to f);
+ifelse (>= e f) !(print @txt1) !(print @txt2);
+
+set !txt1 !(g is less or equal to h);
+set !txt2 !(g is greater than h);
+ifelse (<= g h) !(print @txt1) !(print @txt2);
+
+// string conditions;
+
+set !txt1 !(abc is equal to abcd);
+set !txt2 !(abc is different from abcd);
+ifelse (== abc abcd) !(print @txt1) !(print @txt2);
+ifelse (!= abc abcd) !(print @txt2) !(print @txt1);
+set !abc abcd;
+ifelse (== abc abcd) !(print @txt1) !(print @txt2);
+
+// ls !hash;
+
+return 0;
+
+
