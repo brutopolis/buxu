@@ -825,6 +825,11 @@ Int eval(VirtualMachine *vm, char *cmd)
     while (splited->size > 0)
     {
         char *str = StackShift(*splited);
+        if (strlen(str) == 0)
+        {
+            free(str);
+            continue;
+        }
         result = interpret(vm, str);
         free(str);
         if (result > 0)

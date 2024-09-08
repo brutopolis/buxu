@@ -52,4 +52,4 @@ print (list.get @a1 2);
 set !ccc (get @acd);
 print @ccc;
 return 123;
-repl;
+repl; // this should not be executed;

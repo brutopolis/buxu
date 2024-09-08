@@ -45,9 +45,9 @@ ifelse (<= g h) !(print @txt1) !(print @txt2);
 set !txt1 !(abc is equal to abcd);
 set !txt2 !(abc is different from abcd);
 ifelse (== abc abcd) !(print @txt1) !(print @txt2);
-ifelse (!= abc abcd) !(print @txt2) !(print @txt1);
-set !abc abcd;
-ifelse (== abc abcd) !(print @txt1) !(print @txt2);
+
+ifelse (~= abc abcd) !(print @txt2) !(print @txt1);
+
 
 // ls !hash;
 

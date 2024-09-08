@@ -6,27 +6,34 @@ Int std_set(VirtualMachine *vm, VariableList *args)
     Variable varname = StackShift(*args);
     Variable value = StackShift(*args);
 
-
     if (varname.type == TYPE_STRING)
     {
         char * name = varname.value.string;
         Int index = hashfind(vm, name);
 
-        if (index == -1)
+        if (index >= 0)
         {
+            unusevar(vm, index);
             index = newvar(vm);
+            vm->stack->data[index] = valueDuplicate(value.value, value.type);
+            vm->typestack->data[index] = value.type;
+        }
+        else 
+        {
+            //create a new variable
+            index = newvar(vm);
+            vm->stack->data[index] = valueDuplicate(value.value, value.type);
+            vm->typestack->data[index] = value.type;
             hashset(vm, name, index);
         }
-        
-        vm->stack->data[index] = valueDuplicate(value.value, value.type);
-        vm->typestack->data[index] = value.type;
     }
     else if (varname.type == TYPE_NUMBER)
     {
         Int index = (Int)varname.value.number;
-        if (index >= 0 && index < vm->stack->size)
+        if (index >= 0)
         {
             unusevar(vm, index);
+            index = newvar(vm);
             vm->stack->data[index] = valueDuplicate(value.value, value.type);
             vm->typestack->data[index] = value.type;
         }
@@ -38,7 +45,6 @@ Int std_set(VirtualMachine *vm, VariableList *args)
             vm->typestack->data[index] = value.type;
         }
     }
-
 
     freerawvar(varname);
     freerawvar(value);
@@ -1005,8 +1011,14 @@ Int std_condition_equals(VirtualMachine *vm, VariableList *args)
             result = newNumber(vm, strcmp(a.value.string, b.value.string) == 0);
         }
     }
-    freerawvar(a);
-    freerawvar(b);
+    if (a.type != TYPE_STRING && a.type != TYPE_ERROR && a.type != TYPE_LIST)
+    {
+        freerawvar(a);
+    }
+    if (b.type != TYPE_STRING && b.type != TYPE_ERROR && b.type != TYPE_LIST)
+    {
+        freerawvar(b);
+    }
     return result;
 }
 
@@ -1034,8 +1046,15 @@ Int std_condition_not_equals(VirtualMachine *vm, VariableList *args)
             result = newNumber(vm, strcmp(a.value.string, b.value.string) != 0);
         }
     }
-    freerawvar(a);
-    freerawvar(b);
+    
+    if (a.type != TYPE_STRING && a.type != TYPE_ERROR && a.type != TYPE_LIST)
+    {
+        freerawvar(a);
+    }
+    if (b.type != TYPE_STRING && b.type != TYPE_ERROR && b.type != TYPE_LIST)
+    {
+        freerawvar(b);
+    }
     return result;
 }
 
@@ -1063,8 +1082,14 @@ Int std_condition_greater(VirtualMachine *vm, VariableList *args)
             result = newNumber(vm, strcmp(a.value.string, b.value.string) > 0);
         }
     }
-    freerawvar(a);
-    freerawvar(b);
+    if (a.type != TYPE_STRING && a.type != TYPE_ERROR && a.type != TYPE_LIST)
+    {
+        freerawvar(a);
+    }
+    if (b.type != TYPE_STRING && b.type != TYPE_ERROR && b.type != TYPE_LIST)
+    {
+        freerawvar(b);
+    }
     return result;
 }
 
@@ -1092,8 +1117,14 @@ Int std_condition_less(VirtualMachine *vm, VariableList *args)
             result = newNumber(vm, strcmp(a.value.string, b.value.string) < 0);
         }
     }
-    freerawvar(a);
-    freerawvar(b);
+    if (a.type != TYPE_STRING && a.type != TYPE_ERROR && a.type != TYPE_LIST)
+    {
+        freerawvar(a);
+    }
+    if (b.type != TYPE_STRING && b.type != TYPE_ERROR && b.type != TYPE_LIST)
+    {
+        freerawvar(b);
+    }
     return result;
 }
 
@@ -1121,8 +1152,14 @@ Int std_condition_greater_equals(VirtualMachine *vm, VariableList *args)
             result = newNumber(vm, strcmp(a.value.string, b.value.string) >= 0);
         }
     }
-    freerawvar(a);
-    freerawvar(b);
+    if (a.type != TYPE_STRING && a.type != TYPE_ERROR && a.type != TYPE_LIST)
+    {
+        freerawvar(a);
+    }
+    if (b.type != TYPE_STRING && b.type != TYPE_ERROR && b.type != TYPE_LIST)
+    {
+        freerawvar(b);
+    }
     return result;
 }
 
@@ -1150,8 +1187,14 @@ Int std_condition_less_equals(VirtualMachine *vm, VariableList *args)
             result = newNumber(vm, strcmp(a.value.string, b.value.string) <= 0);
         }
     }
-    freerawvar(a);
-    freerawvar(b);
+    if (a.type != TYPE_STRING && a.type != TYPE_ERROR && a.type != TYPE_LIST)
+    {
+        freerawvar(a);
+    }
+    if (b.type != TYPE_STRING && b.type != TYPE_ERROR && b.type != TYPE_LIST)
+    {
+        freerawvar(b);
+    }
     return result;
 }
 
@@ -1161,8 +1204,14 @@ Int std_condition_and(VirtualMachine *vm, VariableList *args)
     Variable b = StackShift(*args);
     Int result = -1;
     result = newNumber(vm, (isTrue(a) && isTrue(b)));
-    freerawvar(a);
-    freerawvar(b);
+    if (a.type != TYPE_STRING && a.type != TYPE_ERROR && a.type != TYPE_LIST)
+    {
+        freerawvar(a);
+    }
+    if (b.type != TYPE_STRING && b.type != TYPE_ERROR && b.type != TYPE_LIST)
+    {
+        freerawvar(b);
+    }
     return result;
 }
 
