@@ -2,8 +2,8 @@
 
 Int std_temp(VirtualMachine *vm, IntList *args)
 {
-    Int result = StackShift(*args);
-    StackPush(*vm->temp, result);
+    Int result = stack_shift(*args);
+    stack_push(*vm->temp, result);
     return result;
 }
 
@@ -11,35 +11,35 @@ Int std_clear(VirtualMachine *vm, IntList *args)
 {
     while (vm->temp->size > 0)
     {
-        unusevar(vm, StackShift(*vm->temp));
+        unuse_var(vm, stack_shift(*vm->temp));
     }
     return -1;
 }
 
 Int std_set(VirtualMachine *vm, IntList *args)
 {
-    Int varname = StackShift(*args);
-    Int value = StackShift(*args);
+    Int varname = stack_shift(*args);
+    Int value = stack_shift(*args);
 
     if (vm->typestack->data[varname] == TYPE_STRING)
     {
         char * name = vm->stack->data[varname].string;
-        Int index = hashfind(vm, name);
+        Int index = hash_find(vm, name);
 
         if (index >= 0)
         {
-            unusevar(vm, index);
-            index = newvar(vm);
-            vm->stack->data[index] = valueDuplicate(vm->stack->data[value], vm->typestack->data[value]);
+            unuse_var(vm, index);
+            index = new_var(vm);
+            vm->stack->data[index] = value_duplicate(vm->stack->data[value], vm->typestack->data[value]);
             vm->typestack->data[index] = vm->typestack->data[value];
         }
         else 
         {
             //create a new variable
-            index = newvar(vm);
-            vm->stack->data[index] = valueDuplicate(vm->stack->data[value], vm->typestack->data[value]);
+            index = new_var(vm);
+            vm->stack->data[index] = value_duplicate(vm->stack->data[value], vm->typestack->data[value]);
             vm->typestack->data[index] = vm->typestack->data[value];
-            hashset(vm, name, index);
+            hash_set(vm, name, index);
         }
     }
     else if (vm->typestack->data[varname] == TYPE_NUMBER)
@@ -47,26 +47,26 @@ Int std_set(VirtualMachine *vm, IntList *args)
         Int index = (Int)vm->stack->data[varname].number;
         if (index >= 0)
         {
-            unusevar(vm, index);
-            index = newvar(vm);
-            vm->stack->data[index] = valueDuplicate(vm->stack->data[value], vm->typestack->data[value]);
+            unuse_var(vm, index);
+            index = new_var(vm);
+            vm->stack->data[index] = value_duplicate(vm->stack->data[value], vm->typestack->data[value]);
             vm->typestack->data[index] = vm->typestack->data[value];
         }
         else 
         {
             //create a new variable
-            index = newvar(vm);
-            vm->stack->data[index] = valueDuplicate(vm->stack->data[value], vm->typestack->data[value]);
+            index = new_var(vm);
+            vm->stack->data[index] = value_duplicate(vm->stack->data[value], vm->typestack->data[value]);
             vm->typestack->data[index] = vm->typestack->data[value];
         }
     }
-    //unusevar(vm, varname);
+    //unuse_var(vm, varname);
     return -1;
 }
 
 Int std_new(VirtualMachine *vm, IntList *args)
 {
-    Int var = StackShift(*args);
+    Int var = stack_shift(*args);
     return var;
 }
 
@@ -74,7 +74,7 @@ Int std_print(VirtualMachine *vm, IntList *args)
 {
     while (args->size > 0)
     {
-        Int var = StackShift(*args);
+        Int var = stack_shift(*args);
         Int _type = -1;
 
         Value temp = vm->stack->data[var];
@@ -84,10 +84,6 @@ Int std_print(VirtualMachine *vm, IntList *args)
         {
             _type = vm->typestack->data[(Int)vm->stack->data[var].number];
             temp = vm->stack->data[(Int)vm->stack->data[var].number];
-        }
-        else 
-        {
-            return -1;
         }
         
         if (_type == TYPE_FUNCTION)
@@ -214,7 +210,7 @@ Int std_ls(VirtualMachine *vm, IntList *args)
     }
     else
     {
-        Int _var = StackShift(*args);
+        Int _var = stack_shift(*args);
         if (vm->typestack->data[_var] == TYPE_STRING)
         {
             if(strcmp("hashes", vm->stack->data[_var].string) == 0 ||
@@ -345,7 +341,7 @@ Int std_ls(VirtualMachine *vm, IntList *args)
 
 Int std_eval(VirtualMachine *vm, IntList *args)
 {
-    Int str = StackShift(*args);
+    Int str = stack_shift(*args);
     char* _str = vm->stack->data[str].string;
     Int result = eval(vm, _str);
     return result;
@@ -356,17 +352,17 @@ Int std_delete(VirtualMachine *vm, IntList *args)
     Int index;
     while (args->size > 0)
     {
-        index = StackShift(*args);
+        index = stack_shift(*args);
         if (vm->typestack->data[index] == TYPE_POINTER || vm->typestack->data[index] == TYPE_NUMBER)
         {
-            unusevar(vm, vm->stack->data[index].number);
+            unuse_var(vm, vm->stack->data[index].number);
         }
         else if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_ERROR)
         {
-            Int _index = hashfind(vm, vm->stack->data[index].string);
+            Int _index = hash_find(vm, vm->stack->data[index].string);
             if (_index != -1)
             {
-                unusevar(vm, _index);
+                unuse_var(vm, _index);
             }
         }
         else
@@ -384,28 +380,28 @@ Int std_comment(VirtualMachine *vm, IntList *args)
 
 Int std_return(VirtualMachine *vm, IntList *args)
 {
-    Int var = StackShift(*args);
+    Int var = stack_shift(*args);
     return var;
 }
 
 Int std_type(VirtualMachine *vm, IntList *args)
 {
-    Int var = StackShift(*args);
-    Int result = newNumber(vm, vm->typestack->data[var]);
+    Int var = stack_shift(*args);
+    Int result = new_number(vm, vm->typestack->data[var]);
     return result;
 }
 
 Int std_get(VirtualMachine *vm, IntList *args)
 {
-    Int var = StackShift(*args);
+    Int var = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[var] == TYPE_STRING)
     {
-        Int index = hashfind(vm, vm->stack->data[var].string);
+        Int index = hash_find(vm, vm->stack->data[var].string);
         if (index == -1)
         {
-            char *error = strf("Variable %s not found", vm->stack->data[var].string);
-            result = newError(vm, error);
+            char *error = str_format("Variable %s not found", vm->stack->data[var].string);
+            result = new_error(vm, error);
             free(error);
         }
         else
@@ -422,8 +418,8 @@ Int std_get(VirtualMachine *vm, IntList *args)
         }
         else 
         {
-            char *error = strf("Variable %d not found", index);
-            result = newError(vm, error);
+            char *error = str_format("Variable %d not found", index);
+            result = new_error(vm, error);
             free(error);
         }
     }
@@ -438,25 +434,25 @@ Int std_get(VirtualMachine *vm, IntList *args)
 
 Int std_math_add(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
-    Int result = newNumber(vm, vm->stack->data[a].number + vm->stack->data[b].number);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
+    Int result = new_number(vm, vm->stack->data[a].number + vm->stack->data[b].number);
     return result;
 }
 
 Int std_math_sub(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
-    Int result = newNumber(vm, vm->stack->data[a].number - vm->stack->data[b].number);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
+    Int result = new_number(vm, vm->stack->data[a].number - vm->stack->data[b].number);
     return result;
 }
 
 Int std_math_mul(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
-    Int result = newNumber(vm, vm->stack->data[a].number * vm->stack->data[b].number);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
+    Int result = new_number(vm, vm->stack->data[a].number * vm->stack->data[b].number);
     
     
     return result;
@@ -464,9 +460,9 @@ Int std_math_mul(VirtualMachine *vm, IntList *args)
 
 Int std_math_div(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
-    Int result = newNumber(vm, vm->stack->data[a].number / vm->stack->data[b].number);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
+    Int result = new_number(vm, vm->stack->data[a].number / vm->stack->data[b].number);
     
     
     return result;
@@ -474,9 +470,9 @@ Int std_math_div(VirtualMachine *vm, IntList *args)
 
 Int std_math_mod(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
-    Int result = newNumber(vm, (Int)vm->stack->data[a].number % (Int)vm->stack->data[b].number);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
+    Int result = new_number(vm, (Int)vm->stack->data[a].number % (Int)vm->stack->data[b].number);
     
     
     return result;
@@ -484,9 +480,9 @@ Int std_math_mod(VirtualMachine *vm, IntList *args)
 
 Int std_math_pow(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
-    Int result = newNumber(vm, pow(vm->stack->data[a].number, vm->stack->data[b].number));
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
+    Int result = new_number(vm, pow(vm->stack->data[a].number, vm->stack->data[b].number));
     
     
     return result;
@@ -495,53 +491,53 @@ Int std_math_pow(VirtualMachine *vm, IntList *args)
 
 Int std_math_sqrt(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int result = newNumber(vm, sqrt(vm->stack->data[a].number));
+    Int a = stack_shift(*args);
+    Int result = new_number(vm, sqrt(vm->stack->data[a].number));
     
     return result;
 }
 
 Int std_math_abs(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int result = newNumber(vm, fabs(vm->stack->data[a].number));
+    Int a = stack_shift(*args);
+    Int result = new_number(vm, fabs(vm->stack->data[a].number));
     
     return result;
 }
 
 Int std_math_random(VirtualMachine *vm, IntList *args)
 {
-    Int ___min = StackShift(*args);
-    Int ___max = StackShift(*args);
-    Int result = newNumber(vm, rand() % (Int)vm->stack->data[___max].number + (Int)vm->stack->data[___min].number);
+    Int ___min = stack_shift(*args);
+    Int ___max = stack_shift(*args);
+    Int result = new_number(vm, rand() % (Int)vm->stack->data[___max].number + (Int)vm->stack->data[___min].number);
     return result;
 }
 
 Int std_math_seed(VirtualMachine *vm, IntList *args)
 {
-    Int seed = StackShift(*args);
+    Int seed = stack_shift(*args);
     srand((Int)vm->stack->data[seed].number);
     return -1;
 }
 
 Int std_math_floor(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int result = newNumber(vm, floor(vm->stack->data[a].number));
+    Int a = stack_shift(*args);
+    Int result = new_number(vm, floor(vm->stack->data[a].number));
     return result;;
 }
 
 Int std_math_ceil(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int result = newNumber(vm, ceil(vm->stack->data[a].number));
+    Int a = stack_shift(*args);
+    Int result = new_number(vm, ceil(vm->stack->data[a].number));
     return result;
 }
 
 Int std_math_round(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int result = newNumber(vm, round(vm->stack->data[a].number));
+    Int a = stack_shift(*args);
+    Int result = new_number(vm, round(vm->stack->data[a].number));
     return result;
 }
 
@@ -553,21 +549,21 @@ Int std_math_round(VirtualMachine *vm, IntList *args)
 
 Int std_list_new(VirtualMachine *vm, IntList *args) 
 {
-    Int index = newList(vm);
+    Int index = new_list(vm);
     IntList *list = (IntList*)vm->stack->data[index].pointer;
     while (args->size > 0)
     {
-        Int var = StackShift(*args);
+        Int var = stack_shift(*args);
         if (vm->typestack->data[var] == TYPE_POINTER)
         {
-            StackPush(*list, (Int)vm->stack->data[var].number);
+            stack_push(*list, (Int)vm->stack->data[var].number);
         }
         else 
         {
-            Int tmp = newvar(vm);
-            vm->stack->data[tmp] = valueDuplicate(vm->stack->data[var], vm->typestack->data[var]);
+            Int tmp = new_var(vm);
+            vm->stack->data[tmp] = value_duplicate(vm->stack->data[var], vm->typestack->data[var]);
             vm->typestack->data[tmp] = vm->typestack->data[var];
-            StackPush(*list, tmp);
+            stack_push(*list, tmp);
         }
     }
     return index;
@@ -575,16 +571,16 @@ Int std_list_new(VirtualMachine *vm, IntList *args)
 
 Int std_list_insert(VirtualMachine *vm, IntList *args)
 {
-    Int list = StackShift(*args);
-    Int index = StackShift(*args);
-    Int value = StackShift(*args);
+    Int list = stack_shift(*args);
+    Int index = stack_shift(*args);
+    Int value = stack_shift(*args);
 
     if (vm->typestack->data[list] == TYPE_POINTER)
     {
         if (vm->typestack->data[(Int)vm->stack->data[list].number] == TYPE_LIST)
         {
             IntList *lst = (IntList*)vm->stack->data[(Int)vm->stack->data[list].number].pointer;
-            StackInsert(*lst, (Int)vm->stack->data[index].number, (Int)vm->stack->data[value].number);
+            stack_insert(*lst, (Int)vm->stack->data[index].number, (Int)vm->stack->data[value].number);
         }
     }
     return -1;
@@ -592,15 +588,15 @@ Int std_list_insert(VirtualMachine *vm, IntList *args)
 
 Int std_list_push(VirtualMachine *vm, IntList *args)
 {
-    Int list = StackShift(*args);
-    Int value = StackShift(*args);
+    Int list = stack_shift(*args);
+    Int value = stack_shift(*args);
 
     if (vm->typestack->data[list] == TYPE_POINTER)
     {
         if (vm->typestack->data[(Int)vm->stack->data[list].number] == TYPE_LIST)
         {
             IntList *lst = (IntList*)vm->stack->data[(Int)vm->stack->data[list].number].pointer;
-            StackPush(*lst, (Int)vm->stack->data[value].number);
+            stack_push(*lst, (Int)vm->stack->data[value].number);
         }
     }
     return -1;
@@ -608,14 +604,14 @@ Int std_list_push(VirtualMachine *vm, IntList *args)
 
 Int std_list_unshift(VirtualMachine *vm, IntList *args) // returns the removed element
 {
-    Int list = StackShift(*args);
-    Int value = StackShift(*args);
+    Int list = stack_shift(*args);
+    Int value = stack_shift(*args);
     if (vm->typestack->data[list] == TYPE_POINTER)
     {
         if (vm->typestack->data[(Int)vm->stack->data[list].number] == TYPE_LIST)
         {
             IntList *lst = (IntList*)vm->stack->data[(Int)vm->stack->data[list].number].pointer;
-            StackUnshift(*lst, (Int)vm->stack->data[value].number);
+            stack_unshift(*lst, (Int)vm->stack->data[value].number);
         }
     }
     return -1;   
@@ -623,14 +619,14 @@ Int std_list_unshift(VirtualMachine *vm, IntList *args) // returns the removed e
 
 Int std_list_remove(VirtualMachine *vm, IntList *args)// returns the removed element
 {
-    Int list = StackShift(*args);
-    Int index = StackShift(*args);
+    Int list = stack_shift(*args);
+    Int index = stack_shift(*args);
     if (vm->typestack->data[list] == TYPE_POINTER)
     {
         if (vm->typestack->data[(Int)vm->stack->data[list].number] == TYPE_LIST)
         {
             IntList *lst = (IntList*)vm->stack->data[(Int)vm->stack->data[list].number].pointer;
-            Int result = StackRemove(*lst, (Int)vm->stack->data[list].number);
+            Int result = stack_remove(*lst, (Int)vm->stack->data[list].number);
             return result;
         }
     }
@@ -639,13 +635,13 @@ Int std_list_remove(VirtualMachine *vm, IntList *args)// returns the removed ele
 
 Int std_list_pop(VirtualMachine *vm, IntList *args) // returns the removed element
 {
-    Int list = StackShift(*args);
+    Int list = stack_shift(*args);
     if (vm->typestack->data[list] == TYPE_POINTER)
     {
         if (vm->typestack->data[(Int)vm->stack->data[list].number] == TYPE_LIST)
         {
             IntList *lst = (IntList*)vm->stack->data[(Int)vm->stack->data[list].number].pointer;
-            Int result = StackPop(*lst);
+            Int result = stack_pop(*lst);
             return result;
         }
     }
@@ -654,13 +650,13 @@ Int std_list_pop(VirtualMachine *vm, IntList *args) // returns the removed eleme
 
 Int std_list_shift(VirtualMachine *vm, IntList *args)
 {
-    Int list = StackShift(*args);
+    Int list = stack_shift(*args);
     if (vm->typestack->data[list]== TYPE_POINTER)
     {
         if (vm->typestack->data[(Int)vm->stack->data[list].number] == TYPE_LIST)
         {
             IntList *lst = (IntList*)vm->stack->data[(Int)vm->stack->data[list].number].pointer;
-            Int result = StackShift(*lst);
+            Int result = stack_shift(*lst);
             return result;
         }
     }
@@ -669,9 +665,9 @@ Int std_list_shift(VirtualMachine *vm, IntList *args)
 
 Int std_list_concat(VirtualMachine *vm, IntList *args)
 {
-    Int list1 = StackShift(*args);
-    Int list2 = StackShift(*args);
-    Int _newlist = newList(vm);
+    Int list1 = stack_shift(*args);
+    Int list2 = stack_shift(*args);
+    Int _newlist = new_list(vm);
     IntList *newlist = (IntList*)vm->stack->data[_newlist].pointer;
     if (vm->typestack->data[list1] == TYPE_POINTER && vm->typestack->data[list2] == TYPE_POINTER)
     {
@@ -681,11 +677,11 @@ Int std_list_concat(VirtualMachine *vm, IntList *args)
             IntList *lst2 = (IntList*)vm->stack->data[(Int)vm->stack->data[list2].number].pointer;
             for (Int i = 0; i < lst1->size; i++)
             {
-                StackPush(*newlist, lst1->data[i]);
+                stack_push(*newlist, lst1->data[i]);
             }
             for (Int i = 0; i < lst2->size; i++)
             {
-                StackPush(*newlist, lst2->data[i]);
+                stack_push(*newlist, lst2->data[i]);
             }
         }
     }
@@ -694,8 +690,8 @@ Int std_list_concat(VirtualMachine *vm, IntList *args)
 
 Int std_list_find(VirtualMachine *vm, IntList *args)
 {
-    Int list = StackShift(*args);
-    Int value = StackShift(*args);
+    Int list = stack_shift(*args);
+    Int value = stack_shift(*args);
     if (vm->typestack->data[list] == TYPE_POINTER)
     {
         if (vm->typestack->data[(Int)vm->stack->data[list].number] == TYPE_LIST)
@@ -715,8 +711,8 @@ Int std_list_find(VirtualMachine *vm, IntList *args)
 
 Int std_list_get(VirtualMachine *vm, IntList *args)
 {
-    Int list = StackShift(*args);
-    Int index = StackShift(*args);
+    Int list = stack_shift(*args);
+    Int index = stack_shift(*args);
     if (vm->typestack->data[list] == TYPE_POINTER)
     {
         if (vm->typestack->data[(Int)vm->stack->data[list].number] == TYPE_LIST)
@@ -738,8 +734,8 @@ Int std_list_get(VirtualMachine *vm, IntList *args)
 
 Int std_string_concat(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[a] == TYPE_NUMBER)
     {
@@ -747,14 +743,14 @@ Int std_string_concat(VirtualMachine *vm, IntList *args)
         {
             char _a[(int)log10(vm->stack->data[a].number)+2];
             sprintf(_a, "%d", (Int)vm->stack->data[a].number);
-            vm->stack->data[a].string = strduplicate(_a);
+            vm->stack->data[a].string = str_duplicate(_a);
             vm->typestack->data[a] = TYPE_STRING;
         }
         else
         {
             char _a[(int)log10(vm->stack->data[a].number)+8];
             sprintf(_a, "%f", vm->stack->data[a].number);
-            vm->stack->data[a].string = strduplicate(_a);
+            vm->stack->data[a].string = str_duplicate(_a);
             vm->typestack->data[a] = TYPE_STRING;
         }
     }
@@ -762,7 +758,7 @@ Int std_string_concat(VirtualMachine *vm, IntList *args)
     {
         if (vm->typestack->data[(Int)vm->stack->data[a].number] == TYPE_STRING)
         {
-            vm->stack->data[a].string = strduplicate(vm->stack->data[(Int)vm->stack->data[a].number].string);
+            vm->stack->data[a].string = str_duplicate(vm->stack->data[(Int)vm->stack->data[a].number].string);
             vm->typestack->data[a] = TYPE_STRING;
         }
         else if (vm->typestack->data[(Int)vm->stack->data[a].number] == TYPE_NUMBER)
@@ -771,28 +767,28 @@ Int std_string_concat(VirtualMachine *vm, IntList *args)
             {
                 char _a[(int)log10(vm->stack->data[(Int)vm->stack->data[a].number].number)+2];
                 sprintf(_a, "%d", (Int)vm->stack->data[(Int)vm->stack->data[a].number].number);
-                vm->stack->data[a].string = strduplicate(_a);
+                vm->stack->data[a].string = str_duplicate(_a);
                 vm->typestack->data[a] = TYPE_STRING;
             }
             else
             {
                 char _a[(int)log10(vm->stack->data[(Int)vm->stack->data[a].number].number)+8];
                 sprintf(_a, "%f", vm->stack->data[(Int)vm->stack->data[a].number].number);
-                vm->stack->data[a].string = strduplicate(_a);
+                vm->stack->data[a].string = str_duplicate(_a);
                 vm->typestack->data[a] = TYPE_STRING;
             }
         }
     }
     else if (vm->typestack->data[a] == TYPE_ERROR)
     {
-        vm->stack->data[a].string = strduplicate(vm->stack->data[a].string);
+        vm->stack->data[a].string = str_duplicate(vm->stack->data[a].string);
         vm->typestack->data[a] = TYPE_STRING;
     }
     else if (vm->typestack->data[a] == TYPE_FUNCTION)
     {
         char _a[20];
         sprintf(_a, "%p", vm->stack->data[a].pointer);
-        vm->stack->data[a].string = strduplicate(_a);
+        vm->stack->data[a].string = str_duplicate(_a);
         vm->typestack->data[a] = TYPE_STRING;
     }
     
@@ -802,14 +798,14 @@ Int std_string_concat(VirtualMachine *vm, IntList *args)
         {
             char _b[(int)log10(vm->stack->data[b].number)+2];
             sprintf(_b, "%d", (Int)vm->stack->data[b].number);
-            vm->stack->data[b].string = strduplicate(_b);
+            vm->stack->data[b].string = str_duplicate(_b);
             vm->typestack->data[b] = TYPE_STRING;
         }
         else
         {
             char _b[(int)log10(vm->stack->data[b].number)+8];
             sprintf(_b, "%f", vm->stack->data[b].number);
-            vm->stack->data[b].string = strduplicate(_b);
+            vm->stack->data[b].string = str_duplicate(_b);
             vm->typestack->data[b] = TYPE_STRING;
         }
     }
@@ -817,7 +813,7 @@ Int std_string_concat(VirtualMachine *vm, IntList *args)
     {
         if (vm->typestack->data[(Int)vm->stack->data[b].number] == TYPE_STRING)
         {
-            vm->stack->data[b].string = strduplicate(vm->stack->data[(Int)vm->stack->data[b].number].string);
+            vm->stack->data[b].string = str_duplicate(vm->stack->data[(Int)vm->stack->data[b].number].string);
             vm->typestack->data[b] = TYPE_STRING;
         }
         else if (vm->typestack->data[(Int)vm->stack->data[b].number] == TYPE_NUMBER)
@@ -826,41 +822,41 @@ Int std_string_concat(VirtualMachine *vm, IntList *args)
             {
                 char _b[(int)log10(vm->stack->data[(Int)vm->stack->data[b].number].number)+2];
                 sprintf(_b, "%d", (Int)vm->stack->data[(Int)vm->stack->data[b].number].number);
-                vm->stack->data[b].string = strduplicate(_b);
+                vm->stack->data[b].string = str_duplicate(_b);
                 vm->typestack->data[b] = TYPE_STRING;
             }
             else
             {
                 char _b[(int)log10(vm->stack->data[(Int)vm->stack->data[b].number].number)+8];
                 sprintf(_b, "%f", vm->stack->data[(Int)vm->stack->data[b].number].number);
-                vm->stack->data[b].string = strduplicate(_b);
+                vm->stack->data[b].string = str_duplicate(_b);
                 vm->typestack->data[b] = TYPE_STRING;
             }
         }
     }
     else if (vm->typestack->data[b] == TYPE_ERROR)
     {
-        vm->stack->data[b].string = strduplicate(vm->stack->data[b].string);
+        vm->stack->data[b].string = str_duplicate(vm->stack->data[b].string);
         vm->typestack->data[b] = TYPE_STRING;
     }
     else if (vm->typestack->data[b] == TYPE_FUNCTION)
     {
         char _b[20];
         sprintf(_b, "%p", vm->stack->data[b].pointer);
-        vm->stack->data[b].string = strduplicate(_b);
+        vm->stack->data[b].string = str_duplicate(_b);
         vm->typestack->data[b] = TYPE_STRING;
     }
 
-    char* _newstr = strconcat(vm->stack->data[a].string, vm->stack->data[b].string);
-    result = newString(vm, _newstr);
+    char* _newstr = str_concat(vm->stack->data[a].string, vm->stack->data[b].string);
+    result = new_string(vm, _newstr);
     free(_newstr);
     return result;
 }
 
 Int std_string_find(VirtualMachine *vm, IntList *args)
 {
-    Int str = StackShift(*args);
-    Int substr = StackShift(*args);
+    Int str = stack_shift(*args);
+    Int substr = stack_shift(*args);
     Int result = -1;
     if ((vm->typestack->data[str] == TYPE_STRING || vm->typestack->data[str] == TYPE_ERROR) && (vm->typestack->data[substr] == TYPE_STRING || vm->typestack->data[substr] == TYPE_ERROR))
     {
@@ -869,7 +865,7 @@ Int std_string_find(VirtualMachine *vm, IntList *args)
         char* _result = strstr(_str, _substr);
         if (_result != NULL)
         {
-            result = newNumber(vm, _result - _str);
+            result = new_number(vm, _result - _str);
         }
     }
     return result;
@@ -877,15 +873,15 @@ Int std_string_find(VirtualMachine *vm, IntList *args)
 
 Int std_string_ndup(VirtualMachine *vm, IntList *args)
 {
-    Int str = StackShift(*args);
-    Int start = StackShift(*args);
-    Int end = StackShift(*args);
+    Int str = stack_shift(*args);
+    Int start = stack_shift(*args);
+    Int end = stack_shift(*args);
     Int result = -1;
     if ((vm->typestack->data[str] == TYPE_STRING || vm->typestack->data[str] == TYPE_ERROR) && vm->typestack->data[start] == TYPE_NUMBER && vm->typestack->data[end] == TYPE_NUMBER)
     {
         char* _str = strndup(vm->stack->data[str].string + (Int)vm->stack->data[start].number, (Int)vm->stack->data[end].number - (Int)vm->stack->data[start].number);
         printf("%s\n", _str);
-        result = newString(vm, _str);
+        result = new_string(vm, _str);
         printf("STRING:%s\n", _str);
         free(_str);
     }
@@ -894,41 +890,41 @@ Int std_string_ndup(VirtualMachine *vm, IntList *args)
 
 Int std_string_split(VirtualMachine *vm, IntList *args)
 {
-    Int str = StackShift(*args);
-    Int delim = StackShift(*args);
+    Int str = stack_shift(*args);
+    Int delim = stack_shift(*args);
     Int result = -1;
     if ((vm->typestack->data[str] == TYPE_STRING || vm->typestack->data[str] == TYPE_ERROR) && (vm->typestack->data[delim] == TYPE_STRING || vm->typestack->data[delim] == TYPE_ERROR))
     {
         StringList *list = splitString(vm->stack->data[str].string, vm->stack->data[delim].string);
-        result = newList(vm);
+        result = new_list(vm);
         IntList *newlist = (IntList*)vm->stack->data[result].pointer;
         while (list->size > 0)
         {
-            char* _str = StackShift(*list);
+            char* _str = stack_shift(*list);
             printf("STRING:%s\n", _str);
-            char* cmd = strf("list.push @%d @%d", result, newString(vm, _str));
+            char* cmd = str_format("list.push @%d @%d", result, new_string(vm, _str));
             eval(vm, cmd);
             free(cmd);
             free(_str);
         }
-        StackFree(*list);
+        stack_free(*list);
     }
     return result;
 }
 
 Int std_string_replace(VirtualMachine *vm, IntList *args)
 {
-    Int str = StackShift(*args);
-    Int substr = StackShift(*args);
-    Int replacement = StackShift(*args);
+    Int str = stack_shift(*args);
+    Int substr = stack_shift(*args);
+    Int replacement = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[str] == TYPE_STRING && vm->typestack->data[substr] == TYPE_STRING && vm->typestack->data[replacement] == TYPE_STRING)
     {
         char* _str = vm->stack->data[str].string;
         char* _substr = vm->stack->data[substr].string;
         char* _replacement = vm->stack->data[replacement].string;
-        char* _newstr = strreplace(_str, _substr, _replacement);
-        result = newString(vm, _newstr);
+        char* _newstr = str_replace(_str, _substr, _replacement);
+        result = new_string(vm, _newstr);
         free(_newstr);
     }
     return result;
@@ -936,11 +932,11 @@ Int std_string_replace(VirtualMachine *vm, IntList *args)
 
 Int std_string_length(VirtualMachine *vm, IntList *args)
 {
-    Int str = StackShift(*args);
+    Int str = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[str] == TYPE_STRING)
     {
-        result = newNumber(vm, strlen(vm->stack->data[str].string));
+        result = new_number(vm, strlen(vm->stack->data[str].string));
     }
     return result;
 }
@@ -951,26 +947,26 @@ Int std_string_length(VirtualMachine *vm, IntList *args)
 
 Int std_condition_equals(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[a] == vm->typestack->data[b])
     {
         if (vm->typestack->data[a] == TYPE_NUMBER)
         {
-            result = newNumber(vm, vm->stack->data[a].number == vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number == vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_STRING)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) == 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) == 0);
         }
         else if (vm->typestack->data[a] == TYPE_POINTER)
         {
-            result = newNumber(vm, vm->stack->data[a].number == vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number == vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_ERROR)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) == 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) == 0);
         }
     }
     if (vm->typestack->data[a] != TYPE_STRING && vm->typestack->data[a] != TYPE_ERROR && vm->typestack->data[a] != TYPE_LIST)
@@ -986,26 +982,26 @@ Int std_condition_equals(VirtualMachine *vm, IntList *args)
 
 Int std_condition_not_equals(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[a] == vm->typestack->data[b])
     {
         if (vm->typestack->data[a] == TYPE_NUMBER)
         {
-            result = newNumber(vm, vm->stack->data[a].number != vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number != vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_STRING)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) != 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) != 0);
         }
         else if (vm->typestack->data[a] == TYPE_POINTER)
         {
-            result = newNumber(vm, vm->stack->data[a].number != vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number != vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_ERROR)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) != 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) != 0);
         }
     }
     
@@ -1022,26 +1018,26 @@ Int std_condition_not_equals(VirtualMachine *vm, IntList *args)
 
 Int std_condition_greater(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[a] == vm->typestack->data[b])
     {
         if (vm->typestack->data[a] == TYPE_NUMBER)
         {
-            result = newNumber(vm, vm->stack->data[a].number > vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number > vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_STRING)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) > 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) > 0);
         }
         else if (vm->typestack->data[a] == TYPE_POINTER)
         {
-            result = newNumber(vm, vm->stack->data[a].number > vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number > vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_ERROR)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) > 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) > 0);
         }
     }
     if (vm->typestack->data[a] != TYPE_STRING && vm->typestack->data[a] != TYPE_ERROR && vm->typestack->data[a] != TYPE_LIST)
@@ -1057,26 +1053,26 @@ Int std_condition_greater(VirtualMachine *vm, IntList *args)
 
 Int std_condition_less(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[a] == vm->typestack->data[b])
     {
         if (vm->typestack->data[a] == TYPE_NUMBER)
         {
-            result = newNumber(vm, vm->stack->data[a].number < vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number < vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_STRING)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) < 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) < 0);
         }
         else if (vm->typestack->data[a] == TYPE_POINTER)
         {
-            result = newNumber(vm, vm->stack->data[a].number < vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number < vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_ERROR)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) < 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) < 0);
         }
     }
     if (vm->typestack->data[a] != TYPE_STRING && vm->typestack->data[a] != TYPE_ERROR && vm->typestack->data[a] != TYPE_LIST)
@@ -1092,26 +1088,26 @@ Int std_condition_less(VirtualMachine *vm, IntList *args)
 
 Int std_condition_greater_equals(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[a] == vm->typestack->data[b])
     {
         if (vm->typestack->data[a] == TYPE_NUMBER)
         {
-            result = newNumber(vm, vm->stack->data[a].number >= vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number >= vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_STRING)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) >= 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) >= 0);
         }
         else if (vm->typestack->data[a] == TYPE_POINTER)
         {
-            result = newNumber(vm, vm->stack->data[a].number >= vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number >= vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_ERROR)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) >= 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) >= 0);
         }
     }
     if (vm->typestack->data[a] != TYPE_STRING && vm->typestack->data[a] != TYPE_ERROR && vm->typestack->data[a] != TYPE_LIST)
@@ -1127,26 +1123,26 @@ Int std_condition_greater_equals(VirtualMachine *vm, IntList *args)
 
 Int std_condition_less_equals(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[a] == vm->typestack->data[b])
     {
         if (vm->typestack->data[a] == TYPE_NUMBER)
         {
-            result = newNumber(vm, vm->stack->data[a].number <= vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number <= vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_STRING)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) <= 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) <= 0);
         }
         else if (vm->typestack->data[a] == TYPE_POINTER)
         {
-            result = newNumber(vm, vm->stack->data[a].number <= vm->stack->data[b].number);
+            result = new_number(vm, vm->stack->data[a].number <= vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_ERROR)
         {
-            result = newNumber(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) <= 0);
+            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) <= 0);
         }
     }
     if (vm->typestack->data[a] != TYPE_STRING && vm->typestack->data[a] != TYPE_ERROR && vm->typestack->data[a] != TYPE_LIST)
@@ -1162,10 +1158,10 @@ Int std_condition_less_equals(VirtualMachine *vm, IntList *args)
 
 Int std_condition_and(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
     Int result = -1;
-    result = newNumber(vm, (isTrue(vm->stack->data[a], vm->typestack->data[a]) && isTrue(vm->stack->data[b], vm->typestack->data[b])));
+    result = new_number(vm, (is_true(vm->stack->data[a], vm->typestack->data[a]) && is_true(vm->stack->data[b], vm->typestack->data[b])));
     if (vm->typestack->data[a] != TYPE_STRING && vm->typestack->data[a] != TYPE_ERROR && vm->typestack->data[a] != TYPE_LIST)
     {
         
@@ -1179,12 +1175,12 @@ Int std_condition_and(VirtualMachine *vm, IntList *args)
 
 Int std_condition_or(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
-    Int b = StackShift(*args);
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
     Int result = -1;
-    if (isTrue(vm->stack->data[a], vm->typestack->data[a]))
+    if (is_true(vm->stack->data[a], vm->typestack->data[a]))
     {
-        Int index = newvar(vm);
+        Int index = new_var(vm);
         if (vm->typestack->data[a] == TYPE_LIST || vm->typestack->data[a] == TYPE_STRING)
         {
             vm->stack->data[index] = vm->stack->data[a];
@@ -1192,7 +1188,7 @@ Int std_condition_or(VirtualMachine *vm, IntList *args)
         }
         else
         {
-            vm->stack->data[index] = valueDuplicate(vm->stack->data[a], vm->typestack->data[a]);
+            vm->stack->data[index] = value_duplicate(vm->stack->data[a], vm->typestack->data[a]);
             
             
         }
@@ -1201,17 +1197,14 @@ Int std_condition_or(VirtualMachine *vm, IntList *args)
     }
     else
     {
-        Int index = newvar(vm);
+        Int index = new_var(vm);
         if (vm->typestack->data[b] == TYPE_LIST || vm->typestack->data[b] == TYPE_STRING)
         {
             vm->stack->data[index] = vm->stack->data[b];
-            
         }
         else
         {
-            vm->stack->data[index] = valueDuplicate(vm->stack->data[b], vm->typestack->data[b]);
-            
-            
+            vm->stack->data[index] = value_duplicate(vm->stack->data[b], vm->typestack->data[b]);
         }
     }
     return result;
@@ -1219,24 +1212,19 @@ Int std_condition_or(VirtualMachine *vm, IntList *args)
 
 Int std_condition_not(VirtualMachine *vm, IntList *args)
 {
-    Int a = StackShift(*args);
+    Int a = stack_shift(*args);
     Int result = -1;
     if (vm->typestack->data[a] == TYPE_NUMBER)
     {
-        result = newNumber(vm, !vm->stack->data[a].number);
+        result = new_number(vm, !vm->stack->data[a].number);
     }
-    else if (isTrue(vm->stack->data[a], vm->typestack->data[a]))
+    else if (is_true(vm->stack->data[a], vm->typestack->data[a]))
     {
-        result = newNumber(vm, 0);
+        result = new_number(vm, 0);
     }
     else
     {
-        result = newNumber(vm, 1);
-    }
-    
-    if (vm->typestack->data[a] != TYPE_LIST || vm->typestack->data[a] != TYPE_STRING)
-    {
-        
+        result = new_number(vm, 1);
     }
 
     return result;
@@ -1244,10 +1232,10 @@ Int std_condition_not(VirtualMachine *vm, IntList *args)
 
 Int std_condition_if(VirtualMachine *vm, IntList *args)
 {
-    Int condition = StackShift(*args);
-    Int _then = StackShift(*args);
+    Int condition = stack_shift(*args);
+    Int _then = stack_shift(*args);
     Int result = -1;
-    if (isTrue(vm->stack->data[condition], vm->typestack->data[condition]))
+    if (is_true(vm->stack->data[condition], vm->typestack->data[condition]))
     {
         result = eval(vm, vm->stack->data[_then].string);
     }
@@ -1256,11 +1244,11 @@ Int std_condition_if(VirtualMachine *vm, IntList *args)
 
 Int std_condition_ifelse(VirtualMachine *vm, IntList *args)
 {
-    Int condition = StackShift(*args);
-    Int _then = StackShift(*args);
-    Int _else = StackShift(*args);
+    Int condition = stack_shift(*args);
+    Int _then = stack_shift(*args);
+    Int _else = stack_shift(*args);
     Int result = -1;
-    if (isTrue(vm->stack->data[condition], vm->typestack->data[condition]))
+    if (is_true(vm->stack->data[condition], vm->typestack->data[condition]))
     {
         result = eval(vm, vm->stack->data[_then].string);
     }
@@ -1272,104 +1260,104 @@ Int std_condition_ifelse(VirtualMachine *vm, IntList *args)
 }
 
 
-void initStd(VirtualMachine *vm)
+void init_std(VirtualMachine *vm)
 {
-    spawnFunction(vm, "temp", std_temp);
-    spawnFunction(vm, "clear", std_clear);
-    spawnFunction(vm, "set", std_set);
-    spawnFunction(vm, "new", std_new);
-    spawnFunction(vm, "print", std_print);
-    spawnFunction(vm, "eval", std_eval);
-    spawnFunction(vm, "ls", std_ls);
-    spawnFunction(vm, "delete", std_delete);
-    spawnFunction(vm, "//", std_comment);
-    spawnFunction(vm, "return", std_return);
-    spawnFunction(vm, "type", std_type);
-    spawnFunction(vm, "get", std_get);
+    spawn_function(vm, "temp", std_temp);
+    spawn_function(vm, "clear", std_clear);
+    spawn_function(vm, "set", std_set);
+    spawn_function(vm, "new", std_new);
+    spawn_function(vm, "print", std_print);
+    spawn_function(vm, "eval", std_eval);
+    spawn_function(vm, "ls", std_ls);
+    spawn_function(vm, "delete", std_delete);
+    spawn_function(vm, "//", std_comment);
+    spawn_function(vm, "return", std_return);
+    spawn_function(vm, "type", std_type);
+    spawn_function(vm, "get", std_get);
 }
 
-void initMath(VirtualMachine *vm)
+void init_math(VirtualMachine *vm)
 {
-    spawnFunction(vm, "add", std_math_add);
-    spawnFunction(vm, "sub", std_math_sub);
-    spawnFunction(vm, "mul", std_math_mul);
-    spawnFunction(vm, "div", std_math_div);
-    spawnFunction(vm, "mod", std_math_mod);
-    spawnFunction(vm, "pow", std_math_pow);
-    spawnFunction(vm, "abs", std_math_abs);
-    spawnFunction(vm, "sqrt", std_math_sqrt);
-    spawnFunction(vm, "ceil", std_math_ceil);
-    spawnFunction(vm, "seed", std_math_seed);
-    spawnFunction(vm, "floor", std_math_floor);
-    spawnFunction(vm, "round", std_math_round);
-    spawnFunction(vm, "random", std_math_random);
+    spawn_function(vm, "add", std_math_add);
+    spawn_function(vm, "sub", std_math_sub);
+    spawn_function(vm, "mul", std_math_mul);
+    spawn_function(vm, "div", std_math_div);
+    spawn_function(vm, "mod", std_math_mod);
+    spawn_function(vm, "pow", std_math_pow);
+    spawn_function(vm, "abs", std_math_abs);
+    spawn_function(vm, "sqrt", std_math_sqrt);
+    spawn_function(vm, "ceil", std_math_ceil);
+    spawn_function(vm, "seed", std_math_seed);
+    spawn_function(vm, "floor", std_math_floor);
+    spawn_function(vm, "round", std_math_round);
+    spawn_function(vm, "random", std_math_random);
 }
 
-void initList(VirtualMachine *vm)
+void init_list(VirtualMachine *vm)
 {
-    spawnFunction(vm, "list.new", std_list_new);
+    spawn_function(vm, "list.new", std_list_new);
 
-    spawnFunction(vm, "list.insert", std_list_insert);
-    spawnFunction(vm, "list.push", std_list_push);
-    spawnFunction(vm, "list.unshift", std_list_unshift);
+    spawn_function(vm, "list.insert", std_list_insert);
+    spawn_function(vm, "list.push", std_list_push);
+    spawn_function(vm, "list.unshift", std_list_unshift);
     
-    spawnFunction(vm, "list.remove", std_list_remove);
-    spawnFunction(vm, "list.pop", std_list_pop);
-    spawnFunction(vm, "list.shift", std_list_shift);
+    spawn_function(vm, "list.remove", std_list_remove);
+    spawn_function(vm, "list.pop", std_list_pop);
+    spawn_function(vm, "list.shift", std_list_shift);
 
-    spawnFunction(vm, "list.concat", std_list_concat);
-    spawnFunction(vm, "list.find", std_list_find);
+    spawn_function(vm, "list.concat", std_list_concat);
+    spawn_function(vm, "list.find", std_list_find);
 
-    spawnFunction(vm, "list.get", std_list_get);
+    spawn_function(vm, "list.get", std_list_get);
 }
 
-void initString(VirtualMachine *vm)
+void init_string(VirtualMachine *vm)
 {
-    //spawnFunction(vm, "string.format", std_string_new);
-    spawnFunction(vm, "string.concat", std_string_concat);
-    spawnFunction(vm, "string.find", std_string_find);
-    spawnFunction(vm, "string.sub", std_string_ndup);
-    spawnFunction(vm, "string.split", std_string_split);
-    spawnFunction(vm, "string.replace", std_string_replace);
-    spawnFunction(vm, "string.len", std_string_length);
+    //spawn_function(vm, "string.format", std_string_new);
+    spawn_function(vm, "string.concat", std_string_concat);
+    spawn_function(vm, "string.find", std_string_find);
+    spawn_function(vm, "string.sub", std_string_ndup);
+    spawn_function(vm, "string.split", std_string_split);
+    spawn_function(vm, "string.replace", std_string_replace);
+    spawn_function(vm, "string.len", std_string_length);
 }
 
-void initConditions(VirtualMachine *vm)
+void init_conditions(VirtualMachine *vm)
 {
-    spawnFunction(vm, "==", std_condition_equals);
-    spawnFunction(vm, "~=", std_condition_not_equals);
-    spawnFunction(vm, ">", std_condition_greater);
-    spawnFunction(vm, "<", std_condition_less);
-    spawnFunction(vm, ">=", std_condition_greater_equals);
-    spawnFunction(vm, "<=", std_condition_less_equals);
-    spawnFunction(vm, "and", std_condition_and);
-    spawnFunction(vm, "or", std_condition_or);
-    spawnFunction(vm, "not", std_condition_not);
-    spawnFunction(vm, "if", std_condition_if);
-    spawnFunction(vm, "ifelse", std_condition_ifelse);
+    spawn_function(vm, "==", std_condition_equals);
+    spawn_function(vm, "~=", std_condition_not_equals);
+    spawn_function(vm, ">", std_condition_greater);
+    spawn_function(vm, "<", std_condition_less);
+    spawn_function(vm, ">=", std_condition_greater_equals);
+    spawn_function(vm, "<=", std_condition_less_equals);
+    spawn_function(vm, "and", std_condition_and);
+    spawn_function(vm, "or", std_condition_or);
+    spawn_function(vm, "not", std_condition_not);
+    spawn_function(vm, "if", std_condition_if);
+    spawn_function(vm, "ifelse", std_condition_ifelse);
 }
 
-void initDefaultVars(VirtualMachine *vm)
+void init_default_vars(VirtualMachine *vm)
 {
-    spawnNumber(vm, "PI", 3.14159265358979323846);// PI number
-    spawnNumber(vm, "ERROR", TYPE_ERROR);// error type
-    spawnNumber(vm, "NIL", TYPE_NIL);// nil type
-    spawnNumber(vm, "UNUSED", TYPE_UNUSED);// unused type
-    spawnNumber(vm, "POINTER", TYPE_POINTER);// pointer type
-    spawnNumber(vm, "NUMBER", TYPE_NUMBER);// number type
-    spawnNumber(vm, "STRING", TYPE_STRING);// string type
-    spawnNumber(vm, "FUNCTION", TYPE_FUNCTION);// function type
-    spawnNumber(vm, "LIST", TYPE_LIST);// list type
+    spawn_number(vm, "PI", 3.14159265358979323846);// PI number
+    spawn_number(vm, "ERROR", TYPE_ERROR);// error type
+    spawn_number(vm, "NIL", TYPE_NIL);// nil type
+    spawn_number(vm, "UNUSED", TYPE_UNUSED);// unused type
+    spawn_number(vm, "POINTER", TYPE_POINTER);// pointer type
+    spawn_number(vm, "NUMBER", TYPE_NUMBER);// number type
+    spawn_number(vm, "STRING", TYPE_STRING);// string type
+    spawn_number(vm, "FUNCTION", TYPE_FUNCTION);// function type
+    spawn_number(vm, "LIST", TYPE_LIST);// list type
 
-    spawnString(vm, "VERSION", VERSION);// version
+    spawn_string(vm, "VERSION", VERSION);// version
 }
 
-void initAll(VirtualMachine *vm)
+void init_all(VirtualMachine *vm)
 {
-    initStd(vm);
-    initMath(vm);
-    initList(vm);
-    initString(vm);
-    initConditions(vm);
-    initDefaultVars(vm);
+    init_std(vm);
+    init_math(vm);
+    init_list(vm);
+    init_string(vm);
+    init_conditions(vm);
+    init_default_vars(vm);
 }

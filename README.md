@@ -28,13 +28,13 @@ Bruter is a metaprogramable lightweight language written in C;
 ## Arg Types
 
 
-- `@pointer` = starts with @
+- `@pointer` = starts with @;
 
-- `#reference` = starts with #
+- `number` = starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -;
 
-- `number` = starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -
+- `string` = enclosed by !() or !word;
 
-- `string` = enclosed by !() or untyped.
+- `list` = enclosed by ();
 
 - `nil` = nil;
 
@@ -43,9 +43,9 @@ Bruter is a metaprogramable lightweight language written in C;
     function;
     function ...;
     function @variable; // pass a pointer as argument to function call;
-    function #variable; // pass the pointed object as argument to function call;
+    function variable; // pass the pointed object as argument to function call;
     function (function (function ...));
-    function @variable_1 #variable_2 ...;
+    function @variable_1 $variable_2 ...;
     set target_variable value; // set the value to target_variable;
     set target_variable (function ...); // set the result object to target_variable;
     set target_variable @(function ...); // set a pointer to the result object to target_variable;
@@ -63,10 +63,11 @@ library search path:
 
 ## Reserved
 
-- `()` = expression/delimiter
-- `!` = string indicator
-- `@` = pointer indicator
-- `;` = end of command
+- `()` = expression/list delimiter
+- `!` = string operator
+- `@` = pointer operator
+- `$` = temporary operator
+- `;` = end of command separator
 
 ## TO DO
 
@@ -77,8 +78,10 @@ library search path:
 - `math lib` = ok
 - `string lib` = ok
 - `list lib` = ok
+- `auto lib` = a std lib for memory management, not yet
 - `conditons lib` = ok/testing
-- `loops` = depends on conditions
-- `functions` = not yet
-- `libraries` = not yet
+- `loops lib` = depends on conditions
+- `functions lib` = not yet
+- `libraries lib` = not yet
 - `expect` = a function that expects a type and returns a boolean, not yet
+- `vs-code extension` = deadly outdated, not yet

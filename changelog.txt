@@ -1,3 +1,17 @@
+(09/09/2024) - version 0.4.8
+
+- some README updates
+- specialSplit renamed to special_space_split
+- added a new function special_split which splits by a given char
+- fixed string splitters
+- fixed eval function
+- all functions are were renamed from pascalCase to snake_case for consistency and better readability
+- Variable type and everything related to it was removed
+- VariableList type and everything related to it was removed
+- List type renamed to ValueList
+- specific Int and Float types macros for specific architeture were added
+- removed bruter.txt
+
 (09/09/2024) - version 0.4.7
 
 - functions will now get indexes instead of Variables;
@@ -8,3 +22,4 @@
 (07/09/2024) - version 0.4.6a 
 
 - fixed "set" function related leaks;
+- created this file;
