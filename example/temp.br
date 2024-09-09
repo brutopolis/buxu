@@ -1,0 +1,68 @@
+set $!a $(add $50 $11);
+set $!b $(mul $10 $20);
+set $!c $(div $100 $2);
+set $!d $(sub $100 $50);
+set $!e $(round $3.141592);
+set (temp !f) (temp (ceil (temp 3.141)));
+set (temp !g) (temp (floor (temp 3.141592659)));
+set (temp !h) (temp (sqrt (temp 100)));
+set (temp !i) (temp (random (temp 5) (temp 9)));
+set (temp !abc) (temp !abuble);
+set (temp !abcd) (temp !(opa iae));
+clear;
+
+print @abc;
+clear;
+
+// conditions test;
+
+set (temp !txt) (temp !(a and b are different));
+clear;
+if (~= (temp a) (temp b)) (temp !(print @txt));
+clear;
+
+set (temp !txt1) (temp !(a is greater than b));
+clear;
+set (temp !txt2) (temp !(a is less than b));
+clear;
+ifelse (> (temp a) (temp b)) (temp !(print @txt1)) (temp !(print @txt2));
+clear;
+
+set (temp !txt1) (temp !(c is less than d));
+clear;
+set (temp !txt2) (temp !(c is greater than d));
+clear;
+ifelse (< (temp c) (temp d)) (temp !(print @txt1)) (temp !(print @txt2));
+clear;
+
+set (temp !txt1) (temp !(e is greater or equal to f));
+clear;
+set (temp !txt2) (temp !(e is less or equal to f));
+clear;
+ifelse (>= (temp e) (temp f)) (temp !(print @txt1)) (temp !(print @txt2));
+clear;
+
+set (temp !txt1) (temp !(g is less or equal to h));
+clear;
+set (temp !txt2) (temp !(g is greater than h));
+clear;
+ifelse (<= (temp g) (temp h)) (temp !(print @txt1)) (temp !(print @txt2));
+clear;
+
+// string conditions;
+
+set (temp !txt1) (temp !(abc is equal to abcd));
+clear;
+set (temp !txt2) (temp !(abc is different from abcd));
+clear;
+ifelse (== (temp abc) (temp abcd)) (temp !(print @txt1)) (temp !(print @txt2));
+clear;
+
+ifelse (~= (temp abc) (temp abcd)) (temp !(print @txt2)) (temp !(print @txt1));
+clear;
+
+ls;
+
+
+
+return 0;

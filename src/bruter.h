@@ -10,7 +10,7 @@
 #define Int long
 #define Float double
 
-#define VERSION "0.4.6a"
+#define VERSION "0.4.7"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -148,11 +148,11 @@ typedef struct
     CharList *typestack;
     HashList *hashes;
     IntList *empty;
-    //Int bytesInUse;
+    IntList *temp;
 } VirtualMachine;
 
 //Function
-typedef Int (*Function)(VirtualMachine*, VariableList*);
+typedef Int (*Function)(VirtualMachine*, IntList*);
 
 //String
 char* strduplicate(const char *str);
@@ -166,7 +166,7 @@ char* strreplace(const char *str, const char *substr, const char *replacement);
 StringList* splitString(char *str, char *delim);
 StringList* specialSplit(char *str);
 
-char isTrue(Variable var);
+char isTrue(Value value, char __type);
 
 // variable
 
@@ -215,71 +215,73 @@ void hashunset(VirtualMachine *vm, char *key);
 // eval
 Int eval(VirtualMachine *vm, char *cmd);
 Int interpret(VirtualMachine *vm, char* cmd);
-VariableList* parse(VirtualMachine *vm, char *cmd);
+IntList* parse(VirtualMachine *vm, char *cmd);
 
 
 //std
-Int std_set(VirtualMachine *vm, VariableList *args);
-Int std_new(VirtualMachine *vm, VariableList *args);
-Int std_print(VirtualMachine *vm, VariableList *args);
-Int std_ls(VirtualMachine *vm, VariableList *args);
-Int std_help(VirtualMachine *vm, VariableList *args);
-Int std_eval(VirtualMachine *vm, VariableList *args);
-Int std_delete(VirtualMachine *vm, VariableList *args);
-Int std_type(VirtualMachine *vm, VariableList *args);
-Int std_get(VirtualMachine *vm, VariableList *args);
+Int std_temp(VirtualMachine *vm, IntList *args);
+Int std_clear(VirtualMachine *vm, IntList *args);
+Int std_set(VirtualMachine *vm, IntList *args);
+Int std_new(VirtualMachine *vm, IntList *args);
+Int std_print(VirtualMachine *vm, IntList *args);
+Int std_ls(VirtualMachine *vm, IntList *args);
+Int std_help(VirtualMachine *vm, IntList *args);
+Int std_eval(VirtualMachine *vm, IntList *args);
+Int std_delete(VirtualMachine *vm, IntList *args);
+Int std_type(VirtualMachine *vm, IntList *args);
+Int std_get(VirtualMachine *vm, IntList *args);
 
 //math
-Int std_math_add(VirtualMachine *vm, VariableList *args);
-Int std_math_sub(VirtualMachine *vm, VariableList *args);
-Int std_math_mul(VirtualMachine *vm, VariableList *args);
-Int std_math_div(VirtualMachine *vm, VariableList *args);
-Int std_math_mod(VirtualMachine *vm, VariableList *args);
-Int std_math_pow(VirtualMachine *vm, VariableList *args);
-Int std_math_sqrt(VirtualMachine *vm, VariableList *args);
-Int std_math_abs(VirtualMachine *vm, VariableList *args);
-Int std_math_random(VirtualMachine *vm, VariableList *args);
-Int std_math_floor(VirtualMachine *vm, VariableList *args);
-Int std_math_ceil(VirtualMachine *vm, VariableList *args);
-Int std_math_round(VirtualMachine *vm, VariableList *args);
+Int std_math_add(VirtualMachine *vm, IntList *args);
+Int std_math_sub(VirtualMachine *vm, IntList *args);
+Int std_math_mul(VirtualMachine *vm, IntList *args);
+Int std_math_div(VirtualMachine *vm, IntList *args);
+Int std_math_mod(VirtualMachine *vm, IntList *args);
+Int std_math_pow(VirtualMachine *vm, IntList *args);
+Int std_math_sqrt(VirtualMachine *vm, IntList *args);
+Int std_math_abs(VirtualMachine *vm, IntList *args);
+Int std_math_random(VirtualMachine *vm, IntList *args);
+Int std_math_floor(VirtualMachine *vm, IntList *args);
+Int std_math_ceil(VirtualMachine *vm, IntList *args);
+Int std_math_round(VirtualMachine *vm, IntList *args);
 
 
 //list
-Int std_list_new(VirtualMachine *vm, VariableList *args);
-Int std_list_insert(VirtualMachine *vm, VariableList *args);
-Int std_list_push(VirtualMachine *vm, VariableList *args);
-Int std_list_pop(VirtualMachine *vm, VariableList *args);
-Int std_list_shift(VirtualMachine *vm, VariableList *args);
-Int std_list_unshift(VirtualMachine *vm, VariableList *args);
-Int std_list_remove(VirtualMachine *vm, VariableList *args);
+Int std_list_new(VirtualMachine *vm, IntList *args);
+Int std_list_insert(VirtualMachine *vm, IntList *args);
+Int std_list_push(VirtualMachine *vm, IntList *args);
+Int std_list_pop(VirtualMachine *vm, IntList *args);
+Int std_list_shift(VirtualMachine *vm, IntList *args);
+Int std_list_unshift(VirtualMachine *vm, IntList *args);
+Int std_list_remove(VirtualMachine *vm, IntList *args);
 
-Int std_list_concat(VirtualMachine *vm, VariableList *args);
-Int std_list_find(VirtualMachine *vm, VariableList *args);
+Int std_list_concat(VirtualMachine *vm, IntList *args);
+Int std_list_find(VirtualMachine *vm, IntList *args);
 
-Int std_list_get(VirtualMachine *vm, VariableList *args);
+Int std_list_get(VirtualMachine *vm, IntList *args);
 
 //string
-Int std_string_length(VirtualMachine *vm, VariableList *args);
-Int std_string_concat(VirtualMachine *vm, VariableList *args);
-Int std_string_find(VirtualMachine *vm, VariableList *args);
-Int std_string_replace(VirtualMachine *vm, VariableList *args);
-Int std_string_split(VirtualMachine *vm, VariableList *args);
-Int std_string_new(VirtualMachine *vm, VariableList *args);
-Int std_string_ndup(VirtualMachine *vm, VariableList *args);
-Int std_string_split(VirtualMachine *vm, VariableList *args);
+Int std_string_length(VirtualMachine *vm, IntList *args);
+Int std_string_concat(VirtualMachine *vm, IntList *args);
+Int std_string_find(VirtualMachine *vm, IntList *args);
+Int std_string_replace(VirtualMachine *vm, IntList *args);
+Int std_string_split(VirtualMachine *vm, IntList *args);
+Int std_string_new(VirtualMachine *vm, IntList *args);
+Int std_string_ndup(VirtualMachine *vm, IntList *args);
+Int std_string_split(VirtualMachine *vm, IntList *args);
 
 //conditions
-Int std_condition_equals(VirtualMachine *vm, VariableList *args);
-Int std_condition_not_equals(VirtualMachine *vm, VariableList *args);
-Int std_condition_greater(VirtualMachine *vm, VariableList *args);
-Int std_condition_greater_equals(VirtualMachine *vm, VariableList *args);
-Int std_condition_less(VirtualMachine *vm, VariableList *args);
-Int std_condition_less_equals(VirtualMachine *vm, VariableList *args);
-Int std_condition_and(VirtualMachine *vm, VariableList *args);
-Int std_condition_or(VirtualMachine *vm, VariableList *args);
-Int std_condition_not(VirtualMachine *vm, VariableList *args);
-Int std_condition_if(VirtualMachine *vm, VariableList *args);
-Int std_condition_ifelse(VirtualMachine *vm, VariableList *args);
+Int std_condition_equals(VirtualMachine *vm, IntList *args);
+Int std_condition_not_equals(VirtualMachine *vm, IntList *args);
+Int std_condition_greater(VirtualMachine *vm, IntList *args);
+Int std_condition_greater_equals(VirtualMachine *vm, IntList *args);
+Int std_condition_less(VirtualMachine *vm, IntList *args);
+Int std_condition_less_equals(VirtualMachine *vm, IntList *args);
+Int std_condition_and(VirtualMachine *vm, IntList *args);
+Int std_condition_or(VirtualMachine *vm, IntList *args);
+Int std_condition_not(VirtualMachine *vm, IntList *args);
+Int std_condition_if(VirtualMachine *vm, IntList *args);
+Int std_condition_ifelse(VirtualMachine *vm, IntList *args);
 
 
 

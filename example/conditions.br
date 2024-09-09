@@ -1,4 +1,7 @@
+
+
 set !a (add 50 11);
+ls !hash;
 set !b (mul 10 20);
 set !c (div 100 2);
 set !d (sub 100 50);
@@ -15,8 +18,6 @@ set !abc !abuble;
 set !abcd !(opa iae);
 
 print @abc;
-
-// conditions test;
 
 
 set !txt !(a and b are different);
@@ -40,8 +41,6 @@ set !txt1 !(g is less or equal to h);
 set !txt2 !(g is greater than h);
 ifelse (<= g h) !(print @txt1) !(print @txt2);
 
-// string conditions;
-
 set !txt1 !(abc is equal to abcd);
 set !txt2 !(abc is different from abcd);
 ifelse (== abc abcd) !(print @txt1) !(print @txt2);
@@ -49,8 +48,4 @@ ifelse (== abc abcd) !(print @txt1) !(print @txt2);
 ifelse (~= abc abcd) !(print @txt2) !(print @txt1);
 
 
-// ls !hash;
-
 return 0;
-
-

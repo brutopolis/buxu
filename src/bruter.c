@@ -2,39 +2,39 @@
 
 // bools
 
-char isTrue(Variable var)
+char isTrue(Value value, char __type)
 {
-    if (var.type == TYPE_NUMBER)
+    if (__type == TYPE_NUMBER)
     {
-        return var.value.number != 0;
+        return value.number != 0;
     }
-    else if (var.type == TYPE_STRING)
+    else if (__type == TYPE_STRING)
     {
         return 1;
     }
-    else if (var.type == TYPE_LIST)
+    else if (__type == TYPE_LIST)
     {
         return 1;
     }
-    else if (var.type == TYPE_ERROR)
+    else if (__type == TYPE_ERROR)
     {
         return 0;
     }
-    else if (var.type == TYPE_NIL)
+    else if (__type == TYPE_NIL)
     {
         return 0;
     }
-    else if (var.type == TYPE_UNUSED)
+    else if (__type == TYPE_UNUSED)
     {
         return 0;
     }
-    else if (var.type == TYPE_FUNCTION)
+    else if (__type == TYPE_FUNCTION)
     {
         return 1;
     }
-    else if (var.type == TYPE_POINTER)
+    else if (__type == TYPE_POINTER)
     {
-        return var.value.number != -1;
+        return value.number != -1;
     }
     return 0;
 }
@@ -202,9 +202,31 @@ StringList* specialSplit(char *str)
             StackPush(*splited, tmp);
             i = j + 1;
         }
-        else if (str[i] == '!' && str[i + 1] == '(')
+        else if ((str[i] == '!' && str[i + 1] == '(') ||
+                 (str[i] == '@' && str[i + 1] == '(') ||
+                 (str[i] == '$' && str[i + 1] == '('))
         {
             Int j = i + 1;
+            Int count = 1;
+            while (count != 0)
+            {
+                j++;
+                if (str[j] == '(')
+                {
+                    count++;
+                }
+                else if (str[j] == ')')
+                {
+                    count--;
+                }
+            }
+            char *tmp = strnduplicate(str + i, j - i + 1);
+            StackPush(*splited, tmp);
+            i = j + 1;
+        }
+        else if (str[i] == '$' && str[i + 1] == '!' && strlen(str) > i + 2 && str[i + 2] == '(')
+        {
+            Int j = i + 2;
             Int count = 1;
             while (count != 0)
             {
@@ -338,8 +360,6 @@ void hashunset(VirtualMachine *vm, char* varname)
     {
         free(vm->hashes->data[index].key);
         vm->hashes->data[index].key = NULL;
-        //free(vm->hashes->data[index]);
-        //vm->hashes->data[index] = NULL;
         StackRemove(*vm->hashes, index);
     }
 }
@@ -381,8 +401,8 @@ VirtualMachine* makeVM()
     vm->typestack = makeCharList();
     vm->hashes = (HashList*)malloc(sizeof(HashList));
     StackInit(*vm->hashes);
-    vm->empty = (IntList*)malloc(sizeof(IntList));
-    StackInit(*vm->empty);
+    vm->empty = makeIntList();
+    vm->temp = makeIntList();
 
 
     return vm;
@@ -609,11 +629,18 @@ void freevm(VirtualMachine *vm)
         StackShift(*vm->empty);
     }
 
+    while (vm->temp->size > 0)
+    {
+        StackShift(*vm->temp);
+    }
+
     StackFree(*vm->stack);
     StackFree(*vm->typestack);
 
     StackFree(*vm->hashes);
     StackFree(*vm->empty);
+    StackFree(*vm->temp);
+
     free(vm);
 }
 
@@ -660,49 +687,35 @@ void registerVar(VirtualMachine *vm, char *varname, Variable var)
 
 
 // Parser functions
-VariableList* parse(VirtualMachine *vm, char *cmd) 
+IntList* parse(VirtualMachine *vm, char *cmd) 
 {
-    VariableList *result = makeVariableList();
+    IntList *result = makeIntList();
     StringList *splited = specialSplit(cmd);
+    //Int current = 0;
     while (splited->size > 0)
     {
         char* str = StackShift(*splited);
         if (str[0] == '(')
         {
-            if (str[1] == ')')
-            {
-                Variable var;
-                var.type = TYPE_LIST;
-                var.value.pointer = makeVariableList();
-                StackPush(*result, var);
-            }
-            else
-            {
-                char* temp = strnduplicate(str + 1, strlen(str) - 2);
-                Int index = eval(vm, temp);
-                free(temp);
-                Variable var;
-                var.type = vm->typestack->data[index];
-                var.value = valueDuplicate(vm->stack->data[index], var.type);
-                StackPush(*result, var);
-                unusevar(vm, index);
-            }
+            char* temp = strnduplicate(str + 1, strlen(str) - 2);
+            Int index = eval(vm, temp);
+            StackPush(*result, index);
+            free(temp);
         }
         else if (str[0] == '!') // literal string
         {
             if (str[1] == '(')
             {
-                Variable var;
-                var.type = TYPE_STRING;
-                var.value.string = strnduplicate(str + 2, strlen(str) - 3);
-                //printf("%s\n", var.value.string);
+                char* temp = strnduplicate(str + 2, strlen(str) - 3);
+                Int var = newString(vm, temp);
+                free(temp);
                 StackPush(*result, var);
             }
             else
             {
-                Variable var;
-                var.type = TYPE_STRING;
-                var.value.string = strduplicate(str + 1);
+                char* temp = strduplicate(str + 1);
+                Int var = newString(vm, temp);
+                free(temp);
                 StackPush(*result, var);
             }
         }
@@ -710,24 +723,12 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
         {
             if (strlen(str) == 1) 
             {
-                StackPush(*result, createError("Variable not found"));
-            }
-            else if(str[1] == '(')
-            {
-                char* temp = strnduplicate(str + 1, strlen(str) - 2);
-                Int index = eval(vm, temp);
-                free(temp);
-                Variable var;
-                var.type = TYPE_POINTER;
-                var.value.number = index;
-                StackPush(*result, var);
+                StackPush(*result, newError(vm, "Variable not found"));
             }
             else if(str[1] >= '0' && str[1] <= '9') 
             {
-                Variable var;
-                var.value = (Value){atoi(str + 1)};
-                var.type = TYPE_POINTER;
-                StackPush(*result, var);
+                Int index = newPointer(vm, atoi(str + 1));
+                StackPush(*result, index);
             }
             else
             {
@@ -735,23 +736,96 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
                 if (index == -1) 
                 {
                     char* error = strf("Variable %s not found", str + 1);
-                    StackPush(*result, createError(error));
+                    StackPush(*result, newError(vm, error));
                     free(error);
                 }
                 else 
                 {
-                    Variable var;
-                    var.type = TYPE_POINTER;
-                    var.value.number = index;
+                    Int var = newPointer(vm, index);
                     StackPush(*result, var);
                 }
             }
         }
+        else if (str[0] == '$') 
+        {
+            Int index = -1;
+            if (str[1] == '(') 
+            {
+                char* temp = strnduplicate(str + 2, strlen(str) - 3);
+                index = eval(vm, temp);
+                StackPush(*result, index);
+                free(temp);
+            }
+            else if (str[1] == '!') 
+            {
+                if (str[2] == '(') 
+                {
+                    char* temp = strnduplicate(str + 3, strlen(str) - 4);
+                    index = newString(vm, temp);
+                    free(temp);
+                    StackPush(*result, index);
+                }
+                else 
+                {
+                    char* temp = strduplicate(str + 2);
+                    index = newString(vm, temp);
+                    free(temp);
+                    StackPush(*result, index);
+                }
+            }
+            else if (str[1] == '@') 
+            {
+                if (strlen(str) == 2) 
+                {
+                    index = newError(vm, "Variable not found");
+                    StackPush(*result, index);
+                }
+                else if (str[2] >= '0' && str[2] <= '9') 
+                {
+                    index = newPointer(vm, atoi(str + 2));
+                    StackPush(*result, index);
+                }
+                else 
+                {
+                    Int _index = hashfind(vm, str + 2);
+                    if (_index == -1) 
+                    {
+                        char* error = strf("Variable %s not found", str + 2);
+                        index = newError(vm, error);
+                        StackPush(*result, index);
+                        free(error);
+                    }
+                    else 
+                    {
+                        index = newPointer(vm, _index);
+                        StackPush(*result, index);
+                    }
+                }
+            }
+            else if ((str[1] >= '0' && str[1] <= '9') || str[1] == '-') 
+            {
+                index = newNumber(vm, atof(str + 1));
+                StackPush(*result, index);
+            }
+            else 
+            {
+                index = hashfind(vm, str + 1);
+                if (index == -1) 
+                {
+                    char* error = strf("Variable %s not found", str + 1);
+                    StackPush(*result, newError(vm, error));
+                    free(error);
+                }
+                else 
+                {
+                    StackPush(*result, index);
+                }
+            }
+            StackPush(*vm->temp, index);
+        }
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
         {
-            Variable var;
-            var.type = TYPE_NUMBER;
-            var.value.number = atof(str);
+            Int var = newNumber(vm, atof(str));
             StackPush(*result, var);
         }
         else //string 
@@ -760,18 +834,19 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
             if (index == -1) 
             {
                 char* error = strf("Variable %s not found", str);
-                StackPush(*result, createError(error));
+                StackPush(*result, newError(vm, error));
                 free(error);
             }
             else 
             {
-                Variable var;
-                var.type = vm->typestack->data[index];
-                var.value = vm->stack->data[index];
-                StackPush(*result, var);
+                StackPush(*result, index);
             }
         }
         free(str);
+        /*char* hashname = strf("arg%d", current);
+        hashset(vm, hashname, result->data[current]);
+        free(hashname);
+        current++;*/
     }
     StackFree(*splited);
     return result;
@@ -779,16 +854,16 @@ VariableList* parse(VirtualMachine *vm, char *cmd)
 
 Int interpret(VirtualMachine *vm, char* cmd)
 {
-    VariableList *parsed = parse(vm, cmd);
-    Variable func = StackShift(*parsed);
+    IntList *parsed = parse(vm, cmd);
+    Int func = StackShift(*parsed);
     Int result = -1;
-    
+      
 
-    if (func.type == TYPE_POINTER)
+    if (vm->typestack->data[func] == TYPE_NUMBER)
     {
-        if (vm->typestack->data[(Int)func.value.number] == TYPE_FUNCTION)
+        if (vm->typestack->data[(Int)vm->stack->data[func].number] == TYPE_FUNCTION)
         {
-            Function function = vm->stack->data[(Int)func.value.number].pointer;
+            Function function = vm->stack->data[(Int)vm->stack->data[func].number].pointer;
             result = function(vm, parsed);
         }
         else // make a list
@@ -797,9 +872,9 @@ Int interpret(VirtualMachine *vm, char* cmd)
             result = std_list_new(vm, parsed);
         }
     }
-    else if (func.type == TYPE_FUNCTION)
+    else if (vm->typestack->data[func] == TYPE_FUNCTION)
     {
-        Function function = func.value.pointer;
+        Function function = vm->stack->data[func].pointer;
         result = function(vm, parsed);
     }
     else 
@@ -810,10 +885,11 @@ Int interpret(VirtualMachine *vm, char* cmd)
 
     while (parsed->size > 0)
     {
-        freerawvar(StackShift(*parsed));
+        Int index = StackShift(*parsed);
+        unusevar(vm, index);
     }
 
-    
+
     StackFree(*parsed);
     return result;
 }
@@ -880,10 +956,10 @@ void writefile(char *filename, char *code)
     fclose(file);
 }
 
-Int std_file_read(VirtualMachine *vm, VariableList *args)
+Int std_file_read(VirtualMachine *vm, IntList *args)
 {
-    Variable filename = StackShift(*args);
-    char *code = readfile(filename.value.string);
+    Int filename = StackShift(*args);
+    char *code = readfile(vm->stack->data[filename].string);
     Int result = -1;
     if (code == NULL)
     {
@@ -894,26 +970,24 @@ Int std_file_read(VirtualMachine *vm, VariableList *args)
         result = eval(vm, code);
         free(code);
     }
-    freerawvar(filename);
+    //freerawvar(filename);
     return result;
 }
 
-Int std_file_write(VirtualMachine *vm, VariableList *args)
+Int std_file_write(VirtualMachine *vm, IntList *args)
 {
-    Variable filename = StackShift(*args);
-    Variable code = StackShift(*args);
-    writefile(filename.value.string, code.value.string);
-    freerawvar(filename);
-    freerawvar(code);
+    Int filename = StackShift(*args);
+    Int code = StackShift(*args);
+    writefile(vm->stack->data[filename].string, vm->stack->data[code].string);
     return -1;
 }
 
-Int std_exit(VirtualMachine *vm, VariableList *args)
+Int std_exit(VirtualMachine *vm, IntList *args)
 {
     return 0;
 }
 
-Int std_repl(VirtualMachine *vm, VariableList *args)
+Int std_repl(VirtualMachine *vm, IntList *args)
 {
     printf("bruter v%s\n", VERSION);
     if (hashfind(vm, "exit") == -1)
@@ -953,7 +1027,7 @@ int main(int argv, char **argc)
     // read file pointed by argv[1]
     if (argv == 1)
     {
-        VariableList *varlist = makeVariableList();
+        IntList *varlist = makeIntList();
         std_repl(vm, varlist);
         StackFree(*varlist);
     }

@@ -4,29 +4,28 @@ extern "C"
     
 }
 
-Int _ino_serial_begin(VirtualMachine *vm, VariableList *args)
+Int _ino_serial_begin(VirtualMachine *vm, IntList *args)
 {
-    Variable _ref = StackShift(*args);
-    Serial.begin((Int)_ref.value.number);
-    freerawvar(_ref);
+    Int _ref = StackShift(*args);
+    Serial.begin((Int)vm->stack->data[_ref].number);
     return -1;
 }
 
-Int _ino_print(VirtualMachine *vm, VariableList *args)
+Int _ino_print(VirtualMachine *vm, IntList *args)
 {
     while (args->size > 0)
     {
-        Variable var = StackShift(*args);
+        Int var = StackShift(*args);
         Int _type = -1;
-        //printf("Type: %d\n", var.type);
+        //printf("Type: %d\n", vm->typestack->data[var]);
 
-        Value temp = var.value;
-        _type = var.type;
+        Value temp = vm->stack->data[var];
+        _type = vm->typestack->data[var];
 
-        if (var.type == TYPE_POINTER)
+        if (vm->typestack->data[var] == TYPE_POINTER)
         {
-            _type = vm->typestack->data[(Int)var.value.number];
-            temp = vm->stack->data[(Int)var.value.number];
+            _type = vm->typestack->data[(Int)vm->stack->data[var].number];
+            temp = vm->stack->data[(Int)vm->stack->data[var].number];
         }
         
         if (_type == TYPE_NUMBER)
@@ -60,7 +59,6 @@ Int _ino_print(VirtualMachine *vm, VariableList *args)
         {
             printf("(unknown)");
         }
-        freerawvar(var);
         if (args->size > 0)
         {
             printf(" ");
@@ -70,77 +68,68 @@ Int _ino_print(VirtualMachine *vm, VariableList *args)
     return -1;
 }
 
-Int _ino_delay(VirtualMachine *vm, VariableList *args)
+Int _ino_delay(VirtualMachine *vm, IntList *args)
 {
-    Variable _ref = StackShift(*args);
-    delay((Int)_ref.value.number);
+    Int _ref = StackShift(*args);
+    delay((Int)vm->stack->data[_ref].number);
     return -1;
 }
 
-Int _ino_millis(VirtualMachine *vm, VariableList *args)
+Int _ino_millis(VirtualMachine *vm, IntList *args)
 {
     return millis();
 }
 
-Int _ino_tone(VirtualMachine *vm, VariableList *args)
+Int _ino_tone(VirtualMachine *vm, IntList *args)
 {
-    Variable _ref = StackShift(*args);
-    Variable _ref2 = StackShift(*args);
-    tone((int)_ref.value.number, (int)_ref2.value.number);
-    freerawvar(_ref);
-    freerawvar(_ref2);
+    Int _ref = StackShift(*args);
+    Int _ref2 = StackShift(*args);
+    tone((int)vm->stack->data[_ref].number, (int)vm->stack->data[_ref2].number);
     return -1;
 }
 
 
-Int _ino_noTone(VirtualMachine *vm, VariableList *args)
+Int _ino_noTone(VirtualMachine *vm, IntList *args)
 {
-    Variable _ref = StackShift(*args);
-    noTone((Int)_ref.value.number);
-    freerawvar(_ref);
+    Int _ref = StackShift(*args);
+    noTone((Int)vm->stack->data[_ref].number);
     return -1;
 }
 
-Int _ino_pinmode(VirtualMachine *vm, VariableList *args)
+Int _ino_pinmode(VirtualMachine *vm, IntList *args)
 {
-    Variable _ref = StackShift(*args);
-    Variable _ref2 = StackShift(*args);
-    pinMode((Int)_ref.value.number, (Int)_ref2.value.number);
-    freerawvar(_ref);
-    freerawvar(_ref2);
+    Int _ref = StackShift(*args);
+    Int _ref2 = StackShift(*args);
+    pinMode((Int)vm->stack->data[_ref].number, (Int)vm->stack->data[_ref2].number);
     return -1;
 }
 
-Int _ino_digitalwrite(VirtualMachine *vm, VariableList *args)
+Int _ino_digitalwrite(VirtualMachine *vm, IntList *args)
 {
-    Variable _ref = StackShift(*args);
-    Variable _ref2 = StackShift(*args);
-    digitalWrite((Int)_ref.value.number, (Int)_ref2.value.number);
-    freerawvar(_ref);
-    freerawvar(_ref2);
+    Int _ref = StackShift(*args);
+    Int _ref2 = StackShift(*args);
+    digitalWrite((Int)vm->stack->data[_ref].number, (Int)vm->stack->data[_ref2].number);
     return -1;
 }
 
-Int _ino_digitalread(VirtualMachine *vm, VariableList *args)
+Int _ino_digitalread(VirtualMachine *vm, IntList *args)
 {
-    Variable _ref = StackShift(*args);
-    return digitalRead((Int)_ref.value.number);
+    Int _ref = StackShift(*args);
+    return digitalRead((Int)vm->stack->data[_ref].number);
 }
 
-Int _ino_analogwrite(VirtualMachine *vm, VariableList *args)
+Int _ino_analogwrite(VirtualMachine *vm, IntList *args)
 {
-    Variable _ref = StackShift(*args);
-    Variable _ref2 = StackShift(*args);
-    analogWrite((Int)_ref.value.number, (Int)_ref2.value.number);
-    freerawvar(_ref);
-    freerawvar(_ref2);
+    Int _ref = StackShift(*args);
+    Int _ref2 = StackShift(*args);
+    analogWrite((Int)vm->stack->data[_ref].number, (Int)vm->stack->data[_ref2].number);
     return -1;
 }
 
-Int _ino_analogread(VirtualMachine *vm, VariableList *args)
+Int _ino_analogread(VirtualMachine *vm, IntList *args)
 {
-    Variable _ref = StackShift(*args);
-    return analogRead((Int)_ref.value.number);
+    Int _ref = StackShift(*args);
+    return analogRead((Int)vm->stack->data[_ref].number);
 }
 
 
