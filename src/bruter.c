@@ -622,7 +622,6 @@ void unuse_var(VirtualMachine *vm, Int index)
         {
             free(vm->hashes->data[i].key);
             stack_remove(*vm->hashes, i);
-            //break;
         }
     }
     stack_push(*vm->empty, index);
@@ -829,7 +828,12 @@ Int interpret(VirtualMachine *vm, char* cmd)
     while (parsed->size > 0)
     {
         Int index = stack_shift(*parsed);
-        unuse_var(vm, index);
+        if(vm->typestack->data[index] != TYPE_FUNCTION &&
+           vm->typestack->data[index] != TYPE_STRING &&
+           vm->typestack->data[index] != TYPE_ERROR)
+        {
+            unuse_var(vm, index);
+        }
     }
 
 

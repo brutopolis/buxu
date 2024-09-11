@@ -25,7 +25,7 @@
     #define Float float
 #endif
 
-#define VERSION "0.4.8"
+#define VERSION "0.4.8a"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -223,11 +223,13 @@ Int std_set(VirtualMachine *vm, IntList *args);
 Int std_new(VirtualMachine *vm, IntList *args);
 Int std_print(VirtualMachine *vm, IntList *args);
 Int std_ls(VirtualMachine *vm, IntList *args);
-Int std_help(VirtualMachine *vm, IntList *args);
+Int std_size(VirtualMachine *vm, IntList *args);
 Int std_eval(VirtualMachine *vm, IntList *args);
-Int std_delete(VirtualMachine *vm, IntList *args);
+Int std_rm(VirtualMachine *vm, IntList *args);
 Int std_type(VirtualMachine *vm, IntList *args);
 Int std_get(VirtualMachine *vm, IntList *args);
+Int std_sweep(VirtualMachine *vm, IntList *args);
+Int std_rebase(VirtualMachine *vm, IntList *args);
 
 //math
 Int std_math_add(VirtualMachine *vm, IntList *args);

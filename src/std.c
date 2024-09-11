@@ -13,6 +13,145 @@ Int std_clear(VirtualMachine *vm, IntList *args)
     {
         unuse_var(vm, stack_shift(*vm->temp));
     }
+
+    return -1;
+}
+
+Int std_sweep(VirtualMachine *vm, IntList *args)
+{
+    Int index = vm->typestack->size - 1;
+    while (vm->typestack->data[index] == TYPE_UNUSED)
+    {
+        for (Int i = 0; i < vm->hashes->size; i++)
+        {
+            if (vm->hashes->data[i].index == index)
+            {
+                free(vm->hashes->data[i].key);
+                stack_remove(*vm->hashes, i);
+            }
+        }
+        for (Int i = 0; i < vm->empty->size; i++)
+        {
+            if (vm->empty->data[i] == index)
+            {
+                stack_remove(*vm->empty, i);
+            }
+        }
+        for (Int i = 0; i < vm->temp->size; i++)
+        {
+            if (vm->temp->data[i] == index)
+            {
+                stack_remove(*vm->temp, i);
+            }
+        }
+        stack_pop(*vm->stack);
+        index--;
+    }
+
+    return -1;
+}
+
+Int std_rebase(VirtualMachine *vm, IntList *args)
+{
+    std_sweep(vm, NULL);
+    Int index = vm->stack->size - 1;
+    while (index >= 0)
+    {
+        if (vm->typestack->data[index] == TYPE_UNUSED)
+        {
+            for (Int i = 0; i < vm->hashes->size; i++)
+            {
+                if (vm->hashes->data[i].index == index)
+                {
+                    free(vm->hashes->data[i].key);
+                    stack_remove(*vm->hashes, i);
+                }
+            }
+            for (Int i = 0; i < vm->empty->size; i++)
+            {
+                if (vm->empty->data[i] == index)
+                {
+                    stack_remove(*vm->empty, i);
+                }
+            }
+            for (Int i = 0; i < vm->temp->size; i++)
+            {
+                if (vm->temp->data[i] == index)
+                {
+                    stack_remove(*vm->temp, i);
+                }
+            }
+            for (Int i = 0; i < vm->stack->size; i++)
+            {
+                if (vm->typestack->data[i] == TYPE_POINTER)
+                {
+                    if(vm->stack->data[i].number == index)
+                    {
+                        vm->stack->data[i].number = -1;
+                    }
+                    else if(vm->stack->data[i].number > index)
+                    {
+                        vm->stack->data[i].number--;
+                    }
+                }
+                else if (vm->typestack->data[i] == TYPE_LIST)
+                {
+                    IntList *list = (IntList*)vm->stack->data[i].pointer;
+                    for (Int j = 0; j < list->size; j++)
+                    {
+                        if (list->data[j] == index)
+                        {
+                            list->data[j] = -1;
+                        }
+                        else if (list->data[j] > index)
+                        {
+                            list->data[j]--;
+                        }
+                    }
+                }
+            }
+            for (Int i = 0; i < vm->temp->size; i++)
+            {
+                if (vm->temp->data[i] == index)
+                {
+                    vm->temp->data[i] = -1;
+                }
+                else if (vm->temp->data[i] > index)
+                {
+                    vm->temp->data[i]--;
+                }
+            }
+            for (Int i = 0; i < vm->empty->size; i++)
+            {
+                if (vm->empty->data[i] == index)
+                {
+                    vm->empty->data[i] = -1;
+                }
+                else if (vm->empty->data[i] > index)
+                {
+                    vm->empty->data[i]--;
+                }
+            }
+            for (Int i = 0; i < vm->hashes->size; i++)
+            {
+                if (vm->hashes->data[i].index == index)
+                {
+                    vm->hashes->data[i].index = -1;
+                }
+                else if (vm->hashes->data[i].index > index)
+                {
+                    vm->hashes->data[i].index--;
+                }
+            }
+            stack_remove(*vm->stack, index);
+            stack_remove(*vm->typestack, index);
+        }
+        else
+        {
+            index--;
+        }
+    }
+
     return -1;
 }
 
@@ -274,6 +413,124 @@ Int std_ls(VirtualMachine *vm, IntList *args)
                     }
                 }
             }
+            else if(strcmp("temp", vm->stack->data[_var].string) == 0)
+            {
+                for (Int i = 0; i < vm->temp->size; i++)
+                {
+                    if (vm->typestack->data[vm->temp->data[i]] == TYPE_FUNCTION)
+                    {
+                        printf("[%d] {function}: %p\n", vm->temp->data[i], vm->stack->data[vm->temp->data[i]].pointer);
+                    }
+                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_NUMBER)
+                    {
+                        if (round(vm->stack->data[vm->temp->data[i]].number) == vm->stack->data[vm->temp->data[i]].number)
+                        {
+                            printf("[%d] {number}: %d\n", vm->temp->data[i], (Int)vm->stack->data[vm->temp->data[i]].number);
+                        }
+                        else
+                        {
+                            printf("[%d] {number}: %f\n", vm->temp->data[i], vm->stack->data[vm->temp->data[i]].number);
+                        }
+                    }
+                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_STRING)
+                    {
+                        printf("[%d] {string}: %s\n", vm->temp->data[i], vm->stack->data[vm->temp->data[i]].string);
+                    }
+                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_LIST)
+                    {
+                        printf("[%d] {list}: [", vm->temp->data[i]);
+                        IntList *list = (IntList*)vm->stack->data[vm->temp->data[i]].pointer;
+                        for (Int j = 0; j < (list->size-1); j++)
+                        {
+                            printf("%d, ", list->data[j]);
+                        }
+                        if (list->size > 0)
+                        {
+                            printf("%d]\n", list->data[list->size-1]);
+                        }
+                        else
+                        {
+                            printf("]\n");
+                        }
+                    }
+                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_ERROR)
+                    {
+                        printf("[%d] {error}: %s\n", vm->temp->data[i], vm->stack->data[vm->temp->data[i]].string);
+                    }
+                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_POINTER)
+                    {
+                        printf("[%d] {pointer}: %d\n", vm->temp->data[i], (Int)vm->stack->data[vm->temp->data[i]].number);
+                    }
+                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_UNUSED)
+                    {
+                        printf("[%d] {free}\n", vm->temp->data[i]);
+                    }
+                    else
+                    {
+                        printf("[%d] {unknown}\n", vm->temp->data[i]);
+                    }
+                }
+            }
+            else if(strcmp("empty", vm->stack->data[_var].string) == 0 || 
+                    strcmp("free", vm->stack->data[_var].string) == 0)
+            {
+                for (Int i = 0; i < vm->empty->size; i++)
+                {
+                    if (vm->typestack->data[vm->empty->data[i]] == TYPE_FUNCTION)
+                    {
+                        printf("[%d] {function}: %p\n", vm->empty->data[i], vm->stack->data[vm->empty->data[i]].pointer);
+                    }
+                    else if (vm->typestack->data[vm->empty->data[i]] == TYPE_NUMBER)
+                    {
+                        if (round(vm->stack->data[vm->empty->data[i]].number) == vm->stack->data[vm->empty->data[i]].number)
+                        {
+                            printf("[%d] {number}: %d\n", vm->empty->data[i], (Int)vm->stack->data[vm->empty->data[i]].number);
+                        }
+                        else
+                        {
+                            printf("[%d] {number}: %f\n", vm->empty->data[i], vm->stack->data[vm->empty->data[i]].number);
+                        }
+                    }
+                    else if (vm->typestack->data[vm->empty->data[i]] == TYPE_STRING)
+                    {
+                        printf("[%d] {string}: %s\n", vm->empty->data[i], vm->stack->data[vm->empty->data[i]].string);
+                    }
+                    else if (vm->typestack->data[vm->empty->data[i]] == TYPE_LIST)
+                    {
+                        printf("[%d] {list}: [", vm->empty->data[i]);
+                        IntList *list = (IntList*)vm->stack->data[vm->empty->data[i]].pointer;
+                        for (Int j = 0; j < (list->size-1); j++)
+                        {
+                            printf("%d, ", list->data[j]);
+                        }
+                        if (list->size > 0)
+                        {
+                            printf("%d]\n", list->data[list->size-1]);
+                        }
+                        else
+                        {
+                            printf("]\n");
+                        }
+                    }
+                    else if (vm->typestack->data[vm->empty->data[i]] == TYPE_ERROR)
+                    {
+                        printf("[%d] {error}: %s\n", vm->empty->data[i], vm->stack->data[vm->empty->data[i]].string);
+                    }
+                    else if (vm->typestack->data[vm->empty->data[i]] == TYPE_POINTER)
+                    {
+                        printf("[%d] {pointer}: %d\n", vm->empty->data[i], (Int)vm->stack->data[vm->empty->data[i]].number);
+                    }
+                    else if (vm->typestack->data[vm->empty->data[i]] == TYPE_UNUSED)
+                    {
+                        printf("[%d] {free}\n", vm->empty->data[i]);
+                    }
+                    else
+                    {
+                        printf("[%d] {unknown}\n", vm->empty->data[i]);
+                    }
+                }
+            }
+
         }
         else if ((vm->typestack->data[_var] == TYPE_POINTER && vm->typestack->data[(Int)vm->stack->data[_var].number] == TYPE_LIST)
         ||       vm->typestack->data[_var] == TYPE_LIST)
@@ -347,7 +604,7 @@ Int std_eval(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-Int std_delete(VirtualMachine *vm, IntList *args)
+Int std_rm(VirtualMachine *vm, IntList *args)
 {
     Int index;
     while (args->size > 0)
@@ -373,8 +630,14 @@ Int std_delete(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+
+
 Int std_comment(VirtualMachine *vm, IntList *args)
 {
+    while (args->size > 0)
+    {
+        stack_shift(*args);
+    }
     return -1;
 }
 
@@ -423,6 +686,27 @@ Int std_get(VirtualMachine *vm, IntList *args)
             free(error);
         }
     }
+    return result;
+}
+
+Int std_size(VirtualMachine *vm, IntList *args)
+{
+    Int totalsize = vm->stack->size * (sizeof(Value) + 1);
+    while (args->size > 0)
+    {
+        Int var = stack_shift(*args);
+        if (vm->typestack->data[var] == TYPE_LIST)
+        {
+            IntList *list = (IntList*)vm->stack->data[var].pointer;
+            totalsize += list->size * sizeof(Int);
+            totalsize += sizeof(IntList);
+        }
+        else if (vm->typestack->data[var] == TYPE_STRING)
+        {
+            totalsize += strlen(vm->stack->data[var].string);
+        }
+    }
+    Int result = new_number(vm, totalsize);
     return result;
 }
 
@@ -1264,16 +1548,19 @@ void init_std(VirtualMachine *vm)
 {
     spawn_function(vm, "temp", std_temp);
     spawn_function(vm, "clear", std_clear);
+    spawn_function(vm, "sweep", std_sweep);
+    spawn_function(vm, "rebase", std_rebase);
     spawn_function(vm, "set", std_set);
+    spawn_function(vm, "get", std_get);
     spawn_function(vm, "new", std_new);
     spawn_function(vm, "print", std_print);
     spawn_function(vm, "eval", std_eval);
     spawn_function(vm, "ls", std_ls);
-    spawn_function(vm, "delete", std_delete);
+    spawn_function(vm, "rm", std_rm);
     spawn_function(vm, "//", std_comment);
     spawn_function(vm, "return", std_return);
     spawn_function(vm, "type", std_type);
-    spawn_function(vm, "get", std_get);
+    spawn_function(vm, "size", std_size);
 }
 
 void init_math(VirtualMachine *vm)

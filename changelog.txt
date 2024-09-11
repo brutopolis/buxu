@@ -1,3 +1,11 @@
+(10/09/2024) - version 0.4.8a
+
+- created a new ls argument, "temp", that lists all temp variables;
+- std_delete renamed to std_rm;
+- new function std_size;
+- new function std_sweep;
+- new function std_rebase;
+
 (09/09/2024) - version 0.4.8
 
 - some README updates

@@ -79,9 +79,10 @@ library search path:
 - `string lib` = ok
 - `list lib` = ok
 - `auto lib` = a std lib for memory management, not yet
-- `conditons lib` = ok/testing
-- `loops lib` = depends on conditions
+- `conditons lib` = ok
+- `loops lib` = working on it
 - `functions lib` = not yet
 - `libraries lib` = not yet
+- `type punning` = not yet
 - `expect` = a function that expects a type and returns a boolean, not yet
 - `vs-code extension` = deadly outdated, not yet
