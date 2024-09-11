@@ -34,9 +34,12 @@ char is_true(Value value, char __type)
     }
     else if (__type == TYPE_POINTER)
     {
-        return value.number != -1;
+        return (value.number != -1);
     }
-    return 0;
+    else
+    {
+        return 1;
+    }
 }
 
 //string functions

@@ -1,3 +1,11 @@
+(11/09/2024) - version 0.4.8b
+
+- new function std_loop_while;
+- new function std_loop_repeat;
+- new function std_edit;
+- new function std_change;
+- fixed some condition related bugs;
+
 (10/09/2024) - version 0.4.8a
 
 - created a new ls argument, "temp", that lists all temp variables;

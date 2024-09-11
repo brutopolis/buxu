@@ -20,4 +20,4 @@ valgrind \
     --show-leak-kinds=all \
     --track-origins=yes \
     --log-file=valgrind-out.txt \
-    --verbose bin/bruter example/conditions.br
+    --verbose bin/bruter example/loops.br

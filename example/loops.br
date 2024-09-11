@@ -1,0 +1,7 @@
+set $!_index 0;
+set $!_size 10;
+
+while $!(< _index _size) $!(print _index;edit $!_index $(add $_index $1));
+clear;
+ls;
+return 11;

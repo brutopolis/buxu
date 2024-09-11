@@ -7,6 +7,18 @@
 #include <math.h>
 #include <stdarg.h>
 
+#define VERSION "0.4.8b"
+
+#define TYPE_ERROR -2
+#define TYPE_NIL -1
+#define TYPE_UNUSED 0
+#define TYPE_POINTER 1
+#define TYPE_NUMBER 2
+#define TYPE_STRING 3
+#define TYPE_FUNCTION 4
+#define TYPE_LIST 5
+
+
 #if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(__LP64__) || defined(_WIN64) || defined(__amd64__) || defined(__x86_64) || defined(__x86_64__) || defined(__x86_64)
     #define Int long
     #define Float double
@@ -24,17 +36,6 @@
     #define Int int
     #define Float float
 #endif
-
-#define VERSION "0.4.8a"
-
-#define TYPE_ERROR -2
-#define TYPE_NIL -1
-#define TYPE_UNUSED 0
-#define TYPE_POINTER 1
-#define TYPE_NUMBER 2
-#define TYPE_STRING 3
-#define TYPE_FUNCTION 4
-#define TYPE_LIST 5
 
 #define Nil -1
 
@@ -230,6 +231,10 @@ Int std_type(VirtualMachine *vm, IntList *args);
 Int std_get(VirtualMachine *vm, IntList *args);
 Int std_sweep(VirtualMachine *vm, IntList *args);
 Int std_rebase(VirtualMachine *vm, IntList *args);
+Int std_comment(VirtualMachine *vm, IntList *args);
+Int std_return(VirtualMachine *vm, IntList *args);
+Int std_edit(VirtualMachine *vm, IntList *args);
+Int std_change(VirtualMachine *vm, IntList *args);
 
 //math
 Int std_math_add(VirtualMachine *vm, IntList *args);
@@ -266,7 +271,6 @@ Int std_string_concat(VirtualMachine *vm, IntList *args);
 Int std_string_find(VirtualMachine *vm, IntList *args);
 Int std_string_replace(VirtualMachine *vm, IntList *args);
 Int std_string_split(VirtualMachine *vm, IntList *args);
-Int std_string_new(VirtualMachine *vm, IntList *args);
 Int std_string_ndup(VirtualMachine *vm, IntList *args);
 Int std_string_split(VirtualMachine *vm, IntList *args);
 
@@ -284,6 +288,9 @@ Int std_condition_if(VirtualMachine *vm, IntList *args);
 Int std_condition_ifelse(VirtualMachine *vm, IntList *args);
 
 
+//loops
+Int std_loop_while(VirtualMachine *vm, IntList *args);
+Int std_loop_repeat(VirtualMachine *vm, IntList *args);
 
 
 void init_default_vars(VirtualMachine *vm);
@@ -291,7 +298,8 @@ void init_std(VirtualMachine *vm);
 void init_math(VirtualMachine *vm);
 void init_list(VirtualMachine *vm);
 void init_string(VirtualMachine *vm);
-void init_conditions(VirtualMachine *vm);
+void init_condition(VirtualMachine *vm);
+void init_loop(VirtualMachine *vm);
 void init_all(VirtualMachine *vm);
 
 #endif
