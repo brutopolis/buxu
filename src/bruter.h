@@ -7,7 +7,7 @@
 #include <math.h>
 #include <stdarg.h>
 
-#define VERSION "0.4.8b"
+#define VERSION "0.4.8c"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
@@ -218,12 +218,10 @@ IntList* parse(VirtualMachine *vm, char *cmd);
 
 
 //std
-Int std_temp(VirtualMachine *vm, IntList *args);
+//Int std_temp(VirtualMachine *vm, IntList *args);
 Int std_clear(VirtualMachine *vm, IntList *args);
 Int std_set(VirtualMachine *vm, IntList *args);
-Int std_new(VirtualMachine *vm, IntList *args);
-Int std_print(VirtualMachine *vm, IntList *args);
-Int std_ls(VirtualMachine *vm, IntList *args);
+Int std_comment(VirtualMachine *vm, IntList *args);
 Int std_size(VirtualMachine *vm, IntList *args);
 Int std_eval(VirtualMachine *vm, IntList *args);
 Int std_rm(VirtualMachine *vm, IntList *args);
@@ -231,10 +229,13 @@ Int std_type(VirtualMachine *vm, IntList *args);
 Int std_get(VirtualMachine *vm, IntList *args);
 Int std_sweep(VirtualMachine *vm, IntList *args);
 Int std_rebase(VirtualMachine *vm, IntList *args);
-Int std_comment(VirtualMachine *vm, IntList *args);
 Int std_return(VirtualMachine *vm, IntList *args);
 Int std_edit(VirtualMachine *vm, IntList *args);
 Int std_change(VirtualMachine *vm, IntList *args);
+
+// io
+Int std_io_print(VirtualMachine *vm, IntList *args);
+Int std_io_ls(VirtualMachine *vm, IntList *args);
 
 //math
 Int std_math_add(VirtualMachine *vm, IntList *args);

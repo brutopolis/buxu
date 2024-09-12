@@ -1,11 +1,11 @@
 #include "bruter.h"
 
-Int std_temp(VirtualMachine *vm, IntList *args)
+/*Int std_temp(VirtualMachine *vm, IntList *args)
 {
     Int result = stack_shift(*args);
     stack_push(*vm->temp, result);
     return result;
-}
+}*/
 
 Int std_clear(VirtualMachine *vm, IntList *args)
 {
@@ -160,42 +160,14 @@ Int std_set(VirtualMachine *vm, IntList *args)
     Int varname = stack_shift(*args);
     Int value = stack_shift(*args);
 
-    if (vm->typestack->data[varname] == TYPE_STRING)
-    {
-        char * name = vm->stack->data[varname].string;
-        Int index = hash_find(vm, name);
+    char * name = vm->stack->data[varname].string;
+    Int index = hash_find(vm, name);
 
-        if (index >= 0)
-        {
-            unuse_var(vm, index);
-            index = new_var(vm);
-            vm->stack->data[index] = vm->stack->data[value];
-            vm->typestack->data[index] = vm->typestack->data[value];
-        }
-        else 
-        {
-            hash_set(vm, name, value);
-        }
-    }
-    else if (vm->typestack->data[varname] == TYPE_NUMBER)
+    if (index >= 0)
     {
-        Int index = (Int)vm->stack->data[varname].number;
-        if (index >= 0)
-        {
-            unuse_var(vm, index);
-            index = new_var(vm);
-            vm->stack->data[index] = vm->stack->data[value];
-            vm->typestack->data[index] = vm->typestack->data[value];
-        }
-        else 
-        {
-            //create a new variable
-            index = new_var(vm);
-            vm->stack->data[index] = vm->stack->data[value];
-            vm->typestack->data[index] = vm->typestack->data[value];
-        }
+        hash_unset(vm, name);
     }
-    //unuse_var(vm, varname);
+    hash_set(vm, name, value);
     return -1;
 }
 
@@ -218,7 +190,7 @@ Int std_edit(VirtualMachine *vm, IntList *args)
     else if (vm->typestack->data[varname] == TYPE_NUMBER)
     {
         Int index = (Int)vm->stack->data[varname].number;
-        if (index >= 0)
+        if (index >= 0 && index < vm->stack->size)
         {
             vm->stack->data[index] = vm->stack->data[value];
             vm->typestack->data[index] = vm->typestack->data[value];
@@ -255,13 +227,7 @@ Int std_change(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int std_new(VirtualMachine *vm, IntList *args)
-{
-    Int var = stack_shift(*args);
-    return var;
-}
-
-Int std_print(VirtualMachine *vm, IntList *args)
+Int std_io_print(VirtualMachine *vm, IntList *args)
 {
     while (args->size > 0)
     {
@@ -339,7 +305,7 @@ Int std_print(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int std_ls(VirtualMachine *vm, IntList *args)
+Int std_io_ls(VirtualMachine *vm, IntList *args)
 {
     if (args->size == 0)
     {
@@ -681,8 +647,6 @@ Int std_rm(VirtualMachine *vm, IntList *args)
     }
     return -1;
 }
-
-
 
 Int std_comment(VirtualMachine *vm, IntList *args)
 {
@@ -1566,23 +1530,26 @@ Int std_loop_repeat(VirtualMachine *vm, IntList *args)
 
 void init_std(VirtualMachine *vm)
 {
-    spawn_function(vm, "temp", std_temp);
+    //spawn_function(vm, "temp", std_temp);
     spawn_function(vm, "clear", std_clear);
     spawn_function(vm, "sweep", std_sweep);
     spawn_function(vm, "rebase", std_rebase);
     spawn_function(vm, "set", std_set);
     spawn_function(vm, "get", std_get);
-    spawn_function(vm, "new", std_new);
-    spawn_function(vm, "print", std_print);
     spawn_function(vm, "eval", std_eval);
-    spawn_function(vm, "ls", std_ls);
     spawn_function(vm, "rm", std_rm);
-    spawn_function(vm, "//", std_comment);
     spawn_function(vm, "return", std_return);
     spawn_function(vm, "type", std_type);
     spawn_function(vm, "size", std_size);
     spawn_function(vm, "edit", std_edit);
     spawn_function(vm, "change", std_change);
+    spawn_function(vm, "//", std_comment);
+}
+
+void init_io(VirtualMachine *vm)
+{
+    spawn_function(vm, "print", std_io_print);
+    spawn_function(vm, "ls", std_io_ls);
 }
 
 void init_math(VirtualMachine *vm)
@@ -1670,6 +1637,7 @@ void init_default_vars(VirtualMachine *vm)
 void init_all(VirtualMachine *vm)
 {
     init_std(vm);
+    init_io(vm);
     init_math(vm);
     init_list(vm);
     init_string(vm);

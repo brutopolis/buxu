@@ -1,3 +1,11 @@
+(12/09/2024) - version 0.4.8c
+
+- some README updates;
+- removed function std_new;
+- removed function std_temp;
+- renamed function std_print to std_io_print;
+- renamed function std_ls to std_io_ls;
+
 (11/09/2024) - version 0.4.8b
 
 - new function std_loop_while;
@@ -16,17 +24,17 @@
 
 (09/09/2024) - version 0.4.8
 
-- some README updates
-- specialSplit renamed to special_space_split
-- added a new function special_split which splits by a given char
-- fixed string splitters
-- fixed eval function
-- all functions are were renamed from pascalCase to snake_case for consistency and better readability
-- Variable type and everything related to it was removed
-- VariableList type and everything related to it was removed
-- List type renamed to ValueList
-- specific Int and Float types macros for specific architeture were added
-- removed bruter.txt
+- some README updates;
+- specialSplit renamed to special_space_split;
+- added a new function special_split which splits by a given char;
+- fixed string splitters;
+- fixed eval function;
+- all functions are were renamed from pascalCase to snake_case for consistency and better readability;
+- Variable type and everything related to it was removed;
+- VariableList type and everything related to it was removed;
+- List type renamed to ValueList;
+- specific Int and Float types macros for specific architeture were added;
+- removed bruter.txt;
 
 (09/09/2024) - version 0.4.7
 
