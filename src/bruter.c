@@ -32,10 +32,6 @@ char is_true(Value value, char __type)
     {
         return 1;
     }
-    else if (__type == TYPE_POINTER)
-    {
-        return (value.number != -1);
-    }
     else
     {
         return 1;
@@ -205,31 +201,9 @@ StringList* special_space_split(char *str)
             stack_push(*splited, tmp);
             i = j + 1;
         }
-        else if ((str[i] == '!' && str[i + 1] == '(') ||
-                 (str[i] == '@' && str[i + 1] == '(') ||
-                 (str[i] == '$' && str[i + 1] == '('))
+        else if ((str[i] == '!' && str[i + 1] == '('))
         {
             Int j = i + 1;
-            Int count = 1;
-            while (count != 0)
-            {
-                j++;
-                if (str[j] == '(')
-                {
-                    count++;
-                }
-                else if (str[j] == ')')
-                {
-                    count--;
-                }
-            }
-            char *tmp = str_nduplicate(str + i, j - i + 1);
-            stack_push(*splited, tmp);
-            i = j + 1;
-        }
-        else if (str[i] == '$' && str[i + 1] == '!' && strlen(str) > i + 2 && str[i + 2] == '(')
-        {
-            Int j = i + 2;
             Int count = 1;
             while (count != 0)
             {
@@ -356,10 +330,6 @@ Value value_duplicate(Value value, char type)
     {
         dup.pointer = value.pointer;
     }
-    else if (type == TYPE_POINTER)
-    {
-        dup.number = value.number;
-    }
     return dup;
 }
 
@@ -447,12 +417,14 @@ Int new_var(VirtualMachine *vm)
     if (vm->empty->size > 0)
     {
         Int id = stack_shift(*vm->empty);
+        stack_push(*vm->temp, id);
         return id;
     }
     else
     {
         stack_push(*vm->stack, (Value){0});
         stack_push(*vm->typestack, TYPE_NIL);
+        stack_push(*vm->temp, vm->stack->size-1);
         return vm->stack->size-1;
     }
 }
@@ -489,13 +461,6 @@ Int new_error(VirtualMachine *vm, char *error)
     return id;
 }
 
-Int new_pointer(VirtualMachine *vm, Int index)
-{
-    Int id = new_var(vm);
-    vm->stack->data[id].number = index;
-    vm->typestack->data[id] = TYPE_POINTER;
-    return id;
-}
 
 Int new_list(VirtualMachine *vm)
 {
@@ -507,46 +472,46 @@ Int new_list(VirtualMachine *vm)
 
 // var spawn
 
-void spawn_var(VirtualMachine *vm, char* varname)
+Int spawn_var(VirtualMachine *vm, char* varname)
 {
     Int index = new_var(vm);
     hash_set(vm, varname, index);
+    return index;
 }
 
-void spawn_number(VirtualMachine *vm, char* varname, Float number)
+Int spawn_number(VirtualMachine *vm, char* varname, Float number)
 {
     Int index = new_number(vm, number);
     hash_set(vm, varname, index);
+    return index;
 }
 
-void spawn_string(VirtualMachine *vm, char* varname, char* string)
+Int spawn_string(VirtualMachine *vm, char* varname, char* string)
 {
     Int index = new_string(vm, string);
     hash_set(vm, varname, index);
+    return index;
 }
 
-void spawn_function(VirtualMachine *vm, char* varname, Function function)
+Int spawn_function(VirtualMachine *vm, char* varname, Function function)
 {
     Int index = new_function(vm, function);
     hash_set(vm, varname, index);
+    return index;
 }
 
-void spawn_error(VirtualMachine *vm, char* varname, char* error)
+Int spawn_error(VirtualMachine *vm, char* varname, char* error)
 {
     Int index = new_error(vm, error);
     hash_set(vm, varname, index);
+    return index;
 }
 
-void spawn_pointer(VirtualMachine *vm, char* varname, Int index)
-{
-    Int id = new_pointer(vm, index);
-    hash_set(vm, varname, id);
-}
-
-void spawn_list(VirtualMachine *vm, char* varname)
+Int spawn_list(VirtualMachine *vm, char* varname)
 {
     Int index = new_list(vm);
     hash_set(vm, varname, index);
+    return index;
 }
 
 //frees
@@ -630,6 +595,23 @@ void unuse_var(VirtualMachine *vm, Int index)
     stack_push(*vm->empty, index);
 }
 
+void hold_var(VirtualMachine *vm, Int index)
+{
+    for (Int i = 0; i < vm->temp->size; i++)
+    {
+        if (vm->temp->data[i] == index)
+        {
+            stack_remove(*vm->temp, i);
+            break;
+        }
+    }
+}
+
+void unhold_var(VirtualMachine *vm, Int index)
+{
+    stack_push(*vm->temp, index);
+}
+
 
 // Parser functions
 IntList* parse(VirtualMachine *vm, char *cmd) 
@@ -663,110 +645,6 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                 free(temp);
                 stack_push(*result, var);
             }
-        }
-        else if (str[0] == '@') 
-        {
-            if (strlen(str) == 1) 
-            {
-                stack_push(*result, new_error(vm, "Variable not found"));
-            }
-            else if(str[1] >= '0' && str[1] <= '9') 
-            {
-                Int index = new_pointer(vm, atoi(str + 1));
-                stack_push(*result, index);
-            }
-            else
-            {
-                Int index = hash_find(vm, str + 1);
-                if (index == -1) 
-                {
-                    char* error = str_format("Variable %s not found", str + 1);
-                    stack_push(*result, new_error(vm, error));
-                    free(error);
-                }
-                else 
-                {
-                    Int var = new_pointer(vm, index);
-                    stack_push(*result, var);
-                }
-            }
-        }
-        else if (str[0] == '$') 
-        {
-            Int index = -1;
-            if (str[1] == '(') 
-            {
-                char* temp = str_nduplicate(str + 2, strlen(str) - 3);
-                index = eval(vm, temp);
-                stack_push(*result, index);
-                free(temp);
-            }
-            else if (str[1] == '!') 
-            {
-                if (str[2] == '(') 
-                {
-                    char* temp = str_nduplicate(str + 3, strlen(str) - 4);
-                    index = new_string(vm, temp);
-                    free(temp);
-                    stack_push(*result, index);
-                }
-                else 
-                {
-                    char* temp = str_duplicate(str + 2);
-                    index = new_string(vm, temp);
-                    free(temp);
-                    stack_push(*result, index);
-                }
-            }
-            else if (str[1] == '@') 
-            {
-                if (strlen(str) == 2) 
-                {
-                    index = new_error(vm, "Variable not found");
-                    stack_push(*result, index);
-                }
-                else if (str[2] >= '0' && str[2] <= '9') 
-                {
-                    index = new_pointer(vm, atoi(str + 2));
-                    stack_push(*result, index);
-                }
-                else 
-                {
-                    Int _index = hash_find(vm, str + 2);
-                    if (_index == -1) 
-                    {
-                        char* error = str_format("Variable %s not found", str + 2);
-                        index = new_error(vm, error);
-                        stack_push(*result, index);
-                        free(error);
-                    }
-                    else 
-                    {
-                        index = new_pointer(vm, _index);
-                        stack_push(*result, index);
-                    }
-                }
-            }
-            else if ((str[1] >= '0' && str[1] <= '9') || str[1] == '-') 
-            {
-                index = new_number(vm, atof(str + 1));
-                stack_push(*result, index);
-            }
-            else 
-            {
-                index = hash_find(vm, str + 1);
-                if (index == -1) 
-                {
-                    char* error = str_format("Variable %s not found", str + 1);
-                    stack_push(*result, new_error(vm, error));
-                    free(error);
-                }
-                else 
-                {
-                    stack_push(*result, index);
-                }
-            }
-            stack_push(*vm->temp, index);
         }
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
         {
@@ -838,7 +716,6 @@ Int interpret(VirtualMachine *vm, char* cmd)
             unuse_var(vm, index);
         }
     }
-
 
     stack_free(*parsed);
     return result;
@@ -956,7 +833,7 @@ Int std_repl(VirtualMachine *vm, IntList *args)
     }
     //printf("repl exited with code %d;\n", result);
     printf("repl returned: @%d ", result);
-    char * str = str_format("print @%d", result);
+    char * str = str_format("print (get %d)", result);
     eval(vm, str);
     free(str);
     return result;
@@ -1010,15 +887,12 @@ int main(int argv, char **argc)
             case TYPE_FUNCTION:
                 printf("{function}");
                 break;
-            case TYPE_POINTER:
-                printf("{pointer}");
-                break;
             default:
                 printf("{unknown}");
                 break;
         }
         printf(": ");
-        char * str = str_format("print @%d", result);
+        char * str = str_format("print (get %d)", result);
         eval(vm, str);
         free(str);
     }

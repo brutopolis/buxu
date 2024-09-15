@@ -21,12 +21,6 @@ Int _ino_print(VirtualMachine *vm, IntList *args)
 
         Value temp = vm->stack->data[var];
         _type = vm->typestack->data[var];
-
-        if (vm->typestack->data[var] == TYPE_POINTER)
-        {
-            _type = vm->typestack->data[(Int)vm->stack->data[var].number];
-            temp = vm->stack->data[(Int)vm->stack->data[var].number];
-        }
         
         if (_type == TYPE_NUMBER)
         {
@@ -174,14 +168,14 @@ Bruter *session = new Bruter();
 void setup()
 {
     Serial.begin(115200);
-    session->run((char*)"@set str !(looping);");
-    session->run((char*)"@Serial.println @str;");
-    session->run((char*)"@Serial.println @str;");
+    session->run((char*)"set str !(looping);");
+    session->run((char*)"Serial.println str;");
+    session->run((char*)"Serial.println str;");
 }
 
 void loop()
 {
     delay(1000);
 
-    session->run((char*)"@Serial.println @str;");
+    session->run((char*)"Serial.println str;");
 }

@@ -7,12 +7,12 @@
 #include <math.h>
 #include <stdarg.h>
 
-#define VERSION "0.4.8c"
+#define VERSION "0.4.9"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
 #define TYPE_UNUSED 0
-#define TYPE_POINTER 1
+#define TYPE_OTHER 1
 #define TYPE_NUMBER 2
 #define TYPE_STRING 3
 #define TYPE_FUNCTION 4
@@ -132,6 +132,7 @@
 typedef union 
 {
     Float number;
+    Int integer;
     char* string;
     void* pointer;
 } Value;
@@ -190,20 +191,21 @@ void unuse_var(VirtualMachine *vm, Int index);
 Int new_number(VirtualMachine *vm, Float number);
 Int new_string(VirtualMachine *vm, char *str);
 Int new_function(VirtualMachine *vm, Function function);
-Int new_pointer(VirtualMachine *vm, Int index);
 Int new_error(VirtualMachine *vm, char *error);
 Int new_list(VirtualMachine *vm);
 Int new_var(VirtualMachine *vm);
 
+void hold_var(VirtualMachine *vm, Int index);
+void unhold_var(VirtualMachine *vm, Int index);
+
 Value value_duplicate(Value value, char type);
 
-void spawn_var(VirtualMachine *vm, char* varname);
-void spawn_string(VirtualMachine *vm, char* varname, char* string);
-void spawn_number(VirtualMachine *vm, char* varname, Float number);
-void spawn_function(VirtualMachine *vm, char* varname, Function function);
-void spawn_error(VirtualMachine *vm, char* varname, char* error);
-void spawn_pointer(VirtualMachine *vm, char* varname, Int index);
-void spawn_list(VirtualMachine *vm, char* varname);
+Int spawn_var(VirtualMachine *vm, char* varname);
+Int spawn_string(VirtualMachine *vm, char* varname, char* string);
+Int spawn_number(VirtualMachine *vm, char* varname, Float number);
+Int spawn_function(VirtualMachine *vm, char* varname, Function function);
+Int spawn_error(VirtualMachine *vm, char* varname, char* error);
+Int spawn_list(VirtualMachine *vm, char* varname);
 
 Int hash_find(VirtualMachine *vm, char *key);
 void hash_set(VirtualMachine *vm, char *key, Int index);
@@ -220,6 +222,8 @@ IntList* parse(VirtualMachine *vm, char *cmd);
 //std
 //Int std_temp(VirtualMachine *vm, IntList *args);
 Int std_clear(VirtualMachine *vm, IntList *args);
+Int std_hold(VirtualMachine *vm, IntList *args);
+Int std_unhold(VirtualMachine *vm, IntList *args);
 Int std_set(VirtualMachine *vm, IntList *args);
 Int std_comment(VirtualMachine *vm, IntList *args);
 Int std_size(VirtualMachine *vm, IntList *args);

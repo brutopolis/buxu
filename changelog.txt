@@ -1,3 +1,17 @@
+(15/09/2024) - version 0.4.9
+
+- everything is temporary now unless specified;
+- created a "exists" file in bin to ensure that the bin folder exists;
+- created TYPE_OTHER to handle unknown types;
+- TYPE_POINTER and all related stuff were removed;
+- added a integer parameter to the Value union;
+- removed temp operator ($);
+- removed pointer operator (@);
+- some conditions related fixes;
+- spawn functions now return the index;
+- new function hold_var and std_hold;
+- new function unhold_var and std_unhold;
+
 (12/09/2024) - version 0.4.8c
 
 - some README updates;

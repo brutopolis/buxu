@@ -10,25 +10,12 @@ Bruter is a metaprogramable lightweight language written in C;
 
 ## Table of Contents
 
-- [Operators](#operators)
 - [Types](#types)
 - [Usage](#usage)
 - [Libraries](#libraries)
 - [Reserved](#reserved)
 
-## Operators
-
-
-- `$` = variable.
-
-- `;` = end.
-
-- `.` = recursion.
-
 ## Arg Types
-
-
-- `@pointer` = starts with @;
 
 - `number` = starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -;
 
@@ -42,13 +29,11 @@ Bruter is a metaprogramable lightweight language written in C;
 
     function;
     function ...;
-    function @variable; // pass a pointer as argument to function call;
     function variable; // pass the pointed object as argument to function call;
     function (function (function ...));
-    function @variable_1 $variable_2 ...;
+    function variable_1 variable_2 ...;
     set target_variable value; // set the value to target_variable;
     set target_variable (function ...); // set the result object to target_variable;
-    set target_variable @(function ...); // set a pointer to the result object to target_variable;
 
 ## Libraries -- not implemented yet -- desconsider
 
@@ -65,8 +50,6 @@ library search path:
 
 - `()` = expression/list delimiter
 - `!` = string operator
-- `@` = pointer operator
-- `$` = temporary operator
 - `;` = end of command separator
 
 ## TO DO
