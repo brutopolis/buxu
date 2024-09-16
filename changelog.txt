@@ -1,3 +1,8 @@
+(16/09/2024) - version 0.4.9a
+
+- build.sh renamed to build-debug.sh;
+- created build.sh;
+
 (15/09/2024) - version 0.4.9
 
 - everything is temporary now unless specified;
