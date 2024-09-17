@@ -1,17 +1,17 @@
-set !_index 0;
-set !_size 10;
-hold 10;
-while !(< _index _size) 
-!(
-    print _index;
-    edit _index (add _index 1)
-);
+set "_index" 0;
+set "_size" 10;
+hold _size;
+hold _index;
 
-repeat 10 
-!(
-    print _index;
-    edit _index (add _index 1)
-);
+set "cond" "< _index _size";
+set "code" "print _index;edit _index (add _index 1);clear;";
+hold cond;
+hold code;
+
+while cond code;
+
 clear;
+unhold _size;
+rebase;
 ls;
-return 11;
+"11" 12 45;

@@ -7,11 +7,10 @@
 #include <math.h>
 #include <stdarg.h>
 
-#define VERSION "0.4.9"
+#define VERSION "0.5.0"
 
 #define TYPE_ERROR -2
 #define TYPE_NIL -1
-#define TYPE_UNUSED 0
 #define TYPE_OTHER 1
 #define TYPE_NUMBER 2
 #define TYPE_STRING 3
@@ -156,7 +155,7 @@ typedef struct
     ValueList *stack;
     CharList *typestack;
     HashList *hashes;
-    IntList *empty;
+    IntList *unused;
     IntList *temp;
 } VirtualMachine;
 
@@ -225,7 +224,7 @@ Int std_clear(VirtualMachine *vm, IntList *args);
 Int std_hold(VirtualMachine *vm, IntList *args);
 Int std_unhold(VirtualMachine *vm, IntList *args);
 Int std_set(VirtualMachine *vm, IntList *args);
-Int std_comment(VirtualMachine *vm, IntList *args);
+Int std_ignore(VirtualMachine *vm, IntList *args);
 Int std_size(VirtualMachine *vm, IntList *args);
 Int std_eval(VirtualMachine *vm, IntList *args);
 Int std_rm(VirtualMachine *vm, IntList *args);
@@ -236,6 +235,8 @@ Int std_rebase(VirtualMachine *vm, IntList *args);
 Int std_return(VirtualMachine *vm, IntList *args);
 Int std_edit(VirtualMachine *vm, IntList *args);
 Int std_change(VirtualMachine *vm, IntList *args);
+Int std_while(VirtualMachine *vm, IntList *args);
+
 
 // io
 Int std_io_print(VirtualMachine *vm, IntList *args);
@@ -293,18 +294,12 @@ Int std_condition_if(VirtualMachine *vm, IntList *args);
 Int std_condition_ifelse(VirtualMachine *vm, IntList *args);
 
 
-//loops
-Int std_loop_while(VirtualMachine *vm, IntList *args);
-Int std_loop_repeat(VirtualMachine *vm, IntList *args);
-
-
 void init_default_vars(VirtualMachine *vm);
 void init_std(VirtualMachine *vm);
 void init_math(VirtualMachine *vm);
 void init_list(VirtualMachine *vm);
 void init_string(VirtualMachine *vm);
 void init_condition(VirtualMachine *vm);
-void init_loop(VirtualMachine *vm);
 void init_all(VirtualMachine *vm);
 
 #endif

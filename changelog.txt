@@ -1,3 +1,18 @@
+(17/09/2024) - version 0.5.0
+
+- some README updates;
+- some changes made in std_edit to prevent memory leaks;
+- vm.empty renamed to vm.unused;
+- TYPE_UNUSED removed;
+- removed function std_sweep;
+- removed function std_loop_repeat;
+- removed "!" operator;
+- renamed "~=" operator to "!=";
+- renamed std_loop_while to std_while;
+- renamed std_comment to std_ignore, "//" operator to "#";
+- string is now delimited with double quotes;
+- interpreter does not deallocate unused args anymore;
+
 (16/09/2024) - version 0.4.9a
 
 - build.sh renamed to build-debug.sh;

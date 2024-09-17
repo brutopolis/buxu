@@ -24,10 +24,6 @@ char is_true(Value value, char __type)
     {
         return 0;
     }
-    else if (__type == TYPE_UNUSED)
-    {
-        return 0;
-    }
     else if (__type == TYPE_FUNCTION)
     {
         return 1;
@@ -201,25 +197,17 @@ StringList* special_space_split(char *str)
             stack_push(*splited, tmp);
             i = j + 1;
         }
-        else if ((str[i] == '!' && str[i + 1] == '('))
+        else if (str[i] == '"')
         {
-            Int j = i + 1;
-            Int count = 1;
-            while (count != 0)
+            Int j = i;
+            j++;  // Avança para depois da abertura de aspas
+            while (str[j] != '"' && str[j] != '\0')
             {
                 j++;
-                if (str[j] == '(')
-                {
-                    count++;
-                }
-                else if (str[j] == ')')
-                {
-                    count--;
-                }
             }
             char *tmp = str_nduplicate(str + i, j - i + 1);
             stack_push(*splited, tmp);
-            i = j + 1;
+            i = j + 1;  // Avança para após o fechamento de aspas
         }
         else if (is_space(str[i]))
         {
@@ -228,7 +216,7 @@ StringList* special_space_split(char *str)
         else
         {
             Int j = i;
-            while (!is_space(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')')
+            while (!is_space(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')' && str[j] != '"')
             {
                 j++;
             }
@@ -239,33 +227,41 @@ StringList* special_space_split(char *str)
     return splited;
 }
 
-StringList* special_split(char *str, char delim)// regular split but doesnt split if the delimiter is inside parenthesis
+StringList* special_split(char *str, char delim)
 {
     StringList *splited;
     splited = (StringList*)malloc(sizeof(StringList));
     stack_init(*splited);
+    
     Int recursion = 0;
+    Int inside_quotes = 0;
     Int i = 0;
     Int last_i = 0;
 
     while (str[i] != '\0')
     {
-        if (str[i] == '(')
+        if (str[i] == '(' && inside_quotes == 0)
         {
             recursion++;
         }
-        else if (str[i] == ')')
+        else if (str[i] == ')' && inside_quotes == 0)
         {
             recursion--;
         }
+        else if (str[i] == '"' && recursion == 0)
+        {
+            // Alterna o estado de dentro/fora de aspas
+            inside_quotes = !inside_quotes;
+        }
 
-        if (str[i] == delim && recursion == 0)
+        // Se encontramos o delimitador e não estamos dentro de parênteses nem aspas
+        if (str[i] == delim && recursion == 0 && inside_quotes == 0)
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i);
             stack_push(*splited, tmp);
             last_i = i + 1;
         }
-        else if (str[i+1] == '\0')
+        else if (str[i + 1] == '\0') // Checagem para o último token
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i + 1);
             stack_push(*splited, tmp);
@@ -275,6 +271,7 @@ StringList* special_split(char *str, char delim)// regular split but doesnt spli
     }
     return splited;
 }
+
 
 StringList* splitString(char *str, char *delim)
 {
@@ -403,7 +400,7 @@ VirtualMachine* make_vm()
     vm->typestack = make_char_list();
     vm->hashes = (HashList*)malloc(sizeof(HashList));
     stack_init(*vm->hashes);
-    vm->empty = make_int_list();
+    vm->unused = make_int_list();
     vm->temp = make_int_list();
 
 
@@ -414,9 +411,9 @@ VirtualMachine* make_vm()
 
 Int new_var(VirtualMachine *vm)
 {
-    if (vm->empty->size > 0)
+    if (vm->unused->size > 0)
     {
-        Int id = stack_shift(*vm->empty);
+        Int id = stack_shift(*vm->unused);
         stack_push(*vm->temp, id);
         return id;
     }
@@ -547,10 +544,10 @@ void free_vm(VirtualMachine *vm)
         free(hash.key);
     }
 
-    while (vm->empty->size > 0)
+    while (vm->unused->size > 0)
     {
 
-        stack_shift(*vm->empty);
+        stack_shift(*vm->unused);
     }
 
     while (vm->temp->size > 0)
@@ -562,7 +559,7 @@ void free_vm(VirtualMachine *vm)
     stack_free(*vm->typestack);
 
     stack_free(*vm->hashes);
-    stack_free(*vm->empty);
+    stack_free(*vm->unused);
     stack_free(*vm->temp);
 
     free(vm);
@@ -583,7 +580,7 @@ void unuse_var(VirtualMachine *vm, Int index)
         }
         stack_free(*((IntList*)vm->stack->data[index].pointer));
     }
-    vm->typestack->data[index] = TYPE_UNUSED;
+    vm->typestack->data[index] = TYPE_NIL;
     for (Int i = 0; i < vm->hashes->size; i++)
     {
         if (vm->hashes->data[i].index == index)
@@ -592,7 +589,7 @@ void unuse_var(VirtualMachine *vm, Int index)
             stack_remove(*vm->hashes, i);
         }
     }
-    stack_push(*vm->empty, index);
+    stack_push(*vm->unused, index);
 }
 
 void hold_var(VirtualMachine *vm, Int index)
@@ -629,29 +626,19 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             stack_push(*result, index);
             free(temp);
         }
-        else if (str[0] == '!') // literal string
+        else if (str[0] == '"') // string
         {
-            if (str[1] == '(')
-            {
-                char* temp = str_nduplicate(str + 2, strlen(str) - 3);
-                Int var = new_string(vm, temp);
-                free(temp);
-                stack_push(*result, var);
-            }
-            else
-            {
-                char* temp = str_duplicate(str + 1);
-                Int var = new_string(vm, temp);
-                free(temp);
-                stack_push(*result, var);
-            }
+            char* temp = str_nduplicate(str + 1, strlen(str) - 2);
+            Int var = new_string(vm, temp);
+            free(temp);
+            stack_push(*result, var);
         }
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
         {
             Int var = new_number(vm, atof(str));
             stack_push(*result, var);
         }
-        else //string 
+        else //variable 
         {
             Int index = hash_find(vm, str);
             if (index == -1) 
@@ -706,7 +693,7 @@ Int interpret(VirtualMachine *vm, char* cmd)
         result = std_list_new(vm, parsed);
     }
 
-    while (parsed->size > 0)
+    /*while (parsed->size > 0)
     {
         Int index = stack_shift(*parsed);
         if(vm->typestack->data[index] != TYPE_FUNCTION &&
@@ -715,7 +702,7 @@ Int interpret(VirtualMachine *vm, char* cmd)
         {
             unuse_var(vm, index);
         }
-    }
+    }*/
 
     stack_free(*parsed);
     return result;
@@ -724,6 +711,33 @@ Int interpret(VirtualMachine *vm, char* cmd)
 Int eval(VirtualMachine *vm, char *cmd)
 {
     StringList *splited = special_split(cmd, ';');
+
+    // remove empty or whitespace only strings using is_space
+    Int last = splited->size - 1;
+    while (last >= 0)
+    {
+        if (strlen(splited->data[last]) == 0)
+        {
+            free(splited->data[last]);
+            stack_remove(*splited, last);
+        }
+        else
+        {
+            Int i = 0;
+            while (splited->data[last][i] != '\0' && is_space(splited->data[last][i]))
+            {
+                i++;
+            }
+            if (splited->data[last][i] == '\0')
+            {
+                free(splited->data[last]);
+                stack_remove(*splited, last);
+            }
+        }
+        last--;
+    }
+
+
     Int result = -1;
     while (splited->size > 0)
     {
@@ -892,9 +906,17 @@ int main(int argv, char **argc)
                 break;
         }
         printf(": ");
-        char * str = str_format("print (get %d)", result);
-        eval(vm, str);
-        free(str);
+        if (vm->typestack->data[result] == TYPE_LIST)
+        {
+            IntList *list = (IntList*)vm->stack->data[result].pointer;
+            for (Int i = 0; i < list->size; i++)
+            {
+                char * str = str_format("print (get %d)", list->data[i]);
+                eval(vm, str);
+                free(str);
+            }
+        }
+        
     }
     free_vm(vm);
 }

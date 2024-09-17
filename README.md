@@ -19,7 +19,7 @@ Bruter is a metaprogramable lightweight language written in C;
 
 - `number` = starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -;
 
-- `string` = enclosed by !() or !word;
+- `string` = enclosed by double quotes;
 
 - `list` = enclosed by ();
 
@@ -49,7 +49,7 @@ library search path:
 ## Reserved
 
 - `()` = expression/list delimiter
-- `!` = string operator
+- `""` = string delimiter
 - `;` = end of command separator
 
 ## TO DO
