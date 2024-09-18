@@ -29,11 +29,11 @@ Bruter is a metaprogramable lightweight language written in C;
 
     function;
     function ...;
-    function variable; // pass the pointed object as argument to function call;
+    function variable;
     function (function (function ...));
     function variable_1 variable_2 ...;
-    set target_variable value; // set the value to target_variable;
-    set target_variable (function ...); // set the result object to target_variable;
+    set target_variable value; 
+    set target_variable (function ...);
 
 ## Libraries -- not implemented yet -- desconsider
 

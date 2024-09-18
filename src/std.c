@@ -139,8 +139,7 @@ Int std_edit(VirtualMachine *vm, IntList *args)
     
     if (variable >= 0 && variable < vm->stack->size)
     {
-        if(vm->typestack->data[variable] == TYPE_STRING || 
-           vm->typestack->data[variable] == TYPE_ERROR ||
+        if(vm->typestack->data[variable] == TYPE_STRING ||
            vm->typestack->data[variable] == TYPE_LIST ||
            vm->typestack->data[variable] == TYPE_OTHER)
         {
@@ -158,7 +157,7 @@ Int std_edit(VirtualMachine *vm, IntList *args)
             }
             if (!found)
             {
-                if (vm->typestack->data[variable] == TYPE_STRING || vm->typestack->data[variable] == TYPE_ERROR)
+                if (vm->typestack->data[variable] == TYPE_STRING)
                 {
                     free(vm->stack->data[variable].string);
                 }
@@ -253,10 +252,6 @@ Int std_io_print(VirtualMachine *vm, IntList *args)
                 printf("]");
             }
         }
-        else if (_type == TYPE_ERROR)
-        {
-            printf("%s", temp.string);
-        }
         else if (_type == TYPE_NIL)
         {
             printf("{nil}");
@@ -317,10 +312,6 @@ Int std_io_ls(VirtualMachine *vm, IntList *args)
                     printf("]\n");
                 }
             }
-            else if (vm->typestack->data[i] == TYPE_ERROR)
-            {
-                printf("[%d] {error}: %s\n", i, vm->stack->data[i].string);
-            }
             else if (vm->typestack->data[i] == TYPE_NIL)
             {
                 printf("[%d] {nil}\n", i);
@@ -379,10 +370,6 @@ Int std_io_ls(VirtualMachine *vm, IntList *args)
                             printf("]\n");
                         }
                     }
-                    else if (vm->typestack->data[index] == TYPE_ERROR)
-                    {
-                        printf("[%s] {error} @%d: %s\n", name, index, vm->stack->data[index].string);
-                    }
                     else if (vm->typestack->data[index] == TYPE_NIL)
                     {
                         printf("[%s] {nil}\n", name);
@@ -432,10 +419,6 @@ Int std_io_ls(VirtualMachine *vm, IntList *args)
                         {
                             printf("]\n");
                         }
-                    }
-                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_ERROR)
-                    {
-                        printf("[%d] {error}: %s\n", vm->temp->data[i], vm->stack->data[vm->temp->data[i]].string);
                     }
                     else if (vm->typestack->data[vm->temp->data[i]] == TYPE_NIL)
                     {
@@ -487,10 +470,6 @@ Int std_io_ls(VirtualMachine *vm, IntList *args)
                         {
                             printf("]\n");
                         }
-                    }
-                    else if (vm->typestack->data[vm->unused->data[i]] == TYPE_ERROR)
-                    {
-                        printf("[%d] {error}: %s\n", vm->unused->data[i], vm->stack->data[vm->unused->data[i]].string);
                     }
                     else if (vm->typestack->data[vm->unused->data[i]] == TYPE_NIL)
                     {
@@ -545,10 +524,6 @@ Int std_io_ls(VirtualMachine *vm, IntList *args)
                         printf("]\n");
                     }
                 }
-                else if (vm->typestack->data[list->data[i]] == TYPE_ERROR)
-                {
-                    printf("[%d] (%d) {error}: %s\n", i, list->data[i], vm->stack->data[list->data[i]].string);
-                }
                 else if (vm->typestack->data[list->data[i]] == TYPE_NIL)
                 {
                     printf("[%d] (%d) {nil}\n", i, list->data[i]);
@@ -581,7 +556,7 @@ Int std_rm(VirtualMachine *vm, IntList *args)
         {
             unuse_var(vm, vm->stack->data[index].number);
         }
-        else if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_ERROR)
+        else if (vm->typestack->data[index] == TYPE_STRING)
         {
             Int _index = hash_find(vm, vm->stack->data[index].string);
             if (_index != -1)
@@ -628,7 +603,6 @@ Int std_get(VirtualMachine *vm, IntList *args)
         if (index == -1)
         {
             char *error = str_format("Variable %s not found", vm->stack->data[var].string);
-            result = new_error(vm, error);
             free(error);
         }
         else
@@ -646,7 +620,8 @@ Int std_get(VirtualMachine *vm, IntList *args)
         else 
         {
             char *error = str_format("Variable %d not found", index);
-            result = new_error(vm, error);
+            //error throw goes here
+            
             free(error);
         }
     }
@@ -953,7 +928,7 @@ Int std_string_find(VirtualMachine *vm, IntList *args)
     Int str = stack_shift(*args);
     Int substr = stack_shift(*args);
     Int result = -1;
-    if ((vm->typestack->data[str] == TYPE_STRING || vm->typestack->data[str] == TYPE_ERROR) && (vm->typestack->data[substr] == TYPE_STRING || vm->typestack->data[substr] == TYPE_ERROR))
+    if ((vm->typestack->data[str] == TYPE_STRING) && (vm->typestack->data[substr] == TYPE_STRING))
     {
         char* _str = vm->stack->data[str].string;
         char* _substr = vm->stack->data[substr].string;
@@ -972,7 +947,7 @@ Int std_string_ndup(VirtualMachine *vm, IntList *args)
     Int start = stack_shift(*args);
     Int end = stack_shift(*args);
     Int result = -1;
-    if ((vm->typestack->data[str] == TYPE_STRING || vm->typestack->data[str] == TYPE_ERROR) && vm->typestack->data[start] == TYPE_NUMBER && vm->typestack->data[end] == TYPE_NUMBER)
+    if ((vm->typestack->data[str] == TYPE_STRING) && vm->typestack->data[start] == TYPE_NUMBER && vm->typestack->data[end] == TYPE_NUMBER)
     {
         char* _str = strndup(vm->stack->data[str].string + (Int)vm->stack->data[start].number, (Int)vm->stack->data[end].number - (Int)vm->stack->data[start].number);
         printf("%s\n", _str);
@@ -988,7 +963,7 @@ Int std_string_split(VirtualMachine *vm, IntList *args)
     Int str = stack_shift(*args);
     Int delim = stack_shift(*args);
     Int result = -1;
-    if ((vm->typestack->data[str] == TYPE_STRING || vm->typestack->data[str] == TYPE_ERROR) && (vm->typestack->data[delim] == TYPE_STRING || vm->typestack->data[delim] == TYPE_ERROR))
+    if ((vm->typestack->data[str] == TYPE_STRING) && (vm->typestack->data[delim] == TYPE_STRING))
     {
         StringList *list = splitString(vm->stack->data[str].string, vm->stack->data[delim].string);
         result = new_list(vm);
@@ -1055,10 +1030,6 @@ Int std_condition_equals(VirtualMachine *vm, IntList *args)
         {
             result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) == 0);
         }
-        else if (vm->typestack->data[a] == TYPE_ERROR)
-        {
-            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) == 0);
-        }
     }
     return result;
 }
@@ -1075,10 +1046,6 @@ Int std_condition_not_equals(VirtualMachine *vm, IntList *args)
             result = new_number(vm, vm->stack->data[a].number != vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_STRING)
-        {
-            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) != 0);
-        }
-        else if (vm->typestack->data[a] == TYPE_ERROR)
         {
             result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) != 0);
         }
@@ -1102,10 +1069,6 @@ Int std_condition_greater(VirtualMachine *vm, IntList *args)
         {
             result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) > 0);
         }
-        else if (vm->typestack->data[a] == TYPE_ERROR)
-        {
-            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) > 0);
-        }
     }
     return result;
 }
@@ -1122,10 +1085,6 @@ Int std_condition_less(VirtualMachine *vm, IntList *args)
             result = new_number(vm, vm->stack->data[a].number < vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_STRING)
-        {
-            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) < 0);
-        }
-        else if (vm->typestack->data[a] == TYPE_ERROR)
         {
             result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) < 0);
         }
@@ -1148,10 +1107,6 @@ Int std_condition_greater_equals(VirtualMachine *vm, IntList *args)
         {
             result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) >= 0);
         }
-        else if (vm->typestack->data[a] == TYPE_ERROR)
-        {
-            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) >= 0);
-        }
     }
     return result;
 }
@@ -1168,10 +1123,6 @@ Int std_condition_less_equals(VirtualMachine *vm, IntList *args)
             result = new_number(vm, vm->stack->data[a].number <= vm->stack->data[b].number);
         }
         else if (vm->typestack->data[a] == TYPE_STRING)
-        {
-            result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) <= 0);
-        }
-        else if (vm->typestack->data[a] == TYPE_ERROR)
         {
             result = new_number(vm, strcmp(vm->stack->data[a].string, vm->stack->data[b].string) <= 0);
         }
@@ -1376,7 +1327,6 @@ void init_condition(VirtualMachine *vm)
 void init_default_vars(VirtualMachine *vm)
 {
     hold_var(vm,spawn_number(vm, "PI", 3.14159265358979323846));// PI number
-    hold_var(vm,spawn_number(vm, "ERROR", TYPE_ERROR));// error type
     hold_var(vm,spawn_number(vm, "NIL", TYPE_NIL));// nil type
     hold_var(vm,spawn_number(vm, "OTHER", TYPE_OTHER));// unused type
     hold_var(vm,spawn_number(vm, "NUMBER", TYPE_NUMBER));// number type

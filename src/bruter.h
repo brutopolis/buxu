@@ -7,15 +7,14 @@
 #include <math.h>
 #include <stdarg.h>
 
-#define VERSION "0.5.0"
+#define VERSION "0.5.0a"
 
-#define TYPE_ERROR -2
-#define TYPE_NIL -1
-#define TYPE_OTHER 1
-#define TYPE_NUMBER 2
-#define TYPE_STRING 3
-#define TYPE_FUNCTION 4
-#define TYPE_LIST 5
+#define TYPE_NIL 0
+#define TYPE_NUMBER 1
+#define TYPE_STRING 2
+#define TYPE_FUNCTION 3
+#define TYPE_LIST 4
+#define TYPE_OTHER 5
 
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(__LP64__) || defined(_WIN64) || defined(__amd64__) || defined(__x86_64) || defined(__x86_64__) || defined(__x86_64)
@@ -190,7 +189,6 @@ void unuse_var(VirtualMachine *vm, Int index);
 Int new_number(VirtualMachine *vm, Float number);
 Int new_string(VirtualMachine *vm, char *str);
 Int new_function(VirtualMachine *vm, Function function);
-Int new_error(VirtualMachine *vm, char *error);
 Int new_list(VirtualMachine *vm);
 Int new_var(VirtualMachine *vm);
 
@@ -203,7 +201,6 @@ Int spawn_var(VirtualMachine *vm, char* varname);
 Int spawn_string(VirtualMachine *vm, char* varname, char* string);
 Int spawn_number(VirtualMachine *vm, char* varname, Float number);
 Int spawn_function(VirtualMachine *vm, char* varname, Function function);
-Int spawn_error(VirtualMachine *vm, char* varname, char* error);
 Int spawn_list(VirtualMachine *vm, char* varname);
 
 Int hash_find(VirtualMachine *vm, char *key);
@@ -230,7 +227,6 @@ Int std_eval(VirtualMachine *vm, IntList *args);
 Int std_rm(VirtualMachine *vm, IntList *args);
 Int std_type(VirtualMachine *vm, IntList *args);
 Int std_get(VirtualMachine *vm, IntList *args);
-Int std_sweep(VirtualMachine *vm, IntList *args);
 Int std_rebase(VirtualMachine *vm, IntList *args);
 Int std_return(VirtualMachine *vm, IntList *args);
 Int std_edit(VirtualMachine *vm, IntList *args);

@@ -16,10 +16,6 @@ char is_true(Value value, char __type)
     {
         return 1;
     }
-    else if (__type == TYPE_ERROR)
-    {
-        return 0;
-    }
     else if (__type == TYPE_NIL)
     {
         return 0;
@@ -310,7 +306,7 @@ Value value_duplicate(Value value, char type)
     {
         dup.number = value.number;
     }
-    else if (type == TYPE_STRING || type == TYPE_ERROR)
+    else if (type == TYPE_STRING)
     {
         dup.string = str_duplicate(value.string);
     }
@@ -450,15 +446,6 @@ Int new_function(VirtualMachine *vm, Function function)
     return id;
 }
 
-Int new_error(VirtualMachine *vm, char *error)
-{
-    Int id = new_var(vm);
-    vm->stack->data[id].string = str_duplicate(error);
-    vm->typestack->data[id] = TYPE_ERROR;
-    return id;
-}
-
-
 Int new_list(VirtualMachine *vm)
 {
     Int id = new_var(vm);
@@ -497,12 +484,6 @@ Int spawn_function(VirtualMachine *vm, char* varname, Function function)
     return index;
 }
 
-Int spawn_error(VirtualMachine *vm, char* varname, char* error)
-{
-    Int index = new_error(vm, error);
-    hash_set(vm, varname, index);
-    return index;
-}
 
 Int spawn_list(VirtualMachine *vm, char* varname)
 {
@@ -515,7 +496,7 @@ Int spawn_list(VirtualMachine *vm, char* varname)
 
 void free_var(VirtualMachine *vm, Int index)
 {
-    if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_ERROR)
+    if (vm->typestack->data[index] == TYPE_STRING)
     {
         free(vm->stack->data[index].string);
     }
@@ -568,7 +549,7 @@ void free_vm(VirtualMachine *vm)
 void unuse_var(VirtualMachine *vm, Int index)
 {
     //if type is string free the string, if type is list free the list
-    if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_ERROR)
+    if (vm->typestack->data[index] == TYPE_STRING)
     {
         free(vm->stack->data[index].string);
     }
@@ -644,7 +625,6 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             if (index == -1) 
             {
                 char* error = str_format("Variable %s not found", str);
-                stack_push(*result, new_error(vm, error));
                 free(error);
             }
             else 
@@ -692,17 +672,6 @@ Int interpret(VirtualMachine *vm, char* cmd)
         stack_insert(*parsed, 0, func);
         result = std_list_new(vm, parsed);
     }
-
-    /*while (parsed->size > 0)
-    {
-        Int index = stack_shift(*parsed);
-        if(vm->typestack->data[index] != TYPE_FUNCTION &&
-           vm->typestack->data[index] != TYPE_STRING &&
-           vm->typestack->data[index] != TYPE_ERROR)
-        {
-            unuse_var(vm, index);
-        }
-    }*/
 
     stack_free(*parsed);
     return result;
@@ -804,7 +773,6 @@ Int std_file_read(VirtualMachine *vm, IntList *args)
     Int result = -1;
     if (code == NULL)
     {
-        result = new_error(vm, "File not found");
     }
     else
     {
@@ -894,9 +862,6 @@ int main(int argv, char **argc)
                 break;
             case TYPE_LIST:
                 printf("{list}");
-                break;
-            case TYPE_ERROR:
-                printf("{error}");
                 break;
             case TYPE_FUNCTION:
                 printf("{function}");
