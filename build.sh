@@ -15,4 +15,4 @@ gcc src/bruter.c\
     src/std.c\
  -o bin/bruter -lm -O3
 
-bin/bruter example/loops.br
+bin/bruter example/functions.br

@@ -1,3 +1,14 @@
+(19/09/2024) - version 0.5.1
+
+- renamed TYPE_FUNCTION to TYPE_BUILTIN;
+- renamed spawn_function to spawn_builtin;
+- created TYPE_FUNCTION for functions written in bruter;
+- new function spawn_function for functions written in bruter;
+- new function print_element;
+- new function std_function;
+- simplified function std_print;
+- simplified function std_ls;
+
 (18/09/2024) - version 0.5.0a
 
 - TYPES order reorganized;

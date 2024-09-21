@@ -20,7 +20,7 @@ char is_true(Value value, char __type)
     {
         return 0;
     }
-    else if (__type == TYPE_FUNCTION)
+    else if (__type == TYPE_BUILTIN)
     {
         return 1;
     }
@@ -319,7 +319,7 @@ Value value_duplicate(Value value, char type)
             stack_push(*((IntList*)dup.pointer), list->data[i]);
         }
     }
-    else if (type == TYPE_FUNCTION)
+    else if (type == TYPE_BUILTIN)
     {
         dup.pointer = value.pointer;
     }
@@ -438,11 +438,11 @@ Int new_string(VirtualMachine *vm, char *string)
     return id;
 }
 
-Int new_function(VirtualMachine *vm, Function function)
+Int new_builtin(VirtualMachine *vm, Function function)
 {
     Int id = new_var(vm);
     vm->stack->data[id].pointer = function;
-    vm->typestack->data[id] = TYPE_FUNCTION;
+    vm->typestack->data[id] = TYPE_BUILTIN;
     return id;
 }
 
@@ -451,6 +451,14 @@ Int new_list(VirtualMachine *vm)
     Int id = new_var(vm);
     vm->stack->data[id].pointer = make_int_list();
     vm->typestack->data[id] = TYPE_LIST;
+    return id;
+}
+
+Int new_function(VirtualMachine *vm, char* script)
+{
+    Int id = new_var(vm);
+    vm->typestack->data[id] = TYPE_FUNCTION;
+    vm->stack->data[id].string = str_duplicate(script);
     return id;
 }
 
@@ -477,9 +485,9 @@ Int spawn_string(VirtualMachine *vm, char* varname, char* string)
     return index;
 }
 
-Int spawn_function(VirtualMachine *vm, char* varname, Function function)
+Int spawn_builtin(VirtualMachine *vm, char* varname, Function function)
 {
-    Int index = new_function(vm, function);
+    Int index = new_builtin(vm, function);
     hash_set(vm, varname, index);
     return index;
 }
@@ -492,11 +500,18 @@ Int spawn_list(VirtualMachine *vm, char* varname)
     return index;
 }
 
+Int spawn_function(VirtualMachine *vm, char* varname, char *script)
+{
+    Int index = new_function(vm, script);
+    hash_set(vm, varname, index);
+    return index;
+}
+
 //frees
 
 void free_var(VirtualMachine *vm, Int index)
 {
-    if (vm->typestack->data[index] == TYPE_STRING)
+    if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_FUNCTION)
     {
         free(vm->stack->data[index].string);
     }
@@ -644,36 +659,33 @@ IntList* parse(VirtualMachine *vm, char *cmd)
 
 Int interpret(VirtualMachine *vm, char* cmd)
 {
-    IntList *parsed = parse(vm, cmd);
-    Int func = stack_shift(*parsed);
+    IntList *args = parse(vm, cmd);
+    Int func = stack_shift(*args);
     Int result = -1;
-      
 
-    if (vm->typestack->data[func] == TYPE_NUMBER)
+    if (vm->typestack->data[func] == TYPE_FUNCTION)
     {
-        if (vm->typestack->data[(Int)vm->stack->data[func].number] == TYPE_FUNCTION)
+        while (args->size > 0)
         {
-            Function function = vm->stack->data[(Int)vm->stack->data[func].number].pointer;
-            result = function(vm, parsed);
+            Int var = stack_shift(*args);
+            char *name = str_format("args.%d", args->size);
+            hash_set(vm, name, var);
+            free(name);
         }
-        else // make a list
-        {
-            stack_insert(*parsed, 0, func);
-            result = std_list_new(vm, parsed);
-        }
+        result = eval(vm, vm->stack->data[func].string);
     }
-    else if (vm->typestack->data[func] == TYPE_FUNCTION)
+    else if (vm->typestack->data[func] == TYPE_BUILTIN)
     {
         Function function = vm->stack->data[func].pointer;
-        result = function(vm, parsed);
+        result = function(vm, args);
     }
     else 
     {
-        stack_insert(*parsed, 0, func);
-        result = std_list_new(vm, parsed);
+        stack_insert(*args, 0, func);
+        result = std_list_new(vm, args);
     }
 
-    stack_free(*parsed);
+    stack_free(*args);
     return result;
 }
 
@@ -791,18 +803,9 @@ Int std_file_write(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int std_exit(VirtualMachine *vm, IntList *args)
-{
-    return 0;
-}
-
 Int std_repl(VirtualMachine *vm, IntList *args)
 {
     printf("bruter v%s\n", VERSION);
-    if (hash_find(vm, "exit") == -1)
-    {
-        spawn_function(vm, "exit", std_exit);
-    }
     char *cmd;
     Int result = -1;
     while (result == -1)
@@ -827,10 +830,10 @@ int main(int argv, char **argc)
 
     init_all(vm);
 
-    spawn_function(vm, "file.read", std_file_read);
-    spawn_function(vm, "file.write", std_file_write);
+    spawn_builtin(vm, "file.read", std_file_read);
+    spawn_builtin(vm, "file.write", std_file_write);
 
-    spawn_function(vm, "repl", std_repl);
+    spawn_builtin(vm, "repl", std_repl);
 
 
     // read file pointed by argv[1]
@@ -863,14 +866,23 @@ int main(int argv, char **argc)
             case TYPE_LIST:
                 printf("{list}");
                 break;
-            case TYPE_FUNCTION:
+            case TYPE_BUILTIN:
                 printf("{function}");
                 break;
             default:
                 printf("{unknown}");
                 break;
         }
-        printf(": ");
+
+        if (result>=0)
+        {
+            printf(": ");
+        }
+        else 
+        {
+            printf("\n");
+        }
+        
         if (vm->typestack->data[result] == TYPE_LIST)
         {
             IntList *list = (IntList*)vm->stack->data[result].pointer;
@@ -880,6 +892,11 @@ int main(int argv, char **argc)
                 eval(vm, str);
                 free(str);
             }
+        }
+        else 
+        {
+            char * str = str_format("print (get %d)", result);
+            eval(vm, str);
         }
         
     }

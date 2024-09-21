@@ -206,60 +206,70 @@ Int std_change(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+void print_element(VirtualMachine *vm, int index)
+{
+    Int _type = -1;
+
+    Value temp = vm->stack->data[index];
+    _type = vm->typestack->data[index];
+    
+    if (_type == TYPE_BUILTIN)
+    {
+        printf("%p", temp.pointer);
+    }
+    else if (_type == TYPE_FUNCTION)
+    {
+        printf("%s", temp.pointer);
+    }
+    else if (_type == TYPE_NUMBER)
+    {
+        if (round(temp.number) == temp.number)
+        {
+            printf("%d", (Int)temp.number);
+        }
+        else
+        {
+            printf("%f", temp.number);
+        }
+    }
+    else if (_type == TYPE_STRING)
+    {
+        printf("%s", temp.string);
+    }
+    else if (_type == TYPE_LIST)
+    {
+        printf("[");
+        IntList *list = (IntList*)temp.pointer;
+        for (Int i = 0; i < (list->size-1); i++)
+        {
+            printf("%d, ", list->data[i]);
+        }
+        if (list->size > 0)
+        {
+            printf("%d]", list->data[list->size-1]);
+        }
+        else
+        {
+            printf("]");
+        }
+    }
+    else if (_type == TYPE_NIL)
+    {
+        printf("{nil}");
+    }
+    else
+    {
+        printf("{unknown}");
+    }
+}
+
 Int std_io_print(VirtualMachine *vm, IntList *args)
 {
     while (args->size > 0)
     {
         Int var = stack_shift(*args);
-        Int _type = -1;
-
-        Value temp = vm->stack->data[var];
-        _type = vm->typestack->data[var];
         
-        if (_type == TYPE_FUNCTION)
-        {
-            printf("%p", temp.pointer);
-        }
-        else if (_type == TYPE_NUMBER)
-        {
-            if (round(temp.number) == temp.number)
-            {
-                printf("%d", (Int)temp.number);
-            }
-            else
-            {
-                printf("%f", temp.number);
-            }
-        }
-        else if (_type == TYPE_STRING)
-        {
-            printf("%s", temp.string);
-        }
-        else if (_type == TYPE_LIST)
-        {
-            printf("[");
-            IntList *list = (IntList*)temp.pointer;
-            for (Int i = 0; i < (list->size-1); i++)
-            {
-                printf("%d, ", list->data[i]);
-            }
-            if (list->size > 0)
-            {
-                printf("%d]", list->data[list->size-1]);
-            }
-            else
-            {
-                printf("]");
-            }
-        }
-        else if (_type == TYPE_NIL)
-        {
-            printf("{nil}");
-        }
-        else
-        {
-            printf("{unknown}");
-        }
+        print_element(vm, var);
         
         if (args->size > 0)
         {
@@ -276,50 +286,9 @@ Int std_io_ls(VirtualMachine *vm, IntList *args)
     {
         for (Int i = 0; i < vm->stack->size; i++)
         {
-            if (vm->typestack->data[i] == TYPE_FUNCTION)
-            {
-                printf("[%d] {function}: %p\n", i, vm->stack->data[i].pointer);
-            }
-            else if (vm->typestack->data[i] == TYPE_NUMBER)
-            {
-                if (round(vm->stack->data[i].number) == vm->stack->data[i].number)
-                {
-                    printf("[%d] {number}: %d\n", i, (Int)vm->stack->data[i].number);
-                }
-                else
-                {
-                    printf("[%d] {number}: %f\n", i, vm->stack->data[i].number);
-                }
-            }
-            else if (vm->typestack->data[i] == TYPE_STRING)
-            {
-                printf("[%d] {string}: %s\n", i, vm->stack->data[i].string);
-            }
-            else if (vm->typestack->data[i] == TYPE_LIST)
-            {
-                printf("[%d] {list}: [", i);
-                IntList *list = (IntList*)vm->stack->data[i].pointer;
-                for (Int j = 0; j < (list->size-1); j++)
-                {
-                    printf("%d, ", list->data[j]);
-                }
-                if (list->size > 0)
-                {
-                    printf("%d]\n", list->data[list->size-1]);
-                }
-                else
-                {
-                    printf("]\n");
-                }
-            }
-            else if (vm->typestack->data[i] == TYPE_NIL)
-            {
-                printf("[%d] {nil}\n", i);
-            }
-            else
-            {
-                printf("[%d] {unknown}\n", i);
-            }
+            printf("[%d]: ", i);
+            print_element(vm, i);
+            printf("\n");
         }
     }
     else
@@ -332,102 +301,18 @@ Int std_io_ls(VirtualMachine *vm, IntList *args)
             {
                 for (Int i = 0; i < vm->hashes->size; i++)
                 {//[name] {type} @index: content
-                    Int index = vm->hashes->data[i].index;
-                    char *name = vm->hashes->data[i].key;
-                    if (vm->typestack->data[index] == TYPE_FUNCTION)
-                    {
-                        printf("[%s] {function} @%d: %p\n", name, index, vm->stack->data[index].pointer);
-                    }
-                    else if (vm->typestack->data[index] == TYPE_NUMBER)
-                    {
-                        if (round(vm->stack->data[index].number) == vm->stack->data[index].number)
-                        {
-                            printf("[%s] {number} @%d: %d\n", name, index, (Int)vm->stack->data[index].number);
-                        }
-                        else
-                        {
-                            printf("[%s] {number} @%d: %f\n", name, index, vm->stack->data[index].number);
-                        }
-                    }
-                    else if (vm->typestack->data[index] == TYPE_STRING)
-                    {
-                        printf("[%s] {string} @%d: %s\n", name, index, vm->stack->data[index].string);
-                    }
-                    else if (vm->typestack->data[index] == TYPE_LIST)
-                    {
-                        printf("[%s] {list} @%d: [", name, index);
-                        IntList *list = (IntList*)vm->stack->data[index].pointer;
-                        for (Int j = 0; j < (list->size-1); j++)
-                        {
-                            printf("%d, ", list->data[j]);
-                        }
-                        if (list->size > 0)
-                        {
-                            printf("%d]\n", list->data[list->size-1]);
-                        }
-                        else
-                        {
-                            printf("]\n");
-                        }
-                    }
-                    else if (vm->typestack->data[index] == TYPE_NIL)
-                    {
-                        printf("[%s] {nil}\n", name);
-                    }
-                    else
-                    {
-                        printf("[%s] {unknown}\n", name);
-                    }
+                    printf("[%s] {%d} @%d: ", vm->hashes->data[i].key, vm->typestack->data[vm->hashes->data[i].index], vm->hashes->data[i].index);
+                    print_element(vm, vm->hashes->data[i].index);
+                    printf("\n");
                 }
             }
             else if(strcmp("temp", vm->stack->data[_var].string) == 0)
             {
                 for (Int i = 0; i < vm->temp->size; i++)
                 {
-                    if (vm->typestack->data[vm->temp->data[i]] == TYPE_FUNCTION)
-                    {
-                        printf("[%d] {function}: %p\n", vm->temp->data[i], vm->stack->data[vm->temp->data[i]].pointer);
-                    }
-                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_NUMBER)
-                    {
-                        if (round(vm->stack->data[vm->temp->data[i]].number) == vm->stack->data[vm->temp->data[i]].number)
-                        {
-                            printf("[%d] {number}: %d\n", vm->temp->data[i], (Int)vm->stack->data[vm->temp->data[i]].number);
-                        }
-                        else
-                        {
-                            printf("[%d] {number}: %f\n", vm->temp->data[i], vm->stack->data[vm->temp->data[i]].number);
-                        }
-                    }
-                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_STRING)
-                    {
-                        printf("[%d] {string}: %s\n", vm->temp->data[i], vm->stack->data[vm->temp->data[i]].string);
-                    }
-                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_LIST)
-                    {
-                        printf("[%d] {list}: [", vm->temp->data[i]);
-                        IntList *list = (IntList*)vm->stack->data[vm->temp->data[i]].pointer;
-                        for (Int j = 0; j < (list->size-1); j++)
-                        {
-                            printf("%d, ", list->data[j]);
-                        }
-                        if (list->size > 0)
-                        {
-                            printf("%d]\n", list->data[list->size-1]);
-                        }
-                        else
-                        {
-                            printf("]\n");
-                        }
-                    }
-                    else if (vm->typestack->data[vm->temp->data[i]] == TYPE_NIL)
-                    {
-                        printf("[%d] {nil}\n", vm->temp->data[i]);
-                    }
-                    else
-                    {
-                        printf("[%d] {unknown}\n", vm->temp->data[i]);
-                    }
+                    printf("[%d] {temp}: ", vm->temp->data[i]);
+                    print_element(vm, vm->temp->data[i]);
+                    printf("\n");
                 }
             }
             else if(strcmp("unused", vm->stack->data[_var].string) == 0 || 
@@ -435,50 +320,9 @@ Int std_io_ls(VirtualMachine *vm, IntList *args)
             {
                 for (Int i = 0; i < vm->unused->size; i++)
                 {
-                    if (vm->typestack->data[vm->unused->data[i]] == TYPE_FUNCTION)
-                    {
-                        printf("[%d] {function}: %p\n", vm->unused->data[i], vm->stack->data[vm->unused->data[i]].pointer);
-                    }
-                    else if (vm->typestack->data[vm->unused->data[i]] == TYPE_NUMBER)
-                    {
-                        if (round(vm->stack->data[vm->unused->data[i]].number) == vm->stack->data[vm->unused->data[i]].number)
-                        {
-                            printf("[%d] {number}: %d\n", vm->unused->data[i], (Int)vm->stack->data[vm->unused->data[i]].number);
-                        }
-                        else
-                        {
-                            printf("[%d] {number}: %f\n", vm->unused->data[i], vm->stack->data[vm->unused->data[i]].number);
-                        }
-                    }
-                    else if (vm->typestack->data[vm->unused->data[i]] == TYPE_STRING)
-                    {
-                        printf("[%d] {string}: %s\n", vm->unused->data[i], vm->stack->data[vm->unused->data[i]].string);
-                    }
-                    else if (vm->typestack->data[vm->unused->data[i]] == TYPE_LIST)
-                    {
-                        printf("[%d] {list}: [", vm->unused->data[i]);
-                        IntList *list = (IntList*)vm->stack->data[vm->unused->data[i]].pointer;
-                        for (Int j = 0; j < (list->size-1); j++)
-                        {
-                            printf("%d, ", list->data[j]);
-                        }
-                        if (list->size > 0)
-                        {
-                            printf("%d]\n", list->data[list->size-1]);
-                        }
-                        else
-                        {
-                            printf("]\n");
-                        }
-                    }
-                    else if (vm->typestack->data[vm->unused->data[i]] == TYPE_NIL)
-                    {
-                        printf("[%d] {nil}\n", vm->unused->data[i]);
-                    }
-                    else
-                    {
-                        printf("[%d] {unknown}\n", vm->unused->data[i]);
-                    }
+                    printf("[%d] {unused}: ", vm->unused->data[i]);
+                    print_element(vm, vm->unused->data[i]);
+                    printf("\n");
                 }
             }
 
@@ -488,50 +332,9 @@ Int std_io_ls(VirtualMachine *vm, IntList *args)
             IntList *list = (IntList*)vm->stack->data[(Int)vm->stack->data[_var].number].pointer;
             for (Int i = 0; i < list->size; i++)
             {
-                if (vm->typestack->data[list->data[i]] == TYPE_FUNCTION)
-                {
-                    printf("[%d] (%d) {function}: %p\n", i, list->data[i], vm->stack->data[list->data[i]].pointer);
-                }
-                else if (vm->typestack->data[list->data[i]] == TYPE_NUMBER)
-                {
-                    if (round(vm->stack->data[list->data[i]].number) == vm->stack->data[list->data[i]].number)
-                    {
-                        printf("[%d] (%d) {number}: %d\n", i, list->data[i], (Int)vm->stack->data[list->data[i]].number);
-                    }
-                    else
-                    {
-                        printf("[%d] (%d) {number}: %f\n", i, list->data[i], vm->stack->data[list->data[i]].number);
-                    }
-                }
-                else if (vm->typestack->data[list->data[i]] == TYPE_STRING)
-                {
-                    printf("[%d] (%d) {string}: %s\n", i, list->data[i], vm->stack->data[list->data[i]].string);
-                }
-                else if (vm->typestack->data[list->data[i]] == TYPE_LIST)
-                {
-                    printf("[%d] (%d) {list}: [", i, list->data[i]);
-                    IntList *list2 = (IntList*)vm->stack->data[list->data[i]].pointer;
-                    for (Int j = 0; j < (list2->size-1); j++)
-                    {
-                        printf("%d, ", list2->data[j]);
-                    }
-                    if (list2->size > 0)
-                    {
-                        printf("%d]\n", list2->data[list2->size-1]);
-                    }
-                    else
-                    {
-                        printf("]\n");
-                    }
-                }
-                else if (vm->typestack->data[list->data[i]] == TYPE_NIL)
-                {
-                    printf("[%d] (%d) {nil}\n", i, list->data[i]);
-                }
-                else
-                {
-                    printf("[%d] (%d) {unknown}\n", list->data[i]);
-                }
+                printf("%d[%d]: ", (Int)vm->stack->data[_var].number, i);
+                print_element(vm, list->data[i]);
+                printf("\n");
             }
         }
     }
@@ -1241,87 +1044,98 @@ Int std_while(VirtualMachine *vm, IntList *args)
     return result;
 }
 
+// std_builtin
+
+Int std_function(VirtualMachine *vm, IntList *args)
+{
+    Int name = stack_shift(*args);
+    Int script = stack_shift(*args);
+    spawn_function(vm, vm->stack->data[name].string, vm->stack->data[script].string);
+    return -1;
+}
+
 void init_std(VirtualMachine *vm)
 {
-    //spawn_function(vm, "temp", std_temp);
-    hold_var(vm,spawn_function(vm, "clear", std_clear));
-    hold_var(vm,spawn_function(vm, "hold", std_hold));
-    hold_var(vm,spawn_function(vm, "unhold", std_unhold));
-    hold_var(vm,spawn_function(vm, "rebase", std_rebase));
-    hold_var(vm,spawn_function(vm, "set", std_set));
-    hold_var(vm,spawn_function(vm, "get", std_get));
-    hold_var(vm,spawn_function(vm, "eval", std_eval));
-    hold_var(vm,spawn_function(vm, "rm", std_rm));
-    hold_var(vm,spawn_function(vm, "return", std_return));
-    hold_var(vm,spawn_function(vm, "type", std_type));
-    hold_var(vm,spawn_function(vm, "size", std_size));
-    hold_var(vm,spawn_function(vm, "edit", std_edit));
-    hold_var(vm,spawn_function(vm, "change", std_change));
-    hold_var(vm,spawn_function(vm, "#", std_ignore));
-    hold_var(vm,spawn_function(vm, "while", std_while));
+    //spawn_builtin(vm, "temp", std_temp);
+    hold_var(vm,spawn_builtin(vm, "clear", std_clear));
+    hold_var(vm,spawn_builtin(vm, "hold", std_hold));
+    hold_var(vm,spawn_builtin(vm, "unhold", std_unhold));
+    hold_var(vm,spawn_builtin(vm, "rebase", std_rebase));
+    hold_var(vm,spawn_builtin(vm, "set", std_set));
+    hold_var(vm,spawn_builtin(vm, "get", std_get));
+    hold_var(vm,spawn_builtin(vm, "eval", std_eval));
+    hold_var(vm,spawn_builtin(vm, "rm", std_rm));
+    hold_var(vm,spawn_builtin(vm, "return", std_return));
+    hold_var(vm,spawn_builtin(vm, "type", std_type));
+    hold_var(vm,spawn_builtin(vm, "size", std_size));
+    hold_var(vm,spawn_builtin(vm, "edit", std_edit));
+    hold_var(vm,spawn_builtin(vm, "change", std_change));
+    hold_var(vm,spawn_builtin(vm, "#", std_ignore));
+    hold_var(vm,spawn_builtin(vm, "while", std_while));
+    hold_var(vm,spawn_builtin(vm, "function", std_function));
 }
 
 void init_io(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_function(vm, "print", std_io_print));
-    hold_var(vm,spawn_function(vm, "ls", std_io_ls));
+    hold_var(vm,spawn_builtin(vm, "print", std_io_print));
+    hold_var(vm,spawn_builtin(vm, "ls", std_io_ls));
 }
 
 void init_math(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_function(vm, "add", std_math_add));
-    hold_var(vm,spawn_function(vm, "sub", std_math_sub));
-    hold_var(vm,spawn_function(vm, "mul", std_math_mul));
-    hold_var(vm,spawn_function(vm, "div", std_math_div));
-    hold_var(vm,spawn_function(vm, "mod", std_math_mod));
-    hold_var(vm,spawn_function(vm, "pow", std_math_pow));
-    hold_var(vm,spawn_function(vm, "abs", std_math_abs));
-    hold_var(vm,spawn_function(vm, "sqrt", std_math_sqrt));
-    hold_var(vm,spawn_function(vm, "ceil", std_math_ceil));
-    hold_var(vm,spawn_function(vm, "seed", std_math_seed));
-    hold_var(vm,spawn_function(vm, "floor", std_math_floor));
-    hold_var(vm,spawn_function(vm, "round", std_math_round));
-    hold_var(vm,spawn_function(vm, "random", std_math_random));
+    hold_var(vm,spawn_builtin(vm, "add", std_math_add));
+    hold_var(vm,spawn_builtin(vm, "sub", std_math_sub));
+    hold_var(vm,spawn_builtin(vm, "mul", std_math_mul));
+    hold_var(vm,spawn_builtin(vm, "div", std_math_div));
+    hold_var(vm,spawn_builtin(vm, "mod", std_math_mod));
+    hold_var(vm,spawn_builtin(vm, "pow", std_math_pow));
+    hold_var(vm,spawn_builtin(vm, "abs", std_math_abs));
+    hold_var(vm,spawn_builtin(vm, "sqrt", std_math_sqrt));
+    hold_var(vm,spawn_builtin(vm, "ceil", std_math_ceil));
+    hold_var(vm,spawn_builtin(vm, "seed", std_math_seed));
+    hold_var(vm,spawn_builtin(vm, "floor", std_math_floor));
+    hold_var(vm,spawn_builtin(vm, "round", std_math_round));
+    hold_var(vm,spawn_builtin(vm, "random", std_math_random));
 }
 
 void init_list(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_function(vm, "list.new", std_list_new));
-    hold_var(vm,spawn_function(vm, "list.insert", std_list_insert));
-    hold_var(vm,spawn_function(vm, "list.push", std_list_push));
-    hold_var(vm,spawn_function(vm, "list.unshift", std_list_unshift));
-    hold_var(vm,spawn_function(vm, "list.remove", std_list_remove));
-    hold_var(vm,spawn_function(vm, "list.pop", std_list_pop));
-    hold_var(vm,spawn_function(vm, "list.shift", std_list_shift));
-    hold_var(vm,spawn_function(vm, "list.concat", std_list_concat));
-    hold_var(vm,spawn_function(vm, "list.find", std_list_find));
-    hold_var(vm,spawn_function(vm, "list.get", std_list_get));
+    hold_var(vm,spawn_builtin(vm, "list.new", std_list_new));
+    hold_var(vm,spawn_builtin(vm, "list.insert", std_list_insert));
+    hold_var(vm,spawn_builtin(vm, "list.push", std_list_push));
+    hold_var(vm,spawn_builtin(vm, "list.unshift", std_list_unshift));
+    hold_var(vm,spawn_builtin(vm, "list.remove", std_list_remove));
+    hold_var(vm,spawn_builtin(vm, "list.pop", std_list_pop));
+    hold_var(vm,spawn_builtin(vm, "list.shift", std_list_shift));
+    hold_var(vm,spawn_builtin(vm, "list.concat", std_list_concat));
+    hold_var(vm,spawn_builtin(vm, "list.find", std_list_find));
+    hold_var(vm,spawn_builtin(vm, "list.get", std_list_get));
 }
 
 void init_string(VirtualMachine *vm)
 {
-    //spawn_function(vm, "string.format", std_string_new);
-    hold_var(vm,spawn_function(vm, "string.concat", std_string_concat));
-    hold_var(vm,spawn_function(vm, "string.find", std_string_find));
-    hold_var(vm,spawn_function(vm, "string.sub", std_string_ndup));
-    hold_var(vm,spawn_function(vm, "string.split", std_string_split));
-    hold_var(vm,spawn_function(vm, "string.replace", std_string_replace));
-    hold_var(vm,spawn_function(vm, "string.len", std_string_length));
+    //spawn_builtin(vm, "string.format", std_string_new);
+    hold_var(vm,spawn_builtin(vm, "string.concat", std_string_concat));
+    hold_var(vm,spawn_builtin(vm, "string.find", std_string_find));
+    hold_var(vm,spawn_builtin(vm, "string.sub", std_string_ndup));
+    hold_var(vm,spawn_builtin(vm, "string.split", std_string_split));
+    hold_var(vm,spawn_builtin(vm, "string.replace", std_string_replace));
+    hold_var(vm,spawn_builtin(vm, "string.len", std_string_length));
 }
 
 void init_condition(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_function(vm, "==", std_condition_equals));
-    hold_var(vm,spawn_function(vm, "!=", std_condition_not_equals));
-    hold_var(vm,spawn_function(vm, ">", std_condition_greater));
-    hold_var(vm,spawn_function(vm, "<", std_condition_less));
-    hold_var(vm,spawn_function(vm, ">=", std_condition_greater_equals));
-    hold_var(vm,spawn_function(vm, "<=", std_condition_less_equals));
-    hold_var(vm,spawn_function(vm, "and", std_condition_and));
-    hold_var(vm,spawn_function(vm, "or", std_condition_or));
-    hold_var(vm,spawn_function(vm, "not", std_condition_not));
-    hold_var(vm,spawn_function(vm, "if", std_condition_if));
-    hold_var(vm,spawn_function(vm, "ifelse", std_condition_ifelse));
+    hold_var(vm,spawn_builtin(vm, "==", std_condition_equals));
+    hold_var(vm,spawn_builtin(vm, "!=", std_condition_not_equals));
+    hold_var(vm,spawn_builtin(vm, ">", std_condition_greater));
+    hold_var(vm,spawn_builtin(vm, "<", std_condition_less));
+    hold_var(vm,spawn_builtin(vm, ">=", std_condition_greater_equals));
+    hold_var(vm,spawn_builtin(vm, "<=", std_condition_less_equals));
+    hold_var(vm,spawn_builtin(vm, "and", std_condition_and));
+    hold_var(vm,spawn_builtin(vm, "or", std_condition_or));
+    hold_var(vm,spawn_builtin(vm, "not", std_condition_not));
+    hold_var(vm,spawn_builtin(vm, "if", std_condition_if));
+    hold_var(vm,spawn_builtin(vm, "ifelse", std_condition_ifelse));
 }
 
 void init_default_vars(VirtualMachine *vm)
@@ -1331,7 +1145,7 @@ void init_default_vars(VirtualMachine *vm)
     hold_var(vm,spawn_number(vm, "OTHER", TYPE_OTHER));// unused type
     hold_var(vm,spawn_number(vm, "NUMBER", TYPE_NUMBER));// number type
     hold_var(vm,spawn_number(vm, "STRING", TYPE_STRING));// string type
-    hold_var(vm,spawn_number(vm, "FUNCTION", TYPE_FUNCTION));// function type
+    hold_var(vm,spawn_number(vm, "FUNCTION", TYPE_BUILTIN));// function type
     hold_var(vm,spawn_number(vm, "LIST", TYPE_LIST));// list type
     hold_var(vm,spawn_string(vm, "VERSION", VERSION));// version
 }

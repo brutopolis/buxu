@@ -63,7 +63,7 @@ library search path:
 - `list lib` = ok
 - `conditons lib` = ok
 - `loops lib` = ok
-- `functions lib` = not yet
+- `functions lib` = ok/testing
 - `libraries lib` = not yet
 - `expect` = a function that expects a type and returns a boolean, not yet
 - `vs-code extension` = deadly outdated, not yet

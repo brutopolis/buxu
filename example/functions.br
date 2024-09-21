@@ -1,0 +1,17 @@
+set "_index" 0;
+set "_size" 10;
+hold _size;
+hold _index;
+
+set "cond" "< _index _size";
+set "code" "print _index";
+hold cond;
+hold code;
+
+function "tttt" "print args.0";
+function "ttttt" "return 45";
+hold tttt;
+hold ttttt;
+tttt (ttttt);
+print "memory in bytes:" (size) "bytes";
+return 4;

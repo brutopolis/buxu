@@ -11,4 +11,4 @@ valgrind \
     --show-leak-kinds=all \
     --track-origins=yes \
     --log-file=valgrind-out.txt \
-    --verbose bin/bruter example/loops.br
+    --verbose bin/bruter example/functions.br

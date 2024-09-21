@@ -41,7 +41,7 @@ Int _ino_print(VirtualMachine *vm, IntList *args)
             printf("%d", list->data[list->size-1]);
             printf("]");
         }
-        else if (_type == TYPE_FUNCTION)
+        else if (_type == TYPE_BUILTIN)
         {
             printf("(function)%p", temp.pointer);
         }
@@ -133,7 +133,7 @@ class Bruter
     };
     void registerFunction(char *name, Function func)
     {
-        spawn_function(this->vm, name, func);
+        spawn_builtin(this->vm, name, func);
     };
     Int run(char *str)
     {
