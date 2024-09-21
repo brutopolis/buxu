@@ -7,7 +7,7 @@
 #include <math.h>
 #include <stdarg.h>
 
-#define VERSION "0.5.1"
+#define VERSION "0.5.1a"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
