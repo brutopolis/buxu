@@ -585,6 +585,13 @@ void unuse_var(VirtualMachine *vm, Int index)
             stack_remove(*vm->hashes, i);
         }
     }
+    for (Int i = 0; i < vm->temp->size; i++)
+    {
+        if (vm->temp->data[i] == index)
+        {
+            stack_remove(*vm->temp, i);
+        }
+    }
     stack_push(*vm->unused, index);
 }
 

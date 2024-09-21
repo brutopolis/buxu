@@ -1,4 +1,9 @@
-(19/09/2024) - version 0.5.1
+(21/09/2024) - version 0.5.1a
+
+- some README updates;
+- added a condition to prevent the interpreter from crashing after unusing a temp variable;
+
+(21/09/2024) - version 0.5.1
 
 - renamed TYPE_FUNCTION to TYPE_BUILTIN;
 - renamed spawn_function to spawn_builtin;

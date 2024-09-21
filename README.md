@@ -59,11 +59,12 @@ library search path:
 - `operators` = ok
 - `expressions` = ok
 - `math lib` = ok
-- `string lib` = ok
-- `list lib` = ok
-- `conditons lib` = ok
-- `loops lib` = ok
-- `functions lib` = ok/testing
+- `string` = ok
+- `list` = ok
+- `conditons` = ok
+- `loops` = ok
+- `functions` = ok/testing
+- `hashes lib` = not yet
 - `libraries lib` = not yet
 - `expect` = a function that expects a type and returns a boolean, not yet
 - `vs-code extension` = deadly outdated, not yet
