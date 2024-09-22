@@ -1,3 +1,14 @@
+(22/09/2024) - version 0.5.2
+
+- prototype library added(experimental);
+- new function std_prototype_copy;
+- new function std_prototype_compare;
+- new function std_prototype_hold;
+- new function std_prototype_unhold;
+- new function std_import(standalone only);
+- minor leak fixed;
+- renamed std_rm to std_delete;
+
 (21/09/2024) - version 0.5.1a
 
 - some README updates;
@@ -84,7 +95,7 @@
 - added a new function special_split which splits by a given char;
 - fixed string splitters;
 - fixed eval function;
-- all functions are were renamed from pascalCase to snake_case for consistency and better readability;
+- all functions were renamed from pascalCase to snake_case for consistency and better readability;
 - Variable type and everything related to it was removed;
 - VariableList type and everything related to it was removed;
 - List type renamed to ValueList;

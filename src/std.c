@@ -349,7 +349,7 @@ Int std_eval(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-Int std_rm(VirtualMachine *vm, IntList *args)
+Int std_delete(VirtualMachine *vm, IntList *args)
 {
     Int index;
     while (args->size > 0)
@@ -505,7 +505,6 @@ Int std_math_pow(VirtualMachine *vm, IntList *args)
     Int result = new_number(vm, pow(vm->stack->data[a].number, vm->stack->data[b].number));
     return result;
 }
-
 
 Int std_math_sqrt(VirtualMachine *vm, IntList *args)
 {
@@ -753,9 +752,7 @@ Int std_string_ndup(VirtualMachine *vm, IntList *args)
     if ((vm->typestack->data[str] == TYPE_STRING) && vm->typestack->data[start] == TYPE_NUMBER && vm->typestack->data[end] == TYPE_NUMBER)
     {
         char* _str = strndup(vm->stack->data[str].string + (Int)vm->stack->data[start].number, (Int)vm->stack->data[end].number - (Int)vm->stack->data[start].number);
-        printf("%s\n", _str);
         result = new_string(vm, _str);
-        printf("STRING:%s\n", _str);
         free(_str);
     }
     return result;
@@ -774,7 +771,6 @@ Int std_string_split(VirtualMachine *vm, IntList *args)
         while (list->size > 0)
         {
             char* _str = stack_shift(*list);
-            printf("STRING:%s\n", _str);
             char* cmd = str_format("list.push (get %d) (get %d)", result, new_string(vm, _str));
             eval(vm, cmd);
             free(cmd);
@@ -1044,7 +1040,7 @@ Int std_while(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-// std_builtin
+// std_function
 
 Int std_function(VirtualMachine *vm, IntList *args)
 {
@@ -1052,6 +1048,108 @@ Int std_function(VirtualMachine *vm, IntList *args)
     Int script = stack_shift(*args);
     spawn_function(vm, vm->stack->data[name].string, vm->stack->data[script].string);
     return -1;
+}
+
+// std prototype
+// std prototype
+// std prototype
+
+Int std_prototype_copy(VirtualMachine *vm, IntList *args)
+{
+    Int prototype_name = stack_shift(*args);
+    Int new_name = stack_shift(*args);
+    for (Int i = vm->hashes->size-1; i >= 0; i--)
+    {
+        if (str_find(vm->hashes->data[i].key, vm->stack->data[prototype_name].string) == 0)
+        {
+            Int index = new_var(vm);
+            vm->stack->data[index] = value_duplicate(vm->stack->data[vm->hashes->data[i].index], vm->typestack->data[vm->hashes->data[i].index]);
+            vm->typestack->data[index] = vm->typestack->data[vm->hashes->data[i].index];
+            char* tmpstr = str_replace(vm->hashes->data[i].key, vm->stack->data[prototype_name].string, vm->stack->data[new_name].string);
+            hash_set(vm, tmpstr, index);
+            free(tmpstr);
+        }
+    }
+    return -1;
+}
+
+Int std_prototype_compare(VirtualMachine *vm, IntList *args)// compare two prototypes structure and type, return 0 if they are the same, -1 if they are different
+{
+    Int prototype1 = stack_shift(*args);
+    Int prototype2 = stack_shift(*args);
+
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        if (str_find(vm->hashes->data[i].key, vm->stack->data[prototype1].string) == 0)
+        {
+            char * tmpstr = str_replace(vm->hashes->data[i].key, vm->stack->data[prototype1].string, vm->stack->data[prototype2].string);
+            Int index = hash_find(vm, tmpstr);
+            free(tmpstr);
+            if (index == -1)
+            {
+                return new_number(vm, 0);
+            }
+        }
+        else if (str_find(vm->hashes->data[i].key, vm->stack->data[prototype2].string) == 0)
+        {
+            char * tmpstr = str_replace(vm->hashes->data[i].key, vm->stack->data[prototype2].string, vm->stack->data[prototype1].string);
+            Int index = hash_find(vm, tmpstr);
+            free(tmpstr);
+            if (index == -1)
+            {
+                return new_number(vm, 0);
+            }
+        }
+    }
+
+    return new_number(vm, 1);
+}
+
+Int std_prototype_hold(VirtualMachine *vm, IntList *args)
+{
+    Int prototype = stack_shift(*args);
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        if (str_find(vm->hashes->data[i].key, vm->stack->data[prototype].string) == 0)
+        {
+            hold_var(vm, vm->hashes->data[i].index);
+        }
+    }
+    return -1;
+}
+
+Int std_prototype_unhold(VirtualMachine *vm, IntList *args)
+{
+    Int prototype = stack_shift(*args);
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        if (str_find(vm->hashes->data[i].key, vm->stack->data[prototype].string) == 0)
+        {
+            unhold_var(vm, vm->hashes->data[i].index);
+        }
+    }
+    return -1;
+}
+
+Int std_prototype_equals(VirtualMachine *vm, IntList *args)
+{
+    Int prototype1 = stack_shift(*args);
+    Int prototype2 = stack_shift(*args);
+    Int result = -1;
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        if (str_find(vm->hashes->data[i].key, vm->stack->data[prototype1].string) == 0)
+        {
+            char * tmpstr = str_replace(vm->hashes->data[i].key, vm->stack->data[prototype1].string, vm->stack->data[prototype2].string);
+            Int index = hash_find(vm, tmpstr);
+            free(tmpstr);
+            if (index == -1)
+            {
+                return new_number(vm, 0);
+            }
+        }
+    }
+    return result;
 }
 
 void init_std(VirtualMachine *vm)
@@ -1064,7 +1162,7 @@ void init_std(VirtualMachine *vm)
     hold_var(vm,spawn_builtin(vm, "set", std_set));
     hold_var(vm,spawn_builtin(vm, "get", std_get));
     hold_var(vm,spawn_builtin(vm, "eval", std_eval));
-    hold_var(vm,spawn_builtin(vm, "rm", std_rm));
+    hold_var(vm,spawn_builtin(vm, "delete", std_delete));
     hold_var(vm,spawn_builtin(vm, "return", std_return));
     hold_var(vm,spawn_builtin(vm, "type", std_type));
     hold_var(vm,spawn_builtin(vm, "size", std_size));
@@ -1072,7 +1170,21 @@ void init_std(VirtualMachine *vm)
     hold_var(vm,spawn_builtin(vm, "change", std_change));
     hold_var(vm,spawn_builtin(vm, "#", std_ignore));
     hold_var(vm,spawn_builtin(vm, "while", std_while));
+}
+
+void init_function(VirtualMachine *vm)
+{
     hold_var(vm,spawn_builtin(vm, "function", std_function));
+}
+
+void init_prototype(VirtualMachine *vm)
+{
+    hold_var(vm,spawn_builtin(vm, "prototype.copy", std_prototype_copy));
+    hold_var(vm,spawn_builtin(vm, "prototype.compare", std_prototype_compare));
+    hold_var(vm,spawn_builtin(vm, "prototype.hold", std_prototype_hold));
+    hold_var(vm,spawn_builtin(vm, "prototype.unhold", std_prototype_unhold));
+    hold_var(vm,spawn_builtin(vm, "prototype.equals", std_prototype_equals));
+
 }
 
 void init_io(VirtualMachine *vm)
@@ -1145,11 +1257,13 @@ void init_default_vars(VirtualMachine *vm)
     hold_var(vm,spawn_number(vm, "OTHER", TYPE_OTHER));// unused type
     hold_var(vm,spawn_number(vm, "NUMBER", TYPE_NUMBER));// number type
     hold_var(vm,spawn_number(vm, "STRING", TYPE_STRING));// string type
-    hold_var(vm,spawn_number(vm, "FUNCTION", TYPE_BUILTIN));// function type
+    hold_var(vm,spawn_number(vm, "BUILTIN", TYPE_BUILTIN));// builtin function type
+    hold_var(vm,spawn_number(vm, "FUNCTION", TYPE_FUNCTION));// function type
     hold_var(vm,spawn_number(vm, "LIST", TYPE_LIST));// list type
     hold_var(vm,spawn_string(vm, "VERSION", VERSION));// version
 }
 
+// std init presets
 void init_all(VirtualMachine *vm)
 {
     init_std(vm);
@@ -1158,5 +1272,7 @@ void init_all(VirtualMachine *vm)
     init_list(vm);
     init_string(vm);
     init_condition(vm);
+    init_function(vm);
+    init_prototype(vm);
     init_default_vars(vm);
 }

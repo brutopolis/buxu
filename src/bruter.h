@@ -7,7 +7,7 @@
 #include <math.h>
 #include <stdarg.h>
 
-#define VERSION "0.5.1a"
+#define VERSION "0.5.2"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -210,17 +210,13 @@ Int hash_find(VirtualMachine *vm, char *key);
 void hash_set(VirtualMachine *vm, char *key, Int index);
 void hash_unset(VirtualMachine *vm, char *key);
 
-
-
 // eval
-Int script_caller(VirtualMachine *vm, IntList *args);
 Int eval(VirtualMachine *vm, char *cmd);
 Int interpret(VirtualMachine *vm, char* cmd);
 IntList* parse(VirtualMachine *vm, char *cmd);
 
-
+/*
 //std
-//Int std_temp(VirtualMachine *vm, IntList *args);
 Int std_clear(VirtualMachine *vm, IntList *args);
 Int std_hold(VirtualMachine *vm, IntList *args);
 Int std_unhold(VirtualMachine *vm, IntList *args);
@@ -228,7 +224,7 @@ Int std_set(VirtualMachine *vm, IntList *args);
 Int std_ignore(VirtualMachine *vm, IntList *args);
 Int std_size(VirtualMachine *vm, IntList *args);
 Int std_eval(VirtualMachine *vm, IntList *args);
-Int std_rm(VirtualMachine *vm, IntList *args);
+Int std_delete(VirtualMachine *vm, IntList *args);
 Int std_type(VirtualMachine *vm, IntList *args);
 Int std_get(VirtualMachine *vm, IntList *args);
 Int std_rebase(VirtualMachine *vm, IntList *args);
@@ -292,7 +288,7 @@ Int std_condition_or(VirtualMachine *vm, IntList *args);
 Int std_condition_not(VirtualMachine *vm, IntList *args);
 Int std_condition_if(VirtualMachine *vm, IntList *args);
 Int std_condition_ifelse(VirtualMachine *vm, IntList *args);
-
+*/
 
 void init_default_vars(VirtualMachine *vm);
 void init_std(VirtualMachine *vm);
@@ -300,6 +296,9 @@ void init_math(VirtualMachine *vm);
 void init_list(VirtualMachine *vm);
 void init_string(VirtualMachine *vm);
 void init_condition(VirtualMachine *vm);
+void init_io(VirtualMachine *vm);
+void init_function(VirtualMachine *vm);
+void init_prototype(VirtualMachine *vm);
 void init_all(VirtualMachine *vm);
 
 #endif
