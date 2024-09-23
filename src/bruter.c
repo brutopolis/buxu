@@ -151,20 +151,19 @@ Int str_find(const char *str, const char *substr)
     }
     return -1;
 }
-
 StringList* special_space_split(char *str)
 {
     StringList *splited;
     splited = (StringList*)malloc(sizeof(StringList));
     stack_init(*splited);
     
-    Int i = 0;
+    int i = 0;
     while (str[i] != '\0')
     {
         if (str[i] == '(')
         {
-            Int j = i;
-            Int count = 1;
+            int j = i;
+            int count = 1;
             while (count != 0)
             {
                 j++;
@@ -183,15 +182,27 @@ StringList* special_space_split(char *str)
         }
         else if (str[i] == '"')
         {
-            Int j = i;
-            j++;  // Avança para depois da abertura de aspas
+            int j = i;
+            j++;  // Avança para depois da abertura de aspas duplas
             while (str[j] != '"' && str[j] != '\0')
             {
                 j++;
             }
             char *tmp = str_nduplicate(str + i, j - i + 1);
             stack_push(*splited, tmp);
-            i = j + 1;  // Avança para após o fechamento de aspas
+            i = j + 1;  // Avança para após o fechamento de aspas duplas
+        }
+        else if (str[i] == '\'')
+        {
+            int j = i;
+            j++;  // Avança para depois da abertura de aspas simples
+            while (str[j] != '\'' && str[j] != '\0')
+            {
+                j++;
+            }
+            char *tmp = str_nduplicate(str + i, j - i + 1);
+            stack_push(*splited, tmp);
+            i = j + 1;  // Avança para após o fechamento de aspas simples
         }
         else if (is_space(str[i]))
         {
@@ -199,8 +210,8 @@ StringList* special_space_split(char *str)
         }
         else
         {
-            Int j = i;
-            while (!is_space(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')' && str[j] != '"')
+            int j = i;
+            while (!is_space(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')' && str[j] != '"' && str[j] != '\'')
             {
                 j++;
             }
@@ -211,35 +222,42 @@ StringList* special_space_split(char *str)
     return splited;
 }
 
+
 StringList* special_split(char *str, char delim)
 {
     StringList *splited;
     splited = (StringList*)malloc(sizeof(StringList));
     stack_init(*splited);
     
-    Int recursion = 0;
-    Int inside_quotes = 0;
-    Int i = 0;
-    Int last_i = 0;
+    int recursion = 0;
+    int inside_double_quotes = 0;
+    int inside_single_quotes = 0;
+    int i = 0;
+    int last_i = 0;
 
     while (str[i] != '\0')
     {
-        if (str[i] == '(' && inside_quotes == 0)
+        if (str[i] == '(' && inside_double_quotes == 0 && inside_single_quotes == 0)
         {
             recursion++;
         }
-        else if (str[i] == ')' && inside_quotes == 0)
+        else if (str[i] == ')' && inside_double_quotes == 0 && inside_single_quotes == 0)
         {
             recursion--;
         }
-        else if (str[i] == '"' && recursion == 0)
+        else if (str[i] == '"' && recursion == 0 && inside_single_quotes == 0)
         {
-            // Alterna o estado de dentro/fora de aspas
-            inside_quotes = !inside_quotes;
+            // Alterna o estado de dentro/fora de aspas duplas
+            inside_double_quotes = !inside_double_quotes;
+        }
+        else if (str[i] == '\'' && recursion == 0 && inside_double_quotes == 0)
+        {
+            // Alterna o estado de dentro/fora de aspas simples
+            inside_single_quotes = !inside_single_quotes;
         }
 
-        // Se encontramos o delimitador e não estamos dentro de parênteses nem aspas
-        if (str[i] == delim && recursion == 0 && inside_quotes == 0)
+        // Se encontramos o delimitador e não estamos dentro de parênteses nem de aspas simples ou duplas
+        if (str[i] == delim && recursion == 0 && inside_double_quotes == 0 && inside_single_quotes == 0)
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i);
             stack_push(*splited, tmp);
@@ -255,7 +273,6 @@ StringList* special_split(char *str, char delim)
     }
     return splited;
 }
-
 
 StringList* splitString(char *str, char *delim)
 {
@@ -617,7 +634,7 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             stack_push(*result, index);
             free(temp);
         }
-        else if (str[0] == '"') // string
+        else if (str[0] == '"' || str[0] == '\'') // string
         {
             char* temp = str_nduplicate(str + 1, strlen(str) - 2);
             Int var = new_string(vm, temp);
@@ -743,4 +760,56 @@ Int eval(VirtualMachine *vm, char *cmd)
     }
     stack_free(*splited);
     return result;
+}
+
+void collect_garbage(VirtualMachine *vm)
+{
+    for (Int i = 0; i < vm->stack->size; i++)
+    {
+        if (vm->typestack->data[i] != TYPE_NIL)
+        {
+            char used = 0;
+            for (Int j = 0; j < vm->hashes->size; j++)
+            {
+                if (vm->hashes->data[j].index == i)
+                {
+                    used = 1;
+                    break;
+                }
+            }
+
+            //lists references
+            for (Int j = 0; j < vm->stack->size; j++)
+            {
+                if (vm->typestack->data[j] == TYPE_LIST)
+                {
+                    IntList *list = (IntList*)vm->stack->data[j].pointer;
+                    for (Int k = 0; k < list->size; k++)
+                    {
+                        if (list->data[k] == i)
+                        {
+                            used = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            //temp references
+            for (Int j = 0; j < vm->temp->size; j++)
+            {
+                if (vm->temp->data[j] == i)
+                {
+                    used = 1;
+                    break;
+                }
+            }
+            
+
+            if (!used)
+            {
+                unuse_var(vm, i);
+            }
+        }
+    }
 }

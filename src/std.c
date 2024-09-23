@@ -22,6 +22,18 @@ Int std_hold(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+Int std_keep(VirtualMachine *vm, IntList *args)
+{
+    Int index = stack_shift(*args);
+    if (args->size > 0)
+    {
+        Int as = stack_shift(*args);
+        Int _type = vm->typestack->data[index];
+    }
+    hold_var(vm, index);
+    return index;
+}
+
 Int std_unhold(VirtualMachine *vm, IntList *args)
 {
     Int index = stack_shift(*args);
@@ -113,6 +125,12 @@ Int std_rebase(VirtualMachine *vm, IntList *args)
         stack_remove(*vm->typestack, index);
     }
 
+    return -1;
+}
+
+Int std_collect(VirtualMachine *vm, IntList *args)
+{
+    collect_garbage(vm);
     return -1;
 }
 
@@ -554,6 +572,20 @@ Int std_math_round(VirtualMachine *vm, IntList *args)
     Int a = stack_shift(*args);
     Int result = new_number(vm, round(vm->stack->data[a].number));
     return result;
+}
+
+Int std_math_increment(VirtualMachine *vm, IntList *args)
+{
+    Int a = stack_shift(*args);
+    vm->stack->data[a].number++;
+    return a;
+}
+
+Int std_math_decrement(VirtualMachine *vm, IntList *args)
+{
+    Int a = stack_shift(*args);
+    vm->stack->data[a].number--;
+    return a;
 }
 
 
@@ -1154,22 +1186,29 @@ Int std_prototype_equals(VirtualMachine *vm, IntList *args)
 
 void init_std(VirtualMachine *vm)
 {
-    //spawn_builtin(vm, "temp", std_temp);
-    hold_var(vm,spawn_builtin(vm, "clear", std_clear));
-    hold_var(vm,spawn_builtin(vm, "hold", std_hold));
-    hold_var(vm,spawn_builtin(vm, "unhold", std_unhold));
-    hold_var(vm,spawn_builtin(vm, "rebase", std_rebase));
+    
     hold_var(vm,spawn_builtin(vm, "set", std_set));
     hold_var(vm,spawn_builtin(vm, "get", std_get));
+    hold_var(vm,spawn_builtin(vm, "#", std_ignore));
     hold_var(vm,spawn_builtin(vm, "eval", std_eval));
-    hold_var(vm,spawn_builtin(vm, "delete", std_delete));
-    hold_var(vm,spawn_builtin(vm, "return", std_return));
     hold_var(vm,spawn_builtin(vm, "type", std_type));
     hold_var(vm,spawn_builtin(vm, "size", std_size));
     hold_var(vm,spawn_builtin(vm, "edit", std_edit));
-    hold_var(vm,spawn_builtin(vm, "change", std_change));
-    hold_var(vm,spawn_builtin(vm, "#", std_ignore));
     hold_var(vm,spawn_builtin(vm, "while", std_while));
+    hold_var(vm,spawn_builtin(vm, "delete", std_delete));
+    hold_var(vm,spawn_builtin(vm, "return", std_return));
+    hold_var(vm,spawn_builtin(vm, "change", std_change));
+}
+
+void init_manual_memory(VirtualMachine *vm)
+{
+    hold_var(vm,spawn_builtin(vm, "hold", std_hold));
+    hold_var(vm,spawn_builtin(vm, "keep", std_keep));
+    hold_var(vm,spawn_builtin(vm, "clear", std_clear));
+    hold_var(vm,spawn_builtin(vm, "rebase", std_rebase));
+    hold_var(vm,spawn_builtin(vm, "unhold", std_unhold));
+    hold_var(vm,spawn_builtin(vm, "collect", std_collect));
+
 }
 
 void init_function(VirtualMachine *vm)
@@ -1180,10 +1219,10 @@ void init_function(VirtualMachine *vm)
 void init_prototype(VirtualMachine *vm)
 {
     hold_var(vm,spawn_builtin(vm, "prototype.copy", std_prototype_copy));
-    hold_var(vm,spawn_builtin(vm, "prototype.compare", std_prototype_compare));
     hold_var(vm,spawn_builtin(vm, "prototype.hold", std_prototype_hold));
     hold_var(vm,spawn_builtin(vm, "prototype.unhold", std_prototype_unhold));
     hold_var(vm,spawn_builtin(vm, "prototype.equals", std_prototype_equals));
+    hold_var(vm,spawn_builtin(vm, "prototype.compare", std_prototype_compare));
 
 }
 
@@ -1208,20 +1247,22 @@ void init_math(VirtualMachine *vm)
     hold_var(vm,spawn_builtin(vm, "floor", std_math_floor));
     hold_var(vm,spawn_builtin(vm, "round", std_math_round));
     hold_var(vm,spawn_builtin(vm, "random", std_math_random));
+    hold_var(vm,spawn_builtin(vm, "incr", std_math_increment));
+    hold_var(vm,spawn_builtin(vm, "decr", std_math_decrement));
 }
 
 void init_list(VirtualMachine *vm)
 {
     hold_var(vm,spawn_builtin(vm, "list.new", std_list_new));
-    hold_var(vm,spawn_builtin(vm, "list.insert", std_list_insert));
-    hold_var(vm,spawn_builtin(vm, "list.push", std_list_push));
-    hold_var(vm,spawn_builtin(vm, "list.unshift", std_list_unshift));
-    hold_var(vm,spawn_builtin(vm, "list.remove", std_list_remove));
     hold_var(vm,spawn_builtin(vm, "list.pop", std_list_pop));
-    hold_var(vm,spawn_builtin(vm, "list.shift", std_list_shift));
-    hold_var(vm,spawn_builtin(vm, "list.concat", std_list_concat));
-    hold_var(vm,spawn_builtin(vm, "list.find", std_list_find));
     hold_var(vm,spawn_builtin(vm, "list.get", std_list_get));
+    hold_var(vm,spawn_builtin(vm, "list.push", std_list_push));
+    hold_var(vm,spawn_builtin(vm, "list.find", std_list_find));
+    hold_var(vm,spawn_builtin(vm, "list.shift", std_list_shift));
+    hold_var(vm,spawn_builtin(vm, "list.unshift", std_list_unshift));
+    hold_var(vm,spawn_builtin(vm, "list.insert", std_list_insert));
+    hold_var(vm,spawn_builtin(vm, "list.remove", std_list_remove));
+    hold_var(vm,spawn_builtin(vm, "list.concat", std_list_concat));
 }
 
 void init_string(VirtualMachine *vm)
@@ -1264,7 +1305,7 @@ void init_default_vars(VirtualMachine *vm)
 }
 
 // std init presets
-void init_all(VirtualMachine *vm)
+void preset_all(VirtualMachine *vm)
 {
     init_std(vm);
     init_io(vm);
@@ -1274,5 +1315,6 @@ void init_all(VirtualMachine *vm)
     init_condition(vm);
     init_function(vm);
     init_prototype(vm);
+    init_manual_memory(vm);
     init_default_vars(vm);
 }

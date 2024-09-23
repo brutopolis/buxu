@@ -1,3 +1,12 @@
+(23/09/2024) - version 0.5.3
+
+- new function collect_garbage;
+- new function std_collect, use it just when you lose a held variable;
+- new function std_math_increment;
+- new function std_math_decrement;
+- benchmark/ created under example/;
+- single quotes are now allowed as string delimiter;
+
 (22/09/2024) - version 0.5.2
 
 - prototype library added(experimental);

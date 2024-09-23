@@ -108,7 +108,7 @@ int main(int argv, char **argc)
 {
     VirtualMachine *vm = make_vm();
 
-    init_all(vm);
+    preset_all(vm);
 
     spawn_builtin(vm, "file.read", std_file_read);
     spawn_builtin(vm, "file.write", std_file_write);

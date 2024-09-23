@@ -7,7 +7,7 @@
 #include <math.h>
 #include <stdarg.h>
 
-#define VERSION "0.5.2"
+#define VERSION "0.5.3"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -214,6 +214,7 @@ void hash_unset(VirtualMachine *vm, char *key);
 Int eval(VirtualMachine *vm, char *cmd);
 Int interpret(VirtualMachine *vm, char* cmd);
 IntList* parse(VirtualMachine *vm, char *cmd);
+void collect_garbage(VirtualMachine *vm);
 
 /*
 //std
@@ -299,6 +300,7 @@ void init_condition(VirtualMachine *vm);
 void init_io(VirtualMachine *vm);
 void init_function(VirtualMachine *vm);
 void init_prototype(VirtualMachine *vm);
-void init_all(VirtualMachine *vm);
+
+void preset_all(VirtualMachine *vm);
 
 #endif

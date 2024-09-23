@@ -1,0 +1,4 @@
+set "_index" (keep 0);
+set "_size" (keep 100000);
+while (keep "< _index _size") (keep "print _index;# (incr _index);clear;");
+0;

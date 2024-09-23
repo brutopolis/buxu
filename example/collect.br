@@ -1,0 +1,18 @@
+set "_index" (keep 0);
+set "_size" (keep 101000);
+
+# "kept variables are held variables that are not cleared but can be collected";
+# (keep "does return the value, unlike hold, so its good for variables to be collected later");
+
+while (keep "< _index _size") (keep "print _index;edit _index (incr _index);clear;");
+clear;
+rebase;
+
+
+# "the kept variables still there, even after the clear and the rebase";
+unhold _size;
+clear;
+collect;
+ls "hash";
+# "the kept variables are no more";
+"11" 12 45;
