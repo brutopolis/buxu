@@ -6,7 +6,7 @@ gcc src/main.c\
     src/bruter.c\
     src/std.c\
     src/std_os.c\
-    src/multiprocess.c\
+    src/std_linux.c\
  -o bin/bruter -lm -Os -g
 
 valgrind \

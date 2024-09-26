@@ -8,13 +8,19 @@
 #include <stdarg.h>
 
 #ifndef ARDUINO
+#include <errno.h>
+#include <fcntl.h>
+#ifdef _WIN32
+#include <windows.h>
+// Código específico para Windows
+#else
 #include <unistd.h>
 #include <sys/wait.h>
-#include <errno.h>
-    #include <fcntl.h>
+// Código específico para POSIX
+#endif
 #endif
 
-#define VERSION "0.5.4"
+#define VERSION "0.5.4a"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -322,7 +328,11 @@ void init_io(VirtualMachine *vm);
 char* readfile(char *filename);
 void writefile(char *filename, char *content);
 
-
+#ifndef _WIN32
+void init_linux(VirtualMachine *vm);
+#else 
+void init_windows(VirtualMachine *vm);
+#endif
 
 // multiprocess function declarations
 int create_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm);

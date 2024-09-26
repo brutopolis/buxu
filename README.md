@@ -55,7 +55,8 @@ library search path:
 ## TO DO
 
 - `functions` = ok/testing
-- `prototype lib` = testing
+- `prototypes lib` = testing
+- `multiprocessing` = ok on linux, need to write specific code for windows because of fork
 - `libraries lib` = not yet
 - `expect` = a function that expects a type and returns a boolean, not yet
 - `vs-code extension` = deadly outdated, not yet

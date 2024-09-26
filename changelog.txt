@@ -1,3 +1,11 @@
+(26/09/2024) - version 0.5.4a
+
+- some README updates;
+- deleted multiprocess.c;
+- new file std_linux.c;
+- new function init_linux;
+- moved all multiprocess.c functions to std_linux.c;
+
 (26/09/2024) - version 0.5.4
 
 - renamed TYPE_OTHER to TYPE_PROCESS;
@@ -18,7 +26,7 @@
 - moved std functions that dont work on arduino to std_os; 
 - moved std file functions to std_os;
 - added a pointer to process type in the Value union;
-- obs: the multiprocess is not meant to be used on arduino, on windows you need to compile with cygwin or such, because of the fork function;
+- the multiprocess is not meant to be used on arduino, if on windows you will need to compile with cygwin or such, because of the fork function;
 
 (23/09/2024) - version 0.5.3
 

@@ -21,7 +21,7 @@ int main(int argc, char **argv)
         char *_code = readfile(argv[1]);
         if (_code == NULL)
         {
-            printf("File not found\n");
+            printf("file not found\n");
             return 1;
         }
         Int result = eval(vm, _code);

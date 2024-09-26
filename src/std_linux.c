@@ -1,6 +1,5 @@
 #include "bruter.h"
 
-
 // Função para criar um processo filho e configurar os pipes
 int create_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm) {
     // Criar pipe para comunicação pai -> filho
@@ -136,7 +135,6 @@ int is_pipe_open(int fd) {
 
 void terminate_process(process_t* process) 
 {
-    printf("Encerrando processo...\n");
     // Verifica se os pipes estão abertos antes de tentar usá-los
     if (is_pipe_open(process->parent_to_child[1])) {
         send_dynamic_string(process, "terminate", 0);
@@ -169,4 +167,122 @@ void terminate_process(process_t* process)
     if (is_pipe_open(process->child_to_parent[0])) {
         close(process->child_to_parent[0]);
     }
+}
+
+// Função do processo filho
+void default_interpreter(process_t* process, VirtualMachine* vm) 
+{
+    int index = new_var(vm);
+    vm->stack->data[index].process = process;
+    vm->typestack->data[index] = TYPE_PROCESS;
+    
+    while (1) 
+    {
+        char* received = receive_dynamic_string(process, 1);  // Receber do pai
+        if (!received) 
+        {
+            printf("Erro ao receber mensagem no filho\n");
+            continue;
+        }
+        if (strcmp(received, "terminate") == 0) 
+        {
+            free(received);
+            break;  // Encerra o processo se receber "terminate"
+        }
+        
+        eval(vm, received);  // Processa o comando na VM
+        free(received);
+
+        send_dynamic_string(process, "ok", 1);  // Enviar para o pai
+    }
+    vm->stack->data[index].process = NULL;
+    vm->typestack->data[index] = TYPE_NIL;
+    send_dynamic_string(process, "terminated", 1);  // Enviar para o pai
+
+
+    free_vm(vm);
+
+    char * str = str_format("process %d terminated", getpid());
+    execlp("echo", "echo", "process terminated", NULL);
+    perror("Exec failed");
+    
+    exit(EXIT_SUCCESS);
+}
+
+// process function declarations
+Int std_process_fork(VirtualMachine *vm, IntList *args)
+{
+    process_t *process = (process_t*)malloc(sizeof(process_t));
+    // Criar o processo filho
+    if (create_process(process, default_interpreter, vm) == -1) 
+    {
+        perror("Erro ao criar processo");
+        exit(EXIT_FAILURE);
+    }
+
+    //if on child
+    if (process->pid == 0) 
+    {
+        // Processo filho
+
+        return -1;
+    }
+    Int result = new_var(vm);
+    vm->stack->data[result].process = process;
+    vm->typestack->data[result] = TYPE_PROCESS;
+    // remove from temp
+    hold_var(vm, result);
+    return result;
+}
+
+Int std_process_host_send(VirtualMachine *vm, IntList *args)
+{
+    Int process = stack_shift(*args);
+    Int message = stack_shift(*args);
+    send_dynamic_string((process_t*)vm->stack->data[process].process, vm->stack->data[message].string, 0);
+    return -1;
+}
+
+Int std_process_host_receive(VirtualMachine *vm, IntList *args)
+{
+    Int process = stack_shift(*args);
+    char *received = receive_dynamic_string((process_t*)vm->stack->data[process].process, 0);
+    Int result = new_string(vm, received);
+    free(received);
+    return result;
+}
+
+Int std_process_child_send(VirtualMachine *vm, IntList *args)
+{
+    Int process = stack_shift(*args);
+    Int message = stack_shift(*args);
+    send_dynamic_string((process_t*)vm->stack->data[process].process, vm->stack->data[message].string, 1);
+    return -1;
+}
+
+Int std_process_child_receive(VirtualMachine *vm, IntList *args)
+{
+    Int process = stack_shift(*args);
+    char *received = receive_dynamic_string((process_t*)vm->stack->data[process].process, 1);
+    Int result = eval(vm, received);
+    free(received);
+    return result;
+}
+
+Int std_process_terminate(VirtualMachine *vm, IntList *args)
+{
+    Int process = stack_shift(*args);
+    terminate_process((process_t*)vm->stack->data[process].process);
+    unuse_var(vm, process);
+    return -1;
+}
+
+void init_linux(VirtualMachine *vm)
+{
+    hold_var(vm,spawn_builtin(vm, "process.fork", std_process_fork));
+    hold_var(vm,spawn_builtin(vm, "process.send", std_process_host_send));
+    hold_var(vm,spawn_builtin(vm, "process.receive", std_process_host_receive));
+    hold_var(vm,spawn_builtin(vm, "process.child.send", std_process_child_send));
+    hold_var(vm,spawn_builtin(vm, "process.child.receive", std_process_child_receive));
+    hold_var(vm,spawn_builtin(vm, "process.terminate", std_process_terminate));
 }
