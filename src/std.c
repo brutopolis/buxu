@@ -159,34 +159,20 @@ Int std_edit(VirtualMachine *vm, IntList *args)
     {
         if(vm->typestack->data[variable] == TYPE_STRING ||
            vm->typestack->data[variable] == TYPE_LIST ||
-           vm->typestack->data[variable] == TYPE_OTHER)
+           vm->typestack->data[variable] == TYPE_PROCESS)
         {
-            char found = 0;
-            for (Int i = 0; i < vm->stack->size; i++)
+            
+            if (vm->typestack->data[variable] == TYPE_STRING)
             {
-                if (i != variable)
-                {
-                    if (vm->stack->data[i].pointer == vm->stack->data[variable].pointer)
-                    {
-                        found = 1;
-                        break;
-                    }
-                }
+                free(vm->stack->data[variable].string);
             }
-            if (!found)
+            else if (vm->typestack->data[variable] == TYPE_LIST)
             {
-                if (vm->typestack->data[variable] == TYPE_STRING)
-                {
-                    free(vm->stack->data[variable].string);
-                }
-                else if (vm->typestack->data[variable] == TYPE_LIST)
-                {
-                    stack_free(*((IntList*)vm->stack->data[variable].pointer));
-                }
-                else
-                {
-                    free(vm->stack->data[variable].pointer);
-                }
+                stack_free(*((IntList*)vm->stack->data[variable].pointer));
+            }
+            else
+            {
+                free(vm->stack->data[variable].pointer);
             }
         }
         
@@ -226,8 +212,13 @@ Int std_change(VirtualMachine *vm, IntList *args)
 
 void print_element(VirtualMachine *vm, int index)
 {
-    Int _type = -1;
+    if (index < 0 || index >= vm->stack->size)
+    {
+        printf("{invalid}");
+        return;
+    }
 
+    Int _type = -1;
     Value temp = vm->stack->data[index];
     _type = vm->typestack->data[index];
     
@@ -271,6 +262,10 @@ void print_element(VirtualMachine *vm, int index)
             printf("]");
         }
     }
+    else if (_type == TYPE_PROCESS)
+    {
+        printf("{process}");
+    }
     else if (_type == TYPE_NIL)
     {
         printf("{nil}");
@@ -286,9 +281,15 @@ Int std_io_print(VirtualMachine *vm, IntList *args)
     while (args->size > 0)
     {
         Int var = stack_shift(*args);
-        
-        print_element(vm, var);
-        
+        if (var >= 0 || var < vm->stack->size)
+        {
+            print_element(vm, var);
+        }
+        else 
+        {
+            printf("{nil}");
+        }
+
         if (args->size > 0)
         {
             printf(" ");
@@ -369,26 +370,9 @@ Int std_eval(VirtualMachine *vm, IntList *args)
 
 Int std_delete(VirtualMachine *vm, IntList *args)
 {
-    Int index;
     while (args->size > 0)
     {
-        index = stack_shift(*args);
-        if (vm->typestack->data[index] == TYPE_NUMBER)
-        {
-            unuse_var(vm, vm->stack->data[index].number);
-        }
-        else if (vm->typestack->data[index] == TYPE_STRING)
-        {
-            Int _index = hash_find(vm, vm->stack->data[index].string);
-            if (_index != -1)
-            {
-                unuse_var(vm, _index);
-            }
-        }
-        else
-        {
-            printf("invalid free!\n");
-        }
+        unuse_var(vm, stack_shift(*args));
     }
     return -1;
 }
@@ -1223,7 +1207,6 @@ void init_prototype(VirtualMachine *vm)
     hold_var(vm,spawn_builtin(vm, "prototype.unhold", std_prototype_unhold));
     hold_var(vm,spawn_builtin(vm, "prototype.equals", std_prototype_equals));
     hold_var(vm,spawn_builtin(vm, "prototype.compare", std_prototype_compare));
-
 }
 
 void init_io(VirtualMachine *vm)
@@ -1295,7 +1278,7 @@ void init_default_vars(VirtualMachine *vm)
 {
     hold_var(vm,spawn_number(vm, "PI", 3.14159265358979323846));// PI number
     hold_var(vm,spawn_number(vm, "NIL", TYPE_NIL));// nil type
-    hold_var(vm,spawn_number(vm, "OTHER", TYPE_OTHER));// unused type
+    hold_var(vm,spawn_number(vm, "PROCESS", TYPE_PROCESS));// process type
     hold_var(vm,spawn_number(vm, "NUMBER", TYPE_NUMBER));// number type
     hold_var(vm,spawn_number(vm, "STRING", TYPE_STRING));// string type
     hold_var(vm,spawn_number(vm, "BUILTIN", TYPE_BUILTIN));// builtin function type
@@ -1308,7 +1291,10 @@ void init_default_vars(VirtualMachine *vm)
 void preset_all(VirtualMachine *vm)
 {
     init_std(vm);
+    #ifndef ARDUINO  
     init_io(vm);
+    init_std_os(vm);
+    #endif
     init_math(vm);
     init_list(vm);
     init_string(vm);

@@ -5,6 +5,8 @@ rm -rf bin/bruter
 gcc src/main.c\
     src/bruter.c\
     src/std.c\
+    src/std_os.c\
+    src/multiprocess.c\
  -o bin/bruter -lm -Os -g
 
 valgrind \
@@ -12,4 +14,4 @@ valgrind \
     --show-leak-kinds=all \
     --track-origins=yes \
     --log-file=valgrind-out.txt \
-    --verbose bin/bruter example/prototype.br
+    --verbose bin/bruter example/multiproc.br

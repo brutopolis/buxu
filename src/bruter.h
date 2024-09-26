@@ -7,7 +7,14 @@
 #include <math.h>
 #include <stdarg.h>
 
-#define VERSION "0.5.3"
+#ifndef ARDUINO
+#include <unistd.h>
+#include <sys/wait.h>
+#include <errno.h>
+    #include <fcntl.h>
+#endif
+
+#define VERSION "0.5.4"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -15,7 +22,7 @@
 #define TYPE_LIST 3
 #define TYPE_BUILTIN 4
 #define TYPE_FUNCTION 5
-#define TYPE_OTHER 6
+#define TYPE_PROCESS 6
 
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(__LP64__) || defined(_WIN64) || defined(__amd64__) || defined(__x86_64) || defined(__x86_64__) || defined(__x86_64)
@@ -45,6 +52,13 @@
 #ifndef NULL
 #define NULL 0
 #endif
+
+// process type
+typedef struct {
+    int parent_to_child[2]; // Pipe para comunicação: Pai -> Filho
+    int child_to_parent[2]; // Pipe para comunicação: Filho -> Pai
+    pid_t pid;              // PID do processo filho
+} process_t;
 
 
 #define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
@@ -134,6 +148,7 @@ typedef union
     Int integer;
     char* string;
     void* pointer;
+    process_t* process;
 } Value;
 
 //Hash
@@ -297,9 +312,24 @@ void init_math(VirtualMachine *vm);
 void init_list(VirtualMachine *vm);
 void init_string(VirtualMachine *vm);
 void init_condition(VirtualMachine *vm);
-void init_io(VirtualMachine *vm);
 void init_function(VirtualMachine *vm);
 void init_prototype(VirtualMachine *vm);
+
+#ifndef ARDUINO
+
+void init_std_os(VirtualMachine *vm);
+void init_io(VirtualMachine *vm);
+char* readfile(char *filename);
+void writefile(char *filename, char *content);
+
+
+
+// multiprocess function declarations
+int create_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm);
+void send_dynamic_string(process_t* process, const char* str, int to_parent);
+char* receive_dynamic_string(process_t* process, int from_parent);
+void terminate_process(process_t* process);
+#endif
 
 void preset_all(VirtualMachine *vm);
 

@@ -1,0 +1,10 @@
+set "proc1" (process.fork);
+process.send proc1 'print "aoba"';
+process.send proc1 'print "111"';
+process.send proc1 'print "44"';
+process.send proc1 'print "23123"';
+# (process.receive proc1);
+ls;
+process.send proc1 'ls';
+# (process.receive proc1);
+return 0;

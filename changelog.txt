@@ -1,3 +1,25 @@
+(26/09/2024) - version 0.5.4
+
+- renamed TYPE_OTHER to TYPE_PROCESS;
+- new file std_os.c
+- new file multiprocess.c
+- new struct process_t;
+- new function init_std_os;
+- new function create_process;
+- new function terminate_process;
+- new function send_dynamic_string;
+- new function receive_dynamic_string;
+- new function std_process_fork;
+- new function std_process_terminate (avoid it, prefer std_delete);
+- new function std_process_host_send;
+- new function std_process_host_receive;
+- new function std_process_child_send;
+- new function std_process_child_receive;
+- moved std functions that dont work on arduino to std_os; 
+- moved std file functions to std_os;
+- added a pointer to process type in the Value union;
+- obs: the multiprocess is not meant to be used on arduino, on windows you need to compile with cygwin or such, because of the fork function;
+
 (23/09/2024) - version 0.5.3
 
 - new function collect_garbage;

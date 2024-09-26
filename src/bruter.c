@@ -420,7 +420,9 @@ Int new_var(VirtualMachine *vm)
     }
     else
     {
-        stack_push(*vm->stack, (Value){0});
+        Value value;
+        value.pointer = NULL;
+        stack_push(*vm->stack, value);
         stack_push(*vm->typestack, TYPE_NIL);
         stack_push(*vm->temp, vm->stack->size-1);
         return vm->stack->size-1;
@@ -528,6 +530,14 @@ void free_var(VirtualMachine *vm, Int index)
         }
         stack_free(*((IntList*)vm->stack->data[index].pointer));
     }
+    else if (vm->typestack->data[index] == TYPE_PROCESS)
+    {
+        terminate_process(vm->stack->data[index].process);
+        char* temp = str_format("# (process.receive (get %d))", index);
+        eval(vm, temp);
+        free(temp);
+        free(vm->stack->data[index].process);
+    }
     stack_remove(*vm->stack, index);
     stack_remove(*vm->typestack, index);
 }
@@ -572,6 +582,19 @@ void unuse_var(VirtualMachine *vm, Int index)
     if (vm->typestack->data[index] == TYPE_STRING)
     {
         free(vm->stack->data[index].string);
+    }
+    else if (vm->typestack->data[index] == TYPE_FUNCTION)
+    {
+        free(vm->stack->data[index].pointer);
+    }
+    else if (vm->typestack->data[index] == TYPE_PROCESS)
+    {
+        //close pipes
+        terminate_process(vm->stack->data[index].process);
+        char* temp = str_format("# (process.receive (get %d))", index);
+        eval(vm, temp);
+        free(temp);
+        free(vm->stack->data[index].process);
     }
     else if (vm->typestack->data[index] == TYPE_LIST)
     {
