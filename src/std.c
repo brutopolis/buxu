@@ -159,7 +159,8 @@ Int std_edit(VirtualMachine *vm, IntList *args)
     {
         if(vm->typestack->data[variable] == TYPE_STRING ||
            vm->typestack->data[variable] == TYPE_LIST ||
-           vm->typestack->data[variable] == TYPE_PROCESS)
+           vm->typestack->data[variable] == TYPE_PROCESS ||
+           vm->typestack->data[variable] == TYPE_FUNCTION)
         {
             
             if (vm->typestack->data[variable] == TYPE_STRING)
@@ -170,14 +171,22 @@ Int std_edit(VirtualMachine *vm, IntList *args)
             {
                 stack_free(*((IntList*)vm->stack->data[variable].pointer));
             }
+            else if (vm->typestack->data[variable] == TYPE_PROCESS)
+            {
+                terminate_process(vm->stack->data[variable].process);
+                free(vm->stack->data[variable].process);
+            }
             else
             {
                 free(vm->stack->data[variable].pointer);
             }
         }
-        
-        vm->stack->data[variable] = vm->stack->data[value];
-        vm->typestack->data[variable] = vm->typestack->data[value];
+
+        if (value >= 0 && value < vm->stack->size)
+        {
+            vm->stack->data[variable] = vm->stack->data[value];
+            vm->typestack->data[variable] = vm->typestack->data[value];
+        }
     }
     
     return -1;
@@ -185,27 +194,10 @@ Int std_edit(VirtualMachine *vm, IntList *args)
 
 Int std_change(VirtualMachine *vm, IntList *args)
 {
-    Int varname = stack_shift(*args);
+    Int var = stack_shift(*args);
     Int type = stack_shift(*args);
     
-    if (vm->typestack->data[varname] == TYPE_STRING)
-    {
-        char * name = vm->stack->data[varname].string;
-        Int index = hash_find(vm, name);
-
-        if (index >= 0)
-        {
-            vm->typestack->data[index] = vm->typestack->data[type];
-        }
-    }
-    else if (vm->typestack->data[varname] == TYPE_NUMBER)
-    {
-        Int index = (Int)vm->stack->data[varname].number;
-        if (index >= 0)
-        {
-            vm->typestack->data[index] = vm->typestack->data[type];
-        }
-    }
+    vm->typestack->data[var] = (Int)vm->stack->data[type].number;
     
     return -1;
 }
@@ -815,6 +807,24 @@ Int std_string_replace(VirtualMachine *vm, IntList *args)
     return result;
 }
 
+Int std_string_replace_all(VirtualMachine *vm, IntList *args)
+{
+    Int str = stack_shift(*args);
+    Int substr = stack_shift(*args);
+    Int replacement = stack_shift(*args);
+    Int result = -1;
+    if (vm->typestack->data[str] == TYPE_STRING && vm->typestack->data[substr] == TYPE_STRING && vm->typestack->data[replacement] == TYPE_STRING)
+    {
+        char* _str = vm->stack->data[str].string;
+        char* _substr = vm->stack->data[substr].string;
+        char* _replacement = vm->stack->data[replacement].string;
+        char* _newstr = str_replace_all(_str, _substr, _replacement);
+        result = new_string(vm, _newstr);
+        free(_newstr);
+    }
+    return result;
+}
+
 Int std_string_length(VirtualMachine *vm, IntList *args)
 {
     Int str = stack_shift(*args);
@@ -826,6 +836,36 @@ Int std_string_length(VirtualMachine *vm, IntList *args)
     return result;
 }
 
+Int std_string_format(VirtualMachine *vm, IntList *args)
+{
+    Int str = stack_shift(*args);
+    Int result = -1;
+    char* _str = vm->stack->data[str].string;
+    for (Int i = 0; i < strlen(_str); i++)
+    {
+        if (_str[i] == '%')
+        {
+            if (_str[i+1] == 'd')
+            {
+                Int value = stack_shift(*args);
+                char* _value = str_format("%d", (Int)vm->stack->data[value].number);
+                char* _newstr = str_replace(_str, "%d", _value);
+                free(_value);
+                free(_str);
+                _str = _newstr;
+            }
+            else if (_str[i+1] == 's')
+            {
+                Int value = stack_shift(*args);
+                char* _value = vm->stack->data[value].string;
+                char* _newstr = str_replace(_str, "%s", _value);
+                free(_str);
+                _str = _newstr;
+            }
+        }
+    }
+    return result;
+}
 // std conditions
 // std conditions
 // std conditions
@@ -1056,6 +1096,18 @@ Int std_while(VirtualMachine *vm, IntList *args)
     return result;
 }
 
+Int std_repeat(VirtualMachine *vm, IntList *args)
+{
+    Int times = stack_shift(*args);
+    Int _do_str = stack_shift(*args);
+    Int result = -1;
+    for (Int i = 0; i < vm->stack->data[times].number; i++)
+    {
+        result = eval(vm, vm->stack->data[_do_str].string);
+    }
+    return result;
+}
+
 // std_function
 
 Int std_function(VirtualMachine *vm, IntList *args)
@@ -1081,7 +1133,7 @@ Int std_prototype_copy(VirtualMachine *vm, IntList *args)
             Int index = new_var(vm);
             vm->stack->data[index] = value_duplicate(vm->stack->data[vm->hashes->data[i].index], vm->typestack->data[vm->hashes->data[i].index]);
             vm->typestack->data[index] = vm->typestack->data[vm->hashes->data[i].index];
-            char* tmpstr = str_replace(vm->hashes->data[i].key, vm->stack->data[prototype_name].string, vm->stack->data[new_name].string);
+            char* tmpstr = str_replace_all(vm->hashes->data[i].key, vm->stack->data[prototype_name].string, vm->stack->data[new_name].string);
             hash_set(vm, tmpstr, index);
             free(tmpstr);
         }
@@ -1098,7 +1150,7 @@ Int std_prototype_compare(VirtualMachine *vm, IntList *args)// compare two proto
     {
         if (str_find(vm->hashes->data[i].key, vm->stack->data[prototype1].string) == 0)
         {
-            char * tmpstr = str_replace(vm->hashes->data[i].key, vm->stack->data[prototype1].string, vm->stack->data[prototype2].string);
+            char * tmpstr = str_replace_all(vm->hashes->data[i].key, vm->stack->data[prototype1].string, vm->stack->data[prototype2].string);
             Int index = hash_find(vm, tmpstr);
             free(tmpstr);
             if (index == -1)
@@ -1108,7 +1160,7 @@ Int std_prototype_compare(VirtualMachine *vm, IntList *args)// compare two proto
         }
         else if (str_find(vm->hashes->data[i].key, vm->stack->data[prototype2].string) == 0)
         {
-            char * tmpstr = str_replace(vm->hashes->data[i].key, vm->stack->data[prototype2].string, vm->stack->data[prototype1].string);
+            char * tmpstr = str_replace_all(vm->hashes->data[i].key, vm->stack->data[prototype2].string, vm->stack->data[prototype1].string);
             Int index = hash_find(vm, tmpstr);
             free(tmpstr);
             if (index == -1)
@@ -1156,7 +1208,7 @@ Int std_prototype_equals(VirtualMachine *vm, IntList *args)
     {
         if (str_find(vm->hashes->data[i].key, vm->stack->data[prototype1].string) == 0)
         {
-            char * tmpstr = str_replace(vm->hashes->data[i].key, vm->stack->data[prototype1].string, vm->stack->data[prototype2].string);
+            char * tmpstr = str_replace_all(vm->hashes->data[i].key, vm->stack->data[prototype1].string, vm->stack->data[prototype2].string);
             Int index = hash_find(vm, tmpstr);
             free(tmpstr);
             if (index == -1)
@@ -1179,6 +1231,7 @@ void init_std(VirtualMachine *vm)
     hold_var(vm,spawn_builtin(vm, "size", std_size));
     hold_var(vm,spawn_builtin(vm, "edit", std_edit));
     hold_var(vm,spawn_builtin(vm, "while", std_while));
+    hold_var(vm,spawn_builtin(vm, "repeat", std_repeat));
     hold_var(vm,spawn_builtin(vm, "delete", std_delete));
     hold_var(vm,spawn_builtin(vm, "return", std_return));
     hold_var(vm,spawn_builtin(vm, "change", std_change));
@@ -1256,7 +1309,9 @@ void init_string(VirtualMachine *vm)
     hold_var(vm,spawn_builtin(vm, "string.sub", std_string_ndup));
     hold_var(vm,spawn_builtin(vm, "string.split", std_string_split));
     hold_var(vm,spawn_builtin(vm, "string.replace", std_string_replace));
+    hold_var(vm,spawn_builtin(vm, "string.replace.all", std_string_replace_all));
     hold_var(vm,spawn_builtin(vm, "string.len", std_string_length));
+    hold_var(vm,spawn_builtin(vm, "string.format", std_string_format));
 }
 
 void init_condition(VirtualMachine *vm)

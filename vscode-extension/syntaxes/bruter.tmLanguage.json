@@ -26,7 +26,7 @@
         "patterns": [
           {
             "name": "variable.other.bruter",
-            "match": "\\$[a-zA-Z_][a-zA-Z0-9_]*"
+            "match": "\\[a-zA-Z_][a-zA-Z0-9_]*"
           }
         ]
       },
@@ -34,16 +34,21 @@
         "patterns": [
           {
             "name": "keyword.control.bruter",
-            "match": "\\b(from|while|until|for|each|\\s+in\\s+|print|else|if\\s*|set\\s*|loop\\s+|loop{|using\\s*\\b)"
-          }
+            "match": "\\b(if\\s*|set\\s*|edit\\s*|ifelse\\s*|if\\s*|not\\s*|while\\s*|or\\s*|and\\s*|return\\s*|hold\\s*|unhold\\s*|keep\\s*|clear\\s*|rebase\\s*|collect\\s*|#\\s*|change\\s*|delete\\s*|type\\s*|get\\s*|prototype|process|string|list)"
+          } 
         ]
       },
       "strings": {
         "patterns": [
           {
             "name": "string.quoted.single.bruter",
-            "begin": "`",
-            "end": "`"
+            "begin": "\"",
+            "end": "\""
+          },
+          {
+            "name": "string.quoted.single.bruter",
+            "begin": "'",
+            "end": "'"
           }
           
         ]
@@ -60,7 +65,7 @@
         "patterns": [
           {
             "name": "comment.line.double-slash.bruter",
-            "begin": "//",
+            "begin": "#",
             "end": ";"
           }
         ]
@@ -70,7 +75,7 @@
           {
 
             "name": "entity.name.function.bruter",
-            "match": "\\b(STATE|SET|INSERT|DELETE|MOVE|SWAP|SHIFT|RANDOM|COPY|FILL|REVERSE|SORT|FIND|IF|EQUAL|NOT_EQUAL|GREATER|LESS|GREATER_OR_EQUAL|LESS_OR_EQUAL|AND|OR|PRINT|SCAN|GOTO|ADD|SUB|MUL|DIV|INCREMENT|DECREMENT|MOD|POW|SQRT|ABS|MIN|MAX|RANDOM|ROUND|FLOOR|CEIL|TRUNC|SIN|COS|TAN|ASIN|ACOS|ATAN|ATAN2|SINH|COSH|TANH|EXP|FREXP|LDEXP|LOG|LOG2|LOG10|LOAD|SAVE)\\b"
+            "match": "\\b(print\\s*|ls\\s*|size\\s*|eval\\s*)\\b"
           }
         ]
       }

@@ -19,7 +19,7 @@
 #endif
 #endif
 
-#define VERSION "0.5.4b"
+#define VERSION "0.5.5"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -190,6 +190,7 @@ char* str_sub(const char *str, Int start, Int end);
 char* str_concat(const char *str1, const char *str2);
 Int str_find(const char *str, const char *substr);
 char* str_replace(const char *str, const char *substr, const char *replacement);
+char* str_replace_all(const char *str, const char *substr, const char *replacement);
 
 StringList* splitString(char *str, char *delim);
 StringList* special_space_split(char *str);

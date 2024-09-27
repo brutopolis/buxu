@@ -75,6 +75,57 @@ char* str_replace(const char *str, const char *substr, const char *replacement)
     Int len = strlen(str);
     Int sublen = strlen(substr);
     Int replen = strlen(replacement);
+    
+    // Encontrar a primeira ocorrência de 'substr'
+    Int i = 0;
+    Int pos = -1;  // Posição da primeira ocorrência
+    while (str[i] != '\0')
+    {
+        if (str[i] == substr[0])
+        {
+            Int j = 0;
+            while (j < sublen && str[i + j] == substr[j])
+            {
+                j++;
+            }
+            if (j == sublen)
+            {
+                pos = i;
+                break;  // Encontrou a primeira ocorrência, sair do loop
+            }
+        }
+        i++;
+    }
+
+    // Se não encontrou a substring, retornar a string original
+    if (pos == -1)
+    {
+        char *newstr = (char*)malloc(len + 1);
+        strcpy(newstr, str);
+        return newstr;
+    }
+
+    // Calcular o novo tamanho e alocar memória para a nova string
+    char *newstr = (char*)malloc(len - sublen + replen + 1);
+
+    // Copiar a parte antes da substring encontrada
+    strncpy(newstr, str, pos);
+    
+    // Copiar o replacement
+    strcpy(newstr + pos, replacement);
+    
+    // Copiar o restante da string após a substring substituída
+    strcpy(newstr + pos + replen, str + pos + sublen);
+    
+    return newstr;
+}
+
+
+char* str_replace_all(const char *str, const char *substr, const char *replacement)
+{
+    Int len = strlen(str);
+    Int sublen = strlen(substr);
+    Int replen = strlen(replacement);
     Int count = 0;
     for (Int i = 0; i < len; i++)
     {
@@ -683,10 +734,6 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             }
         }
         free(str);
-        /*char* hashname = str_format("arg%d", current);
-        hash_set(vm, hashname, result->data[current]);
-        free(hashname);
-        current++;*/
     }
     stack_free(*splited);
     return result;

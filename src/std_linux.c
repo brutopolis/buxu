@@ -103,7 +103,8 @@ char* receive_dynamic_string(process_t* process, int from_parent)
             perror("Erro ao receber string do pai");
             exit(EXIT_FAILURE);
         }
-    } else 
+    } 
+    else 
     {
         // Receber do filho (pipe filho -> pai)
         if (read(process->child_to_parent[0], &len, sizeof(len)) == -1) 
@@ -126,7 +127,6 @@ char* receive_dynamic_string(process_t* process, int from_parent)
 
     return buffer;  // Retorna a string dinamicamente alocada
 }
-
 
 int is_pipe_open(int fd) {
     // Usa fcntl para verificar se o descritor de arquivo está aberto
@@ -175,6 +175,10 @@ void default_interpreter(process_t* process, VirtualMachine* vm)
     int index = new_var(vm);
     vm->stack->data[index].process = process;
     vm->typestack->data[index] = TYPE_PROCESS;
+    hold_var(vm, index);
+    hash_set(vm, "process.child", index);
+    char* _str;
+    Int result = -1;
     
     while (1) 
     {
@@ -190,10 +194,29 @@ void default_interpreter(process_t* process, VirtualMachine* vm)
             break;  // Encerra o processo se receber "terminate"
         }
         
-        eval(vm, received);  // Processa o comando na VM
+        result = eval(vm, received);  // Processa o comando na VM
         free(received);
-
-        send_dynamic_string(process, "ok", 1);  // Enviar para o pai
+        //eval(vm, str_format("process.child.send (get %d) (get %d)", index, _ok)); 
+        
+        if (result > -1) 
+        {
+            if (vm->typestack->data[result] == TYPE_STRING) 
+            {
+                _str = vm->stack->data[result].string;
+                send_dynamic_string(process, _str, 1);  // Enviar para o pai
+            } 
+            else 
+            {
+                _str = str_format("%d", vm->stack->data[result].number);
+                send_dynamic_string(process, _str, 1);  // Enviar para o pai
+                free(_str);
+            }
+        }
+        else 
+        {
+            send_dynamic_string(process, "__NIL__", 1);  // Enviar para o pai
+        }
+        
     }
     vm->stack->data[index].process = NULL;
     vm->typestack->data[index] = TYPE_NIL;
@@ -253,9 +276,17 @@ Int std_process_host_receive(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     char *received = receive_dynamic_string((process_t*)vm->stack->data[process].process, 0);
-    Int result = new_string(vm, received);
-    free(received);
-    return result;
+    if (strcmp(received, "__NIL__") == 0)
+    {
+        free(received);
+        return -1;
+    }
+    else 
+    {
+        Int result = new_string(vm, received);
+        free(received);
+        return result;
+    }
 }
 
 Int std_process_child_send(VirtualMachine *vm, IntList *args)

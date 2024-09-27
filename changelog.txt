@@ -1,3 +1,12 @@
+(27/09/2024) - version 0.5.5
+
+- some README updates;
+- some vscode extension updates(belive it or not);
+- new function std_string_format;
+- new function str_replace_all;
+- new function std_string_replace_all;
+- new function std_repeat;
+
 (26/09/2024) - version 0.5.4b
 
 - fixed some memory leaks in multiprocessing;
