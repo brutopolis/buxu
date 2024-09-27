@@ -13,14 +13,13 @@
 #ifdef _WIN32
 #include <windows.h>
 // Código específico para Windows
-#else
+#else // Linux
 #include <unistd.h>
 #include <sys/wait.h>
-// Código específico para POSIX
 #endif
 #endif
 
-#define VERSION "0.5.4a"
+#define VERSION "0.5.4b"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1

@@ -1,4 +1,4 @@
-set "proc1" (process.fork);
+process.fork 'proc1';
 process.send proc1 'print "aoba"';
 process.send proc1 'print "111"';
 process.send proc1 'print "44"';

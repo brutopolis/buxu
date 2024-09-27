@@ -40,7 +40,7 @@ int create_process(process_t* process, void (*child_function)(process_t*, Virtua
         close(process->parent_to_child[0]);
         close(process->child_to_parent[1]);
 
-        exit(0);  // Termina o processo filho após a execução
+        //exit(0);  // Termina o processo filho após a execução
     } else {
         // Processo pai: fechar extremidades dos pipes não utilizadas
         close(process->parent_to_child[0]);  // Fecha leitura do pai -> filho
@@ -198,20 +198,16 @@ void default_interpreter(process_t* process, VirtualMachine* vm)
     vm->stack->data[index].process = NULL;
     vm->typestack->data[index] = TYPE_NIL;
     send_dynamic_string(process, "terminated", 1);  // Enviar para o pai
-
-
-    free_vm(vm);
-
-    char * str = str_format("process %d terminated", getpid());
-    execlp("echo", "echo", "process terminated", NULL);
-    perror("Exec failed");
-    
-    exit(EXIT_SUCCESS);
 }
 
 // process function declarations
 Int std_process_fork(VirtualMachine *vm, IntList *args)
 {
+    Int name = -1;
+    if (args->size > 0)
+    {
+        name = stack_shift(*args);
+    }
     process_t *process = (process_t*)malloc(sizeof(process_t));
     // Criar o processo filho
     if (create_process(process, default_interpreter, vm) == -1) 
@@ -220,18 +216,28 @@ Int std_process_fork(VirtualMachine *vm, IntList *args)
         exit(EXIT_FAILURE);
     }
 
-    //if on child
+    Int result = new_var(vm);
+    
+    
+
     if (process->pid == 0) 
     {
-        // Processo filho
-
+        vm->stack->data[result].process = NULL;
+        vm->typestack->data[result] = TYPE_NIL;
+        vm->stack->data[result].integer = 0;
+        free(process);
+        return new_number(vm, 0);
+    }
+    vm->typestack->data[result] = TYPE_PROCESS;
+    vm->stack->data[result].process = process;
+    hold_var(vm, result);
+    
+    if (name >= 0)
+    {
+        hash_set(vm, vm->stack->data[name].string, result);
         return -1;
     }
-    Int result = new_var(vm);
-    vm->stack->data[result].process = process;
-    vm->typestack->data[result] = TYPE_PROCESS;
-    // remove from temp
-    hold_var(vm, result);
+    
     return result;
 }
 

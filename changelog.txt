@@ -1,3 +1,10 @@
+(26/09/2024) - version 0.5.4b
+
+- fixed some memory leaks in multiprocessing;
+- no more exec's, everything is freed properly now;
+- process.fork can now receive a string as the process name, if a name provided it wont return the process;
+- process.fork now check if it is in child;
+
 (26/09/2024) - version 0.5.4a
 
 - some README updates;
