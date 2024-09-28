@@ -1,3 +1,9 @@
+(27/09/2024) - version 0.5.5a
+
+- removed function std_include;
+- build.sh now compiles the static bruter library also;
+- compiled files now go on build/ instead of bin/;
+
 (27/09/2024) - version 0.5.5
 
 - some README updates;

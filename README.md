@@ -57,7 +57,6 @@ library search path:
 - `functions` = ok/testing
 - `prototypes lib` = testing
 - `multiprocessing` = ok on linux, need to write specific code for windows because of fork
-- `libraries lib` = +/- check std_include
 - `expect` = a function that expects a type and returns a boolean, not yet
 - `vs-code extension` = testing
 - `reduce allocs` = not yet

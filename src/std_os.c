@@ -32,24 +32,6 @@ void writefile(char *filename, char *code)
     fclose(file);
 }
 
-Int std_include(VirtualMachine *vm, IntList *args)
-{
-    Int filename = stack_shift(*args);
-    char *code = readfile(vm->stack->data[filename].string);
-    Int result = -1;
-    if (code == NULL)
-    {
-        printf("File %s not found\n", filename);
-        exit(1);
-    }
-    else
-    {
-        result = eval(vm, code);
-        free(code);
-    }
-    return result;
-}
-
 Int std_file_read(VirtualMachine *vm, IntList *args)
 {
     Int filename = stack_shift(*args);
@@ -101,7 +83,6 @@ void init_std_os(VirtualMachine *vm)
 {
     hold_var(vm,spawn_builtin(vm, "file.read", std_file_read));
     hold_var(vm,spawn_builtin(vm, "file.write", std_file_write));
-    hold_var(vm,spawn_builtin(vm, "include", std_include));
     hold_var(vm,spawn_builtin(vm, "repl", std_repl));
     #ifdef _WIN32 
     #else
