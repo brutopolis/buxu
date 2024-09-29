@@ -78,51 +78,49 @@ void send_dynamic_string(process_t* process, const char* str, int to_parent)
     }
 }
 
-// Função para receber uma string dinamicamente alocada
 char* receive_dynamic_string(process_t* process, int from_parent) 
 {
     size_t len;
     char* buffer;
+    int fd = from_parent ? process->parent_to_child[0] : process->child_to_parent[0];
 
-    if (from_parent) 
+    // Estrutura para o poll()
+    struct pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = POLLIN;
+
+    // Verifica se há algo no pipe antes de bloquear
+    int ret = poll(&pfd, 1, 1000);  // Timeout de 1 segundo
+
+    if (ret == -1) 
     {
-        // Receber do pai (pipe pai -> filho)
-        if (read(process->parent_to_child[0], &len, sizeof(len)) == -1) 
-        {
-            perror("Erro ao receber tamanho da string do pai");
-            exit(EXIT_FAILURE);
-        }
-        buffer = (char*)malloc(len);
-        if (buffer == NULL) 
-        {
-            perror("Erro ao alocar memória");
-            exit(EXIT_FAILURE);
-        }
-        if (read(process->parent_to_child[0], buffer, len) == -1) 
-        {
-            perror("Erro ao receber string do pai");
-            exit(EXIT_FAILURE);
-        }
+        perror("Erro ao verificar dados no pipe");
+        exit(EXIT_FAILURE);
     } 
-    else 
+    else if (ret == 0) 
     {
-        // Receber do filho (pipe filho -> pai)
-        if (read(process->child_to_parent[0], &len, sizeof(len)) == -1) 
-        {
-            perror("Erro ao receber tamanho da string do filho");
-            exit(EXIT_FAILURE);
-        }
-        buffer = (char*)malloc(len);
-        if (buffer == NULL) 
-        {
-            perror("Erro ao alocar memória");
-            exit(EXIT_FAILURE);
-        }
-        if (read(process->child_to_parent[0], buffer, len) == -1) 
-        {
-            perror("Erro ao receber string do filho");
-            exit(EXIT_FAILURE);
-        }
+        printf("Nenhum dado disponível no pipe.\n");
+        return NULL;  // Nenhum dado disponível
+    }
+
+    // Dados disponíveis, proceder com a leitura
+    if (read(fd, &len, sizeof(len)) == -1) 
+    {
+        perror("Erro ao receber tamanho da string");
+        exit(EXIT_FAILURE);
+    }
+
+    buffer = (char*)malloc(len);
+    if (buffer == NULL) 
+    {
+        perror("Erro ao alocar memória");
+        exit(EXIT_FAILURE);
+    }
+
+    if (read(fd, buffer, len) == -1) 
+    {
+        perror("Erro ao receber string");
+        exit(EXIT_FAILURE);
     }
 
     return buffer;  // Retorna a string dinamicamente alocada
@@ -214,7 +212,7 @@ void default_interpreter(process_t* process, VirtualMachine* vm)
         }
         else 
         {
-            send_dynamic_string(process, "__NIL__", 1);  // Enviar para o pai
+            send_dynamic_string(process, "", 1);  // Enviar para o pai
         }
         
     }
@@ -276,7 +274,7 @@ Int std_process_host_receive(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     char *received = receive_dynamic_string((process_t*)vm->stack->data[process].process, 0);
-    if (strcmp(received, "__NIL__") == 0)
+    if (strcmp(received, "") == 0)
     {
         free(received);
         return -1;
@@ -287,6 +285,20 @@ Int std_process_host_receive(VirtualMachine *vm, IntList *args)
         free(received);
         return result;
     }
+}
+
+Int std_process_host_await(VirtualMachine *vm, IntList *args)
+{
+    Int process = stack_shift(*args);
+    char *received = receive_dynamic_string((process_t*)vm->stack->data[process].process, 0);
+    while (strcmp(received, "") == 0)
+    {
+        free(received);
+        received = receive_dynamic_string((process_t*)vm->stack->data[process].process, 0);
+    }
+    Int result = new_string(vm, received);
+    free(received);
+    return result;
 }
 
 Int std_process_child_send(VirtualMachine *vm, IntList *args)
@@ -318,8 +330,9 @@ void init_linux(VirtualMachine *vm)
 {
     hold_var(vm,spawn_builtin(vm, "process.fork", std_process_fork));
     hold_var(vm,spawn_builtin(vm, "process.send", std_process_host_send));
+    hold_var(vm,spawn_builtin(vm, "process.await", std_process_host_await));
+    hold_var(vm,spawn_builtin(vm, "process.terminate", std_process_terminate));
     hold_var(vm,spawn_builtin(vm, "process.receive", std_process_host_receive));
     hold_var(vm,spawn_builtin(vm, "process.child.send", std_process_child_send));
     hold_var(vm,spawn_builtin(vm, "process.child.receive", std_process_child_receive));
-    hold_var(vm,spawn_builtin(vm, "process.terminate", std_process_terminate));
 }

@@ -1,17 +1,17 @@
-set "_index" 0;
-set "_size" 100000;
-hold _size;
-hold _index;
+# "if you want to benckmark use example/benchmark/loops.br";
+hash.set "_index" 0;
+hash.set "_size" 100000;
+mem.hold _size;
+mem.hold _index;
+hash.set "cond" "< _index _size";
+hash.set "code" "print _index;mem.edit _index (add _index 1);mem.clear;";
+mem.hold cond;
+mem.hold code;
 
-set "cond" "< _index _size";
-set "code" "print _index;edit _index (add _index 1);clear;";
-hold cond;
-hold code;
+loop.while cond code;
 
-while cond code;
-
-clear;
-unhold _size;
-rebase;
+mem.clear;
+mem.unhold _size;
+mem.rebase;
 ls;
 "11" 12 45;

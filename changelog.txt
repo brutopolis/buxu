@@ -1,3 +1,37 @@
+(29/09/2024) - version 0.5.6
+
+- some README updates;
+- removed std_get;
+- reintroduced @ operator, but direct reference to indexes;
+- new function init_hash;
+- new function std_hash_set;
+- new function std_hash_get;
+- new function std_hash_delete;
+- new function std_type_set;
+- new function std_type_get;
+- new function std_loop_repeat;
+- new function std_loop_while;
+- new function std_mem_hold;
+- new function std_mem_unhold;
+- new function std_mem_keep;
+- new function std_mem_rebase;
+- new function std_mem_clear;
+- new function std_mem_edit;
+- new function std_mem_collect;
+- new function std_mem_length;
+- new function std_mem_delete;
+- new function std_list_set;
+- new function std_string_to_number;
+- new function std_process_await;
+- new variable type.size;
+- new variable type.nil;
+- new variable type.number;
+- new variable type.string;
+- new variable type.list;
+- new variable type.function;
+- new variable type.builtin;
+- new variable type.process;
+
 (27/09/2024) - version 0.5.5a
 
 - removed function std_include;

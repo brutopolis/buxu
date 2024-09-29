@@ -398,9 +398,10 @@ Int hash_find(VirtualMachine *vm, char *varname)
 
 void hash_set(VirtualMachine *vm, char* varname, Int index)
 {
-    if (hash_find(vm, varname) != -1)
+    Int _index = hash_find(vm, varname);
+    if (_index != -1)
     {
-        vm->hashes->data[hash_find(vm, varname)].index = index;
+        vm->hashes->data[_index].index = index;
     }
     else 
     {
@@ -690,8 +691,6 @@ void unhold_var(VirtualMachine *vm, Int index)
 {
     stack_push(*vm->temp, index);
 }
-
-
 // Parser functions
 IntList* parse(VirtualMachine *vm, char *cmd) 
 {
@@ -701,7 +700,11 @@ IntList* parse(VirtualMachine *vm, char *cmd)
     while (splited->size > 0)
     {
         char* str = stack_shift(*splited);
-        if (str[0] == '(')
+        if (str[0] == '@') 
+        {
+            stack_push(*result, atoi(str + 1));
+        }
+        else if (str[0] == '(')
         {
             char* temp = str_nduplicate(str + 1, strlen(str) - 2);
             Int index = eval(vm, temp);
@@ -831,6 +834,7 @@ Int eval(VirtualMachine *vm, char *cmd)
     stack_free(*splited);
     return result;
 }
+
 
 void collect_garbage(VirtualMachine *vm)
 {

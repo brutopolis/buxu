@@ -15,4 +15,4 @@ valgrind \
     --show-leak-kinds=all \
     --track-origins=yes \
     --log-file=valgrind-out.txt \
-    --verbose build/bruter example/multiproc.br
+    --verbose build/bruter example/benchmark/multiloops.br

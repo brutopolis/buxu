@@ -34,22 +34,12 @@ Bruter is a metaprogramable lightweight language written in C;
     function variable_1 variable_2 ...;
     set target_variable value; 
     set target_variable (function ...);
-
-## Libraries -- not implemented yet -- desconsider
-
-bruter libraries are loaded with `using`:
-
-    using library_name;
-
-library search path:
-
-    libr_path/library_name/library_name.br
-    libr_path/library_name.br
-
+    
 ## Reserved
 
 - `()` = expression/list delimiter
 - `""` = string delimiter
+- `''` = string delimiter
 - `;` = end of command separator
 
 ## TO DO

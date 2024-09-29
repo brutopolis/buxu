@@ -1,20 +1,20 @@
-set "obj.name" "joao";
-set "obj.age" 20;
-set "obj.position.x" 10;
-set "obj.position.y" 20;
+hash.set "obj.name" "joao";
+hash.set "obj.age" 20;
+hash.set "obj.position.x" 10;
+hash.set "obj.position.y" 20;
 
 
 prototype.copy "obj." "obj3.";
 
 print (prototype.compare "obj." "obj3.");
 
-set "obj3.n" 44;
-set "obj3.m" 55;
+hash.set "obj3.n" 44;
+hash.set "obj3.m" 55;
 
 prototype.hold "obj";
-clear;
+mem.clear;
 print (prototype.compare "obj." "obj3.");
-rebase;
+mem.rebase;
 ls;
 
 return 4;

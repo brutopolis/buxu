@@ -8,6 +8,7 @@
 #include <stdarg.h>
 
 #ifndef ARDUINO
+#include <poll.h>
 #include <errno.h>
 #include <fcntl.h>
 #ifdef _WIN32
@@ -19,7 +20,7 @@
 #endif
 #endif
 
-#define VERSION "0.5.5a"
+#define VERSION "0.5.6"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -237,94 +238,20 @@ Int interpret(VirtualMachine *vm, char* cmd);
 IntList* parse(VirtualMachine *vm, char *cmd);
 void collect_garbage(VirtualMachine *vm);
 
-/*
-//std
-Int std_clear(VirtualMachine *vm, IntList *args);
-Int std_hold(VirtualMachine *vm, IntList *args);
-Int std_unhold(VirtualMachine *vm, IntList *args);
-Int std_set(VirtualMachine *vm, IntList *args);
-Int std_ignore(VirtualMachine *vm, IntList *args);
-Int std_size(VirtualMachine *vm, IntList *args);
-Int std_eval(VirtualMachine *vm, IntList *args);
-Int std_delete(VirtualMachine *vm, IntList *args);
-Int std_type(VirtualMachine *vm, IntList *args);
-Int std_get(VirtualMachine *vm, IntList *args);
-Int std_rebase(VirtualMachine *vm, IntList *args);
-Int std_return(VirtualMachine *vm, IntList *args);
-Int std_edit(VirtualMachine *vm, IntList *args);
-Int std_change(VirtualMachine *vm, IntList *args);
-Int std_while(VirtualMachine *vm, IntList *args);
-
-
-// io
-Int std_io_print(VirtualMachine *vm, IntList *args);
-Int std_io_ls(VirtualMachine *vm, IntList *args);
-
-//math
-Int std_math_add(VirtualMachine *vm, IntList *args);
-Int std_math_sub(VirtualMachine *vm, IntList *args);
-Int std_math_mul(VirtualMachine *vm, IntList *args);
-Int std_math_div(VirtualMachine *vm, IntList *args);
-Int std_math_mod(VirtualMachine *vm, IntList *args);
-Int std_math_pow(VirtualMachine *vm, IntList *args);
-Int std_math_sqrt(VirtualMachine *vm, IntList *args);
-Int std_math_abs(VirtualMachine *vm, IntList *args);
-Int std_math_random(VirtualMachine *vm, IntList *args);
-Int std_math_floor(VirtualMachine *vm, IntList *args);
-Int std_math_ceil(VirtualMachine *vm, IntList *args);
-Int std_math_round(VirtualMachine *vm, IntList *args);
-
-
-//list
-Int std_list_new(VirtualMachine *vm, IntList *args);
-Int std_list_insert(VirtualMachine *vm, IntList *args);
-Int std_list_push(VirtualMachine *vm, IntList *args);
-Int std_list_pop(VirtualMachine *vm, IntList *args);
-Int std_list_shift(VirtualMachine *vm, IntList *args);
-Int std_list_unshift(VirtualMachine *vm, IntList *args);
-Int std_list_remove(VirtualMachine *vm, IntList *args);
-
-Int std_list_concat(VirtualMachine *vm, IntList *args);
-Int std_list_find(VirtualMachine *vm, IntList *args);
-
-Int std_list_get(VirtualMachine *vm, IntList *args);
-
-//string
-Int std_string_length(VirtualMachine *vm, IntList *args);
-Int std_string_concat(VirtualMachine *vm, IntList *args);
-Int std_string_find(VirtualMachine *vm, IntList *args);
-Int std_string_replace(VirtualMachine *vm, IntList *args);
-Int std_string_split(VirtualMachine *vm, IntList *args);
-Int std_string_ndup(VirtualMachine *vm, IntList *args);
-Int std_string_split(VirtualMachine *vm, IntList *args);
-
-//conditions
-Int std_condition_equals(VirtualMachine *vm, IntList *args);
-Int std_condition_not_equals(VirtualMachine *vm, IntList *args);
-Int std_condition_greater(VirtualMachine *vm, IntList *args);
-Int std_condition_greater_equals(VirtualMachine *vm, IntList *args);
-Int std_condition_less(VirtualMachine *vm, IntList *args);
-Int std_condition_less_equals(VirtualMachine *vm, IntList *args);
-Int std_condition_and(VirtualMachine *vm, IntList *args);
-Int std_condition_or(VirtualMachine *vm, IntList *args);
-Int std_condition_not(VirtualMachine *vm, IntList *args);
-Int std_condition_if(VirtualMachine *vm, IntList *args);
-Int std_condition_ifelse(VirtualMachine *vm, IntList *args);
-*/
-
 void init_default_vars(VirtualMachine *vm);
 void init_std(VirtualMachine *vm);
 void init_math(VirtualMachine *vm);
 void init_list(VirtualMachine *vm);
 void init_string(VirtualMachine *vm);
 void init_condition(VirtualMachine *vm);
-void init_function(VirtualMachine *vm);
 void init_prototype(VirtualMachine *vm);
+void init_type(VirtualMachine *vm);
+void init_hash(VirtualMachine *vm);
+void init_loop(VirtualMachine *vm);
 
 #ifndef ARDUINO
 
 void init_std_os(VirtualMachine *vm);
-void init_io(VirtualMachine *vm);
 char* readfile(char *filename);
 void writefile(char *filename, char *content);
 
