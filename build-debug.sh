@@ -8,11 +8,11 @@ gcc src/main.c\
     src/std.c\
     src/std_os.c\
     src/std_linux.c\
- -o build/bruter -lm -Os -g
+ -o build/bruter -lm -O3 -g
 
 valgrind \
     --leak-check=full \
     --show-leak-kinds=all \
     --track-origins=yes \
     --log-file=valgrind-out.txt \
-    --verbose build/bruter example/benchmark/multiloops.br
+    --verbose build/bruter example/threads.br

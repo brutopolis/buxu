@@ -202,6 +202,7 @@ Int str_find(const char *str, const char *substr)
     }
     return -1;
 }
+
 StringList* special_space_split(char *str)
 {
     StringList *splited;
@@ -439,6 +440,13 @@ IntList* make_int_list()
     return list;
 }
 
+StringList* make_string_list()
+{
+    StringList *list = (StringList*)malloc(sizeof(StringList));
+    stack_init(*list);
+    return list;
+}
+
 CharList* make_char_list()
 {
     CharList *list = (CharList*)malloc(sizeof(CharList));
@@ -570,7 +578,7 @@ Int spawn_function(VirtualMachine *vm, char* varname, char *script)
 
 void free_var(VirtualMachine *vm, Int index)
 {
-    if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_FUNCTION)
+    if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_FUNCTION || vm->typestack->data[index] == TYPE_OTHER)
     {
         free(vm->stack->data[index].string);
     }
@@ -582,14 +590,17 @@ void free_var(VirtualMachine *vm, Int index)
         }
         stack_free(*((IntList*)vm->stack->data[index].pointer));
     }
+    #ifndef ARDUINO
     else if (vm->typestack->data[index] == TYPE_PROCESS)
     {
-        terminate_process(vm->stack->data[index].process);
+        process_destroy(vm->stack->data[index].process);
         char* temp = str_format("# (process.receive (get %d))", index);
         eval(vm, temp);
         free(temp);
         free(vm->stack->data[index].process);
     }
+    #endif
+    
     stack_remove(*vm->stack, index);
     stack_remove(*vm->typestack, index);
 }
@@ -639,15 +650,26 @@ void unuse_var(VirtualMachine *vm, Int index)
     {
         free(vm->stack->data[index].pointer);
     }
+    #ifndef ARDUINO
     else if (vm->typestack->data[index] == TYPE_PROCESS)
     {
         //close pipes
-        terminate_process(vm->stack->data[index].process);
+        process_destroy(vm->stack->data[index].process);
         char* temp = str_format("# (process.receive (get %d))", index);
         eval(vm, temp);
         free(temp);
         free(vm->stack->data[index].process);
     }
+    else if (vm->typestack->data[index] == TYPE_THREAD)
+    {
+        //close pipes
+        thread_destroy(vm->stack->data[index].pointer);
+        
+
+        free(vm->stack->data[index].pointer);
+
+    }
+    #endif
     else if (vm->typestack->data[index] == TYPE_LIST)
     {
         while (((IntList*)vm->stack->data[index].pointer)->size > 0)
@@ -656,7 +678,13 @@ void unuse_var(VirtualMachine *vm, Int index)
         }
         stack_free(*((IntList*)vm->stack->data[index].pointer));
     }
+    else if (vm->typestack->data[index] == TYPE_OTHER)
+    {
+        free(vm->stack->data[index].pointer);
+    }
+
     vm->typestack->data[index] = TYPE_NIL;
+    
     for (Int i = 0; i < vm->hashes->size; i++)
     {
         if (vm->hashes->data[i].index == index)

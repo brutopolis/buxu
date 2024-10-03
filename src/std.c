@@ -187,7 +187,7 @@ Int std_mem_edit(VirtualMachine *vm, IntList *args)
             }
             else if (vm->typestack->data[variable] == TYPE_PROCESS)
             {
-                terminate_process(vm->stack->data[variable].process);
+                process_destroy(vm->stack->data[variable].process);
                 free(vm->stack->data[variable].process);
             }
             else
@@ -270,7 +270,15 @@ void print_element(VirtualMachine *vm, int index)
     }
     else if (_type == TYPE_PROCESS)
     {
-        printf("{process}");
+        printf("{process} %p", temp.process);
+    }
+    else if (_type == TYPE_THREAD)
+    {
+        printf("{thread} %p", temp.pointer);
+    }
+    else if (_type == TYPE_OTHER)
+    {
+        printf("{other} %p", temp.pointer);
     }
     else if (_type == TYPE_NIL)
     {

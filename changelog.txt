@@ -1,3 +1,18 @@
+(03/10/2024) - version 0.5.7
+
+- some README updates;
+- new function permanent_thread;
+- new function thread_destroy;
+- new function make_thread_arg;
+- new function std_thread_send;
+- new function std_thread_join;
+- new function std_thread_await;
+- new function std_thread_create;
+- new function std_thread_destroy;
+- renamed std_process_terminate to std_process_destroy;
+- renamed terminate_process to process_destroy;
+- will implement a std way to get values from threads next;
+
 (29/09/2024) - version 0.5.6
 
 - some README updates;

@@ -11,6 +11,7 @@
 #include <poll.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pthread.h>
 #ifdef _WIN32
 #include <windows.h>
 // Código específico para Windows
@@ -20,7 +21,7 @@
 #endif
 #endif
 
-#define VERSION "0.5.6"
+#define VERSION "0.5.7"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -29,6 +30,8 @@
 #define TYPE_BUILTIN 4
 #define TYPE_FUNCTION 5
 #define TYPE_PROCESS 6
+#define TYPE_THREAD 7
+#define TYPE_OTHER 8
 
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(__LP64__) || defined(_WIN64) || defined(__amd64__) || defined(__x86_64) || defined(__x86_64__) || defined(__x86_64)
@@ -180,6 +183,16 @@ typedef struct
     IntList *temp;
 } VirtualMachine;
 
+typedef struct
+{
+    VirtualMachine* vm;
+    StringList* strlist;
+    pthread_mutex_t* argslock;
+    pthread_mutex_t* vmlock;
+    pthread_t* thread;
+    volatile int status;         // precisa ser volátil, se não trava a criação de threads 
+} Thread;
+
 //Function
 typedef Int (*Function)(VirtualMachine*, IntList*);
 
@@ -203,7 +216,9 @@ char is_true(Value value, char __type);
 
 ValueList* make_value_list();
 IntList* make_int_list();
+StringList* make_string_list();
 CharList* make_char_list();
+Thread* make_thread_arg(VirtualMachine* vm, Int vmlock, char* str, ...);
 VirtualMachine* make_vm();
 void free_vm(VirtualMachine *vm);
 void free_var(VirtualMachine *vm, Int index);
@@ -215,6 +230,7 @@ Int new_builtin(VirtualMachine *vm, Function function);
 Int new_function(VirtualMachine *vm, char* script);
 Int new_list(VirtualMachine *vm);
 Int new_var(VirtualMachine *vm);
+Int new_thread(VirtualMachine *vm, Thread* thread_arg);
 
 void hold_var(VirtualMachine *vm, Int index);
 void unhold_var(VirtualMachine *vm, Int index);
@@ -265,7 +281,15 @@ void init_windows(VirtualMachine *vm);
 int create_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm);
 void send_dynamic_string(process_t* process, const char* str, int to_parent);
 char* receive_dynamic_string(process_t* process, int from_parent);
-void terminate_process(process_t* process);
+void process_destroy(process_t* process);
+
+// threads
+void* permanent_thread(void* arg);
+Int std_thread_create(VirtualMachine* vm, IntList* args);
+Int std_thread_join(VirtualMachine* vm, IntList* args);
+Int std_thread_send(VirtualMachine* vm, IntList* args);
+Int std_thread_destroy(VirtualMachine* vm, IntList* args);
+void thread_destroy(Thread* thread_arg);
 #endif
 
 void preset_all(VirtualMachine *vm);
