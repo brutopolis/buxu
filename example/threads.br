@@ -3,7 +3,6 @@ hash.set 'thread1' (thread.create);
 thread.send thread1 'print "aoba"';
 thread.send thread1 'print "111"';
 thread.send thread1 'print "44"';
-thread.send thread1 'return "aobaaaaa"';
 thread.await thread1;
 
 thread.destroy thread1;

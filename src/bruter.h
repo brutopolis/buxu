@@ -18,6 +18,7 @@
 #else // Linux
 #include <unistd.h>
 #include <sys/wait.h>
+extern char** environ;
 #endif
 #endif
 
@@ -278,7 +279,8 @@ void init_windows(VirtualMachine *vm);
 #endif
 
 // multiprocess function declarations
-int create_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm);
+int fork_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm);
+int create_process(process_t* process, char* argv[]);
 void send_dynamic_string(process_t* process, const char* str, int to_parent);
 char* receive_dynamic_string(process_t* process, int from_parent);
 void process_destroy(process_t* process);
@@ -290,6 +292,8 @@ Int std_thread_join(VirtualMachine* vm, IntList* args);
 Int std_thread_send(VirtualMachine* vm, IntList* args);
 Int std_thread_destroy(VirtualMachine* vm, IntList* args);
 void thread_destroy(Thread* thread_arg);
+void init_pthreads(VirtualMachine *vm);
+
 #endif
 
 void preset_all(VirtualMachine *vm);

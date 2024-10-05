@@ -64,14 +64,14 @@ int main(int argc, char **argv)
             IntList *list = (IntList*)vm->stack->data[result].pointer;
             for (Int i = 0; i < list->size; i++)
             {
-                char * str = str_format("print (get %d)", list->data[i]);
+                char * str = str_format("print @%d", list->data[i]);
                 eval(vm, str);
                 free(str);
             }
         }
         else 
         {
-            char * str = str_format("print (get %d)", result);
+            char * str = str_format("print @%d", result);
             eval(vm, str);
             free(str);
         }

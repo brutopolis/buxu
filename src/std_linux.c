@@ -1,7 +1,7 @@
 #include "bruter.h"
 
 // Função para criar um processo filho e configurar os pipes
-int create_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm) {
+int fork_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm) {
     // Criar pipe para comunicação pai -> filho
     if (pipe(process->parent_to_child) == -1) {
         perror("Erro ao criar pipe pai -> filho");
@@ -49,6 +49,66 @@ int create_process(process_t* process, void (*child_function)(process_t*, Virtua
 
     return 0;
 }
+
+// create process but with fork + exec
+int create_process(process_t* process, char* argv[]) 
+{
+    // Criar pipe para comunicação pai -> filho
+    if (pipe(process->parent_to_child) == -1) {
+        perror("Erro ao criar pipe pai -> filho");
+        return -1;
+    }
+
+    // Criar pipe para comunicação filho -> pai
+    if (pipe(process->child_to_parent) == -1) {
+        perror("Erro ao criar pipe filho -> pai");
+        close(process->parent_to_child[0]);  // Fechar as extremidades dos pipes
+        close(process->parent_to_child[1]);
+        return -1;
+    }
+
+    // Criar o processo filho
+    process->pid = fork();
+    if (process->pid == -1) {
+        perror("Erro ao criar processo filho");
+        close(process->parent_to_child[0]);  // Fechar as extremidades dos pipes
+        close(process->parent_to_child[1]);
+        close(process->child_to_parent[0]);
+        close(process->child_to_parent[1]);
+        return -1;
+    }
+
+    if (process->pid == 0) {
+        // Processo filho: fechar extremidades dos pipes não utilizadas
+        close(process->parent_to_child[1]);  // Fecha escrita do pai -> filho
+        close(process->child_to_parent[0]);  // Fecha leitura do filho -> pai
+
+        // Redirecionar a entrada e saída padrão
+        dup2(process->parent_to_child[0], STDIN_FILENO);
+        dup2(process->child_to_parent[1], STDOUT_FILENO);
+
+        // Fechar os pipes após a execução
+        close(process->parent_to_child[0]);
+        close(process->child_to_parent[1]);
+
+        // Executar o programa
+        execvp(argv[0], argv);
+
+        // Se execvp retornar, houve um erro
+        perror("Erro ao executar o programa");
+        exit(EXIT_FAILURE);
+    } else {
+        // Processo pai: fechar extremidades dos pipes não utilizadas
+        close(process->parent_to_child[0]);  // Fecha leitura do pai -> filho
+        close(process->child_to_parent[1]);  // Fecha escrita do filho -> pai
+    }
+
+    return 0;
+}
+
+/* create process exec child process example
+
+*/
 
 // Função para enviar uma string dinamicamente
 void send_dynamic_string(process_t* process, const char* str, int to_parent) 
@@ -126,7 +186,8 @@ char* receive_dynamic_string(process_t* process, int from_parent)
     return buffer;  // Retorna a string dinamicamente alocada
 }
 
-int is_pipe_open(int fd) {
+int is_pipe_open(int fd) 
+{
     // Usa fcntl para verificar se o descritor de arquivo está aberto
     return fcntl(fd, F_GETFD) != -1 || errno != EBADF;
 }
@@ -230,7 +291,7 @@ Int std_process_fork(VirtualMachine *vm, IntList *args)
     }
     process_t *process = (process_t*)malloc(sizeof(process_t));
     // Criar o processo filho
-    if (create_process(process, default_interpreter, vm) == -1) 
+    if (fork_process(process, default_interpreter, vm) == -1) 
     {
         perror("Erro ao criar processo");
         exit(EXIT_FAILURE);
@@ -325,188 +386,12 @@ Int std_process_destroy(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-void* permanent_thread(void* arg)
-{
-    Thread* thread_arg = (Thread*)arg;
-    VirtualMachine* vm = thread_arg->vm;
-    StringList* strings = thread_arg->strlist;
-    VirtualMachine* localvm = make_vm();
-    preset_all(localvm);
-    if (strings->size > 0) 
-    {
-        //status 0 = not ready
-        //status 1 = ready (will process a string)
-        //status 2 = busy (it is processing a string)
-        //status 3 = idle (has no strings to process, waiting for one)
-        //status 4 = destroyed
-        thread_arg->status = 1;// status 1 = ready, status 0 = not ready, status 2 = busy
-    }
-
-    while (1) 
-    {
-        if (strings->size == 0) 
-        {
-            thread_arg->status = 3;// status 3 = idle
-            while (strings->size == 0) 
-            {
-                printf("waiting for strings\n");
-            }
-        }
-        pthread_mutex_lock(thread_arg->argslock); 
-        thread_arg->status = 2;// status 2 = busy
-        
-        char* current = stack_shift(*strings);
-        pthread_mutex_unlock(thread_arg->argslock);
-
-        if (strcmp(current, "terminate") == 0) 
-        {
-            free(current);
-            break;
-        }
-
-        pthread_mutex_lock(thread_arg->vmlock);
-        eval(localvm, current);
-        pthread_mutex_unlock(thread_arg->vmlock);
-        free(current);
-        thread_arg->status = 1;// status 1 = ready
-    }
-
-    while (strings->size > 0) 
-    {
-        free(stack_shift(*strings));
-    }
-
-    free_vm(localvm);
-    thread_arg->status = 4;
-    return NULL;
-}
-
-
-
-// Função para criar Thread e inicializar a thread
-Thread* make_thread_arg(VirtualMachine* vm, Int vmlock, char* str, ...)
-{
-    Thread* thread_arg = (Thread*)malloc(sizeof(Thread));
-    thread_arg->vm = vm;
-    thread_arg->strlist = make_string_list();
-    
-    // Aloca e inicializa o mutex e a variável de condição
-    thread_arg->argslock = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
-    
-    pthread_mutex_init(thread_arg->argslock, NULL);  // Inicializa o mutex
-    
-    thread_arg->vmlock = (pthread_mutex_t*)vm->stack->data[vmlock].pointer;
-    thread_arg->status = 0;
-
-    // Processa os argumentos
-    va_list args;
-    va_start(args, str);
-    char* current = str;
-    while (current != NULL) 
-    {
-        stack_push(*thread_arg->strlist, str_duplicate(current));
-        current = va_arg(args, char*);
-    }
-    va_end(args);
-
-    pthread_t thread;
-    pthread_create(&thread, NULL, permanent_thread, thread_arg);  // Passa o argumento correto
-
-    thread_arg->thread = (pthread_t*)malloc(sizeof(pthread_t));  // Aloca espaço para a thread
-    *(thread_arg->thread) = thread;  // Armazena a thread
-
-    return thread_arg;
-}
-
-
-Int std_thread_create(VirtualMachine* vm, IntList* args) 
-{
-    Int index = new_var(vm);
-    hold_var(vm, index);
-
-    Thread* thread_arg = make_thread_arg(vm, eval(vm, "return vm.lock"), "print (string.concat 'thread v' VERSION)", NULL);
-    vm->stack->data[index].pointer = thread_arg;
-    vm->typestack->data[index] = TYPE_THREAD;
-
-    if (args->size > 0) 
-    {
-        Int name = stack_shift(*args);
-        hash_set(vm, vm->stack->data[name].string, index);
-        // status MUST be volatile, otherwise it freezes thread creation
-        while (thread_arg->status == 0) {}
-        return -1;
-    }
-    else 
-    {
-        // status MUST be volatile, otherwise it freezes thread creation
-        while (thread_arg->status == 0) {}
-        return index;
-    }
-}
-
-
-Int std_thread_send(VirtualMachine* vm, IntList* args)
-{
-    Int thread = stack_shift(*args);
-    Int message = stack_shift(*args);
-    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
-
-    pthread_mutex_lock(thread_arg->argslock);  // Protege a lista de strings
-    stack_push(*thread_arg->strlist, str_duplicate(vm->stack->data[message].string));
-    pthread_mutex_unlock(thread_arg->argslock);  // Libera o mutex
-
-    return -1;
-}
-
-Int std_thread_await(VirtualMachine* vm, IntList* args)
-{
-    Int thread = stack_shift(*args);
-    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
-
-    while (thread_arg->status == 2) {}  // wait until the thread is not busy
-
-    return -1;
-}
-
-Int std_thread_join(VirtualMachine* vm, IntList* args)
-{
-    Int thread = stack_shift(*args);
-    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
-
-    while (thread_arg->status != 3) {}  // wait until the thread is idle(no strings to process)
-
-    return -1;
-}
-
-void thread_destroy(Thread* thread_arg)
-{
-    pthread_mutex_lock(thread_arg->argslock);  // Protege a lista de strings
-    stack_push(*thread_arg->strlist, str_duplicate("terminate"));
-    pthread_mutex_unlock(thread_arg->argslock);  // Libera o mutex
-
-    pthread_join(*thread_arg->thread, NULL);  // Espera a thread terminar
-    pthread_mutex_destroy(thread_arg->argslock);  // Destrói o mutex
-    pthread_mutex_destroy(thread_arg->vmlock);  // Destrói o mutex
-    free(thread_arg->argslock);  // Libera a memória do mutex
-    free(thread_arg->thread);  // Libera a memória da thread
-    stack_free(*thread_arg->strlist);  // Libera a lista de strings
-    free(thread_arg);
-}
-
-// Função para terminar uma thread no contexto da VM
-Int std_thread_destroy(VirtualMachine* vm, IntList* args) 
-{
-    Int thread = stack_shift(*args);
-    thread_destroy((Thread*)vm->stack->data[thread].pointer);
-    return -1;
-}
-
-
 // inits
 
 void init_linux_process(VirtualMachine *vm)
 {
     hold_var(vm,spawn_builtin(vm, "process.fork", std_process_fork));
+    //hold_var(vm,spawn_builtin(vm, "process.create", std_process_create));
     hold_var(vm,spawn_builtin(vm, "process.send", std_process_host_send));
     hold_var(vm,spawn_builtin(vm, "process.await", std_process_host_await));
     hold_var(vm,spawn_builtin(vm, "process.destroy", std_process_destroy));
@@ -515,22 +400,8 @@ void init_linux_process(VirtualMachine *vm)
     hold_var(vm,spawn_builtin(vm, "process.child.receive", std_process_child_receive));
 }
 
-void init_linux_thread(VirtualMachine *vm)
-{
-    Int vmlockindex = new_var(vm);
-    hold_var(vm,vmlockindex);
-    hash_set(vm, "vm.lock", vmlockindex);
-    vm->typestack->data[vmlockindex] = TYPE_OTHER;
-    vm->stack->data[vmlockindex].pointer = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
-    pthread_mutex_init((pthread_mutex_t*)vm->stack->data[vmlockindex].pointer, NULL);
-    hold_var(vm,spawn_builtin(vm, "thread.create", std_thread_create));
-    hold_var(vm,spawn_builtin(vm, "thread.send", std_thread_send));
-    hold_var(vm,spawn_builtin(vm, "thread.destroy", std_thread_destroy));
-    hold_var(vm,spawn_builtin(vm, "thread.await", std_thread_await));
-}
 
 void init_linux(VirtualMachine *vm)
 {
     init_linux_process(vm);
-    init_linux_thread(vm);
 }

@@ -18,5 +18,6 @@ gcc ../src/bruter.c\
 ar rcs lib/bruter.a bruter.o std.o std_os.o std_linux.o
 
 gcc ../src/main.c lib/bruter.a -o bruter -O3 -lm
+
 cp ../src/bruter.h include/bruter.h
 rm -rf *.o

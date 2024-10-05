@@ -1,3 +1,10 @@
+(04/10/2024) - version 0.5.7a
+
+- some minor fixes;
+- some README updates;
+- renamed create_process to fork_process;
+- moved std_thread functions to std_os, not linux exclusive anymore(unlike std_process);
+
 (03/10/2024) - version 0.5.7
 
 - some README updates;
@@ -84,7 +91,7 @@
 - new file multiprocess.c
 - new struct process_t;
 - new function init_std_os;
-- new function create_process;
+- new function fork_process;
 - new function terminate_process;
 - new function send_dynamic_string;
 - new function receive_dynamic_string;

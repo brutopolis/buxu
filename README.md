@@ -4,17 +4,20 @@
 ## Description
 
 
-Bruter is a metaprogramable lightweight language written in C;
+bruter is a metaprogramable lightweight language written in C;
 
 *`UNDER HEAVY DEVELOPMENT`*
 
 ## Table of Contents
 
-- [Types](#types)
-- [Usage](#usage)
-- [Libraries](#libraries)
-- [Reserved](#reserved)
-
+- [bruter](#bruter)
+  - [Description](#description)
+  - [Table of Contents](#table-of-contents)
+  - [Arg Types](#arg-types)
+  - [Usage](#usage)
+  - [Reserved](#reserved)
+  - [TO DO](#to-do)
+  
 ## Arg Types
 
 - `number` = starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -;
@@ -46,8 +49,7 @@ Bruter is a metaprogramable lightweight language written in C;
 
 - `functions` = ok/testing
 - `prototypes lib` = testing
-- `multiprocessing` = ok on linux, need to write specific code for windows because of fork
+- `multiprocessing` = ok (linux only, part of std_linux)
 - `multithreading` = ok
 - `expect` = not yet
 - `vs-code extension` = testing
-- `reduce allocs` = not yet

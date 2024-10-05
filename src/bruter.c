@@ -594,7 +594,7 @@ void free_var(VirtualMachine *vm, Int index)
     else if (vm->typestack->data[index] == TYPE_PROCESS)
     {
         process_destroy(vm->stack->data[index].process);
-        char* temp = str_format("# (process.receive (get %d))", index);
+        char* temp = str_format("# (process.receive @%d)", index);
         eval(vm, temp);
         free(temp);
         free(vm->stack->data[index].process);
@@ -655,7 +655,7 @@ void unuse_var(VirtualMachine *vm, Int index)
     {
         //close pipes
         process_destroy(vm->stack->data[index].process);
-        char* temp = str_format("# (process.receive (get %d))", index);
+        char* temp = str_format("# (process.receive @%d)", index);
         eval(vm, temp);
         free(temp);
         free(vm->stack->data[index].process);

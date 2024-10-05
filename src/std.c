@@ -412,41 +412,6 @@ Int std_type_get(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-Int std_get(VirtualMachine *vm, IntList *args)
-{
-    Int var = stack_shift(*args);
-    Int result = -1;
-    if (vm->typestack->data[var] == TYPE_STRING)
-    {
-        Int index = hash_find(vm, vm->stack->data[var].string);
-        if (index == -1)
-        {
-            char *error = str_format("Variable %s not found", vm->stack->data[var].string);
-            free(error);
-        }
-        else
-        {
-            result = index;
-        }
-    }
-    else if (vm->typestack->data[var] == TYPE_NUMBER)
-    {
-        Int index = (Int)vm->stack->data[var].number;
-        if (index >= 0 && index < vm->stack->size)
-        {
-            result = index;
-        }
-        else 
-        {
-            char *error = str_format("Variable %d not found", index);
-            //error throw goes here
-            
-            free(error);
-        }
-    }
-    return result;
-}
-
 Int std_mem_length(VirtualMachine *vm, IntList *args)
 {
     return new_number(vm, vm->stack->size);
@@ -796,7 +761,7 @@ Int std_string_split(VirtualMachine *vm, IntList *args)
         while (list->size > 0)
         {
             char* _str = stack_shift(*list);
-            char* cmd = str_format("list.push (get %d) (get %d)", result, new_string(vm, _str));
+            char* cmd = str_format("list.push @%d @%d", result, new_string(vm, _str));
             eval(vm, cmd);
             free(cmd);
             free(_str);
@@ -1245,6 +1210,8 @@ Int std_prototype_equals(VirtualMachine *vm, IntList *args)
     return result;
 }
 
+// inits
+
 void init_std(VirtualMachine *vm)
 {
     
@@ -1391,6 +1358,7 @@ void preset_all(VirtualMachine *vm)
     init_hash(vm);
     init_loop(vm);
     init_string(vm);
+    init_pthreads(vm);
     init_condition(vm);
     init_prototype(vm);
     init_manual_memory(vm);
