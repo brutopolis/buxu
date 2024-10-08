@@ -1,3 +1,16 @@
+(07/10/2024) - version 0.5.7b
+
+- removed function std_thread_await;
+- renamed std_thread_join to std_thread_await;
+- arduino file updated and tested.
+- new function std_thread_transfer_push;
+- new function std_thread_transfer_unshift;
+- new function std_thread_transfer_shift;
+- new function std_thread_transfer_pop;
+- new function std_thread_transfer_insert;
+- new function std_thread_transfer_remove;
+
+
 (04/10/2024) - version 0.5.7a
 
 - some minor fixes;

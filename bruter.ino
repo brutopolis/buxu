@@ -13,56 +13,49 @@ Int _ino_serial_begin(VirtualMachine *vm, IntList *args)
 
 Int _ino_print(VirtualMachine *vm, IntList *args)
 {
-    while (args->size > 0)
-    {
-        Int var = stack_shift(*args);
-        Int _type = -1;
-        //printf("Type: %d\n", vm->typestack->data[var]);
+    Int var = stack_shift(*args);
+    Int _type = -1;
+    //printf("Type: %d\n", vm->typestack->data[var]);
 
-        Value temp = vm->stack->data[var];
-        _type = vm->typestack->data[var];
-        
-        if (_type == TYPE_NUMBER)
-        {
-            printf("%f", temp.number);
-        }
-        else if (_type == TYPE_STRING)
-        {
-            printf("%s", temp.string);
-        }
-        else if (_type == TYPE_LIST)
-        {
-            printf("[");
-            IntList *list = (IntList*)temp.pointer;
-            for (Int i = 0; i < (list->size-1); i++)
-            {
-                printf("%d, ", list->data[i]);
-            }
-            printf("%d", list->data[list->size-1]);
-            printf("]");
-        }
-        else if (_type == TYPE_BUILTIN)
-        {
-            printf("(function)%p", temp.pointer);
-        }
-        else if (_type == TYPE_FUNCTION)
-        {
-            printf("(function)%s", temp.string);
-        }
-        else if (_type == TYPE_PROCESS)// do not
-        {
-            printf("(process)%p", temp.process);
-        }
-        else
-        {
-            printf("(unknown)");
-        }
-        if (args->size > 0)
-        {
-            printf(" ");
-        }
+    Value temp = vm->stack->data[var];
+    _type = vm->typestack->data[var];
+    
+    if (_type == TYPE_NUMBER)
+    {
+        printf("%f\n", temp.number);
     }
-    printf("\n");
+    else if (_type == TYPE_STRING)
+    {
+        printf("%s\n", temp.string);
+    }
+    else if (_type == TYPE_LIST)
+    {
+        printf("[");
+        IntList *list = (IntList*)temp.pointer;
+        for (Int i = 0; i < (list->size-1); i++)
+        {
+            printf("%d, ", list->data[i]);
+        }
+        printf("%d", list->data[list->size-1]);
+        printf("]\n");
+    }
+    else if (_type == TYPE_BUILTIN)
+    {
+        printf("(function)%p\n", temp.pointer);
+    }
+    else if (_type == TYPE_FUNCTION)
+    {
+        printf("(function)%s\n", temp.string);
+    }
+    else if (_type == TYPE_PROCESS)// do not
+    {
+        printf("(process)%p\n", temp.process);
+    }
+    else
+    {
+        printf("(unknown)\n");
+    }
+    
     return -1;
 }
 
@@ -151,7 +144,7 @@ class Bruter
     Bruter()
     {
         this->vm = make_vm();
-        init_std(this->vm);
+        preset_all(this->vm);
         this->registerFunction((char*)"Serial.begin", _ino_serial_begin);
         this->registerFunction((char*)"Serial.println", _ino_print);
         this->registerFunction((char*)"delay", _ino_delay);
@@ -172,7 +165,7 @@ Bruter *session = new Bruter();
 void setup()
 {
     Serial.begin(115200);
-    session->run((char*)"set 'str' 'looping');");
+    session->run((char*)"hash.set 'str' 'looping';");
     session->run((char*)"Serial.println str;");
     session->run((char*)"Serial.println str;");
 }

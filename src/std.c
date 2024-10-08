@@ -185,11 +185,13 @@ Int std_mem_edit(VirtualMachine *vm, IntList *args)
             {
                 stack_free(*((IntList*)vm->stack->data[variable].pointer));
             }
+            #ifndef ARDUINO
             else if (vm->typestack->data[variable] == TYPE_PROCESS)
             {
                 process_destroy(vm->stack->data[variable].process);
                 free(vm->stack->data[variable].process);
             }
+            #endif
             else
             {
                 free(vm->stack->data[variable].pointer);
@@ -1351,6 +1353,7 @@ void preset_all(VirtualMachine *vm)
     init_std(vm);
     #ifndef ARDUINO
     init_std_os(vm);
+    init_pthreads(vm);
     #endif
     init_math(vm);
     init_list(vm);
@@ -1358,7 +1361,6 @@ void preset_all(VirtualMachine *vm)
     init_hash(vm);
     init_loop(vm);
     init_string(vm);
-    init_pthreads(vm);
     init_condition(vm);
     init_prototype(vm);
     init_manual_memory(vm);

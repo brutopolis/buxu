@@ -22,7 +22,7 @@ extern char** environ;
 #endif
 #endif
 
-#define VERSION "0.5.7"
+#define VERSION "0.5.7b"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -174,6 +174,8 @@ typedef Stack(Hash) HashList;
 typedef Stack(char*) StringList;
 typedef Stack(Int) IntList;
 typedef Stack(char) CharList;
+// mutex stack
+typedef Stack(pthread_mutex_t) MutexList;
 
 typedef struct
 {
@@ -186,12 +188,19 @@ typedef struct
 
 typedef struct
 {
+    ValueList* stack;
+    CharList* typestack;
+} ThreadTransfer;
+
+typedef struct
+{
     VirtualMachine* vm;
-    StringList* strlist;
-    pthread_mutex_t* argslock;
-    pthread_mutex_t* vmlock;
+    StringList* strings;
+    pthread_mutex_t* strings_lock;
     pthread_t* thread;
     volatile int status;         // precisa ser volátil, se não trava a criação de threads 
+    pthread_mutex_t* thread_lock;
+    ThreadTransfer* transfer;
 } Thread;
 
 //Function
@@ -219,7 +228,7 @@ ValueList* make_value_list();
 IntList* make_int_list();
 StringList* make_string_list();
 CharList* make_char_list();
-Thread* make_thread_arg(VirtualMachine* vm, Int vmlock, char* str, ...);
+Thread* make_thread_arg(VirtualMachine* vm, char* str, ...);
 VirtualMachine* make_vm();
 void free_vm(VirtualMachine *vm);
 void free_var(VirtualMachine *vm, Int index);

@@ -79,13 +79,14 @@ Int std_repl(VirtualMachine *vm, IntList *args)
 }
 
 // threads
-
-
 void* permanent_thread(void* arg)
 {
-    Thread* thread_arg = (Thread*)arg;
-    VirtualMachine* vm = thread_arg->vm;
-    StringList* strings = thread_arg->strlist;
+    Thread* thread = (Thread*)arg;
+    VirtualMachine* vm = thread->vm;
+    StringList* strings = thread->strings;
+    //  init transfer
+
+
     VirtualMachine* localvm = make_vm();
     preset_all(localvm);
     if (strings->size > 0) 
@@ -95,36 +96,37 @@ void* permanent_thread(void* arg)
         //status 2 = busy (it is processing a string)
         //status 3 = idle (has no strings to process, waiting for one)
         //status 4 = destroyed
-        thread_arg->status = 1;// status 1 = ready, status 0 = not ready, status 2 = busy
+        thread->status = 1;// status 1 = ready, status 0 = not ready, status 2 = busy
     }
 
+    Int thread_index = new_var(localvm);
+    localvm->stack->data[thread_index].pointer = thread;
+    localvm->typestack->data[thread_index] = TYPE_THREAD;
+    hash_set(localvm, "thread.self", thread_index);
     while (1) 
     {
         if (strings->size == 0) 
         {
-            thread_arg->status = 3;// status 3 = idle
+            thread->status = 3;// status 3 = idle
             while (strings->size == 0) 
             {
-                printf("waiting for strings\n");
+                printf("\1");
             }
         }
-        pthread_mutex_lock(thread_arg->argslock); 
-        thread_arg->status = 2;// status 2 = busy
+        pthread_mutex_lock(thread->strings_lock); 
+        thread->status = 2;// status 2 = busy
         
         char* current = stack_shift(*strings);
-        pthread_mutex_unlock(thread_arg->argslock);
+        pthread_mutex_unlock(thread->strings_lock);
 
         if (strcmp(current, "terminate") == 0) 
         {
             free(current);
             break;
         }
-
-        pthread_mutex_lock(thread_arg->vmlock);
         eval(localvm, current);
-        pthread_mutex_unlock(thread_arg->vmlock);
         free(current);
-        thread_arg->status = 1;// status 1 = ready
+        thread->status = 1;// status 1 = ready
     }
 
     while (strings->size > 0) 
@@ -133,45 +135,45 @@ void* permanent_thread(void* arg)
     }
 
     free_vm(localvm);
-    thread_arg->status = 4;
+    thread->status = 4;
     return NULL;
 }
 
-
-
-// Função para criar Thread e inicializar a thread
-Thread* make_thread_arg(VirtualMachine* vm, Int vmlock, char* str, ...)
+Thread* make_thread(VirtualMachine* vm, char* str, ...)
 {
-    Thread* thread_arg = (Thread*)malloc(sizeof(Thread));
-    thread_arg->vm = vm;
-    thread_arg->strlist = make_string_list();
+    Thread* thread = (Thread*)malloc(sizeof(Thread));
+    thread->vm = vm;
+    thread->strings = make_string_list();
     
-    // Aloca e inicializa o mutex e a variável de condição
-    thread_arg->argslock = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
+    thread->strings_lock = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
+    thread->thread_lock = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
     
-    pthread_mutex_init(thread_arg->argslock, NULL);  // Inicializa o mutex
-    
-    thread_arg->vmlock = (pthread_mutex_t*)vm->stack->data[vmlock].pointer;
-    thread_arg->status = 0;
+    pthread_mutex_init(thread->strings_lock, NULL); 
+    pthread_mutex_init(thread->thread_lock, NULL);
 
-    // Processa os argumentos
+    thread->status = 0;
+
+    thread->transfer = (ThreadTransfer*)malloc(sizeof(ThreadTransfer));
+    thread->transfer->stack = make_value_list();
+    thread->transfer->typestack = make_char_list();
+    
     va_list args;
     va_start(args, str);
     char* current = str;
     while (current != NULL) 
     {
-        stack_push(*thread_arg->strlist, str_duplicate(current));
+        stack_push(*thread->strings, str_duplicate(current));
         current = va_arg(args, char*);
     }
     va_end(args);
 
-    pthread_t thread;
-    pthread_create(&thread, NULL, permanent_thread, thread_arg);  // Passa o argumento correto
+    pthread_t thread_t;
+    pthread_create(&thread_t, NULL, permanent_thread, thread); 
 
-    thread_arg->thread = (pthread_t*)malloc(sizeof(pthread_t));  // Aloca espaço para a thread
-    *(thread_arg->thread) = thread;  // Armazena a thread
+    thread->thread = (pthread_t*)malloc(sizeof(pthread_t));  
+    *(thread->thread) = thread_t;
 
-    return thread_arg;
+    return thread;
 }
 
 
@@ -180,8 +182,8 @@ Int std_thread_create(VirtualMachine* vm, IntList* args)
     Int index = new_var(vm);
     hold_var(vm, index);
 
-    Thread* thread_arg = make_thread_arg(vm, eval(vm, "return vm.lock"), "print (string.concat 'thread v' VERSION)", NULL);
-    vm->stack->data[index].pointer = thread_arg;
+    Thread* thread = make_thread(vm, "print (string.concat 'thread v' VERSION)", NULL);
+    vm->stack->data[index].pointer = thread;
     vm->typestack->data[index] = TYPE_THREAD;
 
     if (args->size > 0) 
@@ -189,13 +191,13 @@ Int std_thread_create(VirtualMachine* vm, IntList* args)
         Int name = stack_shift(*args);
         hash_set(vm, vm->stack->data[name].string, index);
         // status MUST be volatile, otherwise it freezes thread creation
-        while (thread_arg->status == 0) {}
+        while (thread->status == 0) {}
         return -1;
     }
     else 
     {
         // status MUST be volatile, otherwise it freezes thread creation
-        while (thread_arg->status == 0) {}
+        while (thread->status == 0) {}
         return index;
     }
 }
@@ -203,53 +205,44 @@ Int std_thread_create(VirtualMachine* vm, IntList* args)
 
 Int std_thread_send(VirtualMachine* vm, IntList* args)
 {
-    Int thread = stack_shift(*args);
+    Int thread_i = stack_shift(*args);
     Int message = stack_shift(*args);
-    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
+    Thread* thread = (Thread*)vm->stack->data[thread_i].pointer;
 
-    pthread_mutex_lock(thread_arg->argslock);  // Protege a lista de strings
-    stack_push(*thread_arg->strlist, str_duplicate(vm->stack->data[message].string));
-    pthread_mutex_unlock(thread_arg->argslock);  // Libera o mutex
+    pthread_mutex_lock(thread->strings_lock);
+    stack_push(*thread->strings, str_duplicate(vm->stack->data[message].string));
+    pthread_mutex_unlock(thread->strings_lock);
 
     return -1;
 }
 
 Int std_thread_await(VirtualMachine* vm, IntList* args)
 {
-    Int thread = stack_shift(*args);
-    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
+    Int thread_i = stack_shift(*args);
+    Thread* thread = (Thread*)vm->stack->data[thread_i].pointer;
 
-    while (thread_arg->status == 2) {}  // wait until the thread is not busy
-
+    while (thread->status != 3) {}  // wait until the thread is idle(no strings to process)
     return -1;
 }
 
-Int std_thread_join(VirtualMachine* vm, IntList* args)
+void thread_destroy(Thread* thread)
 {
-    Int thread = stack_shift(*args);
-    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
-
-    while (thread_arg->status != 3) {}  // wait until the thread is idle(no strings to process)
-
-    return -1;
+    pthread_mutex_lock(thread->strings_lock);
+    stack_push(*thread->strings, str_duplicate("terminate"));
+    pthread_mutex_unlock(thread->strings_lock);
+    pthread_join(*(thread->thread), NULL);
+    pthread_mutex_destroy(thread->strings_lock);
+    pthread_mutex_destroy(thread->thread_lock);
+    free(thread->strings_lock);
+    free(thread->thread_lock);
+    free(thread->thread);
+    free(thread->transfer->stack);
+    free(thread->transfer->typestack);
+    free(thread->transfer);
+    free(thread->strings);
+    free(thread);
 }
 
-void thread_destroy(Thread* thread_arg)
-{
-    pthread_mutex_lock(thread_arg->argslock);  // Protege a lista de strings
-    stack_push(*thread_arg->strlist, str_duplicate("terminate"));
-    pthread_mutex_unlock(thread_arg->argslock);  // Libera o mutex
-
-    pthread_join(*thread_arg->thread, NULL);  // Espera a thread terminar
-    pthread_mutex_destroy(thread_arg->argslock);  // Destrói o mutex
-    pthread_mutex_destroy(thread_arg->vmlock);  // Destrói o mutex
-    free(thread_arg->argslock);  // Libera a memória do mutex
-    free(thread_arg->thread);  // Libera a memória da thread
-    stack_free(*thread_arg->strlist);  // Libera a lista de strings
-    free(thread_arg);
-}
-
-// Função para terminar uma thread no contexto da VM
 Int std_thread_destroy(VirtualMachine* vm, IntList* args) 
 {
     Int thread = stack_shift(*args);
@@ -257,18 +250,111 @@ Int std_thread_destroy(VirtualMachine* vm, IntList* args)
     return -1;
 }
 
+// thread transfer functions
+Int std_thread_transfer_push(VirtualMachine* vm, IntList* args)
+{
+    Int thread = stack_shift(*args);
+    Int value = stack_shift(*args);
+    
+    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
+    pthread_mutex_lock(thread_arg->thread_lock);
+    stack_push(*thread_arg->transfer->stack, vm->stack->data[value]);
+    stack_push(*thread_arg->transfer->typestack, vm->typestack->data[value]);
+    pthread_mutex_unlock(thread_arg->thread_lock);
+    return -1;
+}
+
+Int std_thread_transfer_pop(VirtualMachine* vm, IntList* args)
+{
+    Int thread = stack_shift(*args);
+    Int value = stack_shift(*args);
+    Int result = new_var(vm);
+
+    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
+    
+    pthread_mutex_lock(thread_arg->thread_lock);
+    vm->stack->data[result] = stack_pop(*thread_arg->transfer->stack);
+    vm->typestack->data[result] = stack_pop(*thread_arg->transfer->typestack);
+    pthread_mutex_unlock(thread_arg->thread_lock);
+    return result;
+}
+
+Int std_thread_transfer_unshift(VirtualMachine* vm, IntList* args)
+{
+    Int thread = stack_shift(*args);
+    Int value = stack_shift(*args);
+    
+    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
+    
+    pthread_mutex_lock(thread_arg->thread_lock);
+    stack_unshift(*thread_arg->transfer->stack, vm->stack->data[value]);
+    stack_unshift(*thread_arg->transfer->typestack, vm->typestack->data[value]);
+    pthread_mutex_unlock(thread_arg->thread_lock);
+    
+    return -1;
+}
+
+Int std_thread_transfer_shift(VirtualMachine* vm, IntList* args)
+{
+    Int thread = stack_shift(*args);
+    Int value = stack_shift(*args);
+    Int result = new_var(vm);
+
+    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
+    
+    pthread_mutex_lock(thread_arg->thread_lock);
+    vm->stack->data[result] = stack_shift(*thread_arg->transfer->stack);
+    vm->typestack->data[result] = stack_shift(*thread_arg->transfer->typestack);
+    pthread_mutex_unlock(thread_arg->thread_lock);
+    return result;
+}
+
+Int std_thread_transfer_insert(VirtualMachine* vm, IntList* args)
+{
+    Int thread = stack_shift(*args);
+    Int index = stack_shift(*args);
+    Int value = stack_shift(*args);
+    
+    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
+    
+    pthread_mutex_lock(thread_arg->thread_lock);
+    stack_insert(*thread_arg->transfer->stack, (Int)vm->stack->data[index].number, vm->stack->data[value]);
+    stack_insert(*thread_arg->transfer->typestack, (Int)vm->stack->data[index].number, vm->typestack->data[value]);
+    pthread_mutex_unlock(thread_arg->thread_lock);
+    
+    return -1;
+}
+
+Int std_thread_transfer_remove(VirtualMachine* vm, IntList* args)
+{
+    Int thread = stack_shift(*args);
+    Int index = stack_shift(*args);
+    Int result = new_var(vm);
+
+    Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
+    
+    pthread_mutex_lock(thread_arg->thread_lock);
+    vm->stack->data[result] = stack_remove(*thread_arg->transfer->stack, (Int)vm->stack->data[index].number);
+    vm->typestack->data[result] = stack_remove(*thread_arg->transfer->typestack, (Int)vm->stack->data[index].number);
+    pthread_mutex_unlock(thread_arg->thread_lock);
+    
+    return result;
+}
+
 void init_pthreads(VirtualMachine *vm)
 {
-    Int vmlockindex = new_var(vm);
-    hold_var(vm,vmlockindex);
-    hash_set(vm, "vm.lock", vmlockindex);
-    vm->typestack->data[vmlockindex] = TYPE_OTHER;
-    vm->stack->data[vmlockindex].pointer = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
-    pthread_mutex_init((pthread_mutex_t*)vm->stack->data[vmlockindex].pointer, NULL);
     hold_var(vm,spawn_builtin(vm, "thread.create", std_thread_create));
     hold_var(vm,spawn_builtin(vm, "thread.send", std_thread_send));
     hold_var(vm,spawn_builtin(vm, "thread.destroy", std_thread_destroy));
     hold_var(vm,spawn_builtin(vm, "thread.await", std_thread_await));
+
+    hold_var(vm,spawn_builtin(vm, "transfer.push", std_thread_transfer_push));
+    hold_var(vm,spawn_builtin(vm, "transfer.pop", std_thread_transfer_pop));
+    hold_var(vm,spawn_builtin(vm, "transfer.unshift", std_thread_transfer_unshift));
+    hold_var(vm,spawn_builtin(vm, "transfer.shift", std_thread_transfer_shift));
+    hold_var(vm,spawn_builtin(vm, "transfer.insert", std_thread_transfer_insert));
+    hold_var(vm,spawn_builtin(vm, "transfer.remove", std_thread_transfer_remove));
+
 }
 
 void init_std_os(VirtualMachine *vm)

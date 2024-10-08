@@ -1,0 +1,10 @@
+
+hash.set 'thread1' (thread.create);
+thread.send thread1 'print "aoba"';
+thread.send thread1 'print "111"';
+thread.send thread1 'print "44"';
+thread.send thread1 'transfer.push thread.self 1234567';
+thread.await thread1;
+print 'aaaooobaa' (transfer.shift thread1);
+thread.destroy thread1;
+return 1234;

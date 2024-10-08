@@ -13,3 +13,4 @@ valgrind-out.txt
 build/
 src/old
 old2
+arduino/
