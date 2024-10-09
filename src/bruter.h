@@ -22,7 +22,7 @@ extern char** environ;
 #endif
 #endif
 
-#define VERSION "0.5.7b"
+#define VERSION "0.5.7c"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -74,12 +74,21 @@ typedef struct {
 #define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
 
 //stack implementation
+#ifndef ARDUINO
+#define Stack(T) struct \
+{ \
+    T *data; \
+    volatile int size; \
+    int capacity; \
+}
+#else 
 #define Stack(T) struct \
 { \
     T *data; \
     int size; \
     int capacity; \
 }
+#endif
 
 #define stack_init(s) do \
 { \
@@ -174,8 +183,6 @@ typedef Stack(Hash) HashList;
 typedef Stack(char*) StringList;
 typedef Stack(Int) IntList;
 typedef Stack(char) CharList;
-// mutex stack
-typedef Stack(pthread_mutex_t) MutexList;
 
 typedef struct
 {
@@ -198,7 +205,7 @@ typedef struct
     StringList* strings;
     pthread_mutex_t* strings_lock;
     pthread_t* thread;
-    volatile int status;         // precisa ser volátil, se não trava a criação de threads 
+    volatile char status;         // precisa ser volátil, se não trava a criação de threads 
     pthread_mutex_t* thread_lock;
     ThreadTransfer* transfer;
 } Thread;
@@ -228,7 +235,7 @@ ValueList* make_value_list();
 IntList* make_int_list();
 StringList* make_string_list();
 CharList* make_char_list();
-Thread* make_thread_arg(VirtualMachine* vm, char* str, ...);
+
 VirtualMachine* make_vm();
 void free_vm(VirtualMachine *vm);
 void free_var(VirtualMachine *vm, Int index);
@@ -297,11 +304,12 @@ void process_destroy(process_t* process);
 // threads
 void* permanent_thread(void* arg);
 Int std_thread_create(VirtualMachine* vm, IntList* args);
-Int std_thread_join(VirtualMachine* vm, IntList* args);
+Int std_thread_await(VirtualMachine* vm, IntList* args);
 Int std_thread_send(VirtualMachine* vm, IntList* args);
 Int std_thread_destroy(VirtualMachine* vm, IntList* args);
 void thread_destroy(Thread* thread_arg);
 void init_pthreads(VirtualMachine *vm);
+Thread* make_thread(VirtualMachine* vm, char* str, ...);
 
 #endif
 

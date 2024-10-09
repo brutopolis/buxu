@@ -664,10 +664,7 @@ void unuse_var(VirtualMachine *vm, Int index)
     {
         //close pipes
         thread_destroy(vm->stack->data[index].pointer);
-        
-
         free(vm->stack->data[index].pointer);
-
     }
     #endif
     else if (vm->typestack->data[index] == TYPE_LIST)

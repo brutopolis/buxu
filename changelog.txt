@@ -1,3 +1,8 @@
+(08/10/2024) - version 0.5.7c
+
+- some new examples;
+- some threads related leaks fixed;
+
 (07/10/2024) - version 0.5.7b
 
 - removed function std_thread_await;
@@ -9,7 +14,6 @@
 - new function std_thread_transfer_pop;
 - new function std_thread_transfer_insert;
 - new function std_thread_transfer_remove;
-
 
 (04/10/2024) - version 0.5.7a
 

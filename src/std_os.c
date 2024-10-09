@@ -103,31 +103,33 @@ void* permanent_thread(void* arg)
     localvm->stack->data[thread_index].pointer = thread;
     localvm->typestack->data[thread_index] = TYPE_THREAD;
     hash_set(localvm, "thread.self", thread_index);
+    hold_var(localvm, thread_index);
     while (1) 
     {
         if (strings->size == 0) 
         {
             thread->status = 3;// status 3 = idle
-            while (strings->size == 0) 
-            {
-                printf("\1");
-            }
+            while (strings->size == 0) {}
+            thread->status = 1;// status 1 = ready
         }
         pthread_mutex_lock(thread->strings_lock); 
         thread->status = 2;// status 2 = busy
-        
         char* current = stack_shift(*strings);
         pthread_mutex_unlock(thread->strings_lock);
 
-        if (strcmp(current, "terminate") == 0) 
+        if (current[0] == 't' && strcmp(current, "terminate") == 0) 
         {
             free(current);
             break;
         }
+
+        
         eval(localvm, current);
         free(current);
-        thread->status = 1;// status 1 = ready
+        printf("thread \n");
     }
+
+    hash_unset (localvm, "thread.self");
 
     while (strings->size > 0) 
     {
@@ -212,7 +214,6 @@ Int std_thread_send(VirtualMachine* vm, IntList* args)
     pthread_mutex_lock(thread->strings_lock);
     stack_push(*thread->strings, str_duplicate(vm->stack->data[message].string));
     pthread_mutex_unlock(thread->strings_lock);
-
     return -1;
 }
 
@@ -221,12 +222,51 @@ Int std_thread_await(VirtualMachine* vm, IntList* args)
     Int thread_i = stack_shift(*args);
     Thread* thread = (Thread*)vm->stack->data[thread_i].pointer;
 
-    while (thread->status != 3) {}  // wait until the thread is idle(no strings to process)
+    while (thread->status != 3) {printf("waiting for string\n");}  // wait until the thread is idle(no strings to process)
     return -1;
 }
 
 void thread_destroy(Thread* thread)
 {
+    while (thread->strings->size > 0) 
+    {
+        free(stack_shift(*thread->strings));
+    }
+
+    while (thread->transfer->stack->size > 0) 
+    {
+        Value v = stack_shift(*thread->transfer->stack);
+        char t = stack_shift(*thread->transfer->typestack);
+        if (t == TYPE_STRING || t == TYPE_FUNCTION || t == TYPE_OTHER)
+        {
+            free(v.string);
+        }
+        else if (t == TYPE_LIST)
+        {
+            while (((IntList*)v.pointer)->size > 0)
+            {
+                stack_shift(*((IntList*)v.pointer));
+            }
+            stack_free(*((IntList*)v.pointer));
+        }
+        #ifndef ARDUINO
+        else if (t == TYPE_PROCESS)
+        {
+            //close pipes
+            process_destroy(v.process);
+            free(v.process);
+        }
+        else if (t == TYPE_THREAD)
+        {
+            //close pipes
+            if ((Thread*)v.pointer != thread)
+            {
+                thread_destroy(v.pointer);
+                free(v.pointer);
+            }
+        }
+        #endif
+    }
     pthread_mutex_lock(thread->strings_lock);
     stack_push(*thread->strings, str_duplicate("terminate"));
     pthread_mutex_unlock(thread->strings_lock);
@@ -239,7 +279,7 @@ void thread_destroy(Thread* thread)
     free(thread->transfer->stack);
     free(thread->transfer->typestack);
     free(thread->transfer);
-    free(thread->strings);
+    stack_free(*thread->strings);
     free(thread);
 }
 
@@ -258,7 +298,7 @@ Int std_thread_transfer_push(VirtualMachine* vm, IntList* args)
     
     Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
     pthread_mutex_lock(thread_arg->thread_lock);
-    stack_push(*thread_arg->transfer->stack, vm->stack->data[value]);
+    stack_push(*thread_arg->transfer->stack, value_duplicate(vm->stack->data[value], vm->typestack->data[value]));
     stack_push(*thread_arg->transfer->typestack, vm->typestack->data[value]);
     pthread_mutex_unlock(thread_arg->thread_lock);
     return -1;
