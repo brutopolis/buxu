@@ -122,11 +122,9 @@ void* permanent_thread(void* arg)
             free(current);
             break;
         }
-
         
         eval(localvm, current);
         free(current);
-        printf("thread \n");
     }
 
     hash_unset (localvm, "thread.self");
@@ -222,7 +220,7 @@ Int std_thread_await(VirtualMachine* vm, IntList* args)
     Int thread_i = stack_shift(*args);
     Thread* thread = (Thread*)vm->stack->data[thread_i].pointer;
 
-    while (thread->status != 3) {printf("waiting for string\n");}  // wait until the thread is idle(no strings to process)
+    while (thread->status != 3) {}  // wait until the thread is idle(no strings to process)
     return -1;
 }
 
@@ -241,32 +239,8 @@ void thread_destroy(Thread* thread)
         {
             free(v.string);
         }
-        else if (t == TYPE_LIST)
-        {
-            while (((IntList*)v.pointer)->size > 0)
-            {
-                stack_shift(*((IntList*)v.pointer));
-            }
-            stack_free(*((IntList*)v.pointer));
-        }
-        #ifndef ARDUINO
-        else if (t == TYPE_PROCESS)
-        {
-            //close pipes
-            process_destroy(v.process);
-            free(v.process);
-        }
-        else if (t == TYPE_THREAD)
-        {
-            //close pipes
-            if ((Thread*)v.pointer != thread)
-            {
-                thread_destroy(v.pointer);
-                free(v.pointer);
-            }
-        }
-        #endif
     }
+    
     pthread_mutex_lock(thread->strings_lock);
     stack_push(*thread->strings, str_duplicate("terminate"));
     pthread_mutex_unlock(thread->strings_lock);
@@ -276,8 +250,8 @@ void thread_destroy(Thread* thread)
     free(thread->strings_lock);
     free(thread->thread_lock);
     free(thread->thread);
-    free(thread->transfer->stack);
-    free(thread->transfer->typestack);
+    stack_free(*thread->transfer->stack);
+    stack_free(*thread->transfer->typestack);
     free(thread->transfer);
     stack_free(*thread->strings);
     free(thread);
@@ -298,9 +272,12 @@ Int std_thread_transfer_push(VirtualMachine* vm, IntList* args)
     
     Thread* thread_arg = (Thread*)vm->stack->data[thread].pointer;
     pthread_mutex_lock(thread_arg->thread_lock);
+    // these two stack pushes are leaking memory, 9 bytes each time called, to fix this, we need to free the memory of the strings
     stack_push(*thread_arg->transfer->stack, value_duplicate(vm->stack->data[value], vm->typestack->data[value]));
     stack_push(*thread_arg->transfer->typestack, vm->typestack->data[value]);
+    
     pthread_mutex_unlock(thread_arg->thread_lock);
+
     return -1;
 }
 

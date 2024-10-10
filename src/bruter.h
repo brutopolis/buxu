@@ -22,7 +22,7 @@ extern char** environ;
 #endif
 #endif
 
-#define VERSION "0.5.7c"
+#define VERSION "0.5.7d"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
