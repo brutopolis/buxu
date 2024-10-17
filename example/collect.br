@@ -8,7 +8,6 @@ loop.while (mem.keep "< _index _size") (mem.keep "print _index;mem.edit _index (
 mem.clear;
 mem.rebase;
 
-
 # "the kept variables still there, even after the clear and the rebase";
 mem.unhold _size;
 mem.clear;

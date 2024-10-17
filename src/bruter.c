@@ -1,23 +1,5 @@
 #include "bruter.h"
 
-// bools
-
-char is_true(Value value, char __type)
-{
-    if (__type == TYPE_NUMBER)
-    {
-        return (round(value.number) != 0);
-    }
-    else if (__type == TYPE_NIL)
-    {
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
 //string functions
 
 char* str_duplicate(const char *str)

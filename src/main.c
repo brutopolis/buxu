@@ -7,16 +7,21 @@
 
 int main(int argc, char **argv)
 {
+    StringList *args = make_string_list();
+    for (int i = 1; i < argc; i++)
+    {
+        stack_push(*args, argv[i]);
+    }
     VirtualMachine *vm = make_vm();
 
-    preset_all(vm);
+    //<extensions>
 
     // read file pointed by argv[1]
-    if (argc == 1)
+    if (args->size == 0)
     {
         interpret(vm, "repl");
     }
-    else 
+    else if (args->size == 1)
     {
         char *_code = readfile(argv[1]);
         if (_code == NULL)
@@ -24,6 +29,7 @@ int main(int argc, char **argv)
             printf("file not found\n");
             return 1;
         }
+
         Int result = eval(vm, _code);
         free(_code);
         
@@ -75,7 +81,7 @@ int main(int argc, char **argv)
             eval(vm, str);
             free(str);
         }
-        
     }
+    stack_free(*args);
     free_vm(vm);
 }

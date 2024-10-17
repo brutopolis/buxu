@@ -1,4 +1,4 @@
-#include "bruter.h"
+#include "../src/bruter.h"
 
 char* readfile(char *filename)
 {
@@ -88,7 +88,7 @@ void* permanent_thread(void* arg)
 
 
     VirtualMachine* localvm = make_vm();
-    preset_all(localvm);
+    // <extensions>src/std.c
     if (strings->size > 0) 
     {
         //status 0 = not ready
@@ -374,14 +374,15 @@ void init_pthreads(VirtualMachine *vm)
 
 }
 
-void init_std_os(VirtualMachine *vm)
+void init_os(VirtualMachine *vm)
 {
     hold_var(vm,spawn_builtin(vm, "file.read", std_file_read));
     hold_var(vm,spawn_builtin(vm, "file.write", std_file_write));
     hold_var(vm,spawn_builtin(vm, "repl", std_repl));
+    init_pthreads(vm);
     #ifdef _WIN32 
     #else
-    init_linux(vm);
+    //init_linux(vm);
     #endif
 }
 

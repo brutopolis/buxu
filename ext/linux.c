@@ -1,4 +1,4 @@
-#include "bruter.h"
+#include "../src/bruter.h"
 
 // Função para criar um processo filho e configurar os pipes
 int fork_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm) {
@@ -388,7 +388,7 @@ Int std_process_destroy(VirtualMachine *vm, IntList *args)
 
 // inits
 
-void init_linux_process(VirtualMachine *vm)
+void init_linux(VirtualMachine *vm)
 {
     hold_var(vm,spawn_builtin(vm, "process.fork", std_process_fork));
     //hold_var(vm,spawn_builtin(vm, "process.create", std_process_create));
@@ -398,10 +398,4 @@ void init_linux_process(VirtualMachine *vm)
     hold_var(vm,spawn_builtin(vm, "process.receive", std_process_host_receive));
     hold_var(vm,spawn_builtin(vm, "process.child.send", std_process_child_send));
     hold_var(vm,spawn_builtin(vm, "process.child.receive", std_process_child_receive));
-}
-
-
-void init_linux(VirtualMachine *vm)
-{
-    init_linux_process(vm);
 }

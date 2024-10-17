@@ -22,7 +22,7 @@ extern char** environ;
 #endif
 #endif
 
-#define VERSION "0.5.7d"
+#define VERSION "0.5.8"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -226,7 +226,8 @@ char* str_replace_all(const char *str, const char *substr, const char *replaceme
 StringList* splitString(char *str, char *delim);
 StringList* special_space_split(char *str);
 
-char is_true(Value value, char __type);
+#define is_true(value, __type) (__type == TYPE_NUMBER ? (round(value.number) != 0) : (__type == TYPE_NIL ? 0 : 1))
+
 #define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
 
 // variable
@@ -271,28 +272,13 @@ Int interpret(VirtualMachine *vm, char* cmd);
 IntList* parse(VirtualMachine *vm, char *cmd);
 void collect_garbage(VirtualMachine *vm);
 
-void init_default_vars(VirtualMachine *vm);
-void init_std(VirtualMachine *vm);
-void init_math(VirtualMachine *vm);
-void init_list(VirtualMachine *vm);
-void init_string(VirtualMachine *vm);
-void init_condition(VirtualMachine *vm);
-void init_prototype(VirtualMachine *vm);
-void init_type(VirtualMachine *vm);
-void init_hash(VirtualMachine *vm);
-void init_loop(VirtualMachine *vm);
+// <extensions>
+// <end>
 
 #ifndef ARDUINO
 
-void init_std_os(VirtualMachine *vm);
 char* readfile(char *filename);
 void writefile(char *filename, char *content);
-
-#ifndef _WIN32
-void init_linux(VirtualMachine *vm);
-#else 
-void init_windows(VirtualMachine *vm);
-#endif
 
 // multiprocess function declarations
 int fork_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm);
@@ -312,7 +298,5 @@ void init_pthreads(VirtualMachine *vm);
 Thread* make_thread(VirtualMachine* vm, char* str, ...);
 
 #endif
-
-void preset_all(VirtualMachine *vm);
 
 #endif
