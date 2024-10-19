@@ -3,34 +3,38 @@
 
 rm -rf build
 mkdir build
+
 mkdir build/lib
-mkdir build/ext
 mkdir build/include
-cp ./src/bruter.h build/include/bruter.h
+mkdir build/example
 cp ./src/main.c build/include/main.c
-cp ./ext/*.c build/ext/
+cp ./lib/* build/lib/
+cp ./include/* build/include/
+cp ./example/* build/example/ -r
 cd build
 
 rm -rf bruter.a
 
 
-for file in ./ext/*; do
+for file in ./lib/*.c; do
     filename="${file##*/}"  
     filename="${filename%.*}" 
 
-    sed -i "s/<extensions>/<extensions>\\nvoid init_$filename(VirtualMachine* vm);\\n/g" include/bruter.h
-
-    for _file in include/*.c; do
-
-        sed -i "s/<extensions>/<extensions>\\ninit_$filename(vm);\\n/g" $_file
-    done
+    sed -i "s/<libraries header>/<libraries header>\\nvoid init_$filename(VirtualMachine* vm);/g" include/bruter.h
+    sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" include/*.c 
+    sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" lib/*.c
 done
 
-gcc ../src/bruter.c -c -O3 -lm
+gcc ../src/bruter.c -c -O3 -lm -I./include
 
-gcc ../ext/*.c -c -O3 -lm
+gcc ./lib/*.c -c -O3 -lm -I./include
 
 ar rcs lib/bruter.a *.o
 
-gcc ./include/main.c lib/bruter.a -o bruter -O3 -lm
+rm -rf lib/*.c
 
+gcc ./include/main.c lib/* -o bruter -O3 -lm
+
+rm -rf *.o
+rm -rf lib/*.c
+rm -rf lib/*.o

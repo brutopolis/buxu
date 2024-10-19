@@ -8,4 +8,5 @@ process.send proc1 'print "44"';
 process.send proc1 'return "aobaaaaa"';
 process.send proc1 'print "aoba"';
 print (process.await proc1);
+process.destroy proc1;
 return 0;

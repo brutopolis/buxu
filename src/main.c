@@ -14,7 +14,7 @@ int main(int argc, char **argv)
     }
     VirtualMachine *vm = make_vm();
 
-    //<extensions>
+    // <libraries init>
 
     // read file pointed by argv[1]
     if (args->size == 0)

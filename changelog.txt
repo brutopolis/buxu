@@ -1,6 +1,12 @@
 (18/10/2024) - version 0.5.8
 
+- new build system;
 - build.sh updated;
+- lib system implemented, now is simple to bundle native functions with the interpreter(see lib/);
+- removed pthreads and everything related to it, we need to keep it simple, btw, now is very easy to implement it as an native lib if the user need so;
+- removed TYPE_THREAD;
+- removed TYPE_PROCESS, use TYPE_OTHER instead;
+- as those types are no more a part of the language, they cannot be automatically unallocated by the interpreter anymore, so you must do it manually using lib specific specific functions;
 
 (10/10/2024) - version 0.5.7d
 

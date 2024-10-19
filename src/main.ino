@@ -47,10 +47,6 @@ Int _ino_print(VirtualMachine *vm, IntList *args)
     {
         printf("(function)%s\n", temp.string);
     }
-    else if (_type == TYPE_PROCESS)// do not
-    {
-        printf("(process)%p\n", temp.process);
-    }
     else
     {
         printf("(unknown)\n");
@@ -144,7 +140,7 @@ class Bruter
     Bruter()
     {
         this->vm = make_vm();
-        preset_all(this->vm);
+        // <libraries init>
         this->registerFunction((char*)"Serial.begin", _ino_serial_begin);
         this->registerFunction((char*)"Serial.println", _ino_print);
         this->registerFunction((char*)"delay", _ino_delay);

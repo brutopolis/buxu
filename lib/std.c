@@ -1,4 +1,4 @@
-#include "../src/bruter.h"
+#include "bruter.h"
 
 Int std_mem_clear(VirtualMachine *vm, IntList *args)
 {
@@ -173,8 +173,8 @@ Int std_mem_edit(VirtualMachine *vm, IntList *args)
     {
         if(vm->typestack->data[variable] == TYPE_STRING ||
            vm->typestack->data[variable] == TYPE_LIST ||
-           vm->typestack->data[variable] == TYPE_PROCESS ||
-           vm->typestack->data[variable] == TYPE_FUNCTION)
+           vm->typestack->data[variable] == TYPE_FUNCTION || 
+           vm->typestack->data[variable] == TYPE_OTHER)
         {
             
             if (vm->typestack->data[variable] == TYPE_STRING)
@@ -185,13 +185,6 @@ Int std_mem_edit(VirtualMachine *vm, IntList *args)
             {
                 stack_free(*((IntList*)vm->stack->data[variable].pointer));
             }
-            #ifndef ARDUINO
-            else if (vm->typestack->data[variable] == TYPE_PROCESS)
-            {
-                process_destroy(vm->stack->data[variable].process);
-                free(vm->stack->data[variable].process);
-            }
-            #endif
             else
             {
                 free(vm->stack->data[variable].pointer);
@@ -269,14 +262,6 @@ void print_element(VirtualMachine *vm, int index)
         {
             printf("]");
         }
-    }
-    else if (_type == TYPE_PROCESS)
-    {
-        printf("{process} %p", temp.process);
-    }
-    else if (_type == TYPE_THREAD)
-    {
-        printf("{thread} %p", temp.pointer);
     }
     else if (_type == TYPE_OTHER)
     {
@@ -1236,7 +1221,6 @@ void init_type(VirtualMachine *vm)
     hold_var(vm,spawn_number(vm, "type.number", TYPE_NUMBER));
     hold_var(vm,spawn_number(vm, "type.string", TYPE_STRING));
     hold_var(vm,spawn_number(vm, "type.builtin", TYPE_BUILTIN));
-    hold_var(vm,spawn_number(vm, "type.process", TYPE_PROCESS));
     hold_var(vm,spawn_number(vm, "type.function", TYPE_FUNCTION));
 
     // type functions

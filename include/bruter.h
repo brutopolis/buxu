@@ -11,14 +11,12 @@
 #include <poll.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <pthread.h>
 #ifdef _WIN32
 #include <windows.h>
-// Código específico para Windows
+
 #else // Linux
 #include <unistd.h>
 #include <sys/wait.h>
-extern char** environ;
 #endif
 #endif
 
@@ -30,8 +28,6 @@ extern char** environ;
 #define TYPE_LIST 3
 #define TYPE_BUILTIN 4
 #define TYPE_FUNCTION 5
-#define TYPE_PROCESS 6
-#define TYPE_THREAD 7
 #define TYPE_OTHER 8
 
 
@@ -74,21 +70,12 @@ typedef struct {
 #define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
 
 //stack implementation
-#ifndef ARDUINO
-#define Stack(T) struct \
-{ \
-    T *data; \
-    volatile int size; \
-    int capacity; \
-}
-#else 
 #define Stack(T) struct \
 { \
     T *data; \
     int size; \
     int capacity; \
 }
-#endif
 
 #define stack_init(s) do \
 { \
@@ -193,23 +180,6 @@ typedef struct
     IntList *temp;
 } VirtualMachine;
 
-typedef struct
-{
-    ValueList* stack;
-    CharList* typestack;
-} ThreadTransfer;
-
-typedef struct
-{
-    VirtualMachine* vm;
-    StringList* strings;
-    pthread_mutex_t* strings_lock;
-    pthread_t* thread;
-    volatile char status;         // precisa ser volátil, se não trava a criação de threads 
-    pthread_mutex_t* thread_lock;
-    ThreadTransfer* transfer;
-} Thread;
-
 //Function
 typedef Int (*Function)(VirtualMachine*, IntList*);
 
@@ -248,7 +218,6 @@ Int new_builtin(VirtualMachine *vm, Function function);
 Int new_function(VirtualMachine *vm, char* script);
 Int new_list(VirtualMachine *vm);
 Int new_var(VirtualMachine *vm);
-Int new_thread(VirtualMachine *vm, Thread* thread_arg);
 
 void hold_var(VirtualMachine *vm, Int index);
 void unhold_var(VirtualMachine *vm, Int index);
@@ -272,31 +241,12 @@ Int interpret(VirtualMachine *vm, char* cmd);
 IntList* parse(VirtualMachine *vm, char *cmd);
 void collect_garbage(VirtualMachine *vm);
 
-// <extensions>
-// <end>
+// <libraries header>
 
 #ifndef ARDUINO
 
 char* readfile(char *filename);
 void writefile(char *filename, char *content);
-
-// multiprocess function declarations
-int fork_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm);
-int create_process(process_t* process, char* argv[]);
-void send_dynamic_string(process_t* process, const char* str, int to_parent);
-char* receive_dynamic_string(process_t* process, int from_parent);
-void process_destroy(process_t* process);
-
-// threads
-void* permanent_thread(void* arg);
-Int std_thread_create(VirtualMachine* vm, IntList* args);
-Int std_thread_await(VirtualMachine* vm, IntList* args);
-Int std_thread_send(VirtualMachine* vm, IntList* args);
-Int std_thread_destroy(VirtualMachine* vm, IntList* args);
-void thread_destroy(Thread* thread_arg);
-void init_pthreads(VirtualMachine *vm);
-Thread* make_thread(VirtualMachine* vm, char* str, ...);
-
 #endif
 
 #endif

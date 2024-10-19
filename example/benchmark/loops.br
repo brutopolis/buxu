@@ -1,4 +1,4 @@
-hash.set "_size" (mem.keep 1000000);
+hash.set "_size" (mem.keep 100000);
 hash.set "_index" (mem.keep 0);
 loop.repeat (div _size 5) (mem.keep "print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);mem.clear;");
 0;

@@ -1,4 +1,84 @@
-#include "../src/bruter.h"
+#include "bruter.h"
+#ifndef ARDUINO
+char* readfile(char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        return NULL;
+    }
+    char *code = (char*)malloc(1);
+    code[0] = '\0';
+    char *line = NULL;
+    size_t len = 0;
+    while (getline(&line, &len, file) != -1)
+    {
+        code = (char*)realloc(code, strlen(code) + strlen(line) + 1);
+        strcat(code, line);
+    }
+    free(line);
+    fclose(file);
+    return code;
+};
+
+void writefile(char *filename, char *code)
+{
+    FILE *file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        return;
+    }
+    fprintf(file, "%s", code);
+    fclose(file);
+}
+
+Int std_file_read(VirtualMachine *vm, IntList *args)
+{
+    Int filename = stack_shift(*args);
+    char *code = readfile(vm->stack->data[filename].string);
+    Int result = -1;
+    if (code == NULL)
+    {
+    }
+    else
+    {
+        result = eval(vm, code);
+        free(code);
+    }
+    //freeRawVar(filename);
+    return result;
+}
+
+Int std_file_write(VirtualMachine *vm, IntList *args)
+{
+    Int filename = stack_shift(*args);
+    Int code = stack_shift(*args);
+    writefile(vm->stack->data[filename].string, vm->stack->data[code].string);
+    return -1;
+}
+
+Int std_repl(VirtualMachine *vm, IntList *args)
+{
+    printf("bruter v%s\n", VERSION);
+    char *cmd;
+    Int result = -1;
+    while (result == -1)
+    {
+        cmd = (char*)malloc(1024);
+        printf("@> ");
+        scanf("%[^\n]%*c", cmd);
+        result = eval(vm, cmd);
+        free(cmd);
+    }
+
+    printf("repl returned: @%d ", result);
+    char * str = str_format("print @%d", result);
+    eval(vm, str);
+    free(str);
+    return result;
+}
+
+#ifndef _WIN32
 
 // Função para criar um processo filho e configurar os pipes
 int fork_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm) {
@@ -49,66 +129,6 @@ int fork_process(process_t* process, void (*child_function)(process_t*, VirtualM
 
     return 0;
 }
-
-// create process but with fork + exec
-int create_process(process_t* process, char* argv[]) 
-{
-    // Criar pipe para comunicação pai -> filho
-    if (pipe(process->parent_to_child) == -1) {
-        perror("Erro ao criar pipe pai -> filho");
-        return -1;
-    }
-
-    // Criar pipe para comunicação filho -> pai
-    if (pipe(process->child_to_parent) == -1) {
-        perror("Erro ao criar pipe filho -> pai");
-        close(process->parent_to_child[0]);  // Fechar as extremidades dos pipes
-        close(process->parent_to_child[1]);
-        return -1;
-    }
-
-    // Criar o processo filho
-    process->pid = fork();
-    if (process->pid == -1) {
-        perror("Erro ao criar processo filho");
-        close(process->parent_to_child[0]);  // Fechar as extremidades dos pipes
-        close(process->parent_to_child[1]);
-        close(process->child_to_parent[0]);
-        close(process->child_to_parent[1]);
-        return -1;
-    }
-
-    if (process->pid == 0) {
-        // Processo filho: fechar extremidades dos pipes não utilizadas
-        close(process->parent_to_child[1]);  // Fecha escrita do pai -> filho
-        close(process->child_to_parent[0]);  // Fecha leitura do filho -> pai
-
-        // Redirecionar a entrada e saída padrão
-        dup2(process->parent_to_child[0], STDIN_FILENO);
-        dup2(process->child_to_parent[1], STDOUT_FILENO);
-
-        // Fechar os pipes após a execução
-        close(process->parent_to_child[0]);
-        close(process->child_to_parent[1]);
-
-        // Executar o programa
-        execvp(argv[0], argv);
-
-        // Se execvp retornar, houve um erro
-        perror("Erro ao executar o programa");
-        exit(EXIT_FAILURE);
-    } else {
-        // Processo pai: fechar extremidades dos pipes não utilizadas
-        close(process->parent_to_child[0]);  // Fecha leitura do pai -> filho
-        close(process->child_to_parent[1]);  // Fecha escrita do filho -> pai
-    }
-
-    return 0;
-}
-
-/* create process exec child process example
-
-*/
 
 // Função para enviar uma string dinamicamente
 void send_dynamic_string(process_t* process, const char* str, int to_parent) 
@@ -233,7 +253,7 @@ void default_interpreter(process_t* process, VirtualMachine* vm)
 {
     int index = new_var(vm);
     vm->stack->data[index].process = process;
-    vm->typestack->data[index] = TYPE_PROCESS;
+    vm->typestack->data[index] = TYPE_OTHER;
     hold_var(vm, index);
     hash_set(vm, "process.child", index);
     char* _str;
@@ -309,7 +329,7 @@ Int std_process_fork(VirtualMachine *vm, IntList *args)
         free(process);
         return new_number(vm, 0);
     }
-    vm->typestack->data[result] = TYPE_PROCESS;
+    vm->typestack->data[result] = TYPE_OTHER;
     vm->stack->data[result].process = process;
     hold_var(vm, result);
     
@@ -385,17 +405,29 @@ Int std_process_destroy(VirtualMachine *vm, IntList *args)
     unuse_var(vm, process);
     return -1;
 }
+#else //if windows
+// no process functions for windows yet
+#endif
 
-// inits
-
-void init_linux(VirtualMachine *vm)
+void init_os(VirtualMachine *vm)
 {
+    hold_var(vm,spawn_builtin(vm, "file.read", std_file_read));
+    hold_var(vm,spawn_builtin(vm, "file.write", std_file_write));
+    hold_var(vm,spawn_builtin(vm, "repl", std_repl));
+
+    #ifdef _WIN32 
+    #else
     hold_var(vm,spawn_builtin(vm, "process.fork", std_process_fork));
-    //hold_var(vm,spawn_builtin(vm, "process.create", std_process_create));
+    #endif
     hold_var(vm,spawn_builtin(vm, "process.send", std_process_host_send));
     hold_var(vm,spawn_builtin(vm, "process.await", std_process_host_await));
     hold_var(vm,spawn_builtin(vm, "process.destroy", std_process_destroy));
     hold_var(vm,spawn_builtin(vm, "process.receive", std_process_host_receive));
     hold_var(vm,spawn_builtin(vm, "process.child.send", std_process_child_send));
     hold_var(vm,spawn_builtin(vm, "process.child.receive", std_process_child_receive));
+
 }
+
+#else 
+void init_os(VirtualMachine *vm) {}
+#endif

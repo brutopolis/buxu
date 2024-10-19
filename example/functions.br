@@ -5,8 +5,8 @@ mem.hold _index;
 
 hash.set "cond" "< _index _size";
 hash.set "code" "print _index";
-hold cond;
-hold code;
+mem.hold cond;
+mem.hold code;
 
 function "tttt" "print args.0";
 function "ttttt" "return 45";

@@ -49,7 +49,5 @@ bruter is a metaprogramable lightweight language written in C;
 
 - `functions` = ok/testing
 - `prototypes lib` = testing
-- `multiprocessing` = ok (linux only, part of std_linux)
-- `multithreading` = ok
 - `expect` = not yet
 - `vs-code extension` = testing
