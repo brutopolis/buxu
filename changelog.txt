@@ -5,6 +5,7 @@
 - new function registerNumber;
 - new function registerString;
 - new function registerList;
+- new library lib/example.c added;
 
 (19/10/2024) - version 0.5.8
 
