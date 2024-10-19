@@ -1,4 +1,12 @@
-(18/10/2024) - version 0.5.8
+(19/10/2024) - version 0.5.8a
+
+- new function registerBuiltin;
+- new function registerFunction;
+- new function registerNumber;
+- new function registerString;
+- new function registerList;
+
+(19/10/2024) - version 0.5.8
 
 - new build system;
 - build.sh updated;

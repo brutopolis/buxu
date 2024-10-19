@@ -1202,128 +1202,128 @@ Int std_prototype_equals(VirtualMachine *vm, IntList *args)
 void init_basics(VirtualMachine *vm)
 {
     
-    hold_var(vm,spawn_builtin(vm, "#", std_ignore));
-    hold_var(vm,spawn_builtin(vm, "eval", std_eval));
-    hold_var(vm,spawn_builtin(vm, "return", std_return));
-    hold_var(vm,spawn_builtin(vm, "function", std_function));
+    registerBuiltin(vm, "#", std_ignore);
+    registerBuiltin(vm, "eval", std_eval);
+    registerBuiltin(vm, "return", std_return);
+    registerBuiltin(vm, "function", std_function);
 #ifndef ARDUINO
-    hold_var(vm,spawn_builtin(vm, "ls", std_io_ls));
-    hold_var(vm,spawn_builtin(vm, "print", std_io_print));
+    registerBuiltin(vm, "ls", std_io_ls);
+    registerBuiltin(vm, "print", std_io_print);
 #endif
 }
 
 void init_type(VirtualMachine *vm)
 {
     // types
-    hold_var(vm,spawn_number(vm, "type.size", sizeof(Value)));
-    hold_var(vm,spawn_number(vm, "type.nil", TYPE_NIL));
-    hold_var(vm,spawn_number(vm, "type.list", TYPE_LIST));
-    hold_var(vm,spawn_number(vm, "type.number", TYPE_NUMBER));
-    hold_var(vm,spawn_number(vm, "type.string", TYPE_STRING));
-    hold_var(vm,spawn_number(vm, "type.builtin", TYPE_BUILTIN));
-    hold_var(vm,spawn_number(vm, "type.function", TYPE_FUNCTION));
+    registerNumber(vm, "type.size", sizeof(Value));
+    registerNumber(vm, "type.nil", TYPE_NIL);
+    registerNumber(vm, "type.list", TYPE_LIST);
+    registerNumber(vm, "type.number", TYPE_NUMBER);
+    registerNumber(vm, "type.string", TYPE_STRING);
+    registerNumber(vm, "type.builtin", TYPE_BUILTIN);
+    registerNumber(vm, "type.function", TYPE_FUNCTION);
 
     // type functions
-    hold_var(vm,spawn_builtin(vm, "type.get", std_type_get));
-    hold_var(vm,spawn_builtin(vm, "type.set", std_type_set));
+    registerBuiltin(vm, "type.get", std_type_get);
+    registerBuiltin(vm, "type.set", std_type_set);
 }
 
 void init_loop(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_builtin(vm, "loop.while", std_loop_while));
-    hold_var(vm,spawn_builtin(vm, "loop.repeat", std_loop_repeat));
+    registerBuiltin(vm, "loop.while", std_loop_while);
+    registerBuiltin(vm, "loop.repeat", std_loop_repeat);
 }
 
 void init_hash(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_builtin(vm, "hash.set", std_hash_set));
-    hold_var(vm,spawn_builtin(vm, "hash.delete", std_hash_delete));
-    hold_var(vm,spawn_builtin(vm, "hash.rename", std_hash_rename));
+    registerBuiltin(vm, "hash.set", std_hash_set);
+    registerBuiltin(vm, "hash.delete", std_hash_delete);
+    registerBuiltin(vm, "hash.rename", std_hash_rename);
 }
 
 void init_manual_memory(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_builtin(vm, "mem.hold", std_mem_hold));
-    hold_var(vm,spawn_builtin(vm, "mem.keep", std_mem_keep));
-    hold_var(vm,spawn_builtin(vm, "mem.edit", std_mem_edit));
-    hold_var(vm,spawn_builtin(vm, "mem.len", std_mem_length));
-    hold_var(vm,spawn_builtin(vm, "mem.clear", std_mem_clear));
-    hold_var(vm,spawn_builtin(vm, "mem.rebase", std_mem_rebase));
-    hold_var(vm,spawn_builtin(vm, "mem.unhold", std_mem_unhold));
-    hold_var(vm,spawn_builtin(vm, "mem.delete", std_mem_delete));
-    hold_var(vm,spawn_builtin(vm, "mem.collect", std_mem_collect));
+    registerBuiltin(vm, "mem.hold", std_mem_hold);
+    registerBuiltin(vm, "mem.keep", std_mem_keep);
+    registerBuiltin(vm, "mem.edit", std_mem_edit);
+    registerBuiltin(vm, "mem.len", std_mem_length);
+    registerBuiltin(vm, "mem.clear", std_mem_clear);
+    registerBuiltin(vm, "mem.rebase", std_mem_rebase);
+    registerBuiltin(vm, "mem.unhold", std_mem_unhold);
+    registerBuiltin(vm, "mem.delete", std_mem_delete);
+    registerBuiltin(vm, "mem.collect", std_mem_collect);
 }
 
 void init_prototype(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_builtin(vm, "prototype.copy", std_prototype_copy));
-    hold_var(vm,spawn_builtin(vm, "prototype.hold", std_prototype_hold));
-    hold_var(vm,spawn_builtin(vm, "prototype.unhold", std_prototype_unhold));
-    hold_var(vm,spawn_builtin(vm, "prototype.equals", std_prototype_equals));
-    hold_var(vm,spawn_builtin(vm, "prototype.compare", std_prototype_compare));
+    registerBuiltin(vm, "prototype.copy", std_prototype_copy);
+    registerBuiltin(vm, "prototype.hold", std_prototype_hold);
+    registerBuiltin(vm, "prototype.unhold", std_prototype_unhold);
+    registerBuiltin(vm, "prototype.equals", std_prototype_equals);
+    registerBuiltin(vm, "prototype.compare", std_prototype_compare);
 }
 
 void init_math(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_builtin(vm, "add", std_math_add));
-    hold_var(vm,spawn_builtin(vm, "sub", std_math_sub));
-    hold_var(vm,spawn_builtin(vm, "mul", std_math_mul));
-    hold_var(vm,spawn_builtin(vm, "div", std_math_div));
-    hold_var(vm,spawn_builtin(vm, "mod", std_math_mod));
-    hold_var(vm,spawn_builtin(vm, "pow", std_math_pow));
-    hold_var(vm,spawn_builtin(vm, "abs", std_math_abs));
-    hold_var(vm,spawn_builtin(vm, "sqrt", std_math_sqrt));
-    hold_var(vm,spawn_builtin(vm, "ceil", std_math_ceil));
-    hold_var(vm,spawn_builtin(vm, "seed", std_math_seed));
-    hold_var(vm,spawn_builtin(vm, "floor", std_math_floor));
-    hold_var(vm,spawn_builtin(vm, "round", std_math_round));
-    hold_var(vm,spawn_builtin(vm, "random", std_math_random));
-    hold_var(vm,spawn_builtin(vm, "incr", std_math_increment));
-    hold_var(vm,spawn_builtin(vm, "decr", std_math_decrement));
+    registerBuiltin(vm, "add", std_math_add);
+    registerBuiltin(vm, "sub", std_math_sub);
+    registerBuiltin(vm, "mul", std_math_mul);
+    registerBuiltin(vm, "div", std_math_div);
+    registerBuiltin(vm, "mod", std_math_mod);
+    registerBuiltin(vm, "pow", std_math_pow);
+    registerBuiltin(vm, "abs", std_math_abs);
+    registerBuiltin(vm, "sqrt", std_math_sqrt);
+    registerBuiltin(vm, "ceil", std_math_ceil);
+    registerBuiltin(vm, "seed", std_math_seed);
+    registerBuiltin(vm, "floor", std_math_floor);
+    registerBuiltin(vm, "round", std_math_round);
+    registerBuiltin(vm, "random", std_math_random);
+    registerBuiltin(vm, "incr", std_math_increment);
+    registerBuiltin(vm, "decr", std_math_decrement);
 }
 
 void init_list(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_builtin(vm, "list.new", std_list_new));
-    hold_var(vm,spawn_builtin(vm, "list.pop", std_list_pop));
-    hold_var(vm,spawn_builtin(vm, "list.get", std_list_get));
-    hold_var(vm,spawn_builtin(vm, "list.len", std_list_length));
-    hold_var(vm,spawn_builtin(vm, "list.push", std_list_push));
-    hold_var(vm,spawn_builtin(vm, "list.find", std_list_find));
-    hold_var(vm,spawn_builtin(vm, "list.shift", std_list_shift));
-    hold_var(vm,spawn_builtin(vm, "list.insert", std_list_insert));
-    hold_var(vm,spawn_builtin(vm, "list.remove", std_list_remove));
-    hold_var(vm,spawn_builtin(vm, "list.concat", std_list_concat));
-    hold_var(vm,spawn_builtin(vm, "list.unshift", std_list_unshift));
+    registerBuiltin(vm, "list.new", std_list_new);
+    registerBuiltin(vm, "list.pop", std_list_pop);
+    registerBuiltin(vm, "list.get", std_list_get);
+    registerBuiltin(vm, "list.len", std_list_length);
+    registerBuiltin(vm, "list.push", std_list_push);
+    registerBuiltin(vm, "list.find", std_list_find);
+    registerBuiltin(vm, "list.shift", std_list_shift);
+    registerBuiltin(vm, "list.insert", std_list_insert);
+    registerBuiltin(vm, "list.remove", std_list_remove);
+    registerBuiltin(vm, "list.concat", std_list_concat);
+    registerBuiltin(vm, "list.unshift", std_list_unshift);
 }
 
 void init_string(VirtualMachine *vm)
 {
     //spawn_builtin(vm, "string.format", std_string_new);
-    hold_var(vm,spawn_builtin(vm, "string.sub", std_string_ndup));
-    hold_var(vm,spawn_builtin(vm, "string.find", std_string_find));
-    hold_var(vm,spawn_builtin(vm, "string.len", std_string_length));
-    hold_var(vm,spawn_builtin(vm, "string.split", std_string_split));
-    hold_var(vm,spawn_builtin(vm, "string.concat", std_string_concat));
-    hold_var(vm,spawn_builtin(vm, "string.format", std_string_format));
-    hold_var(vm,spawn_builtin(vm, "string.replace", std_string_replace));
-    hold_var(vm,spawn_builtin(vm, "string.to.number", std_string_to_number));
-    hold_var(vm,spawn_builtin(vm, "string.replace.all", std_string_replace_all));
+    registerBuiltin(vm, "string.sub", std_string_ndup);
+    registerBuiltin(vm, "string.find", std_string_find);
+    registerBuiltin(vm, "string.len", std_string_length);
+    registerBuiltin(vm, "string.split", std_string_split);
+    registerBuiltin(vm, "string.concat", std_string_concat);
+    registerBuiltin(vm, "string.format", std_string_format);
+    registerBuiltin(vm, "string.replace", std_string_replace);
+    registerBuiltin(vm, "string.to.number", std_string_to_number);
+    registerBuiltin(vm, "string.replace.all", std_string_replace_all);
 }
 
 void init_condition(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_builtin(vm, "or", std_condition_or));
-    hold_var(vm,spawn_builtin(vm, "if", std_condition_if));
-    hold_var(vm,spawn_builtin(vm, "<", std_condition_less));
-    hold_var(vm,spawn_builtin(vm, "and", std_condition_and));
-    hold_var(vm,spawn_builtin(vm, "not", std_condition_not));
-    hold_var(vm,spawn_builtin(vm, "==", std_condition_equals));
-    hold_var(vm,spawn_builtin(vm, ">", std_condition_greater));
-    hold_var(vm,spawn_builtin(vm, "ifelse", std_condition_ifelse));
-    hold_var(vm,spawn_builtin(vm, "!=", std_condition_not_equals));
-    hold_var(vm,spawn_builtin(vm, "<=", std_condition_less_equals));
-    hold_var(vm,spawn_builtin(vm, ">=", std_condition_greater_equals));
+    registerBuiltin(vm, "or", std_condition_or);
+    registerBuiltin(vm, "if", std_condition_if);
+    registerBuiltin(vm, "<", std_condition_less);
+    registerBuiltin(vm, "and", std_condition_and);
+    registerBuiltin(vm, "not", std_condition_not);
+    registerBuiltin(vm, "==", std_condition_equals);
+    registerBuiltin(vm, ">", std_condition_greater);
+    registerBuiltin(vm, "ifelse", std_condition_ifelse);
+    registerBuiltin(vm, "!=", std_condition_not_equals);
+    registerBuiltin(vm, "<=", std_condition_less_equals);
+    registerBuiltin(vm, ">=", std_condition_greater_equals);
 }
 
 void init_default_vars(VirtualMachine *vm)

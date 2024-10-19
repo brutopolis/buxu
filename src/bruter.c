@@ -867,3 +867,28 @@ void collect_garbage(VirtualMachine *vm)
         }
     }
 }
+
+void registerBuiltin(VirtualMachine *vm, char *name, Function function)
+{
+    hold_var(vm,spawn_builtin(vm, name, function));
+}
+
+void registerFunction(VirtualMachine *vm, char *name, char *script)
+{
+    hold_var(vm,spawn_function(vm, name, script));
+}
+
+void registerNumber(VirtualMachine *vm, char *name, Float number)
+{
+    hold_var(vm,spawn_number(vm, name, number));
+}
+
+void registerString(VirtualMachine *vm, char *name, char *string)
+{
+    hold_var(vm,spawn_string(vm, name, string));
+}
+
+void registerList(VirtualMachine *vm, char *name)
+{
+    hold_var(vm,spawn_list(vm, name));
+}

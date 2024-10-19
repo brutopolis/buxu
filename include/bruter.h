@@ -20,7 +20,7 @@
 #endif
 #endif
 
-#define VERSION "0.5.8"
+#define VERSION "0.5.8a"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -230,6 +230,12 @@ Int spawn_number(VirtualMachine *vm, char* varname, Float number);
 Int spawn_builtin(VirtualMachine *vm, char* varname, Function function);
 Int spawn_function(VirtualMachine *vm, char* varname, char* script);
 Int spawn_list(VirtualMachine *vm, char* varname);
+
+void registerBuiltin(VirtualMachine *vm, char* name, Function function);
+void registerFunction(VirtualMachine *vm, char* name, char* script);
+void registerNumber(VirtualMachine *vm, char* name, Float number);
+void registerString(VirtualMachine *vm, char* name, char* string);
+void registerList(VirtualMachine *vm, char* name);
 
 Int hash_find(VirtualMachine *vm, char *key);
 void hash_set(VirtualMachine *vm, char *key, Int index);

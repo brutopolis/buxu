@@ -411,20 +411,20 @@ Int std_process_destroy(VirtualMachine *vm, IntList *args)
 
 void init_os(VirtualMachine *vm)
 {
-    hold_var(vm,spawn_builtin(vm, "file.read", std_file_read));
-    hold_var(vm,spawn_builtin(vm, "file.write", std_file_write));
-    hold_var(vm,spawn_builtin(vm, "repl", std_repl));
+    registerBuiltin(vm, "file.read", std_file_read);
+    registerBuiltin(vm, "file.write", std_file_write);
+    registerBuiltin(vm, "repl", std_repl);
 
     #ifdef _WIN32 
     #else
-    hold_var(vm,spawn_builtin(vm, "process.fork", std_process_fork));
+    registerBuiltin(vm, "process.fork", std_process_fork);
     #endif
-    hold_var(vm,spawn_builtin(vm, "process.send", std_process_host_send));
-    hold_var(vm,spawn_builtin(vm, "process.await", std_process_host_await));
-    hold_var(vm,spawn_builtin(vm, "process.destroy", std_process_destroy));
-    hold_var(vm,spawn_builtin(vm, "process.receive", std_process_host_receive));
-    hold_var(vm,spawn_builtin(vm, "process.child.send", std_process_child_send));
-    hold_var(vm,spawn_builtin(vm, "process.child.receive", std_process_child_receive));
+    registerBuiltin(vm, "process.send", std_process_host_send);
+    registerBuiltin(vm, "process.await", std_process_host_await);
+    registerBuiltin(vm, "process.destroy", std_process_destroy);
+    registerBuiltin(vm, "process.receive", std_process_host_receive);
+    registerBuiltin(vm, "process.child.send", std_process_child_send);
+    registerBuiltin(vm, "process.child.receive", std_process_child_receive);
 
 }
 
