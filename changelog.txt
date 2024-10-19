@@ -1,6 +1,10 @@
 (19/10/2024) - version 0.5.8b
 
 - new function mem.copy;
+- TYPE_OTHER is not automatically unallocated anymore, you must do it manually dependending on your use;
+- moved process_t to os.c;
+- Value.process is no more;
+- minor fixes;
 
 (19/10/2024) - version 0.5.8a
 

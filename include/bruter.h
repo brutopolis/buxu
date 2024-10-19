@@ -20,7 +20,7 @@
 #endif
 #endif
 
-#define VERSION "0.5.8a"
+#define VERSION "0.5.8b"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -58,13 +58,6 @@
 #ifndef NULL
 #define NULL 0
 #endif
-
-// process type
-typedef struct {
-    int parent_to_child[2]; // Pipe para comunicação: Pai -> Filho
-    int child_to_parent[2]; // Pipe para comunicação: Filho -> Pai
-    pid_t pid;              // PID do processo filho
-} process_t;
 
 
 #define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
@@ -154,7 +147,6 @@ typedef union
     Int integer;
     char* string;
     void* pointer;
-    process_t* process;
 } Value;
 
 //Hash

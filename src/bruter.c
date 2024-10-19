@@ -560,7 +560,7 @@ Int spawn_function(VirtualMachine *vm, char* varname, char *script)
 
 void free_var(VirtualMachine *vm, Int index)
 {
-    if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_FUNCTION || vm->typestack->data[index] == TYPE_OTHER)
+    if (vm->typestack->data[index] == TYPE_STRING || vm->typestack->data[index] == TYPE_FUNCTION)
     {
         free(vm->stack->data[index].string);
     }
@@ -630,11 +630,7 @@ void unuse_var(VirtualMachine *vm, Int index)
         }
         stack_free(*((IntList*)vm->stack->data[index].pointer));
     }
-    else if (vm->typestack->data[index] == TYPE_OTHER)
-    {
-        free(vm->stack->data[index].pointer);
-    }
-
+    
     vm->typestack->data[index] = TYPE_NIL;
     
     for (Int i = 0; i < vm->hashes->size; i++)

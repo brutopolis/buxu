@@ -80,6 +80,13 @@ Int std_repl(VirtualMachine *vm, IntList *args)
 
 #ifndef _WIN32
 
+// process type
+typedef struct {
+    int parent_to_child[2]; // Pipe para comunicação: Pai -> Filho
+    int child_to_parent[2]; // Pipe para comunicação: Filho -> Pai
+    pid_t pid;              // PID do processo filho
+} process_t;
+
 // Função para criar um processo filho e configurar os pipes
 int fork_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm) {
     // Criar pipe para comunicação pai -> filho
@@ -246,13 +253,15 @@ void process_destroy(process_t* process)
     if (is_pipe_open(process->child_to_parent[0])) {
         close(process->child_to_parent[0]);
     }
+
+    free(process);
 }
 
 // Função do processo filho
 void default_interpreter(process_t* process, VirtualMachine* vm) 
 {
     int index = new_var(vm);
-    vm->stack->data[index].process = process;
+    vm->stack->data[index].pointer = process;
     vm->typestack->data[index] = TYPE_OTHER;
     hold_var(vm, index);
     hash_set(vm, "process.child", index);
@@ -296,7 +305,7 @@ void default_interpreter(process_t* process, VirtualMachine* vm)
         }
         
     }
-    vm->stack->data[index].process = NULL;
+    vm->stack->data[index].pointer = NULL;
     vm->typestack->data[index] = TYPE_NIL;
     send_dynamic_string(process, "destroyd", 1);
 }
@@ -323,14 +332,14 @@ Int std_process_fork(VirtualMachine *vm, IntList *args)
 
     if (process->pid == 0) 
     {
-        vm->stack->data[result].process = NULL;
+        vm->stack->data[result].pointer = NULL;
         vm->typestack->data[result] = TYPE_NIL;
         vm->stack->data[result].integer = 0;
         free(process);
         return new_number(vm, 0);
     }
     vm->typestack->data[result] = TYPE_OTHER;
-    vm->stack->data[result].process = process;
+    vm->stack->data[result].pointer = process;
     hold_var(vm, result);
     
     if (name >= 0)
@@ -346,14 +355,14 @@ Int std_process_host_send(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     Int message = stack_shift(*args);
-    send_dynamic_string((process_t*)vm->stack->data[process].process, vm->stack->data[message].string, 0);
+    send_dynamic_string((process_t*)vm->stack->data[process].pointer, vm->stack->data[message].string, 0);
     return -1;
 }
 
 Int std_process_host_receive(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
-    char *received = receive_dynamic_string((process_t*)vm->stack->data[process].process, 0);
+    char *received = receive_dynamic_string((process_t*)vm->stack->data[process].pointer, 0);
     if (strcmp(received, "") == 0)
     {
         free(received);
@@ -370,11 +379,11 @@ Int std_process_host_receive(VirtualMachine *vm, IntList *args)
 Int std_process_host_await(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
-    char *received = receive_dynamic_string((process_t*)vm->stack->data[process].process, 0);
+    char *received = receive_dynamic_string((process_t*)vm->stack->data[process].pointer, 0);
     while (strcmp(received, "") == 0)
     {
         free(received);
-        received = receive_dynamic_string((process_t*)vm->stack->data[process].process, 0);
+        received = receive_dynamic_string((process_t*)vm->stack->data[process].pointer, 0);
     }
     Int result = new_string(vm, received);
     free(received);
@@ -385,14 +394,14 @@ Int std_process_child_send(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     Int message = stack_shift(*args);
-    send_dynamic_string((process_t*)vm->stack->data[process].process, vm->stack->data[message].string, 1);
+    send_dynamic_string((process_t*)vm->stack->data[process].pointer, vm->stack->data[message].string, 1);
     return -1;
 }
 
 Int std_process_child_receive(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
-    char *received = receive_dynamic_string((process_t*)vm->stack->data[process].process, 1);
+    char *received = receive_dynamic_string((process_t*)vm->stack->data[process].pointer, 1);
     Int result = eval(vm, received);
     free(received);
     return result;
@@ -401,7 +410,7 @@ Int std_process_child_receive(VirtualMachine *vm, IntList *args)
 Int std_process_destroy(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
-    process_destroy((process_t*)vm->stack->data[process].process);
+    process_destroy((process_t*)vm->stack->data[process].pointer);
     unuse_var(vm, process);
     return -1;
 }

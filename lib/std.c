@@ -173,8 +173,7 @@ Int std_mem_edit(VirtualMachine *vm, IntList *args)
     {
         if(vm->typestack->data[variable] == TYPE_STRING ||
            vm->typestack->data[variable] == TYPE_LIST ||
-           vm->typestack->data[variable] == TYPE_FUNCTION || 
-           vm->typestack->data[variable] == TYPE_OTHER)
+           vm->typestack->data[variable] == TYPE_FUNCTION)
         {
             
             if (vm->typestack->data[variable] == TYPE_STRING)
@@ -184,10 +183,6 @@ Int std_mem_edit(VirtualMachine *vm, IntList *args)
             else if (vm->typestack->data[variable] == TYPE_LIST)
             {
                 stack_free(*((IntList*)vm->stack->data[variable].pointer));
-            }
-            else
-            {
-                free(vm->stack->data[variable].pointer);
             }
         }
 
