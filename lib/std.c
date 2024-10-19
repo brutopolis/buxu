@@ -201,6 +201,24 @@ Int std_mem_edit(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+Int std_mem_copy(VirtualMachine *vm, IntList *args)
+{
+    Int variable = stack_shift(*args);
+    Int value = stack_shift(*args);
+    Int newvar = new_var(vm);
+    
+    if (variable >= 0 && variable < vm->stack->size)
+    {
+        if (value >= 0 && value < vm->stack->size)
+        {
+            vm->stack->data[newvar] = value_duplicate(vm->stack->data[value], vm->typestack->data[value]);
+            vm->typestack->data[newvar] = vm->typestack->data[value];
+        }
+    }
+    
+    return newvar;
+}
+
 Int std_type_set(VirtualMachine *vm, IntList *args)
 {
     Int var = stack_shift(*args);
@@ -1246,6 +1264,7 @@ void init_manual_memory(VirtualMachine *vm)
     registerBuiltin(vm, "mem.hold", std_mem_hold);
     registerBuiltin(vm, "mem.keep", std_mem_keep);
     registerBuiltin(vm, "mem.edit", std_mem_edit);
+    registerBuiltin(vm, "mem.copy", std_mem_copy);
     registerBuiltin(vm, "mem.len", std_mem_length);
     registerBuiltin(vm, "mem.clear", std_mem_clear);
     registerBuiltin(vm, "mem.rebase", std_mem_rebase);
