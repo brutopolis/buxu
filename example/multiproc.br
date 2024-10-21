@@ -1,7 +1,5 @@
 process.fork 'proc1';
 
-function 'print2' 'print args.0';
-
 process.send proc1 'print "aoba"';
 process.send proc1 'print "111"';
 process.send proc1 'print "44"';

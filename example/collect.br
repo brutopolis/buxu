@@ -14,4 +14,4 @@ mem.clear;
 mem.collect;
 ls "hash";
 # "the kept variables are no more";
-"11" 12 45;
+return 0;

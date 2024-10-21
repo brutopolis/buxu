@@ -28,7 +28,7 @@ Int _ino_print(VirtualMachine *vm, IntList *args)
     {
         printf("%s\n", temp.string);
     }
-    else if (_type == TYPE_LIST)
+    /*else if (_type == TYPE_LIST)
     {
         printf("[");
         IntList *list = (IntList*)temp.pointer;
@@ -38,14 +38,10 @@ Int _ino_print(VirtualMachine *vm, IntList *args)
         }
         printf("%d", list->data[list->size-1]);
         printf("]\n");
-    }
+    }*/
     else if (_type == TYPE_BUILTIN)
     {
         printf("(function)%p\n", temp.pointer);
-    }
-    else if (_type == TYPE_FUNCTION)
-    {
-        printf("(function)%s\n", temp.string);
     }
     else
     {

@@ -20,14 +20,12 @@
 #endif
 #endif
 
-#define VERSION "0.5.8b"
+#define VERSION "0.5.9"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
 #define TYPE_STRING 2
-#define TYPE_LIST 3
 #define TYPE_BUILTIN 4
-#define TYPE_FUNCTION 5
 #define TYPE_OTHER 8
 
 
@@ -147,6 +145,7 @@ typedef union
     Int integer;
     char* string;
     void* pointer;
+    char bytes[sizeof(Float)];
 } Value;
 
 //Hash
@@ -207,8 +206,6 @@ void unuse_var(VirtualMachine *vm, Int index);
 Int new_number(VirtualMachine *vm, Float number);
 Int new_string(VirtualMachine *vm, char *str);
 Int new_builtin(VirtualMachine *vm, Function function);
-Int new_function(VirtualMachine *vm, char* script);
-Int new_list(VirtualMachine *vm);
 Int new_var(VirtualMachine *vm);
 
 void hold_var(VirtualMachine *vm, Int index);
@@ -220,11 +217,8 @@ Int spawn_var(VirtualMachine *vm, char* varname);
 Int spawn_string(VirtualMachine *vm, char* varname, char* string);
 Int spawn_number(VirtualMachine *vm, char* varname, Float number);
 Int spawn_builtin(VirtualMachine *vm, char* varname, Function function);
-Int spawn_function(VirtualMachine *vm, char* varname, char* script);
-Int spawn_list(VirtualMachine *vm, char* varname);
 
 void registerBuiltin(VirtualMachine *vm, char* name, Function function);
-void registerFunction(VirtualMachine *vm, char* name, char* script);
 void registerNumber(VirtualMachine *vm, char* name, Float number);
 void registerString(VirtualMachine *vm, char* name, char* string);
 void registerList(VirtualMachine *vm, char* name);

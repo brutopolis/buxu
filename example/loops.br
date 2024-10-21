@@ -14,4 +14,4 @@ mem.clear;
 mem.unhold _size;
 mem.rebase;
 ls;
-"11" 12 45;
+return 0;

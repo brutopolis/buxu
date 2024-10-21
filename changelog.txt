@@ -1,3 +1,23 @@
+(21/10/2024) - version 0.5.9
+
+- arduino related fixes;
+- removed TYPE_LIST;
+- removed TYPE_FUNCTION;
+- lists are not a std type anymore;
+- functions are not a std type anymore;
+- removed all list related functions;
+- removed all function related functions;
+- renamed function std_io_ls to std_io_ls_all;
+- new function std_io_ls_temp;
+- new function std_io_ls_free;
+- new function std_io_ls_type;
+- new function std_io_ls_hash;
+- mew lib array.c;
+- new lib integer.c;
+- new lib prototype.c;
+- prototype moved into separated library apart std;
+- some README updates;
+
 (19/10/2024) - version 0.5.8b
 
 - new function mem.copy;

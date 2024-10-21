@@ -24,8 +24,6 @@ bruter is a metaprogramable lightweight language written in C;
 
 - `string` = enclosed by double quotes;
 
-- `list` = enclosed by ();
-
 - `nil` = nil;
 
 ## Usage
@@ -40,7 +38,7 @@ bruter is a metaprogramable lightweight language written in C;
     
 ## Reserved
 
-- `()` = expression/list delimiter
+- `()` = expression
 - `""` = string delimiter
 - `''` = string delimiter
 - `;` = end of command separator
