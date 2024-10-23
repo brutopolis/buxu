@@ -64,8 +64,8 @@
 #define Stack(T) struct \
 { \
     T *data; \
-    int size; \
-    int capacity; \
+    Int size; \
+    Int capacity; \
 }
 
 #define stack_init(s) do \
@@ -88,7 +88,7 @@
         (s).capacity = (s).capacity == 0 ? 1 : (s).capacity * 2; \
         (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
     } \
-    for (int i = (s).size; i > 0; i--) { \
+    for (Int i = (s).size; i > 0; i--) { \
         (s).data[i] = (s).data[i - 1]; \
     } \
     (s).data[0] = (v); \
@@ -99,7 +99,7 @@
 
 #define stack_shift(s) ({ \
     typeof((s).data[0]) ret = (s).data[0]; \
-    for (int i = 0; i < (s).size - 1; i++) { \
+    for (Int i = 0; i < (s).size - 1; i++) { \
         (s).data[i] = (s).data[i + 1]; \
     } \
     (s).size--; \
@@ -121,7 +121,7 @@
         (s).capacity = (s).capacity == 0 ? 1 : (s).capacity * 2; \
         (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
     } \
-    for (int j = (s).size; j > i; j--) { \
+    for (Int j = (s).size; j > i; j--) { \
         (s).data[j] = (s).data[j - 1]; \
     } \
     (s).data[i] = (v); \
@@ -131,7 +131,7 @@
 //remove element at index i and return it
 #define stack_remove(s, i) ({ \
     typeof((s).data[i]) ret = (s).data[i]; \
-    for (int j = i; j < (s).size - 1; j++) { \
+    for (Int j = i; j < (s).size - 1; j++) { \
         (s).data[j] = (s).data[j + 1]; \
     } \
     (s).size--; \

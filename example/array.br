@@ -1,0 +1,10 @@
+hash.set 'arr' (array.new 45);
+array.fill arr 45;
+array.set arr 30 112;
+array.resize arr 90;
+mem.clear;
+array.fill arr 30;
+# type.set arr type.number;
+mem.clear;
+ls;
+print (array.get arr 30);

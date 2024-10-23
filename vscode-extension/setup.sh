@@ -1,1 +1,1 @@
-npm install vsce -g
+sudo npm install vsce -g

@@ -44,6 +44,6 @@ valgrind \
     --show-leak-kinds=all \
     --track-origins=yes \
     --log-file=valgrind-out.txt \
-    --verbose ./bruter ../example/multiproc.br
+    --verbose ./bruter ../example/array.br
 
 #valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt --verbose build/bruter example/threads.br

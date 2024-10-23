@@ -1,4 +1,4 @@
-(21/10/2024) - version 0.5.9
+(22/10/2024) - version 0.5.9
 
 - arduino related fixes;
 - removed TYPE_LIST;
@@ -12,10 +12,18 @@
 - new function std_io_ls_free;
 - new function std_io_ls_type;
 - new function std_io_ls_hash;
+- new function array_new;
+- new function array_fill;
+- new function array_set;
+- new function array_get;
+- new function array_length;
+- new function array_resize;
 - mew lib array.c;
 - new lib integer.c;
 - new lib prototype.c;
+- reworked string.split to use array instead of list;
 - prototype moved into separated library apart std;
+- some examples updated;
 - some README updates;
 
 (19/10/2024) - version 0.5.8b

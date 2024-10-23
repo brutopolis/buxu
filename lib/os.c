@@ -62,17 +62,23 @@ Int std_repl(VirtualMachine *vm, IntList *args)
     printf("bruter v%s\n", VERSION);
     char *cmd;
     Int result = -1;
+    int junk = 0;
     while (result == -1)
     {
         cmd = (char*)malloc(1024);
         printf("@> ");
-        scanf("%[^\n]%*c", cmd);
+        junk = scanf("%[^\n]%*c", cmd);
+        if (junk == 0)
+        {
+            free(cmd);
+            break;
+        }
         result = eval(vm, cmd);
         free(cmd);
     }
 
-    printf("repl returned: @%d ", result);
-    char * str = str_format("print @%d", result);
+    printf("repl returned: @%ld ", result);
+    char * str = str_format("print @%ld", result);
     eval(vm, str);
     free(str);
     return result;

@@ -17,7 +17,7 @@ Int integer_to_string(VirtualMachine *vm, IntList *args) // example function
 {
     Int _ref = stack_shift(*args);
     char *str = (char*)malloc(32);
-    sprintf(str, "%d", vm->stack->data[_ref].integer);
+    sprintf(str, "%ld", vm->stack->data[_ref].integer);
     Int result = new_string(vm, str);
     free(str);
     return result;

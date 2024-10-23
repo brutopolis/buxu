@@ -47,6 +47,7 @@ Int std_mem_rebase(VirtualMachine *vm, IntList *args)
     while (vm->unused->size > 0)
     {
         index = stack_pop(*vm->unused);
+        // removes
         for (Int i = 0; i < vm->hashes->size; i++)
         {
             if (vm->hashes->data[i].index == index)
@@ -69,6 +70,8 @@ Int std_mem_rebase(VirtualMachine *vm, IntList *args)
                 stack_remove(*vm->temp, i);
             }
         }
+
+        // updates
         for (Int i = 0; i < vm->temp->size; i++)
         {
             if (vm->temp->data[i] == index)
@@ -227,7 +230,7 @@ void print_element(VirtualMachine *vm, int index)
     {
         if (round(temp.number) == temp.number)
         {
-            printf("%d", (Int)temp.number);
+            printf("%ld", (Int)temp.number);
         }
         else
         {
@@ -279,7 +282,7 @@ Int std_io_ls_all(VirtualMachine *vm, IntList *args)
 {
     for (Int i = 0; i < vm->stack->size; i++)
     {
-        printf("[%d]: ", i);
+        printf("[%ld]: ", i);
         print_element(vm, i);
         printf("\n");
     }
@@ -290,7 +293,7 @@ Int std_io_ls_types(VirtualMachine *vm, IntList *args)
 {
     for (Int i = 0; i < vm->stack->size; i++)
     {
-        printf("[%d]: %d\n", i, vm->typestack->data[i]);
+        printf("[%ld]: %d\n", i, vm->typestack->data[i]);
     }
     return -1;
 }
@@ -299,7 +302,7 @@ Int std_io_ls_hashes(VirtualMachine *vm, IntList *args)
 {
     for (Int i = 0; i < vm->hashes->size; i++)
     {
-        printf("[%s] {%d} @%d: ", vm->hashes->data[i].key, vm->typestack->data[vm->hashes->data[i].index], vm->hashes->data[i].index);
+        printf("[%s] {%d} @%ld: ", vm->hashes->data[i].key, vm->typestack->data[vm->hashes->data[i].index], vm->hashes->data[i].index);
         print_element(vm, vm->hashes->data[i].index);
         printf("\n");
     }
@@ -310,7 +313,7 @@ Int std_io_ls_temp(VirtualMachine *vm, IntList *args)
 {
     for (Int i = 0; i < vm->temp->size; i++)
     {
-        printf("[%d] {temp}: ", vm->temp->data[i]);
+        printf("[%ld] {temp}: ", vm->temp->data[i]);
         print_element(vm, vm->temp->data[i]);
         printf("\n");
     }
@@ -321,7 +324,7 @@ Int std_io_ls_unused(VirtualMachine *vm, IntList *args)
 {
     for (Int i = 0; i < vm->unused->size; i++)
     {
-        printf("[%d] {unused}: ", vm->unused->data[i]);
+        printf("[%ld] {unused}: ", vm->unused->data[i]);
         print_element(vm, vm->unused->data[i]);
         printf("\n");
     }
@@ -540,22 +543,23 @@ Int std_string_ndup(VirtualMachine *vm, IntList *args)
 
 Int std_string_split(VirtualMachine *vm, IntList *args)
 {
-    Int name = stack_shift(*args);
     Int str = stack_shift(*args);
     Int delim = stack_shift(*args);
-    Int index = 0;
     if ((vm->typestack->data[str] == TYPE_STRING) && (vm->typestack->data[delim] == TYPE_STRING))
     {
         StringList *list = splitString(vm->stack->data[str].string, vm->stack->data[delim].string);
+        char * _tmp = str_format("array.new %d", list->size);
+        Int _arr = eval(vm, _tmp);
+        free(_tmp);
+        Int index = 1;
         while (list->size > 0)
         {
-            char* _str = stack_shift(*list);
-            char *str_name = str_format("%s.%d", vm->stack->data[str].string, index);
-            spawn_string(vm, str_name, _str);
-            free(str_name);
+            vm->stack->data[_arr + index].string = stack_shift(*list);
+            vm->typestack->data[_arr + index] = TYPE_STRING;
             index++;
         }
         stack_free(*list);
+        return _arr;
     }
     return -1;
 }
@@ -630,8 +634,8 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
             if (_str[i+1] == 'd')
             {
                 Int value = stack_shift(*args);
-                char* _value = str_format("%d", (Int)vm->stack->data[value].number);
-                char* _newstr = str_replace(_str, "%d", _value);
+                char* _value = str_format("%ld", (Int)vm->stack->data[value].number);
+                char* _newstr = str_replace(_str, "%ld", _value);
                 free(_value);
                 free(_str);
                 _str = _newstr;
