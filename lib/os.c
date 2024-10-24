@@ -78,9 +78,7 @@ Int std_repl(VirtualMachine *vm, IntList *args)
     }
 
     printf("repl returned: @%ld ", result);
-    char * str = str_format("print @%ld", result);
-    eval(vm, str);
-    free(str);
+    print_element(vm, result);
     return result;
 }
 

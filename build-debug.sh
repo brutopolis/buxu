@@ -39,6 +39,10 @@ rm -rf *.o
 rm -rf lib/*.c
 rm -rf lib/*.o
 
+valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter ../example/array.br 
+ms_print massif.out.* > massif-out.txt
+rm -rf massif.out.*
+
 valgrind \
     --leak-check=full \
     --show-leak-kinds=all \

@@ -43,9 +43,7 @@ Int array_set(VirtualMachine *vm, IntList *args)
     Int _array = stack_shift(*args);
     Int _index = stack_shift(*args);
     Int _value = stack_shift(*args);
-    char *_str = str_format("mem.edit @%d @%d", _array + (Int)vm->stack->data[_index].number, _value);
-    eval(vm, _str);
-    free(_str);
+    vm->stack->data[_array + (Int)vm->stack->data[_index].number] = vm->stack->data[_value];
     return -1;
 }
 
@@ -56,9 +54,8 @@ Int array_fill(VirtualMachine *vm, IntList *args)
     Int _size = vm->stack->data[_array].number;
     for (Int i = 1; i <= _size; i++)
     {
-        char *_str = str_format("mem.edit @%d @%d", _array + i, _value);
-        eval(vm, _str);
-        free(_str);
+        vm->stack->data[_array + i] = vm->stack->data[_value];
+        vm->typestack->data[_array + i] = vm->typestack->data[_value];
     }
     return -1;
 }
@@ -126,11 +123,35 @@ Int array_resize(VirtualMachine *vm, IntList* args)
     return -1;
 }
 
+Int array_copy(VirtualMachine *vm, IntList *args)
+{
+    Int _array = stack_shift(*args);
+    Int _newarray;
+    Value value = value_duplicate(vm->stack->data[_array], vm->typestack->data[_array]);
+    stack_push(*vm->stack, value);
+    stack_push(*vm->typestack, TYPE_ARRAY);
+    hold_var(vm, vm->stack->size);
+    _newarray = vm->stack->size;
+    printf("new array: %d\n", _newarray);
+
+    vm->stack->data[_newarray].number = vm->stack->data[_array].number;
+    vm->typestack->data[_newarray] = TYPE_ARRAY;
+    for (Int i = 1; i <= vm->stack->data[_array].number; i++)
+    {
+        Value value = value_duplicate(vm->stack->data[_array + i], vm->typestack->data[_array + i]);
+        stack_push(*vm->stack, value);
+        stack_push(*vm->typestack, vm->typestack->data[_array + i]);
+        hold_var(vm, vm->stack->size);
+    }
+    return _newarray;
+}
+
 void init_array(VirtualMachine *vm) // example lib initializer
 {
     registerBuiltin(vm, "array.new", array_new);
     registerBuiltin(vm, "array.get", array_get);
     registerBuiltin(vm, "array.set", array_set);
+    registerBuiltin(vm, "array.copy", array_copy);
     registerBuiltin(vm, "array.fill", array_fill);
     registerBuiltin(vm, "array.resize", array_resize);
     registerBuiltin(vm, "array.length", array_length);

@@ -20,7 +20,7 @@
 #endif
 #endif
 
-#define VERSION "0.5.9"
+#define VERSION "0.5.9a"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -232,6 +232,9 @@ Int eval(VirtualMachine *vm, char *cmd);
 Int interpret(VirtualMachine *vm, char* cmd);
 IntList* parse(VirtualMachine *vm, char *cmd);
 void collect_garbage(VirtualMachine *vm);
+
+//print
+void print_element(VirtualMachine *vm, Int index);
 
 // <libraries header>
 

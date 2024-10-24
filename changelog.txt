@@ -1,3 +1,9 @@
+(24/10/2024) - version 0.5.9a
+
+- some fixes;
+- some optimizations;
+- less allocations;
+
 (22/10/2024) - version 0.5.9
 
 - arduino related fixes;

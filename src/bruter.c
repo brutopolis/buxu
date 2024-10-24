@@ -616,6 +616,7 @@ void unhold_var(VirtualMachine *vm, Int index)
 {
     stack_push(*vm->temp, index);
 }
+
 // Parser functions
 IntList* parse(VirtualMachine *vm, char *cmd) 
 {
@@ -681,9 +682,7 @@ Int interpret(VirtualMachine *vm, char* cmd)
     }
     else 
     {
-        char* error = str_format("Variable %d is not a function", func);
-        printf("%s\n", error);
-        free(error);    
+        printf("Error: %d is not a function\n", func);
     }
 
     stack_free(*args);
@@ -692,6 +691,11 @@ Int interpret(VirtualMachine *vm, char* cmd)
 
 Int eval(VirtualMachine *vm, char *cmd)
 {
+    if(strchr(cmd, ';') == NULL)
+    {
+        return interpret(vm, cmd);
+    }
+
     StringList *splited = special_split(cmd, ';');
 
     // remove empty or whitespace only strings using is_space

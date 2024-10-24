@@ -210,7 +210,7 @@ Int std_type_set(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-void print_element(VirtualMachine *vm, int index)
+void print_element(VirtualMachine *vm, Int index)
 {
     if (index < 0 || index >= vm->stack->size)
     {
@@ -872,10 +872,11 @@ Int std_loop_while(VirtualMachine *vm, IntList *args)
 {
     Int condition_str = stack_shift(*args);
     Int _do_str = stack_shift(*args);
-    Int condition_result = eval(vm, vm->stack->data[condition_str].string);
-    while (is_true(vm->stack->data[condition_result], vm->typestack->data[condition_result]))
-    {   
-        condition_result = eval(vm, vm->stack->data[_do_str].string);
+    Int condition = eval(vm, vm->stack->data[condition_str].string);
+    while (is_true(vm->stack->data[condition], vm->typestack->data[condition]))
+    {
+        eval(vm, vm->stack->data[_do_str].string);
+        condition = eval(vm, vm->stack->data[condition_str].string);
     }
     return -1;
 }
