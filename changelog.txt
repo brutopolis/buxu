@@ -1,4 +1,9 @@
-(24/10/2024) - version 0.5.9a
+(24/10/2024) - version 0.5.9b
+
+- type.array is now a thing;
+- removed integer.c;
+
+(23/10/2024) - version 0.5.9a
 
 - some fixes;
 - some optimizations;

@@ -146,8 +146,101 @@ Int array_copy(VirtualMachine *vm, IntList *args)
     return _newarray;
 }
 
+Int array_concat(VirtualMachine *vm, IntList *args)
+{
+    Int _array1 = stack_shift(*args);
+    Int _array2 = stack_shift(*args);
+    Int _newarray;
+    Value value = value_duplicate(vm->stack->data[_array1], vm->typestack->data[_array1]);
+    stack_push(*vm->stack, value);
+    stack_push(*vm->typestack, TYPE_ARRAY);
+    hold_var(vm, vm->stack->size);
+    _newarray = vm->stack->size;
+    printf("new array: %d\n", _newarray);
+
+    vm->stack->data[_newarray].number = vm->stack->data[_array1].number + vm->stack->data[_array2].number;
+    vm->typestack->data[_newarray] = TYPE_ARRAY;
+    for (Int i = 1; i <= vm->stack->data[_array1].number; i++)
+    {
+        Value value = value_duplicate(vm->stack->data[_array1 + i], vm->typestack->data[_array1 + i]);
+        stack_push(*vm->stack, value);
+        stack_push(*vm->typestack, vm->typestack->data[_array1 + i]);
+        hold_var(vm, vm->stack->size);
+    }
+    for (Int i = 1; i <= vm->stack->data[_array2].number; i++)
+    {
+        Value value = value_duplicate(vm->stack->data[_array2 + i], vm->typestack->data[_array2 + i]);
+        stack_push(*vm->stack, value);
+        stack_push(*vm->typestack, vm->typestack->data[_array2 + i]);
+        hold_var(vm, vm->stack->size);
+    }
+    return _newarray;
+}
+
+Int array_push(VirtualMachine *vm, IntList *args)
+{
+    Int _array = stack_shift(*args);
+    Int _value = stack_shift(*args);
+    Int _size = vm->stack->data[_array].number;
+    vm->stack->data[_array].number = _size + 1;
+    Value value = value_duplicate(vm->stack->data[_value], vm->typestack->data[_value]);
+    stack_push(*vm->stack, value);
+    stack_push(*vm->typestack, vm->typestack->data[_value]);
+    hold_var(vm, vm->stack->size);
+    return -1;
+}
+
+Int array_pop(VirtualMachine *vm, IntList *args)
+{
+    Int _array = stack_shift(*args);
+    Int _size = vm->stack->data[_array].number;
+    if (_size > 0)
+    {
+        unuse_var(vm, _array + _size);
+        vm->stack->data[_array].number = _size - 1;
+    }
+    return -1;
+}
+
+Int array_shift(VirtualMachine *vm, IntList *args)
+{
+    Int _array = stack_shift(*args);
+    Int _size = vm->stack->data[_array].number;
+    if (_size > 0)
+    {
+        unuse_var(vm, _array + 1);
+        for (Int i = 1; i < _size; i++)
+        {
+            vm->stack->data[_array + i] = vm->stack->data[_array + i + 1];
+            vm->typestack->data[_array + i] = vm->typestack->data[_array + i + 1];
+        }
+        vm->stack->data[_array].number = _size - 1;
+    }
+    return -1;
+}
+
+Int array_unshift(VirtualMachine *vm, IntList *args)
+{
+    Int _array = stack_shift(*args);
+    Int _value = stack_shift(*args);
+    Int _size = vm->stack->data[_array].number;
+    vm->stack->data[_array].number = _size + 1;
+    for (Int i = _size; i > 0; i--)
+    {
+        vm->stack->data[_array + i] = vm->stack->data[_array + i - 1];
+        vm->typestack->data[_array + i] = vm->typestack->data[_array + i - 1];
+    }
+    Value value = value_duplicate(vm->stack->data[_value], vm->typestack->data[_value]);
+    vm->stack->data[_array + 1] = value;
+    vm->typestack->data[_array + 1] = vm->typestack->data[_value];
+    hold_var(vm, _array + 1);
+    return -1;
+}
+
 void init_array(VirtualMachine *vm) // example lib initializer
 {
+    registerNumber(vm, "array.type", TYPE_ARRAY);
+
     registerBuiltin(vm, "array.new", array_new);
     registerBuiltin(vm, "array.get", array_get);
     registerBuiltin(vm, "array.set", array_set);
@@ -155,4 +248,10 @@ void init_array(VirtualMachine *vm) // example lib initializer
     registerBuiltin(vm, "array.fill", array_fill);
     registerBuiltin(vm, "array.resize", array_resize);
     registerBuiltin(vm, "array.length", array_length);
+    registerBuiltin(vm, "array.concat", array_concat);
+    registerBuiltin(vm, "array.push", array_push);
+    registerBuiltin(vm, "array.pop", array_pop);
+    registerBuiltin(vm, "array.shift", array_shift);
+    registerBuiltin(vm, "array.unshift", array_unshift);
+    
 }

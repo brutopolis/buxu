@@ -652,10 +652,10 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
     }
     return result;
 }
-// std conditions
-// std conditions
-// std conditions
 
+// std conditions
+// std conditions
+// std conditions
 Int std_condition_equals(VirtualMachine *vm, IntList *args)
 {
     Int a = stack_shift(*args);

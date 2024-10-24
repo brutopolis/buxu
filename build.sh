@@ -38,3 +38,4 @@ gcc ./include/main.c lib/* -o bruter -O3 -lm
 rm -rf *.o
 rm -rf lib/*.c
 rm -rf lib/*.o
+rm -rf include/*.c

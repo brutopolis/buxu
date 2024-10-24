@@ -37,6 +37,7 @@ gcc ./include/main.c lib/* -o bruter -O3 -lm -g
 
 rm -rf *.o
 rm -rf lib/*.c
+rm -rf include/*.c
 rm -rf lib/*.o
 
 valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter ../example/array.br 

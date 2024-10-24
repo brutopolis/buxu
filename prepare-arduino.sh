@@ -6,7 +6,7 @@ mkdir arduino/bruter/src
 cp include/bruter.h arduino/bruter/src/bruter.h
 cp src/bruter.c arduino/bruter/src/bruter.c
 cp lib/* arduino/bruter/src/
-cp src/main.ino arduino/bruter/bruter.ino
+cp src/main.c arduino/bruter/bruter.ino
 
 for file in ./lib/*.c; do
     filename="${file##*/}"  
