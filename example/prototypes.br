@@ -4,17 +4,25 @@ hash.set "obj.position.x" 10;
 hash.set "obj.position.y" 20;
 
 
-prototype.copy "obj." "obj3.";
+proto.copy "obj." "obj3.";
 
-print (prototype.compare "obj." "obj3.");
+print (proto.compare "obj." "obj3.");
 
 hash.set "obj3.n" 44;
 hash.set "obj3.m" 55;
 
-prototype.hold "obj";
+proto.hold "obj";
 mem.clear;
-print (prototype.compare "obj." "obj3.");
+print (proto.compare "obj." "obj3.");
 mem.rebase;
 ls;
 
+proto.push "obj3." 44;
+proto.push "obj3." 55;
+proto.push "obj3." 66;
+proto.push "obj3." 77;
+
+ls.hash;
+
+print (proto.pop "obj3.");
 return 4;

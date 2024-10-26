@@ -3,12 +3,13 @@ array.fill arr 45;
 
 array.set arr 30 112;
 hash.set 'nome_random' (array.copy arr);
-type.set nome_random type.number;
 array.resize arr 90;
 mem.clear;
 array.fill arr 30;
 array.fill nome_random 11;
+array.push nome_random 321;
+array.unshift arr 123;
 # type.set arr type.number;
 mem.clear;
-ls;
+ls.hash;
 return 0;

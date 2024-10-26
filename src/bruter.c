@@ -349,7 +349,7 @@ Value value_duplicate(Value value, char type)
     {
         dup.string = str_duplicate(value.string);
     }
-    /*else if (type == TYPE_LIST)
+    else if (type == TYPE_LIST)
     {
         dup.pointer = make_int_list();
         IntList *list = (IntList*)value.pointer;
@@ -357,7 +357,7 @@ Value value_duplicate(Value value, char type)
         {
             stack_push(*((IntList*)dup.pointer), list->data[i]);
         }
-    }*/
+    }
     else if (type == TYPE_BUILTIN)
     {
         dup.pointer = value.pointer;
@@ -495,6 +495,14 @@ Int new_builtin(VirtualMachine *vm, Function function)
     return id;
 }
 
+Int new_list(VirtualMachine *vm)
+{
+    Int id = new_var(vm);
+    vm->stack->data[id].pointer = make_int_list();
+    vm->typestack->data[id] = TYPE_LIST;
+    return id;
+}
+
 // var spawn
 
 Int spawn_var(VirtualMachine *vm, char* varname)
@@ -525,6 +533,13 @@ Int spawn_builtin(VirtualMachine *vm, char* varname, Function function)
     return index;
 }
 
+Int spawn_list(VirtualMachine *vm, char* varname)
+{
+    Int index = new_list(vm);
+    hash_set(vm, varname, index);
+    return index;
+}
+
 //frees
 
 void free_var(VirtualMachine *vm, Int index)
@@ -532,6 +547,14 @@ void free_var(VirtualMachine *vm, Int index)
     if (vm->typestack->data[index] == TYPE_STRING)
     {
         free(vm->stack->data[index].string);
+    }
+    else if (vm->typestack->data[index] == TYPE_LIST)
+    {
+        while (((IntList*)vm->stack->data[index].pointer)->size > 0)
+        {
+            stack_shift(*((IntList*)vm->stack->data[index].pointer));
+        }
+        stack_free(*((IntList*)vm->stack->data[index].pointer));
     }
     
     stack_remove(*vm->stack, index);
@@ -578,6 +601,14 @@ void unuse_var(VirtualMachine *vm, Int index)
     if (vm->typestack->data[index] == TYPE_STRING)
     {
         free(vm->stack->data[index].string);
+    }
+    else if (vm->typestack->data[index] == TYPE_LIST)
+    {
+        while (((IntList*)vm->stack->data[index].pointer)->size > 0)
+        {
+            stack_shift(*((IntList*)vm->stack->data[index].pointer));
+        }
+        stack_free(*((IntList*)vm->stack->data[index].pointer));
     }
 
     vm->typestack->data[index] = TYPE_NIL;
@@ -765,6 +796,23 @@ void collect_garbage(VirtualMachine *vm)
                 }
             }
 
+            //lists references
+            for (Int j = 0; j < vm->stack->size; j++)
+            {
+                if (vm->typestack->data[j] == TYPE_LIST)
+                {
+                    IntList *list = (IntList*)vm->stack->data[j].pointer;
+                    for (Int k = 0; k < list->size; k++)
+                    {
+                        if (list->data[k] == i)
+                        {
+                            used = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+
             //temp references
             for (Int j = 0; j < vm->temp->size; j++)
             {
@@ -798,4 +846,9 @@ void registerNumber(VirtualMachine *vm, char *name, Float number)
 void registerString(VirtualMachine *vm, char *name, char *string)
 {
     hold_var(vm,spawn_string(vm, name, string));
+}
+
+void registerList(VirtualMachine *vm, char *name)
+{
+    hold_var(vm,spawn_list(vm, name));
 }

@@ -190,6 +190,8 @@ Int array_push(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+// everything below this line is not tested at all
+
 Int array_pop(VirtualMachine *vm, IntList *args)
 {
     Int _array = stack_shift(*args);

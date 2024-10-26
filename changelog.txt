@@ -1,3 +1,17 @@
+(26/10/2024) - version 0.5.9c
+
+- lists are back;
+- some untested array functions added to future tests;
+- new function array_push;
+- new function array_unshift;
+- new function array_shift;
+- new function array_pop;
+- new function array_insert;
+- new function array_remove;
+- new function array_copy;
+- new function prototype_push;
+- new function prototype_pop;
+
 (24/10/2024) - version 0.5.9b
 
 - type.array is now a thing;
