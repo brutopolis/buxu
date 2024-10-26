@@ -16,13 +16,4 @@ mem.clear;
 print (proto.compare "obj." "obj3.");
 mem.rebase;
 ls;
-
-proto.push "obj3." 44;
-proto.push "obj3." 55;
-proto.push "obj3." 66;
-proto.push "obj3." 77;
-
-ls.hash;
-
-print (proto.pop "obj3.");
 return 4;

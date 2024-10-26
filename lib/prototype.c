@@ -104,90 +104,6 @@ Int prototype_equals(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-// prototype array
-
-Int prototype_push(VirtualMachine *vm, IntList *args)
-{
-    Int prototype = stack_shift(*args);
-    Int value = stack_shift(*args);
-
-    char *name;
-    char *resultname;
-    Int size;
-
-    //if last char is . 
-    if (vm->stack->data[prototype].string[strlen(vm->stack->data[prototype].string) - 1] == '.')
-    {
-        name = str_format("%ssize", vm->stack->data[prototype].string);
-        size = hash_find(vm, name);
-        if (size == -1)
-        {
-            size = new_var(vm);
-            vm->typestack->data[size] = TYPE_NUMBER;
-            vm->stack->data[size].number = 1;
-            hash_set(vm, name, size);
-        }
-        resultname = str_format("%s%d", vm->stack->data[prototype].string, (Int)vm->stack->data[size].number - 1);
-    }
-    else
-    {
-        name = str_format("%s.size", vm->stack->data[prototype].string);
-        size = hash_find(vm, name);
-        if (size == -1)
-        {
-            size = new_var(vm);
-            vm->typestack->data[size] = TYPE_NUMBER;
-            vm->stack->data[size].number = 1;
-            hash_set(vm, name, size);
-        }
-        resultname = str_format("%s.%d", vm->stack->data[prototype].string, (Int)vm->stack->data[size].number - 1);
-    }
-
-
-    vm->stack->data[size].number++;
-    hash_set(vm, resultname, value);
-    free(resultname);
-    free(name);
-    return -1;
-}
-
-
-Int prototype_pop(VirtualMachine *vm, IntList *args)
-{
-    Int prototype = stack_shift(*args);
-    char *name;
-    char *resultname;
-    Int size;
-
-    //if last char is . 
-    if (vm->stack->data[prototype].string[strlen(vm->stack->data[prototype].string) - 1] == '.')
-    {
-        name = str_format("%ssize", vm->stack->data[prototype].string);
-        size = hash_find(vm, name);
-        if (size == -1)
-        {
-            return -1;
-        }
-        resultname = str_format("%s%d", vm->stack->data[prototype].string, (Int)vm->stack->data[size].number - 2);
-    }
-    else
-    {
-        name = str_format("%s.size", vm->stack->data[prototype].string);
-        size = hash_find(vm, name);
-        if (size == -1)
-        {
-            return -1;
-        }
-        resultname = str_format("%s.%d", vm->stack->data[prototype].string, (Int)vm->stack->data[size].number - 2);
-    }
-    Int result = hash_find(vm, resultname);
-    vm->stack->data[size].number--;
-    hash_unset(vm, resultname);
-    free(resultname);
-    free(name);
-    return result;
-}
-
 void init_prototype(VirtualMachine *vm)
 {
     registerBuiltin(vm, "proto.copy", prototype_copy);
@@ -195,9 +111,6 @@ void init_prototype(VirtualMachine *vm)
     registerBuiltin(vm, "proto.unhold", prototype_unhold);
     registerBuiltin(vm, "proto.equals", prototype_equals);
     registerBuiltin(vm, "proto.compare", prototype_compare);
-
-    registerBuiltin(vm, "proto.push", prototype_push);
-    registerBuiltin(vm, "proto.pop", prototype_pop);
 }
 
 //#endif

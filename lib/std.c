@@ -578,7 +578,7 @@ Int std_list_insert(VirtualMachine *vm, IntList *args)
     if (vm->typestack->data[list] == TYPE_LIST)
     {
         IntList *lst = (IntList*)vm->stack->data[list].pointer;
-        stack_insert(*lst, (Int)vm->stack->data[index].number, (Int)vm->stack->data[value].number);
+        stack_insert(*lst, (Int)vm->stack->data[index].number, value);
     }
     return -1;
 }
@@ -589,18 +589,18 @@ Int std_list_push(VirtualMachine *vm, IntList *args)
     if (vm->typestack->data[list] == TYPE_LIST)
     {
         IntList *lst = (IntList*)vm->stack->data[list].pointer;
-        stack_push(*lst, (Int)vm->stack->data[value].number);
+        stack_push(*lst, value);
     }
     return -1;
 }
-Int std_list_unshift(VirtualMachine *vm, IntList *args) // returns the removed element
+Int std_list_unshift(VirtualMachine *vm, IntList *args) 
 {
     Int list = stack_shift(*args);
     Int value = stack_shift(*args);
     if (vm->typestack->data[list] == TYPE_LIST)
     {
         IntList *lst = (IntList*)vm->stack->data[list].pointer;
-        stack_unshift(*lst, (Int)vm->stack->data[value].number);
+        stack_unshift(*lst, value);
     }
     return -1;   
 }
@@ -616,7 +616,8 @@ Int std_list_remove(VirtualMachine *vm, IntList *args)// returns the removed ele
     }
     return -1;
 }
-Int std_list_pop(VirtualMachine *vm, IntList *args) // returns the removed element
+
+Int std_list_pop(VirtualMachine *vm, IntList *args)// returns the removed element
 {
     Int list = stack_shift(*args);
     if (vm->typestack->data[list] == TYPE_LIST)
@@ -627,10 +628,11 @@ Int std_list_pop(VirtualMachine *vm, IntList *args) // returns the removed eleme
     }
     return -1;
 }
-Int std_list_shift(VirtualMachine *vm, IntList *args)
+
+Int std_list_shift(VirtualMachine *vm, IntList *args)// returns the removed element
 {
     Int list = stack_shift(*args);
-    if (vm->typestack->data[list]== TYPE_LIST)
+    if (vm->typestack->data[list] == TYPE_LIST)
     {
         IntList *lst = (IntList*)vm->stack->data[list].pointer;
         Int result = stack_shift(*lst);
@@ -638,6 +640,7 @@ Int std_list_shift(VirtualMachine *vm, IntList *args)
     }
     return -1;
 }
+
 Int std_list_concat(VirtualMachine *vm, IntList *args)
 {
     Int list1 = stack_shift(*args);

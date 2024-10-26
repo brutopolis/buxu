@@ -1,0 +1,17 @@
+hash.set 'l' (list.new);
+list.push l 1;
+list.push l 2;
+list.push l 3;
+list.push l 4;
+list.push l 5;
+list.unshift l 6;
+list.unshift l 7;
+print (list.pop l);
+print (list.shift l);
+list.insert l 2 99;
+list.insert l 0 88;
+list.insert l 6 77;
+list.insert l 8 66;
+print (list.get l 0);
+print (list.remove l 1);
+return 0
