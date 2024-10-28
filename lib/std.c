@@ -650,7 +650,7 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
 {
     Int str = stack_shift(*args);
     Int result = -1;
-    char* _str = vm->stack->data[str].string;
+    char* _str = str_duplicate(vm->stack->data[str].string);
     for (Int i = 0; i < strlen(_str); i++)
     {
         if (_str[i] == '%')
@@ -660,7 +660,6 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
                 Int value = stack_shift(*args);
                 char* _value = str_format("%ld", (Int)vm->stack->data[value].number);
                 char* _newstr = str_replace(_str, "%ld", _value);
-                free(_value);
                 free(_str);
                 _str = _newstr;
             }
@@ -677,7 +676,6 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
                 Int value = stack_shift(*args);
                 char* _value = str_format("%f", vm->stack->data[value].number);
                 char* _newstr = str_replace(_str, "%f", _value);
-                free(_value);
                 free(_str);
                 _str = _newstr;
             }
@@ -686,7 +684,6 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
                 Int value = stack_shift(*args);
                 char* _value = str_format("%p", vm->stack->data[value].pointer);
                 char* _newstr = str_replace(_str, "%p", _value);
-                free(_value);
                 free(_str);
                 _str = _newstr;
             }

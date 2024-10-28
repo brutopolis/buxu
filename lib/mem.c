@@ -209,7 +209,103 @@ Int mem_length(VirtualMachine *vm, IntList *args)
     return new_number(vm, vm->stack->size);
 }
 
-Int byte_set(VirtualMachine *vm, IntList *args)
+Int mem_segment_new(VirtualMachine *vm, IntList *args)
+{
+    Int size = stack_shift(*args);
+    Int index = new_var(vm);
+    while ((vm->stack->data[size].number - 1) > 0)
+    {
+        new_var(vm);
+        size--;
+    }
+    return index;
+}
+
+Int mem_segment_fill(VirtualMachine *vm, IntList *args)
+{
+    Int index = stack_shift(*args);
+    Int _size = stack_shift(*args);
+    Int value = stack_shift(*args);
+    while (_size > 0)
+    {
+        unuse_var(vm, index);
+        vm->stack->data[index] = value_duplicate(vm->stack->data[value], vm->typestack->data[value]);
+        vm->typestack->data[index] = vm->typestack->data[value];
+        index++;
+        _size--;
+    }
+    return -1;
+}
+
+Int mem_segment_hold(VirtualMachine *vm, IntList *args)
+{
+    Int index = stack_shift(*args);
+    Int _size = stack_shift(*args);
+    while (_size > 0)
+    {
+        hold_var(vm, index);
+        index++;
+        _size--;
+    }
+    return index;
+}
+
+Int mem_segment_unhold(VirtualMachine *vm, IntList *args)
+{
+    Int index = stack_shift(*args);
+    Int _size = stack_shift(*args);
+    while (_size > 0)
+    {
+        unhold_var(vm, index);
+        index++;
+        _size--;
+    }
+    return index;
+}
+
+Int mem_segment_delete(VirtualMachine *vm, IntList *args)
+{
+    Int index = stack_shift(*args);
+    Int _size = stack_shift(*args);
+    while (_size > 0)
+    {
+        unuse_var(vm, index);
+        index++;
+        _size--;
+    }
+    return -1;
+}
+
+Int mem_segment_clear(VirtualMachine *vm, IntList *args)
+{
+    Int index = stack_shift(*args);
+    Int _size = stack_shift(*args);
+    while (_size > 0)
+    {
+        unuse_var(vm, index);
+        index++;
+        _size--;
+    }
+    return -1;
+}
+
+Int mem_segment_copy(VirtualMachine *vm, IntList *args)
+{
+    Int origin = stack_shift(*args);
+    Int destination = stack_shift(*args);
+    Int _size = stack_shift(*args);
+    while (_size > 0)
+    {
+        vm->stack->data[destination] = value_duplicate(vm->stack->data[origin], vm->typestack->data[origin]);
+        vm->typestack->data[destination] = vm->typestack->data[origin];
+        origin++;
+        destination++;
+        _size--;
+    }
+    return -1;
+}
+
+Int mem_byte_set(VirtualMachine *vm, IntList *args)
 {
     Int value = stack_shift(*args);
     Int index = 0;
@@ -220,7 +316,7 @@ Int byte_set(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int byte_get(VirtualMachine *vm, IntList *args)
+Int mem_byte_get(VirtualMachine *vm, IntList *args)
 {
     Int value = stack_shift(*args);
     Int index = stack_shift(*args);
@@ -233,8 +329,19 @@ Int byte_get(VirtualMachine *vm, IntList *args)
 
 void init_byte(VirtualMachine *vm)
 {
-    registerBuiltin(vm, "byte.set", byte_set);
-    registerBuiltin(vm, "byte.get", byte_get);
+    registerBuiltin(vm, "byte.set", mem_byte_set);
+    registerBuiltin(vm, "byte.get", mem_byte_get);
+}
+
+void init_segment(VirtualMachine *vm)
+{
+    registerBuiltin(vm, "segment.new", mem_segment_new);
+    registerBuiltin(vm, "segment.fill", mem_segment_fill);
+    registerBuiltin(vm, "segment.hold", mem_segment_hold);
+    registerBuiltin(vm, "segment.unhold", mem_segment_unhold);
+    registerBuiltin(vm, "segment.delete", mem_segment_delete);
+    registerBuiltin(vm, "segment.clear", mem_segment_clear);
+    registerBuiltin(vm, "segment.copy", mem_segment_copy);
 }
 
 void init_mem(VirtualMachine *vm)
@@ -253,4 +360,5 @@ void init_mem(VirtualMachine *vm)
     registerBuiltin(vm, "mem.collect", mem_collect);
 
     init_byte(vm);
+    init_segment(vm);
 }

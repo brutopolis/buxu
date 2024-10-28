@@ -1,4 +1,15 @@
-(27/10/2024) - version 0.6
+(28/10/2024) - version 0.6.0a
+
+- some fixes;
+- new function mem_segment_new;
+- new function mem_segment_fill;
+- new function mem_segment_copy;
+- new function mem_segment_clear;
+- new function mem_segment_hold;
+- new function mem_segment_unhold;
+- new function mem_segment_delete;
+
+(27/10/2024) - version 0.6.0
 
 - some README updates;
 - no more prototypes;
