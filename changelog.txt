@@ -8,6 +8,7 @@
 - new function mem_segment_new;
 - new function mem_segment_copy;
 - fixed repl end message;
+- renamed mem_edit to mem_set;
 
 (27/10/2024) - version 0.6.0
 

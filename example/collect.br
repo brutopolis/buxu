@@ -4,7 +4,7 @@ hash.set "_size" (mem.keep 101000);
 # "kept variables are held variables that are not cleared but can be collected";
 # (keep "does return the value, unlike hold, so its good for variables to be collected later");
 
-loop.while (mem.keep "< _index _size") (mem.keep "print _index;mem.edit _index (incr _index);mem.clear @:;");
+loop.while (mem.keep "< _index _size") (mem.keep "print _index;mem.set _index (incr _index);mem.clear @:;");
 mem.clear @:;
 mem.rebase;
 

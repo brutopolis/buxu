@@ -147,7 +147,7 @@ Int mem_collect(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int mem_edit(VirtualMachine *vm, IntList *args)
+Int mem_set(VirtualMachine *vm, IntList *args)
 {
     Int variable = stack_shift(*args);
     Int value = stack_shift(*args);
@@ -322,7 +322,7 @@ void init_mem(VirtualMachine *vm)
     registerBuiltin(vm, "mem.get", mem_get);
     registerBuiltin(vm, "mem.hold", mem_hold);
     registerBuiltin(vm, "mem.keep", mem_keep);
-    registerBuiltin(vm, "mem.edit", mem_edit);
+    registerBuiltin(vm, "mem.set", mem_set);
     registerBuiltin(vm, "mem.copy", mem_copy);
     registerBuiltin(vm, "mem.len", mem_length);
     registerBuiltin(vm, "mem.clear", mem_clear);
