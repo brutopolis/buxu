@@ -20,7 +20,7 @@
 #endif
 #endif
 
-#define VERSION "0.6.0a"
+#define VERSION "0.6.1"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -211,6 +211,7 @@ VirtualMachine* make_vm();
 void free_vm(VirtualMachine *vm);
 void free_var(VirtualMachine *vm, Int index);
 void unuse_var(VirtualMachine *vm, Int index);
+void use_var(VirtualMachine *vm, Int index);
 
 Int new_number(VirtualMachine *vm, Float number);
 Int new_string(VirtualMachine *vm, char *str);

@@ -631,6 +631,11 @@ void unuse_var(VirtualMachine *vm, Int index)
     stack_push(*vm->unused, index);
 }
 
+void use_var(VirtualMachine *vm, Int index)
+{
+    stack_remove(*vm->unused, index);
+}
+
 void hold_var(VirtualMachine *vm, Int index)
 {
     for (Int i = 0; i < vm->temp->size; i++)
@@ -659,7 +664,48 @@ IntList* parse(VirtualMachine *vm, char *cmd)
         char* str = stack_shift(*splited);
         if (str[0] == '@') 
         {
-            stack_push(*result, atoi(str + 1));
+            if (str[1] == ':')
+            {
+                if (strlen(str) == 2)
+                {
+                    for (Int i = 0; i < vm->stack->size; i++)
+                    {
+                        stack_push(*result, i);
+                    }
+                }
+                else
+                {
+                    for (Int i = 0; i < atoi(str + 2); i++)
+                    {
+                        stack_push(*result, i);
+                    }
+                }
+                
+            }
+            else if (strchr(str, ':') != NULL)
+            {
+                char* tmp = strchr(str, ':');
+                if (tmp[1] == '\0')
+                {
+                    for (Int i = atoi(str + 1); i < vm->stack->size; i++)
+                    {
+                        stack_push(*result, i);
+                    }
+                }
+                else
+                {
+                    Int start = atoi(str + 1);
+                    Int end = atoi(tmp + 1);
+                    for (Int i = start; i < end; i++)
+                    {
+                        stack_push(*result, i);
+                    }
+                }
+            }
+            else
+            {
+                stack_push(*result, atoi(str + 1));
+            }
         }
         else if (str[0] == '(')
         {

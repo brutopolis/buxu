@@ -6,8 +6,10 @@ list.push l 4;
 list.push l 5;
 list.unshift l 6;
 list.unshift l 7;
-print (list.pop l);
-print (list.shift l);
+hash.set '_min' (list.pop l);
+hash.set '_max' (list.shift l);
+print @2:8;
+print (list.get l 0);
 list.insert l 2 99;
 list.insert l 0 88;
 list.insert l 6 77;
@@ -15,4 +17,5 @@ list.insert l 8 66;
 print l;
 print (list.get l 0);
 print (list.remove l 1);
+mem.clear @:;
 return 0

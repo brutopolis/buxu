@@ -40,7 +40,7 @@ rm -rf lib/*.c
 rm -rf include/*.c
 rm -rf lib/*.o
 
-valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter ./example/libr.br 
+valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter ./example/list.br 
 ms_print massif.out.* > massif-out.txt
 rm -rf massif.out.*
 
@@ -49,6 +49,6 @@ valgrind \
     --show-leak-kinds=all \
     --track-origins=yes \
     --log-file=valgrind-out.txt \
-    --verbose ./bruter ./example/libr.br
+    --verbose ./bruter ./example/list.br
 
 #valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt --verbose build/bruter example/threads.br

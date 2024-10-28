@@ -1,12 +1,12 @@
-(28/10/2024) - version 0.6.0a
+(28/10/2024) - version 0.6.1
 
+- @ operator can now be used to get a segment of the stack, @: will get the whole stack, @:5 will get the first 5 elements, @5: will get all elements from the 5th to the end, @5:10 will get all elements from the 5th to the 10th;
 - some fixes;
+- new function use_var;
+- new function mem_use;
+- new function mem_unuse;
 - new function mem_segment_new;
 - new function mem_segment_copy;
-- new function mem_segment_clear;
-- new function mem_segment_hold;
-- new function mem_segment_unhold;
-- new function mem_segment_delete;
 - fixed repl end message;
 
 (27/10/2024) - version 0.6.0

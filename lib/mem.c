@@ -3,9 +3,13 @@
 
 Int mem_clear(VirtualMachine *vm, IntList *args)
 {
-    while (vm->temp->size > 0)
+    while (args->size > 0)
     {
-        unuse_var(vm, stack_shift(*vm->temp));
+        Int index = stack_shift(*args);
+        if (stack_find(*vm->temp, index) >= 0)
+        {
+            unuse_var(vm, index);
+        }
     }
 
     return -1;
@@ -13,32 +17,37 @@ Int mem_clear(VirtualMachine *vm, IntList *args)
 
 Int mem_hold(VirtualMachine *vm, IntList *args)
 {
-    Int index = stack_shift(*args);
-    if (args->size > 0)
+    Int index;
+    while (args->size > 0)
     {
-        Int as = stack_shift(*args);
-        Int _type = vm->typestack->data[index];
+        index = stack_shift(*args);
+        if (index >= 0 && index < vm->stack->size)
+        {
+            hold_var(vm, index);
+        } 
     }
-    hold_var(vm, index);
+    
     return -1;
 }
 
 Int mem_keep(VirtualMachine *vm, IntList *args)
 {
     Int index = stack_shift(*args);
-    if (args->size > 0)
-    {
-        Int as = stack_shift(*args);
-        Int _type = vm->typestack->data[index];
-    }
     hold_var(vm, index);
     return index;
 }
 
 Int mem_unhold(VirtualMachine *vm, IntList *args)
 {
-    Int index = stack_shift(*args);
-    unhold_var(vm, index);
+    Int index;
+    while (args->size > 0)
+    {
+        index = stack_shift(*args);
+        if (index >= 0 && index < vm->stack->size)
+        {
+            unhold_var(vm, index);
+        }
+    }
     return -1;
 }
 
@@ -164,6 +173,34 @@ Int mem_edit(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+Int mem_use(VirtualMachine *vm, IntList *args)
+{
+    Int index;
+    while (args->size > 0)
+    {
+        index = stack_shift(*args);
+        if (index >= 0 && index < vm->stack->size)
+        {
+            use_var(vm, index);
+        }
+    }
+    return -1;
+}
+
+Int mem_unuse(VirtualMachine *vm, IntList *args)
+{
+    Int index;
+    while (args->size > 0)
+    {
+        index = stack_shift(*args);
+        if (index >= 0 && index < vm->stack->size)
+        {
+            unuse_var(vm, index);
+        }
+    }
+    return -1;
+}
+
 Int mem_copy(VirtualMachine *vm, IntList *args)
 {
     Int variable = stack_shift(*args);
@@ -221,59 +258,6 @@ Int mem_segment_new(VirtualMachine *vm, IntList *args)
     return index;
 }
 
-Int mem_segment_hold(VirtualMachine *vm, IntList *args)
-{
-    Int index = stack_shift(*args);
-    Int _size = stack_shift(*args);
-    while (vm->stack->data[_size].number > 0)
-    {
-        hold_var(vm, index);
-        index++;
-        vm->stack->data[_size].number--;
-    }
-    return index;
-}
-
-Int mem_segment_unhold(VirtualMachine *vm, IntList *args)
-{
-    Int index = stack_shift(*args);
-    Int _size = stack_shift(*args);
-    while (vm->stack->data[_size].number > 0)
-    {
-        unhold_var(vm, index);
-        index++;
-        vm->stack->data[_size].number--;
-    }
-    return index;
-}
-
-Int mem_segment_delete(VirtualMachine *vm, IntList *args)
-{
-    Int index = stack_shift(*args);
-    Int _size = stack_shift(*args);
-    while (vm->stack->data[_size].number > 0)
-    {
-        unuse_var(vm, index);
-        index++;
-        vm->stack->data[_size].number--;
-    }
-    return -1;
-}
-
-Int mem_segment_clear(VirtualMachine *vm, IntList *args)
-{
-    Int index = stack_shift(*args);
-    Int _size = stack_shift(*args);
-    for (Int i = vm->temp->size - 1; i >= 0; i--)
-    {
-        if (vm->temp->data[i] >= index && vm->temp->data[i] < index + vm->stack->data[_size].number)
-        {
-            unuse_var(vm, vm->temp->data[i]);
-        }
-    }
-    return -1;
-}
-
 Int mem_segment_copy(VirtualMachine *vm, IntList *args)
 {
     Int origin = stack_shift(*args);
@@ -327,16 +311,14 @@ void init_byte(VirtualMachine *vm)
 void init_segment(VirtualMachine *vm)
 {
     registerBuiltin(vm, "seg.new", mem_segment_new);
-    registerBuiltin(vm, "seg.hold", mem_segment_hold);
-    registerBuiltin(vm, "seg.unhold", mem_segment_unhold);
-    registerBuiltin(vm, "seg.delete", mem_segment_delete);
-    registerBuiltin(vm, "seg.clear", mem_segment_clear);
     registerBuiltin(vm, "seg.copy", mem_segment_copy);
 }
 
 void init_mem(VirtualMachine *vm)
 {
     registerNumber(vm, "mem.size", sizeof(Float));
+    registerBuiltin(vm, "mem.use", mem_use);
+    registerBuiltin(vm, "mem.unuse", mem_unuse);
     registerBuiltin(vm, "mem.get", mem_get);
     registerBuiltin(vm, "mem.hold", mem_hold);
     registerBuiltin(vm, "mem.keep", mem_keep);
