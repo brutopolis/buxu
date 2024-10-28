@@ -8,6 +8,7 @@
 - new function mem_segment_hold;
 - new function mem_segment_unhold;
 - new function mem_segment_delete;
+- fixed repl end message;
 
 (27/10/2024) - version 0.6.0
 

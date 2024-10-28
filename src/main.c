@@ -49,7 +49,6 @@ int main(int argc, char **argv)
         char * str = str_format("print 'returned:' @%d", result);
         eval(vm, str);
         free(str);
-        //}
     }
     stack_free(*args);
     free_vm(vm);

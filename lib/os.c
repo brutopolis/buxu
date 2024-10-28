@@ -83,6 +83,7 @@ Int os_repl(VirtualMachine *vm, IntList *args)
 
     printf("repl returned: @%ld\n", result);
     print_element(vm, result);
+    printf("\n");
     return result;
 }
 
