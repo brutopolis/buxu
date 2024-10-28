@@ -2,7 +2,6 @@
 
 - some fixes;
 - new function mem_segment_new;
-- new function mem_segment_fill;
 - new function mem_segment_copy;
 - new function mem_segment_clear;
 - new function mem_segment_hold;

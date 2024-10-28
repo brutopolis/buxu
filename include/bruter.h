@@ -139,6 +139,14 @@
     ret; \
 })
 
+#define stack_find(s, v) ({ \
+    Int i = 0; \
+    while (i < (s).size && (s).data[i] != (v)) { \
+        i++; \
+    } \
+    i == (s).size ? -1 : i; \
+})
+
 //Value
 typedef union 
 {
