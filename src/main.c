@@ -26,10 +26,24 @@ int main(int argc, char **argv)
         char *_code = readfile(argv[1]);
         if (_code == NULL)
         {
-            printf("file not found\n");
+            printf("file %s not found\n", argv[1]);
             return 1;
         }
-
+        Int filepathindex = new_var(vm);
+        // path without file name
+        vm->typestack->data[filepathindex] = TYPE_STRING;
+        // remove file name
+        char *path = stack_shift(*args);
+        char *last = strrchr(path, '/');
+        if (last == NULL)
+        {
+            vm->stack->data[filepathindex].string = str_duplicate("");
+        }
+        else
+        {
+            vm->stack->data[filepathindex].string = str_nduplicate(path, last - path + 1);
+        }
+        hash_set(vm, "file.path", filepathindex);
         Int result = eval(vm, _code);
         free(_code);
         char * str = str_format("print 'returned:' @%d", result);

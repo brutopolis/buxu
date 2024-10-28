@@ -1,0 +1,5 @@
+hash.set 'set' hash.set;
+hash.set 'get' mem.get;
+hash.set 'keep' mem.keep;
+hash.set 'unhold' mem.unhold;
+hash.set 'hold' mem.hold;

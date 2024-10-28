@@ -686,7 +686,9 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             if (index == -1) 
             {
                 char* error = str_format("Variable %s not found", str);
+                printf("%s\n", error);
                 free(error);
+                stack_push(*result, -1);
             }
             else 
             {
@@ -705,8 +707,7 @@ Int interpret(VirtualMachine *vm, char* cmd)
     Int func = stack_shift(*args);
     Int result = -1;
 
-
-    if (vm->typestack->data[func] == TYPE_BUILTIN)
+    if (func > -1 && vm->typestack->data[func] == TYPE_BUILTIN)
     {
         Function function = vm->stack->data[func].pointer;
         result = function(vm, args);

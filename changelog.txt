@@ -1,3 +1,34 @@
+(27/10/2024) - version 0.6
+
+- some README updates;
+- no more prototypes;
+- some fixes;
+- some optimizations;
+- repl doesnt seg fault when try to call a non existent function anymore;
+- new folder libr/ for bruter libraries;
+- new file libr/lazy.br;
+- new file example/functions.br;
+- new function std_do, a replacement for std_function, works like eval, but create a list with the arguments;
+- new function os_file_delete;
+- new function os_file_exists;
+- new function os_file_rename;
+- new function os_file_copy;
+- new function os_file_size;
+- new function byte_edit;
+- new function byte_get;
+- fixed list.remove;
+- moved all memory related functions to mem.c;
+- renamed std_file_read to os_file_read;
+- renamed std_file_write to os_file_write;
+- renamed std_include to os_dofile;
+- renamed std_repl to os_repl;
+- renamed std_process_fork to os_process_fork;
+- renamed std_process_terminate to os_process_terminate;
+- renamed std_process_host_send to os_process_host_send;
+- renamed std_process_host_receive to os_process_host_receive;
+- renamed std_process_child_send to os_process_child_send;
+- renamed std_process_child_receive to os_process_child_receive;
+
 (26/10/2024) - version 0.5.9c
 
 - lists are back;
