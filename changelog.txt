@@ -1,10 +1,13 @@
-(28/10/2024) - version 0.6.2
+(29/10/2024) - version 0.6.2
 
 - removed std_eval, use std_do instead;
 - removed std_loop_repeat, use std_do instead;
 - removed std_loop_while, use std_do instead;
 - hash.set now does auto hold the value;
 - @ operator changed a bit;
+- math functions now can receive an amount of arguments;
+- new function mem_swap;
+- new function mem_sector_swap;
 
 (28/10/2024) - version 0.6.1
 

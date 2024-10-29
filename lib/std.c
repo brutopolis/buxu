@@ -274,33 +274,41 @@ Int std_type_get(VirtualMachine *vm, IntList *args)
 
 Int std_math_add(VirtualMachine *vm, IntList *args)
 {
-    Int a = stack_shift(*args);
-    Int b = stack_shift(*args);
-    Int result = new_number(vm, vm->stack->data[a].number + vm->stack->data[b].number);
+    Float result = 0;
+    while (args->size > 0)
+    {
+        result += vm->stack->data[stack_shift(*args)].number;
+    }
     return result;
 }
 
 Int std_math_sub(VirtualMachine *vm, IntList *args)
 {
-    Int a = stack_shift(*args);
-    Int b = stack_shift(*args);
-    Int result = new_number(vm, vm->stack->data[a].number - vm->stack->data[b].number);
+    Float result = stack_shift(*args);
+    while (args->size > 0)
+    {
+        result -= vm->stack->data[stack_shift(*args)].number;
+    }
     return result;
 }
 
 Int std_math_mul(VirtualMachine *vm, IntList *args)
 {
-    Int a = stack_shift(*args);
-    Int b = stack_shift(*args);
-    Int result = new_number(vm, vm->stack->data[a].number * vm->stack->data[b].number);
+    Int result = stack_shift(*args);
+    while (args->size > 0)
+    {
+        result *= vm->stack->data[stack_shift(*args)].number;
+    }   
     return result;
 }
 
 Int std_math_div(VirtualMachine *vm, IntList *args)
 {
-    Int a = stack_shift(*args);
-    Int b = stack_shift(*args);
-    Int result = new_number(vm, vm->stack->data[a].number / vm->stack->data[b].number);
+    Int result = stack_shift(*args);
+    while (args->size > 0)
+    {
+        result /= vm->stack->data[stack_shift(*args)].number;
+    }
     return result;
 }
 
@@ -329,8 +337,7 @@ Int std_math_sqrt(VirtualMachine *vm, IntList *args)
 
 Int std_math_abs(VirtualMachine *vm, IntList *args)
 {
-    Int a = stack_shift(*args);
-    Int result = new_number(vm, fabs(vm->stack->data[a].number));
+    Int result = new_number(vm, fabs(vm->stack->data[stack_shift(*args)].number));
     return result;
 }
 

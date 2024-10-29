@@ -147,6 +147,22 @@ Int mem_collect(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+Int mem_swap(VirtualMachine *vm, IntList *args)
+{
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
+    if (a >= 0 && a < vm->stack->size && b >= 0 && b < vm->stack->size)
+    {
+        Value temp = vm->stack->data[a];
+        char type = vm->typestack->data[a];
+        vm->stack->data[a] = vm->stack->data[b];
+        vm->typestack->data[a] = vm->typestack->data[b];
+        vm->stack->data[b] = temp;
+        vm->typestack->data[b] = type;
+    }
+    return -1;
+}
+
 Int mem_set(VirtualMachine *vm, IntList *args)
 {
     Int variable = stack_shift(*args);
@@ -246,7 +262,7 @@ Int mem_length(VirtualMachine *vm, IntList *args)
     return new_number(vm, vm->stack->size);
 }
 
-Int mem_segment_new(VirtualMachine *vm, IntList *args)
+Int mem_sector_new(VirtualMachine *vm, IntList *args)
 {
     Int _size = stack_shift(*args);
     Int index = new_var(vm);
@@ -258,7 +274,7 @@ Int mem_segment_new(VirtualMachine *vm, IntList *args)
     return index;
 }
 
-Int mem_segment_copy(VirtualMachine *vm, IntList *args)
+Int mem_sector_copy(VirtualMachine *vm, IntList *args)
 {
     Int origin = stack_shift(*args);
     Int destination = stack_shift(*args);
@@ -275,6 +291,29 @@ Int mem_segment_copy(VirtualMachine *vm, IntList *args)
         }
         origin++;
         destination++;
+        vm->stack->data[_size].number--;
+    }
+    return -1;
+}
+
+Int mem_sector_swap(VirtualMachine *vm, IntList *args)
+{
+    Int a = stack_shift(*args);
+    Int b = stack_shift(*args);
+    Int _size = stack_shift(*args);
+    while (vm->stack->data[_size].number > 0)
+    {
+        if (a >= 0 && a < vm->stack->size && b >= 0 && b < vm->stack->size)
+        {
+            Value temp = vm->stack->data[a];
+            char type = vm->typestack->data[a];
+            vm->stack->data[a] = vm->stack->data[b];
+            vm->typestack->data[a] = vm->typestack->data[b];
+            vm->stack->data[b] = temp;
+            vm->typestack->data[b] = type;
+        }
+        a++;
+        b++;
         vm->stack->data[_size].number--;
     }
     return -1;
@@ -308,10 +347,11 @@ void init_byte(VirtualMachine *vm)
     registerBuiltin(vm, "byte.get", mem_byte_get);
 }
 
-void init_segment(VirtualMachine *vm)
+void init_sector(VirtualMachine *vm)
 {
-    registerBuiltin(vm, "seg.new", mem_segment_new);
-    registerBuiltin(vm, "seg.copy", mem_segment_copy);
+    registerBuiltin(vm, "sector.new", mem_sector_new);
+    registerBuiltin(vm, "sector.copy", mem_sector_copy);
+    registerBuiltin(vm, "sector.swap", mem_sector_swap);
 }
 
 void init_mem(VirtualMachine *vm)
@@ -330,7 +370,8 @@ void init_mem(VirtualMachine *vm)
     registerBuiltin(vm, "mem.unhold", mem_unhold);
     registerBuiltin(vm, "mem.delete", mem_delete);
     registerBuiltin(vm, "mem.collect", mem_collect);
+    registerBuiltin(vm, "mem.swap", mem_swap);
 
     init_byte(vm);
-    init_segment(vm);
+    init_sector(vm);
 }
