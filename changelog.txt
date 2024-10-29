@@ -1,3 +1,11 @@
+(28/10/2024) - version 0.6.2
+
+- removed std_eval, use std_do instead;
+- removed std_loop_repeat, use std_do instead;
+- removed std_loop_while, use std_do instead;
+- hash.set now does auto hold the value;
+- @ operator changed a bit;
+
 (28/10/2024) - version 0.6.1
 
 - @ operator can now be used to get a segment of the stack, @: will get the whole stack, @:5 will get the first 5 elements, @5: will get all elements from the 5th to the end, @5:10 will get all elements from the 5th to the 10th;

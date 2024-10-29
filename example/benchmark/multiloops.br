@@ -1,8 +1,23 @@
 hash.set "_index" (mem.keep 0);
 hash.set "_size" (mem.keep 100000);
 process.fork 'proc1';
-process.send proc1 'mem.set _index (mem.keep 50000);loop.repeat (mem.keep 10000) (mem.keep "print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);");';
-loop.repeat (mem.keep 10000) (mem.keep "print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);");
-print (process.receive proc1);
+process.send proc1 'mem.set _index (mem.keep 50000);
+do "print _index;
+# (incr _index);print _index;
+# (incr _index);print _index;
+# (incr _index);print _index;
+# (incr _index);print _index;
+# (incr _index);" repeat 10000;';
+
+do "print _index;
+# (incr _index);
+print _index;
+# (incr _index);
+print _index;
+# (incr _index);
+print _index;
+# (incr _index);
+print _index;
+# (incr _index);" repeat 10000;
 process.destroy proc1;
-0;
+return 0;

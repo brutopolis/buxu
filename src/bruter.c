@@ -664,43 +664,62 @@ IntList* parse(VirtualMachine *vm, char *cmd)
         char* str = stack_shift(*splited);
         if (str[0] == '@') 
         {
-            if (str[1] == ':')
+            if (strchr(str, ':') != NULL)
             {
-                if (strlen(str) == 2)
+                StringList *splited = splitString(str, ":");
+                char* s_left =  splited->data[0] + 1;
+                char* s_right = splited->data[1];
+
+                Int n_left = atoi(s_left);
+                Int n_right = atoi(s_right);
+                
+                if (n_left == 0 && strlen(s_left) > 0)
                 {
-                    for (Int i = 0; i < vm->stack->size; i++)
-                    {
-                        stack_push(*result, i);
-                    }
+                    n_left = hash_find(vm, s_left);
+                    
                 }
-                else
+
+                if (n_right == 0 && strlen(s_right) > 0)
                 {
-                    for (Int i = 0; i < atoi(str + 2); i++)
-                    {
-                        stack_push(*result, i);
-                    }
+                    n_right = hash_find(vm, s_right);
+                    
                 }
                 
-            }
-            else if (strchr(str, ':') != NULL)
-            {
-                char* tmp = strchr(str, ':');
-                if (tmp[1] == '\0')
+                if (n_right == -1)
                 {
-                    for (Int i = atoi(str + 1); i < vm->stack->size; i++)
+                    n_right = vm->stack->size;
+                }
+
+                if (n_left == -1)
+                {
+                    n_left = 0;
+                }
+                
+                if (n_left < n_right)
+                {
+                    for (Int i = n_left; i <= n_right; i++)
                     {
                         stack_push(*result, i);
                     }
                 }
-                else
+                else if (n_left > n_right)
                 {
-                    Int start = atoi(str + 1);
-                    Int end = atoi(tmp + 1);
-                    for (Int i = start; i < end; i++)
+                    for (Int i = n_left; i >= n_right; i--)
                     {
                         stack_push(*result, i);
                     }
                 }
+                else 
+                {
+                    stack_push(*result, n_left);
+                }
+
+                while (splited->size > 0)
+                {
+                    free(stack_shift(*splited));
+                }
+
+                stack_free(*splited);
             }
             else
             {

@@ -1,5 +1,16 @@
-hash.set "_size" (mem.keep 100000);
-hash.set "_index" (mem.keep 0);
-loop.repeat (div _size 5) (mem.keep "print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);print _index;# (incr _index);");
-ls;
-0;
+hash.set "_size" 100000;
+hash.set "_index" 0;
+do "print _index;
+# (incr _index);
+print _index;
+# (incr _index);
+print _index;
+# (incr _index);
+print _index;
+# (incr _index);
+print _index;
+# (incr _index);" repeat (div _size 5);
+
+print @-:-;
+print 'aoba';
+return 0;

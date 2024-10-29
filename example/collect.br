@@ -1,16 +1,16 @@
-hash.set "_index" (mem.keep 0);
-hash.set "_size" (mem.keep 101000);
+hash.set "_index" 0;
+hash.set "_size" 101000;
 
 # "kept variables are held variables that are not cleared but can be collected";
 # (keep "does return the value, unlike hold, so its good for variables to be collected later");
 
-loop.while (mem.keep "< _index _size") (mem.keep "print _index;mem.set _index (incr _index);mem.clear @:;");
-mem.clear @:;
+do "print _index;mem.set _index (incr _index);mem.clear @-:-;" while "< _index _size";
+mem.clear @-:-;
 mem.rebase;
 
 # "the kept variables still there, even after the clear and the rebase";
 mem.unhold _size;
-mem.clear @:;
+mem.clear @-:-;
 mem.collect;
 ls "hash";
 # "the kept variables are no more";

@@ -17,5 +17,5 @@ list.insert l 8 66;
 print l;
 print (list.get l 0);
 print (list.remove l 1);
-mem.clear @:;
+mem.clear @-:-;
 return 0

@@ -7,6 +7,7 @@ Int std_hash_set(VirtualMachine *vm, IntList *args)
 
     char * name = vm->stack->data[varname].string;
     hash_set(vm, name, value);
+    hold_var(vm, value);
     return -1;
 }
 
@@ -198,24 +199,46 @@ Int std_io_ls_unused(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int std_eval(VirtualMachine *vm, IntList *args)
-{
-    Int str = stack_shift(*args);
-    char* _str = vm->stack->data[str].string;
-    Int result = eval(vm, _str);
-    return result;
-}
-
 Int std_do(VirtualMachine *vm, IntList *args)
 {
     Int str = stack_shift(*args);
+
     char* _str = vm->stack->data[str].string;
-    Int _args = new_list(vm);
-    while (args->size > 0)
+    if (args->size > 0)
     {
-        stack_push(*((IntList*)vm->stack->data[_args].pointer), stack_shift(*args));
+        if (args->data[0] == hash_find(vm, "repeat"))
+        {
+            Int repeat = stack_shift(*args);
+            char * repeat_code = str_duplicate(_str);
+            Int _size = (Int)vm->stack->data[stack_shift(*args)].number;
+            for (Int i = 0; i < _size; i++)
+            {
+                eval(vm, _str);
+            }
+            free(repeat_code);
+            return -1;
+        }
+        else if (args->data[0] == hash_find(vm, "while"))
+        {
+            Int _while = stack_shift(*args);
+            Int _cond = stack_shift(*args); 
+            Int evalresult = eval(vm, vm->stack->data[_cond].string);
+            while (evalresult>0 && vm->stack->data[evalresult].number == 1.0)
+            {
+                eval(vm, _str);
+                evalresult = eval(vm, vm->stack->data[_cond].string);
+            }
+            return -1;
+        }
+
+        Int _args = new_list(vm);
+        while (args->size > 0)
+        {
+            stack_push(*((IntList*)vm->stack->data[_args].pointer), stack_shift(*args));
+        }
+        hash_set(vm, "args", _args);
     }
-    hash_set(vm, "args", _args);
+
     Int result = eval(vm, _str);
     return result;
 }
@@ -939,7 +962,6 @@ void init_basics(VirtualMachine *vm)
 {
     
     registerBuiltin(vm, "#", std_ignore);
-    registerBuiltin(vm, "eval", std_eval);
     registerBuiltin(vm, "do", std_do);
     registerBuiltin(vm, "return", std_return);
 #ifndef ARDUINO
@@ -969,8 +991,8 @@ void init_type(VirtualMachine *vm)
 
 void init_loop(VirtualMachine *vm)
 {
-    registerBuiltin(vm, "loop.while", std_loop_while);
-    registerBuiltin(vm, "loop.repeat", std_loop_repeat);
+    registerNumber(vm, "while", 0);
+    registerNumber(vm, "repeat", 1);
 }
 
 void init_hash(VirtualMachine *vm)
