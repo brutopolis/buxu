@@ -8,6 +8,7 @@
 - math functions now can receive an amount of arguments;
 - new function mem_swap;
 - new function mem_sector_swap;
+- pointers as printed as integer now instead of hex;
 
 (28/10/2024) - version 0.6.1
 

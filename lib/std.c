@@ -55,17 +55,17 @@ void print_element(VirtualMachine *vm, Int index)
     
     if (_type == TYPE_BUILTIN)
     {
-        printf("%p", temp.pointer);
+        printf("{builtin} %ld", temp.pointer);
     }
     else if (_type == TYPE_NUMBER)
     {
         if (round(temp.number) == temp.number)
         {
-            printf("%ld", (Int)temp.number);
+            printf("{number} %ld", (Int)temp.number);
         }
         else
         {
-            printf("%f", temp.number);
+            printf("{number} %f", temp.number);
         }
     }
     else if (_type == TYPE_STRING)
@@ -74,15 +74,15 @@ void print_element(VirtualMachine *vm, Int index)
     }
     else if (_type == TYPE_LIST)
     {
-        printf("[");
+        printf("{list} [");
         IntList *list = (IntList*)temp.pointer;
         for (Int i = 0; i < (list->size-1); i++)
         {
-            printf("%d, ", list->data[i]);
+            printf("%ld, ", list->data[i]);
         }
         if (list->size > 0)
         {
-            printf("%d]", list->data[list->size-1]);
+            printf("%ld]", list->data[list->size-1]);
         }
         else
         {
@@ -91,15 +91,15 @@ void print_element(VirtualMachine *vm, Int index)
     }
     else if (_type == TYPE_OTHER)
     {
-        printf("{other} %p", temp.pointer);
+        printf("{other} %ld", temp.pointer);
     }
     else if (_type == TYPE_NIL)
     {
-        printf("{nil}");
+        printf("{nil} %ld", temp.integer);
     }
     else
     {
-        printf("{unknown} %d", temp.integer);
+        printf("{unknown} %ld", temp.integer);
     }
 }
 
@@ -114,7 +114,7 @@ Int std_io_print(VirtualMachine *vm, IntList *args)
         }
         else 
         {
-            printf("{nil}");
+            printf("{out of stack}");
         }
 
         if (args->size > 0)
