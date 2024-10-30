@@ -5,9 +5,12 @@
 - removed std_loop_while, use std_do instead;
 - hash.set now does auto hold the value;
 - @ operator changed a bit;
-- math functions now can receive an amount of arguments;
+- math functions now can receive endless amount arguments;
+- string functions now can receive endless arguments;
+- list functions now can receive endless arguments;
 - new function mem_swap;
 - new function mem_sector_swap;
+- new type TYPE_RAW;
 - pointers as printed as integer now instead of hex;
 
 (28/10/2024) - version 0.6.1

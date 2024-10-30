@@ -414,33 +414,45 @@ Int std_list_insert(VirtualMachine *vm, IntList *args)
 {
     Int list = stack_shift(*args);
     Int index = stack_shift(*args);
-    Int value = stack_shift(*args);
+    Int value;
     if (vm->typestack->data[list] == TYPE_LIST)
     {
         IntList *lst = (IntList*)vm->stack->data[list].pointer;
-        stack_insert(*lst, (Int)vm->stack->data[index].number, value);
+        while (args->size > 0)
+        {
+            value = stack_shift(*args);
+            stack_insert(*lst, (Int)vm->stack->data[index].number, value);
+        }
     }
     return -1;
 }
 Int std_list_push(VirtualMachine *vm, IntList *args)
 {
     Int list = stack_shift(*args);
-    Int value = stack_shift(*args);
+    Int value;
     if (vm->typestack->data[list] == TYPE_LIST)
     {
         IntList *lst = (IntList*)vm->stack->data[list].pointer;
-        stack_push(*lst, value);
+        while (args->size > 0)
+        {
+            value = stack_shift(*args);
+            stack_push(*lst, value);
+        }
     }
     return -1;
 }
 Int std_list_unshift(VirtualMachine *vm, IntList *args) 
 {
     Int list = stack_shift(*args);
-    Int value = stack_shift(*args);
+    Int value;
     if (vm->typestack->data[list] == TYPE_LIST)
     {
         IntList *lst = (IntList*)vm->stack->data[list].pointer;
-        stack_unshift(*lst, value);
+        while (args->size > 0)
+        {
+            value = stack_shift(*args);
+            stack_unshift(*lst, value);
+        }
     }
     return -1;   
 }
@@ -483,21 +495,18 @@ Int std_list_shift(VirtualMachine *vm, IntList *args)// returns the removed elem
 
 Int std_list_concat(VirtualMachine *vm, IntList *args)
 {
-    Int list1 = stack_shift(*args);
-    Int list2 = stack_shift(*args);
     Int _newlist = new_list(vm);
     IntList *newlist = (IntList*)vm->stack->data[_newlist].pointer;
-    if (vm->typestack->data[list1] == TYPE_LIST && vm->typestack->data[list2] == TYPE_LIST)
+    while (args->size > 0)
     {
-        IntList *lst1 = (IntList*)vm->stack->data[list1].pointer;
-        IntList *lst2 = (IntList*)vm->stack->data[list2].pointer;
-        for (Int i = 0; i < lst1->size; i++)
+        Int list = stack_shift(*args);
+        if (vm->typestack->data[list] == TYPE_LIST)
         {
-            stack_push(*newlist, lst1->data[i]);
-        }
-        for (Int i = 0; i < lst2->size; i++)
-        {
-            stack_push(*newlist, lst2->data[i]);
+            IntList *lst = (IntList*)vm->stack->data[list].pointer;
+            for (Int i = 0; i < lst->size; i++)
+            {
+                stack_push(*newlist, lst->data[i]);
+            }
         }
     }
     return _newlist;
@@ -552,11 +561,31 @@ Int std_list_length(VirtualMachine *vm, IntList *args)
 
 Int std_string_concat(VirtualMachine *vm, IntList *args)
 {
-    Int a = stack_shift(*args);
-    Int b = stack_shift(*args);
+    char* _newstr = "";
+    char* _tmp = NULL;
     Int result = -1;
-
-    char* _newstr = str_concat(vm->stack->data[a].string, vm->stack->data[b].string);
+    while (args->size > 0)
+    {
+        Int str = stack_shift(*args);
+        if (vm->typestack->data[str] == TYPE_STRING)
+        {
+            _tmp = str_concat(_newstr, vm->stack->data[str].string);
+            free(_newstr);
+            _newstr = _tmp;
+        }
+        else if (vm->typestack->data[str] == TYPE_NUMBER)
+        {
+            _tmp = str_format("%s%f", _newstr, vm->stack->data[str].number);
+            free(_newstr);
+            _newstr = _tmp;
+        }
+        else 
+        {
+            _tmp = str_format("%s%ld", _newstr, (Int)vm->stack->data[str].integer);
+            free(_newstr);
+            _newstr = _tmp;
+        }
+    }
     result = new_string(vm, _newstr);
     free(_newstr);
     return result;
@@ -714,6 +743,33 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
                 Int value = stack_shift(*args);
                 char* _value = str_format("%p", vm->stack->data[value].pointer);
                 char* _newstr = str_replace(_str, "%p", _value);
+                free(_str);
+                _str = _newstr;
+            }
+        }
+        else if (_str[i] == '\\')
+        {
+            if (_str[i+1] == 'n')
+            {
+                char* _newstr = str_replace(_str, "\\n", "\n");
+                free(_str);
+                _str = _newstr;
+            }
+            else if (_str[i+1] == 't')
+            {
+                char* _newstr = str_replace(_str, "\\t", "\t");
+                free(_str);
+                _str = _newstr;
+            }
+            else if (_str[i+1] == 'r')
+            {
+                char* _newstr = str_replace(_str, "\\r", "\r");
+                free(_str);
+                _str = _newstr;
+            }
+            else if (_str[i+1] >= '0' && _str[i+1] <= '9')
+            {
+                char* _newstr = str_format("%s%c", _str + i + 1, (char)atoi(_str + i + 1));
                 free(_str);
                 _str = _newstr;
             }

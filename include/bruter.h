@@ -27,6 +27,7 @@
 #define TYPE_STRING 2
 #define TYPE_LIST 3
 #define TYPE_BUILTIN 4
+#define TYPE_RAW 5
 #define TYPE_OTHER 8
 
 
