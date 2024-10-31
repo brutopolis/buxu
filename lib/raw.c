@@ -2,12 +2,12 @@
 
 Int raw_byte_set(VirtualMachine *vm, IntList *args)
 {
+    Int _block = stack_shift(*args);
+    Int index = (Int)vm->stack->data[stack_shift(*args)].number;
     Int value = stack_shift(*args);
-    Int index = 0;
-    while (args->size > 0 && index < sizeof(Float))
+    if (index >= 0 && index < sizeof(Float))
     {
-        vm->stack->data[value].byte[index] = (unsigned char)vm->stack->data[stack_shift(*args)].number;
-        index++;
+        vm->stack->data[_block].byte[index] = (unsigned char)vm->stack->data[value].number;
     }
     return -1;
 }
@@ -16,11 +16,7 @@ Int raw_byte_get(VirtualMachine *vm, IntList *args)
 {
     Int value = stack_shift(*args);
     Int index = (Int)vm->stack->data[stack_shift(*args)].number;
-    if (index >= 0 && index < sizeof(Float))
-    {
-        return vm->stack->data[value].byte[index];
-    }
-    return -1;
+    return vm->stack->data[value].byte[index];
 }
 
 // integer math
@@ -159,7 +155,7 @@ Int raw_byte_add(VirtualMachine *vm, IntList *args)
     Int _block = stack_shift(*args);
     Int _index = stack_shift(*args);
     Int _value = stack_shift(*args);
-    vm->stack->data[_block].byte[_index] += vm->stack->data[_value].number;
+    vm->stack->data[_block].byte[(Int)vm->stack->data[_index].number] += vm->stack->data[_value].number;
     return -1;
 }
 
@@ -168,7 +164,7 @@ Int raw_byte_sub(VirtualMachine *vm, IntList *args)
     Int _block = stack_shift(*args);
     Int _index = stack_shift(*args);
     Int _value = stack_shift(*args);
-    vm->stack->data[_block].byte[_index] -= vm->stack->data[_value].number;
+    vm->stack->data[_block].byte[(Int)vm->stack->data[_index].number] -= vm->stack->data[_value].number;
     return -1;
 }
 
