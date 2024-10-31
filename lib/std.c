@@ -89,6 +89,15 @@ void print_element(VirtualMachine *vm, Int index)
             printf("]");
         }
     }
+    else if (_type == TYPE_RAW)
+    {
+        printf("{raw} [");
+        for (Int i = 0; i < sizeof(Float)-1; i++)
+        {
+            printf("%d, ", temp.byte[i]);
+        }
+        printf("%d]", temp.byte[sizeof(Float)-1]);
+    }
     else if (_type == TYPE_OTHER)
     {
         printf("{other} %ld", temp.pointer);
@@ -631,15 +640,14 @@ Int std_string_split(VirtualMachine *vm, IntList *args)
     if ((vm->typestack->data[str] == TYPE_STRING) && (vm->typestack->data[delim] == TYPE_STRING))
     {
         StringList *list = splitString(vm->stack->data[str].string, vm->stack->data[delim].string);
-        char * _tmp = str_format("array.new %d", list->size);
+        char * _tmp = str_format("list.new", list->size);
         Int _arr = eval(vm, _tmp);
         free(_tmp);
-        Int index = 1;
         while (list->size > 0)
         {
-            vm->stack->data[_arr + index].string = stack_shift(*list);
-            vm->typestack->data[_arr + index] = TYPE_STRING;
-            index++;
+            Int _str = new_var(vm);
+            vm->stack->data[_str].string = stack_shift(*list);
+            vm->typestack->data[_str] = TYPE_STRING;
         }
         stack_free(*list);
         return _arr;
@@ -1046,6 +1054,8 @@ void init_type(VirtualMachine *vm)
     registerNumber(vm, "type.string", TYPE_STRING);
     registerNumber(vm, "type.builtin", TYPE_BUILTIN);
     registerNumber(vm, "type.list", TYPE_LIST);
+    registerNumber(vm, "type.raw", TYPE_RAW);
+    registerNumber(vm, "type.other", TYPE_OTHER);
 
     // type functions
     registerBuiltin(vm, "type.get", std_type_get);

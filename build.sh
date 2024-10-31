@@ -14,6 +14,12 @@ cd build
 
 rm -rf bruter.a
 
+if [ -n "$EXCLUDE" ]; then # EXCLUDE="filename.c" ./build.sh
+    cd lib
+    rm $EXCLUDE
+    echo "excluded libs: $EXCLUDE"
+    cd ..
+fi
 
 for file in ./lib/*.c; do
     filename="${file##*/}"  

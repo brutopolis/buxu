@@ -155,7 +155,7 @@ typedef union
     Int integer;
     char* string;
     void* pointer;
-    char bytes[sizeof(Float)];
+    unsigned char byte[sizeof(Float)];
 } Value;
 
 //Hash

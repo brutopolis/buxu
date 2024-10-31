@@ -319,34 +319,6 @@ Int mem_sector_swap(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int mem_byte_set(VirtualMachine *vm, IntList *args)
-{
-    Int value = stack_shift(*args);
-    Int index = 0;
-    while (args->size > 0 && index < sizeof(Float))
-    {
-        vm->stack->data[value].bytes[index] = stack_shift(*args);
-    }
-    return -1;
-}
-
-Int mem_byte_get(VirtualMachine *vm, IntList *args)
-{
-    Int value = stack_shift(*args);
-    Int index = stack_shift(*args);
-    if (index >= 0 && index < sizeof(Float))
-    {
-        return vm->stack->data[value].bytes[index];
-    }
-    return -1;
-}
-
-void init_byte(VirtualMachine *vm)
-{
-    registerBuiltin(vm, "byte.set", mem_byte_set);
-    registerBuiltin(vm, "byte.get", mem_byte_get);
-}
-
 void init_sector(VirtualMachine *vm)
 {
     registerBuiltin(vm, "sector.new", mem_sector_new);
@@ -372,6 +344,5 @@ void init_mem(VirtualMachine *vm)
     registerBuiltin(vm, "mem.collect", mem_collect);
     registerBuiltin(vm, "mem.swap", mem_swap);
 
-    init_byte(vm);
     init_sector(vm);
 }

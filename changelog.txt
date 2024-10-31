@@ -1,4 +1,4 @@
-(29/10/2024) - version 0.6.2
+(31/10/2024) - version 0.6.2
 
 - removed std_eval, use std_do instead;
 - removed std_loop_repeat, use std_do instead;
@@ -12,6 +12,24 @@
 - new function mem_sector_swap;
 - new type TYPE_RAW;
 - pointers as printed as integer now instead of hex;
+- std_string_split fixed;
+- std_string_format extended;
+- added configurable EXCLUDE to build.sh and build-debug.sh;
+- new lib raw.c;
+- new function raw_byte_set;
+- new function raw_byte_get;
+- new function raw_byte_add;
+- new function raw_byte_sub;
+- new function raw_integer_add;
+- new function raw_integer_sub;
+- new function raw_integer_mul;
+- new function raw_integer_div;
+- new function raw_integer_mod;
+- new function raw_from_float;
+- new function raw_to_float;
+- new function raw_from_string;
+- new function raw_to_string;
+- new function raw_from_bytes;
 
 (28/10/2024) - version 0.6.1
 

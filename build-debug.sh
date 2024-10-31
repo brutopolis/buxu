@@ -1,6 +1,14 @@
 # this is for linux, should work on macos and cygwin also, though I haven't tested it
 # in future i might add build scripts for other platforms
 
+# if $1 is not provided, then it will run the repl
+FILE=$1
+# -z checks if the variable is empty
+if [ -z "$FILE" ]
+then
+    FILE=""
+fi
+
 rm -rf build
 mkdir build
 
@@ -15,6 +23,12 @@ cd build
 
 rm -rf bruter.a
 
+if [ -n "$EXCLUDE" ]; then # EXCLUDE="filename.c" ./build.sh
+    cd lib
+    rm $EXCLUDE
+    echo "excluded libs: $EXCLUDE"
+    cd ..
+fi
 
 for file in ./lib/*.c; do
     filename="${file##*/}"  
@@ -40,7 +54,7 @@ rm -rf lib/*.c
 rm -rf include/*.c
 rm -rf lib/*.o
 
-valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter ./example/list.br 
+valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter $FILE
 ms_print massif.out.* > massif-out.txt
 rm -rf massif.out.*
 
@@ -49,6 +63,6 @@ valgrind \
     --show-leak-kinds=all \
     --track-origins=yes \
     --log-file=valgrind-out.txt \
-    --verbose ./bruter ./example/list.br
+    --verbose ./bruter $FILE
 
 #valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt --verbose build/bruter example/threads.br
