@@ -11,6 +11,17 @@ Int std_hash_set(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+Int std_hash_get(VirtualMachine *vm, IntList *args)
+{
+    Int varname = stack_shift(*args);
+    Int index = hash_find(vm, vm->stack->data[varname].string);
+    if (index >= 0)
+    {
+        return vm->hashes->data[index].index;
+    }
+    return -1;
+}
+
 Int std_hash_delete(VirtualMachine *vm, IntList *args)
 {
     Int varname = stack_shift(*args);
@@ -1071,6 +1082,7 @@ void init_loop(VirtualMachine *vm)
 void init_hash(VirtualMachine *vm)
 {
     registerBuiltin(vm, "hash.set", std_hash_set);
+    registerBuiltin(vm, "hash.get", std_hash_get);
     registerBuiltin(vm, "hash.delete", std_hash_delete);
     registerBuiltin(vm, "hash.rename", std_hash_rename);
 }

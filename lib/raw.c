@@ -16,7 +16,7 @@ Int raw_byte_get(VirtualMachine *vm, IntList *args)
 {
     Int value = stack_shift(*args);
     Int index = (Int)vm->stack->data[stack_shift(*args)].number;
-    return vm->stack->data[value].byte[index];
+    return new_number(vm, vm->stack->data[value].byte[index]);
 }
 
 // integer math

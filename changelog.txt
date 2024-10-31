@@ -1,3 +1,8 @@
+(31/10/2024) - version 0.6.2b
+
+- minor fixes;
+- new function std_hash_get;
+
 (31/10/2024) - version 0.6.2a
 
 - some byte related fixes;
