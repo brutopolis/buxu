@@ -1,3 +1,7 @@
+(31/10/2024) - version 0.6.2a
+
+- some byte related fixes;
+
 (31/10/2024) - version 0.6.2
 
 - removed std_eval, use std_do instead;
