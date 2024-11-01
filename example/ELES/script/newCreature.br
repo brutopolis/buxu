@@ -1,0 +1,13 @@
+list.push creatures 0;
+hash.set "current_creature" (list.last creatures);
+type.set current_creature type.raw;
+hash.set (list.pop args) current_creature;
+# room_position_hunger_water_energy_mood_item1_item2;
+byte.set current_creature 0 0;
+byte.set current_creature 1 0;
+byte.set current_creature 2 255;
+byte.set current_creature 3 255;
+byte.set current_creature 4 255;
+byte.set current_creature 5 255;
+byte.set current_creature 6 0;
+byte.set current_creature 7 0;

@@ -79,6 +79,10 @@ void print_element(VirtualMachine *vm, Int index)
             printf("{number} %f", temp.number);
         }
     }
+    else if (_type == TYPE_INTEGER)
+    {
+        printf("{integer} %ld", temp.integer);
+    }
     else if (_type == TYPE_STRING)
     {
         printf("%s", temp.string);
@@ -576,39 +580,45 @@ Int std_list_length(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+/*Int std_list_first(VirtualMachine *vm, IntList *args)
+{
+    Int list = stack_shift(*args);
+    if (vm->typestack->data[list] == TYPE_LIST)
+    {
+        IntList *lst = (IntList*)vm->stack->data[list].pointer;
+        return lst->data[0];
+    }
+    return -1;
+}*/
+
+Int std_list_last(VirtualMachine *vm, IntList *args)
+{
+    Int list = stack_shift(*args);
+    if (vm->typestack->data[list] == TYPE_LIST)
+    {
+        IntList *lst = (IntList*)vm->stack->data[list].pointer;
+        return lst->data[lst->size-1];
+    }
+    return -1;
+}
+
 
 // std string
 
 Int std_string_concat(VirtualMachine *vm, IntList *args)
 {
-    char* _newstr = "";
-    char* _tmp = NULL;
-    Int result = -1;
+    Int _newstr = new_string(vm, "");
+    char* _newstr_str = vm->stack->data[_newstr].string;
     while (args->size > 0)
     {
         Int str = stack_shift(*args);
-        if (vm->typestack->data[str] == TYPE_STRING)
-        {
-            _tmp = str_concat(_newstr, vm->stack->data[str].string);
-            free(_newstr);
-            _newstr = _tmp;
-        }
-        else if (vm->typestack->data[str] == TYPE_NUMBER)
-        {
-            _tmp = str_format("%s%f", _newstr, vm->stack->data[str].number);
-            free(_newstr);
-            _newstr = _tmp;
-        }
-        else 
-        {
-            _tmp = str_format("%s%ld", _newstr, (Int)vm->stack->data[str].integer);
-            free(_newstr);
-            _newstr = _tmp;
-        }
+        char* _str = vm->stack->data[str].string;
+        char* _tmp = str_concat(_newstr_str, _str);
+        free(_newstr_str);
+        _newstr_str = _tmp;
     }
-    result = new_string(vm, _newstr);
-    free(_newstr);
-    return result;
+    vm->stack->data[_newstr].string = _newstr_str;
+    return _newstr;
 }
 
 Int std_string_find(VirtualMachine *vm, IntList *args)
@@ -1062,6 +1072,7 @@ void init_type(VirtualMachine *vm)
     registerNumber(vm, "type.size", sizeof(Value));
     registerNumber(vm, "type.nil", TYPE_NIL);
     registerNumber(vm, "type.number", TYPE_NUMBER);
+    registerNumber(vm, "type.integer", TYPE_INTEGER);
     registerNumber(vm, "type.string", TYPE_STRING);
     registerNumber(vm, "type.builtin", TYPE_BUILTIN);
     registerNumber(vm, "type.list", TYPE_LIST);
@@ -1147,6 +1158,7 @@ void init_list(VirtualMachine *vm)
     registerBuiltin(vm, "list.remove", std_list_remove);
     registerBuiltin(vm, "list.concat", std_list_concat);
     registerBuiltin(vm, "list.unshift", std_list_unshift);
+    registerBuiltin(vm, "list.last", std_list_last);
 }
 
 void init_default_vars(VirtualMachine *vm)
