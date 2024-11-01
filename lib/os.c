@@ -154,6 +154,23 @@ Int os_file_size (VirtualMachine *vm, IntList *args)
     return result;
 }
 
+Int os_time_now(VirtualMachine *vm, IntList *args)
+{
+    return new_number(vm, time(NULL));
+}
+
+Int os_time_clock(VirtualMachine *vm, IntList *args)
+{
+    return new_number(vm, clock());
+}
+
+Int os_time_sleep(VirtualMachine *vm, IntList *args)
+{
+    Int seconds = stack_shift(*args);
+    sleep(vm->stack->data[seconds].number);
+    return -1;
+}
+
 #ifndef _WIN32
 
 // process type
@@ -503,6 +520,10 @@ void init_os(VirtualMachine *vm)
     registerBuiltin(vm, "file.rename", os_file_rename);
     registerBuiltin(vm, "file.copy", os_file_copy);
     registerBuiltin(vm, "file.size", os_file_size);
+
+    registerBuiltin(vm, "os.time", os_time_now);
+    registerBuiltin(vm, "os.clock", os_time_clock);
+    registerBuiltin(vm, "os.sleep", os_time_sleep);
 
     registerBuiltin(vm, "dofile", os_dofile);
     registerBuiltin(vm, "repl", os_repl);
