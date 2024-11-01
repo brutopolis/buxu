@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
+#include <time.h>
 
 #ifndef ARDUINO
 #include <poll.h>
