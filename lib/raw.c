@@ -5,10 +5,7 @@ Int raw_byte_set(VirtualMachine *vm, IntList *args)
     Int _block = stack_shift(*args);
     Int index = (Int)vm->stack->data[stack_shift(*args)].number;
     Int value = stack_shift(*args);
-    if (index >= 0 && index < sizeof(Float))
-    {
-        vm->stack->data[_block].byte[index] = (unsigned char)vm->stack->data[value].number;
-    }
+    vm->stack->data[_block].byte[index] = (unsigned char)vm->stack->data[value].number;
     return -1;
 }
 

@@ -16,12 +16,11 @@ int main(int argc, char **argv)
 
     // <libraries init>
 
-    // read file pointed by argv[1]
     if (args->size == 0)
     {
         interpret(vm, "repl");
     }
-    else if (args->size == 1)
+    else if (args->size == 1) // read file pointed by argv[1]
     {
         char *_code = readfile(argv[1]);
         if (_code == NULL)

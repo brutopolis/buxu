@@ -170,20 +170,13 @@ Int mem_set(VirtualMachine *vm, IntList *args)
     
     if (variable >= 0 && variable < vm->stack->size)
     {
-        if(vm->typestack->data[variable] == TYPE_STRING )
+        Int found = stack_find(*vm->temp, variable);
+        if (found >= 0)
         {
-            free(vm->stack->data[variable].string);
+            unuse_var(vm, variable);
         }
-        else if (vm->typestack->data[variable] == TYPE_LIST)
-        {
-            stack_free(*((IntList*)vm->stack->data[variable].pointer));
-        }
-
-        if (value >= 0 && value < vm->stack->size)
-        {
-            vm->stack->data[variable] = vm->stack->data[value];
-            vm->typestack->data[variable] = vm->typestack->data[value];
-        }
+        vm->stack->data[variable] = vm->stack->data[value];
+        vm->typestack->data[variable] = vm->typestack->data[value];
     }
     
     return -1;
