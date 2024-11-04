@@ -1,5 +1,5 @@
 hash.set "_index" 0;
-hash.set "_size" 101000;
+hash.set "_size" 1010;
 
 do "print _index;
 incr _index;" 
@@ -11,5 +11,5 @@ mem.rebase;
 mem.unhold _size;
 mem.clear @-:-;
 mem.collect;
-ls.hash;
+ls;
 return 0;

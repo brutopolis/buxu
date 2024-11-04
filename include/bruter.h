@@ -21,7 +21,7 @@
 #endif
 #endif
 
-#define VERSION "0.6.2e"
+#define VERSION "0.6.3"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -61,8 +61,6 @@
 #define NULL 0
 #endif
 
-
-#define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
 
 //stack implementation
 #define Stack(T) struct \
@@ -173,7 +171,6 @@ typedef Stack(Hash) HashList;
 typedef Stack(char*) StringList;
 typedef Stack(Int) IntList;
 typedef Stack(char) CharList;
-
 typedef struct
 {
     ValueList *stack;
@@ -198,6 +195,7 @@ char* str_replace_all(const char *str, const char *substr, const char *replaceme
 
 StringList* splitString(char *str, char *delim);
 StringList* special_space_split(char *str);
+StringList* special_split(char *str, char delim);
 
 #define is_true(value, __type) (__type == TYPE_NUMBER ? (round(value.number) != 0) : (__type == TYPE_NIL ? 0 : 1))
 

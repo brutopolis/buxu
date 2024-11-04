@@ -226,7 +226,6 @@ Int std_io_ls_unused(VirtualMachine *vm, IntList *args)
 Int std_do(VirtualMachine *vm, IntList *args)
 {
     Int str = stack_shift(*args);
-
     char* _str = vm->stack->data[str].string;
     if (args->size > 0)
     {
@@ -246,12 +245,33 @@ Int std_do(VirtualMachine *vm, IntList *args)
         {
             Int _while = stack_shift(*args);
             Int _cond = stack_shift(*args); 
-            Int evalresult = eval(vm, vm->stack->data[_cond].string);
+            char * _cond_str = str_duplicate(vm->stack->data[_cond].string);
+
+            Int evalresult = eval(vm, _cond_str);
             while (evalresult>0 && vm->stack->data[evalresult].number == 1.0)
             {
                 eval(vm, _str);
-                evalresult = eval(vm, vm->stack->data[_cond].string);
+                evalresult = eval(vm, _cond_str);
             }
+            free(_cond_str);
+            return -1;
+        }
+        else if (args->data[0] == hash_find(vm, "each"))
+        {
+            Int _each = stack_shift(*args);
+            Int _var = stack_shift(*args);
+            Int _in = stack_shift(*args);
+            Int _list = stack_shift(*args);
+            char* _var_str = str_duplicate(vm->stack->data[_var].string);
+            IntList *list = (IntList*)vm->stack->data[_list].pointer;
+            hash_set(vm, _var_str, 0);
+            Int hashid = hash_find(vm, _var_str);
+            for (Int i = 0; i < list->size; i++)
+            {
+                vm->hashes->data[hashid].index = list->data[i];
+                eval(vm, _str);
+            }
+            free(_var_str);
             return -1;
         }
 
@@ -303,37 +323,37 @@ Int std_math_add(VirtualMachine *vm, IntList *args)
     {
         result += vm->stack->data[stack_shift(*args)].number;
     }
-    return result;
+    return new_number(vm, result);
 }
 
 Int std_math_sub(VirtualMachine *vm, IntList *args)
 {
-    Float result = stack_shift(*args);
+    Float result = vm->stack->data[stack_shift(*args)].number;
     while (args->size > 0)
     {
         result -= vm->stack->data[stack_shift(*args)].number;
     }
-    return result;
+    return new_number(vm, result);
 }
 
 Int std_math_mul(VirtualMachine *vm, IntList *args)
 {
-    Int result = stack_shift(*args);
+    Float result = vm->stack->data[stack_shift(*args)].number;
     while (args->size > 0)
     {
         result *= vm->stack->data[stack_shift(*args)].number;
     }   
-    return result;
+    return new_number(vm, result);
 }
 
 Int std_math_div(VirtualMachine *vm, IntList *args)
 {
-    Int result = stack_shift(*args);
+    Float result = vm->stack->data[stack_shift(*args)].number;
     while (args->size > 0)
     {
         result /= vm->stack->data[stack_shift(*args)].number;
     }
-    return result;
+    return new_number(vm, result);
 }
 
 Int std_math_mod(VirtualMachine *vm, IntList *args)
@@ -403,16 +423,22 @@ Int std_math_round(VirtualMachine *vm, IntList *args)
 
 Int std_math_increment(VirtualMachine *vm, IntList *args)
 {
-    Int a = stack_shift(*args);
-    vm->stack->data[a].number++;
-    return a;
+    while (args->size > 0)
+    {
+        Int a = stack_shift(*args);
+        vm->stack->data[a].number++;
+    }
+    return -1;
 }
 
 Int std_math_decrement(VirtualMachine *vm, IntList *args)
 {
-    Int a = stack_shift(*args);
-    vm->stack->data[a].number--;
-    return a;
+    while (args->size > 0)
+    {
+        Int a = stack_shift(*args);
+        vm->stack->data[a].number--;
+    }
+    return -1;
 }
 
 // list functions
@@ -1088,6 +1114,8 @@ void init_loop(VirtualMachine *vm)
 {
     registerNumber(vm, "while", 0);
     registerNumber(vm, "repeat", 1);
+    registerNumber(vm, "each", 2);
+    registerNumber(vm, "in", 3);
 }
 
 void init_hash(VirtualMachine *vm)

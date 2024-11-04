@@ -1,3 +1,11 @@
+(03/11/2024) - version 0.6.3
+
+- math functions fixed;
+- new function raw_bytes_set;
+- std_math_increment and std_math_decrement can now receive endless amount of arguments, and doesnt return anything anymore;
+- loop examples updated;
+- some optimizations;
+
 (02/11/2024) - version 0.6.2e
 
 - minor changes;

@@ -1,16 +1,5 @@
 hash.set "_size" 100000;
 hash.set "_index" 0;
-do "print _index;
-# (incr _index);
-print _index;
-# (incr _index);
-print _index;
-# (incr _index);
-print _index;
-# (incr _index);
-print _index;
-# (incr _index);" repeat (div _size 5);
+do "print _index;incr _index;" repeat _size;
 
-print @-:-;
-print 'aoba';
 return 0;
