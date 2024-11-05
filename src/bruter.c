@@ -824,6 +824,7 @@ Int eval(VirtualMachine *vm, char *cmd)
     Int result = -1;
     while (splited->size > 0)
     {
+        
         char *str = stack_shift(*splited);
         if (strlen(str) == 0)
         {

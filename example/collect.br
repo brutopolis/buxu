@@ -1,8 +1,11 @@
 hash.set "_index" 0;
 hash.set "_size" 1010;
 
-do "print _index;
-incr _index;" 
+do 
+"
+    print _index;
+    incr _index;
+" 
 while "< _index _size";
 
 mem.clear @-:-;

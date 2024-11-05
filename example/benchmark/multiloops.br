@@ -1,9 +1,17 @@
-hash.set "_index" (mem.keep 0);
-hash.set "_size" (mem.keep 50000);
+hash.set "_index" 0;
+hash.set "_size" 50000;
 process.fork 'proc1';
-process.send proc1 'mem.set _index (mem.keep 50000);
-do "print _index;incr _index;" repeat _size;';
+process.send proc1 
+'
+    mem.set _index 50000;
+    do 
+    "
+        print _index;
+        incr _index;
+    " repeat _size;
+';
 
 do "print _index;incr _index;" repeat _size;
 process.destroy proc1;
+ls;
 return 0;

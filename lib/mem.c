@@ -255,6 +255,17 @@ Int mem_length(VirtualMachine *vm, IntList *args)
     return new_number(vm, vm->stack->size);
 }
 
+Int mem_next(VirtualMachine *vm, IntList *args)
+{
+    Int index = stack_shift(*args);
+    stack_unshift(*vm->unused, index);
+    while (args->size > 0)
+    {
+        stack_unshift(*vm->unused, stack_shift(*args));
+    }
+    return -1;
+}
+
 Int mem_sector_new(VirtualMachine *vm, IntList *args)
 {
     Int _size = stack_shift(*args);
@@ -336,6 +347,7 @@ void init_mem(VirtualMachine *vm)
     registerBuiltin(vm, "mem.delete", mem_delete);
     registerBuiltin(vm, "mem.collect", mem_collect);
     registerBuiltin(vm, "mem.swap", mem_swap);
+    registerBuiltin(vm, "mem.next", mem_next);
 
     init_sector(vm);
 }

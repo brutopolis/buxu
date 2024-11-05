@@ -318,79 +318,80 @@ Int std_type_get(VirtualMachine *vm, IntList *args)
 
 Int std_math_add(VirtualMachine *vm, IntList *args)
 {
-    Float result = 0;
+    Int result = stack_shift(*args);
     while (args->size > 0)
     {
-        result += vm->stack->data[stack_shift(*args)].number;
+        vm->stack->data[result].number += vm->stack->data[stack_shift(*args)].number;
     }
-    return new_number(vm, result);
+    return result;
 }
 
 Int std_math_sub(VirtualMachine *vm, IntList *args)
 {
-    Float result = vm->stack->data[stack_shift(*args)].number;
+    Int result = stack_shift(*args);
     while (args->size > 0)
     {
-        result -= vm->stack->data[stack_shift(*args)].number;
+        vm->stack->data[result].number -= vm->stack->data[stack_shift(*args)].number;
     }
-    return new_number(vm, result);
+    return result;
 }
 
 Int std_math_mul(VirtualMachine *vm, IntList *args)
 {
-    Float result = vm->stack->data[stack_shift(*args)].number;
+    Int result = stack_shift(*args);
     while (args->size > 0)
     {
-        result *= vm->stack->data[stack_shift(*args)].number;
-    }   
-    return new_number(vm, result);
+        vm->stack->data[result].number *= vm->stack->data[stack_shift(*args)].number;
+    }
+    return result;
 }
 
 Int std_math_div(VirtualMachine *vm, IntList *args)
 {
-    Float result = vm->stack->data[stack_shift(*args)].number;
+    Int result = stack_shift(*args);
     while (args->size > 0)
     {
-        result /= vm->stack->data[stack_shift(*args)].number;
+        vm->stack->data[result].number /= vm->stack->data[stack_shift(*args)].number;
     }
-    return new_number(vm, result);
+    return result;
 }
 
 Int std_math_mod(VirtualMachine *vm, IntList *args)
 {
     Int a = stack_shift(*args);
     Int b = stack_shift(*args);
-    Int result = new_number(vm, (Int)vm->stack->data[a].number % (Int)vm->stack->data[b].number);
-    return result;
+    vm->stack->data[a].number = fmod(vm->stack->data[a].number, vm->stack->data[b].number);
+    return a;
 }
 
 Int std_math_pow(VirtualMachine *vm, IntList *args)
 {
     Int a = stack_shift(*args);
     Int b = stack_shift(*args);
-    Int result = new_number(vm, pow(vm->stack->data[a].number, vm->stack->data[b].number));
-    return result;
+    vm->stack->data[a].number = pow(vm->stack->data[a].number, vm->stack->data[b].number);
+    return a;
 }
 
 Int std_math_sqrt(VirtualMachine *vm, IntList *args)
 {
     Int a = stack_shift(*args);
-    Int result = new_number(vm, sqrt(vm->stack->data[a].number));
-    return result;
+    vm->stack->data[a].number = sqrt(vm->stack->data[a].number);
+    return a;
 }
 
 Int std_math_abs(VirtualMachine *vm, IntList *args)
 {
-    Int result = new_number(vm, fabs(vm->stack->data[stack_shift(*args)].number));
-    return result;
+    Int a = stack_shift(*args);
+    vm->stack->data[a].number = fabs(vm->stack->data[a].number);
+    return a;
 }
 
 Int std_math_random(VirtualMachine *vm, IntList *args)
 {
     Int ___min = stack_shift(*args);
     Int ___max = stack_shift(*args);
-    Int result = new_number(vm, rand() % (Int)vm->stack->data[___max].number + (Int)vm->stack->data[___min].number);
-    return result;
+    ___min = rand() % (Int)vm->stack->data[___max].number + (Int)vm->stack->data[___min].number;
+    return ___min;
 }
 
 Int std_math_seed(VirtualMachine *vm, IntList *args)
@@ -403,22 +404,37 @@ Int std_math_seed(VirtualMachine *vm, IntList *args)
 Int std_math_floor(VirtualMachine *vm, IntList *args)
 {
     Int a = stack_shift(*args);
-    Int result = new_number(vm, floor(vm->stack->data[a].number));
-    return result;;
+    vm->stack->data[a].number = floor(vm->stack->data[a].number);
+    while (args->size > 0)
+    {
+        Int b = stack_shift(*args);
+        vm->stack->data[b].number = floor(vm->stack->data[b].number);
+    }
+    return a;
 }
 
 Int std_math_ceil(VirtualMachine *vm, IntList *args)
 {
     Int a = stack_shift(*args);
-    Int result = new_number(vm, ceil(vm->stack->data[a].number));
-    return result;
+    vm->stack->data[a].number = ceil(vm->stack->data[a].number);
+    while (args->size > 0)
+    {
+        Int b = stack_shift(*args);
+        vm->stack->data[b].number = ceil(vm->stack->data[b].number);
+    }
+    return a;
 }
 
 Int std_math_round(VirtualMachine *vm, IntList *args)
 {
     Int a = stack_shift(*args);
-    Int result = new_number(vm, round(vm->stack->data[a].number));
-    return result;
+    vm->stack->data[a].number = round(vm->stack->data[a].number);
+    while (args->size > 0)
+    {
+        Int b = stack_shift(*args);
+        vm->stack->data[b].number = round(vm->stack->data[b].number);
+    }
+    return a;
 }
 
 Int std_math_increment(VirtualMachine *vm, IntList *args)
