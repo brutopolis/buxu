@@ -1411,6 +1411,16 @@ Int direct_parser(VirtualMachine *vm, char *cmd)
             vm->typestack->data[a] = cmd[7];
             break;
 
+        case 'i' : // turn the integer value of a float
+            a = atoi(cmd + 5);
+            vm->stack->data[a].integer = (Int)vm->stack->data[a].number;
+            break;
+
+        case 'f' : // turn the float value of an integer
+            a = atoi(cmd + 5);
+            vm->stack->data[a].number = (Float)vm->stack->data[a].integer;
+            break;
+
 
         case '$' : // set the result of ... to index // (@@$ index ...);
             a = atoi(cmd + 5);
