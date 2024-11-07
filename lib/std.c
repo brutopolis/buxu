@@ -52,81 +52,6 @@ Int std_type_set(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-void print_element(VirtualMachine *vm, Int index)
-{
-    if (index < 0 || index >= vm->stack->size)
-    {
-        printf("{invalid}");
-        return;
-    }
-
-    Int _type = -1;
-    Value temp = vm->stack->data[index];
-    _type = vm->typestack->data[index];
-    
-    if (_type == TYPE_BUILTIN)
-    {
-        printf("{builtin} %ld", temp.pointer);
-    }
-    else if (_type == TYPE_NUMBER)
-    {
-        if (round(temp.number) == temp.number)
-        {
-            printf("{number} %ld", (Int)temp.number);
-        }
-        else
-        {
-            printf("{number} %f", temp.number);
-        }
-    }
-    else if (_type == TYPE_INTEGER)
-    {
-        printf("{integer} %ld", temp.integer);
-    }
-    else if (_type == TYPE_STRING)
-    {
-        printf("%s", temp.string);
-    }
-    else if (_type == TYPE_LIST)
-    {
-        printf("{list} [");
-        IntList *list = (IntList*)temp.pointer;
-        for (Int i = 0; i < (list->size-1); i++)
-        {
-            printf("%ld, ", list->data[i]);
-        }
-        if (list->size > 0)
-        {
-            printf("%ld]", list->data[list->size-1]);
-        }
-        else
-        {
-            printf("]");
-        }
-    }
-    else if (_type == TYPE_RAW)
-    {
-        printf("{raw} [");
-        for (Int i = 0; i < sizeof(Float)-1; i++)
-        {
-            printf("%d, ", temp.byte[i]);
-        }
-        printf("%d]", temp.byte[sizeof(Float)-1]);
-    }
-    else if (_type == TYPE_OTHER)
-    {
-        printf("{other} %ld", temp.pointer);
-    }
-    else if (_type == TYPE_NIL)
-    {
-        printf("{nil} %ld", temp.integer);
-    }
-    else
-    {
-        printf("{unknown} %ld", temp.integer);
-    }
-}
-
 Int std_io_print(VirtualMachine *vm, IntList *args)
 {
     while (args->size > 0)
@@ -457,6 +382,23 @@ Int std_math_decrement(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+
+Int int_from_float(VirtualMachine *vm, IntList *args)
+{
+    Int result = new_var(vm);
+    vm->typestack->data[result] = TYPE_RAW;
+    vm->stack->data[result].integer = (Int)vm->stack->data[stack_shift(*args)].number;
+    return result;
+}
+
+Int int_to_float(VirtualMachine *vm, IntList *args)
+{
+    Int result = new_var(vm);
+    vm->typestack->data[result] = TYPE_NUMBER;
+    vm->stack->data[result].number = (Float)vm->stack->data[stack_shift(*args)].integer;
+    return result;
+}
+
 // list functions
 // list functions
 // list functions
@@ -702,7 +644,7 @@ Int std_string_split(VirtualMachine *vm, IntList *args)
     Int delim = stack_shift(*args);
     if ((vm->typestack->data[str] == TYPE_STRING) && (vm->typestack->data[delim] == TYPE_STRING))
     {
-        StringList *list = splitString(vm->stack->data[str].string, vm->stack->data[delim].string);
+        StringList *list = split_string(vm->stack->data[str].string, vm->stack->data[delim].string);
         char * _tmp = str_format("list.new", list->size);
         Int _arr = eval(vm, _tmp);
         free(_tmp);
@@ -1159,6 +1101,8 @@ void init_math(VirtualMachine *vm)
     registerBuiltin(vm, "random", std_math_random);
     registerBuiltin(vm, "incr", std_math_increment);
     registerBuiltin(vm, "decr", std_math_decrement);
+    registerBuiltin(vm, "int.from.float", int_from_float);
+    registerBuiltin(vm, "float.from.int", int_to_float);
 }
 
 void init_string(VirtualMachine *vm)

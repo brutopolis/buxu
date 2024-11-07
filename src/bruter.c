@@ -1,7 +1,6 @@
 #include "bruter.h"
 
 //string functions
-
 char* str_duplicate(const char *str)
 {
     char *dup = (char*)malloc(strlen(str) + 1);
@@ -308,7 +307,7 @@ StringList* special_split(char *str, char delim)
     return splited;
 }
 
-StringList* splitString(char *str, char *delim)
+StringList* split_string(char *str, char *delim)
 {
     StringList *splited;
     splited = (StringList*)malloc(sizeof(StringList));
@@ -336,16 +335,153 @@ StringList* splitString(char *str, char *delim)
     return splited;
 }
 
+#ifndef ARDUINO
+
+// print 
+
+void print_element(VirtualMachine *vm, Int index)
+{
+    if (index < 0 || index >= vm->stack->size)
+    {
+        printf("{invalid}");
+        return;
+    }
+
+    Int _type = -1;
+    Value temp = vm->stack->data[index];
+    _type = vm->typestack->data[index];
+    
+    if (_type == TYPE_BUILTIN)
+    {
+        printf("{builtin} %ld", temp.pointer);
+    }
+    else if (_type == TYPE_NUMBER)
+    {
+        if (round(temp.number) == temp.number)
+        {
+            printf("{number} %ld", (Int)temp.number);
+        }
+        else
+        {
+            printf("{number} %f", temp.number);
+        }
+    }
+    else if (_type == TYPE_INTEGER)
+    {
+        printf("{integer} %ld", temp.integer);
+    }
+    else if (_type == TYPE_STRING)
+    {
+        printf("%s", temp.string);
+    }
+    else if (_type == TYPE_LIST)
+    {
+        printf("{list} [");
+        IntList *list = (IntList*)temp.pointer;
+        for (Int i = 0; i < (list->size-1); i++)
+        {
+            printf("%ld, ", list->data[i]);
+        }
+        if (list->size > 0)
+        {
+            printf("%ld]", list->data[list->size-1]);
+        }
+        else
+        {
+            printf("]");
+        }
+    }
+    else if (_type == TYPE_RAW)
+    {
+        printf("{raw} [");
+        for (Int i = 0; i < sizeof(Float)-1; i++)
+        {
+            printf("%d, ", temp.byte[i]);
+        }
+        printf("%d]", temp.byte[sizeof(Float)-1]);
+    }
+    else if (_type == TYPE_OTHER)
+    {
+        printf("{other} %ld", temp.pointer);
+    }
+    else if (_type == TYPE_NIL)
+    {
+        printf("{nil} %ld", temp.integer);
+    }
+    else
+    {
+        printf("{unknown} %ld", temp.integer);
+    }
+}
+
+// repl 
+Int repl(VirtualMachine *vm)
+{
+    printf("bruter v%s\n", VERSION);
+    char *cmd;
+    Int result = -1;
+    int junk = 0;
+    while (result == -1)
+    {
+        cmd = (char*)malloc(1024);
+        printf("@> ");
+        junk = scanf("%[^\n]%*c", cmd);
+        if (junk == 0)
+        {
+            free(cmd);
+            break;
+        }
+        result = eval(vm, cmd);
+        free(cmd);
+    }
+
+    printf("repl returned: @%ld\n", result);
+    print_element(vm, result);
+    printf("\n");
+}
+
+// file functions
+char* readfile(char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        return NULL;
+    }
+    char *code = (char*)malloc(1);
+    code[0] = '\0';
+    char *line = NULL;
+    size_t len = 0;
+    while (getline(&line, &len, file) != -1)
+    {
+        code = (char*)realloc(code, strlen(code) + strlen(line) + 1);
+        strcat(code, line);
+    }
+    free(line);
+    fclose(file);
+    return code;
+};
+
+void writefile(char *filename, char *code)
+{
+    FILE *file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        return;
+    }
+    fprintf(file, "%s", code);
+    fclose(file);
+}
+
+#endif
+
 // value functions
 
 Value value_duplicate(Value value, char type)
 {
     Value dup;
-    if (type == TYPE_NUMBER)
-    {
-        dup.number = value.number;
-    }
-    else if (type == TYPE_STRING)
+
+    if (type == TYPE_STRING)
     {
         dup.string = str_duplicate(value.string);
     }
@@ -362,6 +498,11 @@ Value value_duplicate(Value value, char type)
     {
         dup.pointer = value.pointer;
     }
+    else 
+    {
+        dup.integer = value.integer;
+    }
+
     return dup;
 }
 
@@ -653,6 +794,640 @@ void unhold_var(VirtualMachine *vm, Int index)
     stack_push(*vm->temp, index);
 }
 
+Int direct_bit_parser(VirtualMachine *vm, char *cmd)
+{
+    Int result = -1;
+    Int a = -1;
+    Int b = -1;
+    Int c = -1;
+    Int d = -1;
+    Int e = -1;
+    Int f = -1;
+    char *tmp = NULL;
+    switch (cmd[4])
+    {
+        case 'g': // bit get (@@@@g value index bitindex);
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            c = atoi(strchr(tmp + 1, ' ') + 1);
+            result = (vm->stack->data[a].byte[b] >> c) & 1;
+        
+        case '=': // bit set (@@@@B value byteindex bitindex bitvalue)
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            c = atoi(tmp + 1);
+            d = atoi(strchr(tmp + 1, ' ') + 1);
+            if (d == 0)
+            {
+                vm->stack->data[a].byte[b] &= ~(1 << c);
+            }
+            else
+            {
+                vm->stack->data[a].byte[b] |= 1 << c;
+            }
+            break;
+
+        case 'C': // bit copy (@@@@c value byteindex bitindex value2 byteindex2 bitindex2)
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            c = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            e = atoi(strchr(tmp + 1, ' ') + 1);
+            f = atoi(strchr(tmp + 1, ' ') + 1);
+            if (((vm->stack->data[a].byte[b] >> c) & 1) == 1)
+            {
+                vm->stack->data[d].byte[e] |= 1 << f;
+            }
+            else
+            {
+                vm->stack->data[d].byte[e] &= ~(1 << f);
+            }
+            break;
+
+        case 's': // bit swap (@@@@s value byteindex bitindex value2 byteindex2 bitindex2)
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            c = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            e = atoi(strchr(tmp + 1, ' ') + 1);
+            f = atoi(strchr(tmp + 1, ' ') + 1);
+            if (((vm->stack->data[a].byte[b] >> c) & 1) != ((vm->stack->data[d].byte[e] >> f) & 1))
+            {
+                vm->stack->data[a].byte[b] ^= 1 << c;
+                vm->stack->data[d].byte[e] ^= 1 << f;
+            }
+            break;
+
+        case 'e': // bit compare (@@@@c value byteindex bitindex value2 byteindex2 bitindex2)
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            c = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            e = atoi(strchr(tmp + 1, ' ') + 1);
+            f = atoi(strchr(tmp + 1, ' ') + 1);
+            if (((vm->stack->data[a].byte[b] >> c) & 1) == ((vm->stack->data[d].byte[e] >> f) & 1))
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case '&': // bit and (@@@@a value byteindex bitindex value2 byteindex2 bitindex2)
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            c = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            e = atoi(strchr(tmp + 1, ' ') + 1);
+            f = atoi(strchr(tmp + 1, ' ') + 1);
+            if (((vm->stack->data[a].byte[b] >> c) & 1) == 1 && ((vm->stack->data[d].byte[e] >> f) & 1) == 1)
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case '|': // bit or (@@@@o value byteindex bitindex value2 byteindex2 bitindex2)
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            c = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            e = atoi(strchr(tmp + 1, ' ') + 1);
+            f = atoi(strchr(tmp + 1, ' ') + 1);
+            if (((vm->stack->data[a].byte[b] >> c) & 1) == 1 || ((vm->stack->data[d].byte[e] >> f) & 1) == 1)
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case '^': // bit xor (@@@@x value byteindex bitindex value2 byteindex2 bitindex2)
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            c = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            e = atoi(strchr(tmp + 1, ' ') + 1);
+            f = atoi(strchr(tmp + 1, ' ') + 1);
+            if (((vm->stack->data[a].byte[b] >> c) & 1) != ((vm->stack->data[d].byte[e] >> f) & 1))
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case '~': // bit not (@@@@n value byteindex bitindex)
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            c = atoi(strchr(tmp + 1, ' ') + 1);
+            if (((vm->stack->data[a].byte[b] >> c) & 1) == 0)
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case 'S': // bit shift (@@@@s value byteindex bitindex direction amount)
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            c = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            e = atoi(strchr(tmp + 1, ' ') + 1);
+            f = atoi(strchr(tmp + 1, ' ') + 1);
+            if (d == 0)
+            {
+                vm->stack->data[a].byte[b] <<= f;
+            }
+            else
+            {
+                vm->stack->data[a].byte[b] >>= f;
+            }
+            break;
+        
+        case 'r': // bit rotate (@@@@r value byteindex bitindex direction amount)
+            tmp = strchr(cmd + 7, ' ');
+            a = atoi(cmd + 7);
+            b = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            c = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            e = atoi(strchr(tmp + 1, ' ') + 1);
+            f = atoi(strchr(tmp + 1, ' ') + 1);
+            if (d == 0)
+            {
+                vm->stack->data[a].byte[b] = (vm->stack->data[a].byte[b] << f) | (vm->stack->data[a].byte[b] >> (8 - f));
+            }
+            else
+            {
+                vm->stack->data[a].byte[b] = (vm->stack->data[a].byte[b] >> f) | (vm->stack->data[a].byte[b] << (8 - f));
+            }
+            break;
+
+        case '$': // set the result of ... to the value (@@@$ a ...)
+            a = atoi(cmd + 7);
+            tmp = strchr(cmd + 7, ' ');
+            vm->stack->data[a].integer = direct_bit_parser(vm, tmp);
+            break;
+    }
+    return result;
+}
+            
+
+Int direct_byte_parser(VirtualMachine *vm, char *cmd)
+{
+    Int result = -1;
+    Int a = -1;
+    Int b = -1;
+    Int c = -1;
+    Int d = -1;
+    Int e = -1;
+    switch (cmd[4])
+    {
+        case 'g': // byte get (@@@b value index);
+            a = atoi(cmd + 6);
+            b = atoi(strchr(cmd + 6, ' ') + 1);
+            result = vm->stack->data[a].byte[b];
+            break;
+
+
+        case '=': // byte set (@@@B value index byte);
+            char *tmp = strchr(cmd + 6, ' ');
+            a = atoi(cmd + 6);
+            b = atoi(tmp + 1);
+            c = atoi(strchr(tmp + 1, ' ') + 1);
+            vm->stack->data[a].byte[b] = c;
+            break;
+
+
+        case 'C': // byte copy (@@@c c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            vm->stack->data[c].byte[a] = vm->stack->data[d].byte[b];
+            break;
+
+
+        case 's': // byte swap (@@@s c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            char tmp_b = atoi(strchr(tmp + 1, ' ') + 1);
+            tmp_b = vm->stack->data[c].byte[a];
+            vm->stack->data[c].byte[a] = vm->stack->data[d].byte[b];
+            vm->stack->data[d].byte[b] = tmp_b;
+            break;
+
+
+        case '+': // byte add (@@@a c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            vm->stack->data[c].byte[a] += vm->stack->data[d].byte[b];
+            break;
+
+
+        case '-': // byte sub (@@@s c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            vm->stack->data[c].byte[a] -= vm->stack->data[d].byte[b];
+            break;
+
+
+        case '*': // byte multiply (@@@m c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            vm->stack->data[c].byte[a] *= vm->stack->data[d].byte[b];
+            break;
+
+
+        case '/': // byte divide (@@@d c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            e = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            vm->stack->data[c].byte[a] /= vm->stack->data[d].byte[b];
+            break;
+
+
+        case '%': // byte mod (@@@M c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            vm->stack->data[c].byte[a] = vm->stack->data[c].byte[a] % vm->stack->data[d].byte[b];
+            break;
+
+
+        case 'c': // byte compare (@@@c c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            if (vm->stack->data[c].byte[a] == vm->stack->data[d].byte[b])
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case 'e': // byte equals (@@@e c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            if (vm->stack->data[c].byte[a] == vm->stack->data[d].byte[b])
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case '!': // byte not equals (@@@n c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            if (vm->stack->data[c].byte[a] != vm->stack->data[d].byte[b])
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case '>': // byte greater (@@@g c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            if (vm->stack->data[c].byte[a] > vm->stack->data[d].byte[b])
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case '<': // byte less (@@@l c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            if (vm->stack->data[c].byte[a] < vm->stack->data[d].byte[b])
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case '&': // byte and (@@@a c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            if (vm->stack->data[c].byte[a] && vm->stack->data[d].byte[b])
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case '|': // byte or (@@@o c a d b);
+            tmp = strchr(cmd + 6, ' ');
+            c = atoi(cmd + 6);
+            a = atoi(tmp + 1);
+            tmp = strchr(tmp + 1, ' ');
+            d = atoi(tmp + 1);
+            b = atoi(strchr(tmp + 1, ' ') + 1);
+            if (vm->stack->data[c].byte[a] || vm->stack->data[d].byte[b])
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+
+        case '$': // set the result of ... to the value (@@@$ a ...)
+            a = atoi(cmd + 6);
+            tmp = strchr(cmd + 6, ' ');
+            vm->stack->data[a].integer = direct_byte_parser(vm, tmp);
+        break;
+
+        case '@': // get the bit value of the byte (@@@@ ...)
+            result = direct_bit_parser(vm, cmd);
+            break;
+
+        case 'l': // byte length (@@@l);
+            result = sizeof(Float);
+            break;
+    }
+    return result;
+}
+
+//direct cmds
+Int direct_parser(VirtualMachine *vm, char *cmd)
+{
+    Int result = -1;
+    Int a = -1;
+    Int b = -1;
+    Int c = -1;
+    Int d = -1;
+    char* tmp = NULL;
+
+
+    switch (cmd[3])
+    {
+        case '=': // set (@@S index value);
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            
+            vm->stack->data[a].integer = b;
+            break;
+
+
+        case 'p': // print (@@p index);
+            a = atoi(cmd + 5);
+            printf("%ld\n",vm->stack->data[a].integer);
+            break;
+
+
+        case '+':// add (@@a index value);
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            vm->stack->data[a].integer += b;
+            break;
+
+
+        case '-': // sub (@@s index value);
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            vm->stack->data[a].integer -= b;
+            break;
+
+
+        case '*': // mul (@@m index value);
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            vm->stack->data[a].integer *= b;
+            break;
+
+
+        case '/': // div (@@d index value);
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            vm->stack->data[a].integer /= b;
+            break;
+
+
+        case '%': // mod
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            vm->stack->data[a].integer %= b;
+            break;
+
+
+        case 'e': // equals (@@e index value); ==
+        {    
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            result = vm->stack->data[a].integer == b;
+            break;
+        }
+
+
+        case '!': // not equals (@@n index value); !=
+        {
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            result = vm->stack->data[a].integer != b;
+            break;
+        }
+
+        case '>': // greater (@@g index value); >
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            result = vm->stack->data[a].integer > vm->stack->data[b].integer;
+            break;
+
+
+        case '<': // less (@@l index value); <
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            result = vm->stack->data[a].integer < vm->stack->data[b].integer;
+            break;
+
+
+        case '&': // and (@@a index value); &&
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            result = vm->stack->data[a].integer && vm->stack->data[b].integer;
+            break;
+
+
+        case '|': // or (@@o index value); ||
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            result = vm->stack->data[a].integer || vm->stack->data[b].integer;
+            break;
+
+
+        case 'r': // resize the stack(@@r size)
+            a = atoi(cmd + 5);
+            while (vm->stack->size < a)
+            {
+                new_var(vm);
+            }
+            while (vm->stack->size > a)
+            {
+                free_var(vm, vm->stack->size-1);
+            }
+            break;
+
+
+        case 'l': // stack length (@@l);
+            result = vm->stack->size;
+            break;
+
+
+        case 'g' : // get/return (@@g index);
+            a = atoi(cmd + 5);
+            result = a;
+            break;
+
+
+        case 's' : // swap (@@s a b);
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            Value tmp_v = vm->stack->data[a];
+            vm->stack->data[a] = vm->stack->data[b];
+            vm->stack->data[b] = tmp_v;
+            break;
+        
+
+        case 'c' : // copy (@@c a b);
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            vm->stack->data[a] = value_duplicate(vm->stack->data[b], vm->typestack->data[b]);
+            break;
+
+
+        case 'T' : // get type
+            a = atoi(cmd + 5);
+            result = vm->typestack->data[a];
+            break;
+
+
+        case 't' : // set type
+            a = atoi(cmd + 5);
+            vm->typestack->data[a] = cmd[7];
+            break;
+
+
+        case '$' : // set the result of ... to index // (@@$ index ...);
+            a = atoi(cmd + 5);
+            char *_cmd = strchr(cmd + 5, ' ') + 1;
+            vm->stack->data[a].integer = direct_parser(vm, _cmd);
+            break;
+
+
+        case '@' : //this is a group, @@@ are related to byte functions
+            result = direct_byte_parser(vm, cmd);
+            break;
+        default:
+            break;
+    }
+    return result;
+}
+
 // Parser functions
 IntList* parse(VirtualMachine *vm, char *cmd) 
 {
@@ -662,11 +1437,26 @@ IntList* parse(VirtualMachine *vm, char *cmd)
     while (splited->size > 0)
     {
         char* str = stack_shift(*splited);
-        if (str[0] == '@') 
+        if (str[0] == '(')
+        {
+            if(str[1] == '@' && str[2] == '@') // directcmd
+            {
+                Int ret = direct_parser(vm, str);
+                stack_push(*result, new_number(vm, ret));
+            }
+            else
+            {
+                char* temp = str_nduplicate(str + 1, strlen(str) - 2);
+                Int index = eval(vm, temp);
+                stack_push(*result, index);
+                free(temp);
+            }
+        }
+        else if (str[0] == '@') 
         {
             if (strchr(str, ':') != NULL)
             {
-                StringList *splited = splitString(str, ":");
+                StringList *splited = split_string(str, ":");
                 char* s_left =  splited->data[0] + 1;
                 char* s_right = splited->data[1];
 
@@ -725,13 +1515,6 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             {
                 stack_push(*result, atoi(str + 1));
             }
-        }
-        else if (str[0] == '(')
-        {
-            char* temp = str_nduplicate(str + 1, strlen(str) - 2);
-            Int index = eval(vm, temp);
-            stack_push(*result, index);
-            free(temp);
         }
         else if (str[0] == '"' || str[0] == '\'') // string
         {

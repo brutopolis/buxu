@@ -1,7 +1,20 @@
-(05/11/2024) - version 0.6.4
+(07/11/2024) - version 0.6.4
 
+- direct commands (@@a args...) are now a thing, they are faster than libs and are hardcoded in the interpreter, can only work with integers;
+- direct byte commands (@@@a args...), a subset of direct commands for bytes, also hardcoded in the interpreter;
+- direct bit commands (@@@@a args...), a subset of direct commands for bits, also hardcoded in the interpreter;
 - new function mem_next;
+- new function repl;
+- math functions now set result to the first argument, instead of creating a new one;
+- readfile and writefile moved from os.c to bruter.c;
+- print_element moved from std.c to bruter.c;
+- removed raw.c, direct commands does the same job, and are faster; 
+- new function direct_parser;
+- new function direct_byte_parser;
+- new function direct_bit_parser;
 - some optimizations;
+- build files updated;
+- new exemple pure.br;
 
 (03/11/2024) - version 0.6.3
 

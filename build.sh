@@ -6,7 +6,7 @@ mkdir build
 mkdir build/lib
 mkdir build/include
 mkdir build/example
-cp ./src/main.c build/include/main.c
+cp ./src/*.c build/include/
 cp ./lib/* build/lib/ -r
 cp ./include/* build/include/ -r
 cp ./example/* build/example/ -r
@@ -21,24 +21,28 @@ if [ -n "$EXCLUDE" ]; then # EXCLUDE="filename.c" ./build.sh
     cd ..
 fi
 
-for file in ./lib/*.c; do
-    filename="${file##*/}"  
-    filename="${filename%.*}" 
+#if all libs are excluded we don't need to build anything
+if [ -z "$(ls -A lib)" ]; then
+    echo "no libraries to build"
+    gcc ./include/main.c ./include/bruter.c -o bruter -O3 -lm -I./include
+else
+    for file in ./lib/*.c; do
+        filename="${file##*/}"  
+        filename="${filename%.*}" 
+        echo "building $filename"
+        sed -i "s/<libraries header>/<libraries header>\\nvoid init_$filename(VirtualMachine* vm);/g" include/bruter.h
+        sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" include/*.c 
+        sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" lib/*.c
+    done
+    echo "building bruter"
+    gcc ./include/bruter.c -c -O3 -lm -I./include
+    gcc ./lib/*.c -c -O3 -lm -I./include
+    ar rcs lib/bruter.a *.o
+    rm -rf lib/*.c
+    gcc ./include/main.c lib/* -o bruter -O3 -lm
+fi
 
-    sed -i "s/<libraries header>/<libraries header>\\nvoid init_$filename(VirtualMachine* vm);/g" include/bruter.h
-    sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" include/*.c 
-    sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" lib/*.c
-done
 
-gcc ../src/bruter.c -c -O3 -lm -I./include
-
-gcc ./lib/*.c -c -O3 -lm -I./include
-
-ar rcs lib/bruter.a *.o
-
-rm -rf lib/*.c
-
-gcc ./include/main.c lib/* -o bruter -O3 -lm
 
 rm -rf *.o
 rm -rf lib/*.c

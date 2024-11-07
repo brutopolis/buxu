@@ -1,36 +1,5 @@
 #include "bruter.h"
 #ifndef ARDUINO
-char* readfile(char *filename)
-{
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
-    {
-        return NULL;
-    }
-    char *code = (char*)malloc(1);
-    code[0] = '\0';
-    char *line = NULL;
-    size_t len = 0;
-    while (getline(&line, &len, file) != -1)
-    {
-        code = (char*)realloc(code, strlen(code) + strlen(line) + 1);
-        strcat(code, line);
-    }
-    free(line);
-    fclose(file);
-    return code;
-};
-
-void writefile(char *filename, char *code)
-{
-    FILE *file = fopen(filename, "w");
-    if (file == NULL)
-    {
-        return;
-    }
-    fprintf(file, "%s", code);
-    fclose(file);
-}
 
 Int os_file_read(VirtualMachine *vm, IntList *args)
 {
@@ -63,28 +32,7 @@ Int os_file_delete(VirtualMachine *vm, IntList *args)
 
 Int os_repl(VirtualMachine *vm, IntList *args)
 {
-    printf("bruter v%s\n", VERSION);
-    char *cmd;
-    Int result = -1;
-    int junk = 0;
-    while (result == -1)
-    {
-        cmd = (char*)malloc(1024);
-        printf("@> ");
-        junk = scanf("%[^\n]%*c", cmd);
-        if (junk == 0)
-        {
-            free(cmd);
-            break;
-        }
-        result = eval(vm, cmd);
-        free(cmd);
-    }
-
-    printf("repl returned: @%ld\n", result);
-    print_element(vm, result);
-    printf("\n");
-    return result;
+    return repl(vm);
 }
 
 Int os_dofile(VirtualMachine *vm, IntList *args)

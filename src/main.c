@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 
     if (args->size == 0)
     {
-        interpret(vm, "repl");
+        repl(vm);
     }
     else if (args->size == 1) // read file pointed by argv[1]
     {
