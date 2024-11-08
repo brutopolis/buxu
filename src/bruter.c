@@ -797,6 +797,7 @@ void unhold_var(VirtualMachine *vm, Int index)
 
 Int direct_bit_parser(VirtualMachine *vm, char *cmd)
 {
+    printf("direct bit parser\n");
     Int result = -1;
     Int a = -1;
     Int b = -1;
@@ -805,15 +806,16 @@ Int direct_bit_parser(VirtualMachine *vm, char *cmd)
     Int e = -1;
     Int f = -1;
     char *tmp = NULL;
-    switch (cmd[4])
+    switch (cmd[5])
     {
-        case 'g': // bit get (@@@@g value index bitindex);
+        case '?': // bit get (@@@@g value index bitindex);
             tmp = strchr(cmd + 7, ' ');
             a = atoi(cmd + 7);
             b = atoi(tmp + 1);
             c = atoi(strchr(tmp + 1, ' ') + 1);
             result = (vm->stack->data[a].byte[b] >> c) & 1;
-        
+            break;
+
         case '=': // bit set (@@@@B value byteindex bitindex bitvalue)
             tmp = strchr(cmd + 7, ' ');
             a = atoi(cmd + 7);
@@ -1008,6 +1010,24 @@ Int direct_bit_parser(VirtualMachine *vm, char *cmd)
             tmp = strchr(cmd + 7, ' ');
             vm->stack->data[a].integer = direct_bit_parser(vm, tmp);
             break;
+
+        case 'h': // help
+            printf("bit commands:\n");
+            printf("(@@@@? value index bitindex) - bit get\n");
+            printf("(@@@@= value byteindex bitindex bitvalue) - bit set\n");
+            printf("(@@@@c value byteindex bitindex value2 byteindex2 bitindex2) - bit copy\n");
+            printf("(@@@@s value byteindex bitindex value2 byteindex2 bitindex2) - bit swap\n");
+            printf("(@@@@e value byteindex bitindex value2 byteindex2 bitindex2) - bit compare\n");
+            printf("(@@@@& value byteindex bitindex value2 byteindex2 bitindex2) - bit and\n");
+            printf("(@@@@| value byteindex bitindex value2 byteindex2 bitindex2) - bit or\n");
+            printf("(@@@@^ value byteindex bitindex value2 byteindex2 bitindex2) - bit xor\n");
+            printf("(@@@@~ value byteindex bitindex) - bit not\n");
+            printf("(@@@@S value byteindex bitindex direction amount) - bit shift\n");
+            printf("(@@@@r value byteindex bitindex direction amount) - bit rotate\n");
+            printf("(@@@@$ index ...) - set the result of ... to the value\n");
+            printf("(@@@@h) - help\n");
+            printf("\n");
+        break;
     }
     return result;
 }
@@ -1023,7 +1043,7 @@ Int direct_byte_parser(VirtualMachine *vm, char *cmd)
     Int e = -1;
     switch (cmd[4])
     {
-        case 'g': // byte get (@@@b value index);
+        case '?': // byte get (@@@b value index);
             a = atoi(cmd + 6);
             b = atoi(strchr(cmd + 6, ' ') + 1);
             result = vm->stack->data[a].byte[b];
@@ -1039,7 +1059,7 @@ Int direct_byte_parser(VirtualMachine *vm, char *cmd)
             break;
 
 
-        case 'C': // byte copy (@@@c c a d b);
+        case 'c': // byte copy (@@@c c a d b);
             tmp = strchr(cmd + 6, ' ');
             c = atoi(cmd + 6);
             a = atoi(tmp + 1);
@@ -1117,23 +1137,6 @@ Int direct_byte_parser(VirtualMachine *vm, char *cmd)
             vm->stack->data[c].byte[a] = vm->stack->data[c].byte[a] % vm->stack->data[d].byte[b];
             break;
 
-
-        case 'c': // byte compare (@@@c c a d b);
-            tmp = strchr(cmd + 6, ' ');
-            c = atoi(cmd + 6);
-            a = atoi(tmp + 1);
-            tmp = strchr(tmp + 1, ' ');
-            d = atoi(tmp + 1);
-            b = atoi(strchr(tmp + 1, ' ') + 1);
-            if (vm->stack->data[c].byte[a] == vm->stack->data[d].byte[b])
-            {
-                result = 1;
-            }
-            else
-            {
-                result = 0;
-            }
-            break;
 
         case 'e': // byte equals (@@@e c a d b);
             tmp = strchr(cmd + 6, ' ');
@@ -1249,6 +1252,30 @@ Int direct_byte_parser(VirtualMachine *vm, char *cmd)
 
         case 'l': // byte length (@@@l);
             result = sizeof(Float);
+            break;
+        
+        case 'h': // help
+            printf("byte commands:\n");
+            printf("(@@@g value index) - get the byte value of a variable\n");
+            printf("(@@@= value index byte) - set the byte value of a variable\n");
+            printf("(@@@c origin_value origin_index dest_value dest_index) - copy the byte value of a variable\n");
+            printf("(@@@s origin_value origin_index dest_value dest_index) - swap the byte value of a variable\n");
+            printf("(@@@+ origin_value origin_index dest_value dest_index) - add the byte value of a variable\n");
+            printf("(@@@- origin_value origin_index dest_value dest_index) - subtract the byte value of a variable\n");
+            printf("(@@@* origin_value origin_index dest_value dest_index) - multiply the byte value of a variable\n");
+            printf("(@@@/ origin_value origin_index dest_value dest_index) - divide the byte value of a variable\n");
+            printf("(@@@%% origin_value origin_index dest_value dest_index) - mod the byte value of a variable\n");
+            printf("(@@@e origin_value origin_index dest_value dest_index) - check if the byte value of a variable is equal\n");
+            printf("(@@@! origin_value origin_index dest_value dest_index) - check if the byte value of a variable is not equal\n");
+            printf("(@@@> origin_value origin_index dest_value dest_index) - check if the byte value of a variable is greater\n");
+            printf("(@@@< origin_value origin_index dest_value dest_index) - check if the byte value of a variable is less\n");
+            printf("(@@@& origin_value origin_index dest_value dest_index) - check if the byte value of a variable is true\n");
+            printf("(@@@| origin_value origin_index dest_value dest_index) - check if the byte value of a variable is false\n");
+            printf("(@@@$ index ...) - set the result of ... to the index\n");
+            printf("(@@@l) - byte length\n");
+            printf("(@@@h) - help\n");
+            printf("(@@@@ ...) - bit commands\n");
+            printf("\n");
             break;
     }
     return result;
@@ -1379,7 +1406,7 @@ Int direct_parser(VirtualMachine *vm, char *cmd)
             break;
 
 
-        case 'g' : // get/return (@@g index);
+        case '?' : // get/return (@@? index);
             a = atoi(cmd + 5);
             result = a;
             break;
@@ -1437,6 +1464,38 @@ Int direct_parser(VirtualMachine *vm, char *cmd)
 
         case '@' : //this is a group, @@@ are related to byte functions
             result = direct_byte_parser(vm, cmd);
+            break;
+
+        case 'h' : // help
+            printf("avaliable commands:\n");
+            printf("(@@= index value) set the value of a variable\n");
+            printf("(@@p index) print the value of a variable\n");
+            printf("(@@+ index value) add a value to a variable\n");
+            printf("(@@- index value) subtract a value from a variable\n");
+            printf("(@@* index value) multiply a variable by a value\n");
+            printf("(@@/ index value) divide a variable by a value\n");
+            printf("(@@%% index value) get the remainder of a variable divided by a value\n");
+            printf("(@@e index value) check if a variable is equal to a value\n");
+            printf("(@@! index value) check if a variable is not equal to a value\n");
+            printf("(@@> index value) check if a variable is greater than a value\n");
+            printf("(@@< index value) check if a variable is less than a value\n");
+            printf("(@@& index value) check if a variable and a value are both true\n");
+            printf("(@@| index value) check if a variable or a value are true\n");
+            printf("(@@r size) resize the stack\n");
+            printf("(@@l) get the length of the stack\n");
+            printf("(@@g index) get the value of a variable\n");
+            printf("(@@s a b) swap the values of two variables\n");
+            printf("(@@c a b) copy the value of a variable to another variable\n");
+            printf("(@@T index) get the type of a variable\n");
+            printf("(@@t index type) set the type of a variable\n");
+            printf("(@@i index) turn the float value of a variable into an integer\n");
+            printf("(@@f index) turn the integer value of a variable into a float\n");
+            printf("(@@F index) free a variable\n");
+            printf("(@@$ index ...) set the result of a command to a variable\n");
+            printf("(@@h) help\n");
+            printf("(@@@ ...) byte commands\n");
+            printf("(@@@@ ...) bit commands\n");
+            printf("\n");
             break;
         default:
             break;
