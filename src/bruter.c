@@ -1004,7 +1004,7 @@ Int direct_bit_parser(VirtualMachine *vm, char *cmd)
                 vm->stack->data[a].byte[b] = (vm->stack->data[a].byte[b] >> f) | (vm->stack->data[a].byte[b] << (8 - f));
             }
             break;
-
+            
         case '$': // set the result of ... to the value (@@@$ a ...)
             a = atoi(cmd + 7);
             tmp = strchr(cmd + 7, ' ');
@@ -1240,18 +1240,47 @@ Int direct_byte_parser(VirtualMachine *vm, char *cmd)
             }
             break;
 
+        case 'I' : // if (@@@I index byteindex ...);
+            a = atoi(cmd + 6);
+            b = atoi(strchr(cmd + 6, ' ') + 1);
+            if (vm->stack->data[a].byte[b])
+            {
+                result = direct_byte_parser(vm, strchr(cmd + 6, ' ') + 1);
+            }
+            break;
+
+        case 'R' : // repeat (@@@R index byteindex ...);
+            a = atoi(cmd + 6);
+            b = atoi(strchr(cmd + 6, ' ') + 1);
+            for (Int i = 0; i < vm->stack->data[a].byte[b]; i++)
+            {
+                result = direct_byte_parser(vm, strchr(cmd + 6, ' ') + 1);
+            }
+            break;
+
+        case 'w' : // while (@@@w index byteindex ...);
+            a = atoi(cmd + 6);
+            b = atoi(strchr(cmd + 6, ' ') + 1);
+            while (vm->stack->data[a].byte[b])
+            {
+                result = direct_byte_parser(vm, strchr(cmd + 6, ' ') + 1);
+            }
+            break;
+
         case '$': // set the result of ... to the value (@@@$ a ...)
             a = atoi(cmd + 6);
             tmp = strchr(cmd + 6, ' ');
             vm->stack->data[a].integer = direct_byte_parser(vm, tmp);
         break;
 
-        case '@': // get the bit value of the byte (@@@@ ...)
-            result = direct_bit_parser(vm, cmd);
-            break;
 
         case 'l': // byte length (@@@l);
             result = sizeof(Float);
+            break;
+
+        
+        case '@': // get the bit value of the byte (@@@@ ...)
+            result = direct_bit_parser(vm, cmd);
             break;
         
         case 'h': // help
@@ -1272,6 +1301,9 @@ Int direct_byte_parser(VirtualMachine *vm, char *cmd)
             printf("(@@@& origin_value origin_index dest_value dest_index) - check if the byte value of a variable is true\n");
             printf("(@@@| origin_value origin_index dest_value dest_index) - check if the byte value of a variable is false\n");
             printf("(@@@$ index ...) - set the result of ... to the index\n");
+            printf("(@@@I index byteindex ...) - if\n");
+            printf("(@@@R index byteindex ...) - repeat\n");
+            printf("(@@@w index byteindex ...) - while\n");
             printf("(@@@l) - byte length\n");
             printf("(@@@h) - help\n");
             printf("(@@@@ ...) - bit commands\n");
@@ -1453,7 +1485,33 @@ Int direct_parser(VirtualMachine *vm, char *cmd)
             a = atoi(cmd + 5);
             free_var(vm, a);
             break;
+        
+        case 'I' : // if (@@I index value ...);
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            if (vm->stack->data[a].integer)
+            {
+                result = direct_parser(vm, strchr(cmd + 5, ' ') + 1);
+            }
+            break;
 
+        case 'R' : // repeat (@@R index value ...);
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            for (Int i = 0; i < b; i++)
+            {
+                result = direct_parser(vm, strchr(cmd + 5, ' ') + 1);
+            }
+            break;
+
+        case 'w' : // while (@@w index value ...);
+            a = atoi(cmd + 5);
+            b = atoi(strchr(cmd + 5, ' ') + 1);
+            while (vm->stack->data[a].integer)
+            {
+                result = direct_parser(vm, strchr(cmd + 5, ' ') + 1);
+            }
+            break;
 
         case '$' : // set the result of ... to index // (@@$ index ...);
             a = atoi(cmd + 5);
@@ -1492,6 +1550,9 @@ Int direct_parser(VirtualMachine *vm, char *cmd)
             printf("(@@f index) turn the integer value of a variable into a float\n");
             printf("(@@F index) free a variable\n");
             printf("(@@$ index ...) set the result of a command to a variable\n");
+            printf("(@@I index value ...) if the value of a variable is true, run the commands\n");
+            printf("(@@R index value ...) repeat the commands a number of times\n");
+            printf("(@@w index value ...) while the value of a variable is true, run the commands\n");
             printf("(@@h) help\n");
             printf("(@@@ ...) byte commands\n");
             printf("(@@@@ ...) bit commands\n");
