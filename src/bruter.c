@@ -734,6 +734,7 @@ void free_vm(VirtualMachine *vm)
     stack_free(*vm->temp);
 
     free(vm);
+    printf("vm freed\n");
 }
 
 void unuse_var(VirtualMachine *vm, Int index)
@@ -1421,6 +1422,11 @@ Int direct_parser(VirtualMachine *vm, char *cmd)
             vm->stack->data[a].number = (Float)vm->stack->data[a].integer;
             break;
 
+        case 'F' : // free the variable
+            a = atoi(cmd + 5);
+            free_var(vm, a);
+            break;
+
 
         case '$' : // set the result of ... to index // (@@$ index ...);
             a = atoi(cmd + 5);
@@ -1452,7 +1458,10 @@ IntList* parse(VirtualMachine *vm, char *cmd)
             if(str[1] == '@' && str[2] == '@') // directcmd
             {
                 Int ret = direct_parser(vm, str);
-                stack_push(*result, new_number(vm, ret));
+                if (ret > -1)
+                {
+                    stack_push(*result, new_number(vm, ret));
+                }
             }
             else
             {

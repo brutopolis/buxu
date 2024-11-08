@@ -1,18 +1,12 @@
 hash.set "_index" 0;
-hash.set "_size" 1010;
-
+hash.set "_size" 100000;
+hash.set "condition" 0;
 do 
 "
     print _index;
     incr _index;
+    mem.next condition;
 " 
 while "< _index _size";
 
-mem.clear @-:-;
-mem.rebase;
-
-mem.unhold _size;
-mem.clear @-:-;
-mem.collect;
-ls;
 return 0;

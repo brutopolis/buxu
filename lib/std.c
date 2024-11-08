@@ -227,6 +227,12 @@ Int std_return(VirtualMachine *vm, IntList *args)
     return stack_shift(*args);
 }
 
+Int std_gindex(VirtualMachine *vm, IntList *args)
+{
+    Int var = stack_shift(*args);
+    return new_number(vm, var);
+}
+
 Int std_type_get(VirtualMachine *vm, IntList *args)
 {
     Int var = stack_shift(*args);
@@ -731,7 +737,7 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
             {
                 Int value = stack_shift(*args);
                 char* _value = str_format("%ld", (Int)vm->stack->data[value].number);
-                char* _newstr = str_replace(_str, "%ld", _value);
+                char* _newstr = str_replace(_str, "\%d", _value);
                 free(_str);
                 _str = _newstr;
             }
@@ -739,7 +745,7 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
             {
                 Int value = stack_shift(*args);
                 char* _value = vm->stack->data[value].string;
-                char* _newstr = str_replace(_str, "%s", _value);
+                char* _newstr = str_replace(_str, "\%s", _value);
                 free(_str);
                 _str = _newstr;
             }
@@ -747,7 +753,7 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
             {
                 Int value = stack_shift(*args);
                 char* _value = str_format("%f", vm->stack->data[value].number);
-                char* _newstr = str_replace(_str, "%f", _value);
+                char* _newstr = str_replace(_str, "\%f", _value);
                 free(_str);
                 _str = _newstr;
             }
@@ -755,7 +761,7 @@ Int std_string_format(VirtualMachine *vm, IntList *args)
             {
                 Int value = stack_shift(*args);
                 char* _value = str_format("%p", vm->stack->data[value].pointer);
-                char* _newstr = str_replace(_str, "%p", _value);
+                char* _newstr = str_replace(_str, "\%p", _value);
                 free(_str);
                 _str = _newstr;
             }
@@ -1036,10 +1042,10 @@ Int std_loop_repeat(VirtualMachine *vm, IntList *args)
 
 void init_basics(VirtualMachine *vm)
 {
-    
     registerBuiltin(vm, "#", std_ignore);
     registerBuiltin(vm, "do", std_do);
     registerBuiltin(vm, "return", std_return);
+    registerBuiltin(vm, "gindex", std_gindex);
 #ifndef ARDUINO
     registerBuiltin(vm, "ls", std_io_ls);
     registerBuiltin(vm, "ls.type", std_io_ls_types);

@@ -1,5 +1,5 @@
 hash.set "_size" 100000;
 hash.set "_index" 0;
-do "print _index;incr _index;" repeat _size;
-
+# (@@= 121 0);
+do "# (@@p 121) (@@+ 121 1)" repeat _size;
 return 0;

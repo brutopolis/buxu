@@ -13,5 +13,4 @@ process.send proc1
 
 do "print _index;incr _index;" repeat _size;
 process.destroy proc1;
-ls;
 return 0;
