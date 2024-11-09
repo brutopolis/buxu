@@ -1,5 +1,1 @@
-hash.set "_size" 100000;
-hash.set "_index" 0;
-# (@@= 121 0);
-do "# (@@p 121) (@@+ 121 1)" repeat _size;
-return 0;
+return (.= 121 0) (.R 100000 (., (.p 121),(.+ 121 1)));

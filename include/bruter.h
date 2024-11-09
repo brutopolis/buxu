@@ -194,6 +194,7 @@ char* str_replace(const char *str, const char *substr, const char *replacement);
 char* str_replace_all(const char *str, const char *substr, const char *replacement);
 
 StringList* split_string(char *str, char *delim);
+StringList* split_string_by_char(char *str, char delim);
 StringList* special_space_split(char *str);
 StringList* special_split(char *str, char delim);
 

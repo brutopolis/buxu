@@ -1,8 +1,9 @@
-(08/11/2024) - version 0.6.4
+(09/11/2024) - version 0.6.4
 
-- direct commands (@@a args...) are now a thing, they are faster than libs and are hardcoded in the interpreter, can only work with integers;
-- direct byte commands (@@@a args...), a subset of direct commands for bytes, also hardcoded in the interpreter;
-- direct bit commands (@@@@a args...), a subset of direct commands for bits, also hardcoded in the interpreter;
+- direct commands (.a args...) are now a thing, they are faster than libs and are hardcoded in the interpreter, can only work with integers;
+- direct byte commands (..a args...), a subset of direct commands for bytes, also hardcoded in the interpreter;
+- direct bit commands (...a args...), a subset of direct commands for bits, also hardcoded in the interpreter;
+- comments are now possible using direct (.# comment);
 - removed raw.c, direct commands does the same job, and are faster; 
 - new function mem_next;
 - new function repl;
