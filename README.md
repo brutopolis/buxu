@@ -16,7 +16,6 @@ bruter is a metaprogramable lightweight language written in C;
   - [Arg Types](#arg-types)
   - [Usage](#usage)
   - [Reserved](#reserved)
-  - [TO DO](#to-do)
   
 ## Arg Types
 
@@ -30,20 +29,22 @@ bruter is a metaprogramable lightweight language written in C;
 
     function;
     function ...;
-    function variable;
     function (function (function ...));
     function variable_1 variable_2 ...;
-    set target_variable value; 
-    set target_variable (function ...);
+    hash.set "name" value; 
+    hash.set "name" (function ...);
+    function name;
+    do "code";
+    do "code" repeat number;
+    do "code" while (function ...);
+    do "code" each variable;
+    # (.p 1);
+    # (.r 5000) (.= 1 7);
     
 ## Reserved
 
 - `()` = expression
+- `(. )` = direct command delimiter
 - `""` = string delimiter
 - `''` = string delimiter
 - `;` = end of command separator
-
-## TO DO
-
-- `expect` = not yet
-- `vs-code extension` = testing

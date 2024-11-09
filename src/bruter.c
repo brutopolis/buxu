@@ -825,7 +825,6 @@ void unhold_var(VirtualMachine *vm, Int index)
 
 Int direct_bit_parser(VirtualMachine *vm, char *cmd)
 {
-    printf("direct bit parser\n");
     Int result = -1;
     Int a = -1;
     Int b = -1;
@@ -1032,6 +1031,16 @@ Int direct_bit_parser(VirtualMachine *vm, char *cmd)
                 vm->stack->data[a].byte[b] = (vm->stack->data[a].byte[b] >> f) | (vm->stack->data[a].byte[b] << (8 - f));
             }
             break;
+
+        case 'p': // bit print (...p value) print bits like 00101101
+            a = atoi(cmd + 6);
+            for (Int k = sizeof(Float)-1; k >= 0; k--)
+                for (Int i = 7; i >= 0; i--)
+                {
+                    printf("%d", (vm->stack->data[a].byte[k] >> i) & 1);
+                }
+                printf("\n");
+            break;
             
         case '$': // set the result of ... to the value (..$ a ...)
             a = atoi(cmd + 6);
@@ -1052,6 +1061,7 @@ Int direct_bit_parser(VirtualMachine *vm, char *cmd)
             printf("(...~ v1 i1 b1) - bit not\n");
             printf("(...S v1 i1 b1 direction amount) - bit shift\n");
             printf("(...r v1 i1 b1 direction amount) - bit rotate\n");
+            printf("(...p v1) - bit print\n");
             printf("(...$ index ...) - set the result of ... to the value\n");
             printf("(...h) - help\n");
             printf("\n");
@@ -1306,6 +1316,15 @@ Int direct_byte_parser(VirtualMachine *vm, char *cmd)
             result = sizeof(Float);
             break;
 
+        case 'p': // print (..P index);
+            a = atoi(cmd + 5);
+            printf("[");
+            for (Int i = 0; i < sizeof(Float)-1; i++)
+            {
+                printf("%d, ", vm->stack->data[a].byte[i]);
+            }
+            printf("%d]\n", vm->stack->data[a].byte[sizeof(Float)-1]);
+        break;
         
         case '.': // get the bit value of the byte (... ...)
             result = direct_bit_parser(vm, cmd);
@@ -1332,6 +1351,7 @@ Int direct_byte_parser(VirtualMachine *vm, char *cmd)
             printf("(..I index byteindex ...) - if\n");
             printf("(..R index byteindex ...) - repeat\n");
             printf("(..w index byteindex ...) - while\n");
+            printf("(..p index) - print the byte value of a variable\n");
             printf("(..l) - byte length\n");
             printf("(..h) - help\n");
             printf("(... ...) - bit commands\n");
