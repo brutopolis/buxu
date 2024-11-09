@@ -2,6 +2,7 @@
 
 - some README updates;
 - print functions for bytes and bits added, (..p index) and (...p index);
+- removed vscode-extension, it will be moved to other repository;
 
 (09/11/2024) - version 0.6.4
 
