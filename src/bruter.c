@@ -1652,6 +1652,10 @@ IntList* parse(VirtualMachine *vm, char *cmd)
                 {
                     stack_push(*result, new_number(vm, ret));
                 }
+                else 
+                {
+                    stack_push(*result, -1);
+                }
             }
             else
             {
