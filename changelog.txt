@@ -1,7 +1,8 @@
-(11/11/2024) - version 0.6.4b
+(12/11/2024) - version 0.6.4b
 
 - fixed the seg fault when calling direct commands without hashtag;
 - multiloops.br updated;
+- minor change in direct help messages;
 
 (09/11/2024) - version 0.6.4a
 

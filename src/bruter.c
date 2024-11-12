@@ -1064,7 +1064,6 @@ Int direct_bit_parser(VirtualMachine *vm, char *cmd)
             printf("(...p v1) - bit print\n");
             printf("(...$ index ...) - set the result of ... to the value\n");
             printf("(...h) - help\n");
-            printf("\n");
         break;
     }
     return result;
@@ -1355,7 +1354,6 @@ Int direct_byte_parser(VirtualMachine *vm, char *cmd)
             printf("(..l) - byte length\n");
             printf("(..h) - help\n");
             printf("(... ...) - bit commands\n");
-            printf("\n");
             break;
     }
     return result;
@@ -1626,7 +1624,6 @@ Int direct_parser(VirtualMachine *vm, char *cmd)
             printf("(.h) help\n");
             printf("(.. ...) byte commands\n");
             printf("(... ...) bit commands\n");
-            printf("\n");
             break;
         default:
             break;
