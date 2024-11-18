@@ -1,1 +1,5 @@
-return (.r 2) (.= 1 0) (.R 100000 (., (.p 1),(.+ 1 1)));
+hash.set "_size" 100000;
+hash.set "_index" 0;
+do "print _index;incr _index;" repeat _size;
+
+return 0;

@@ -247,9 +247,6 @@ void hash_unset(VirtualMachine *vm, char *key);
 Int eval(VirtualMachine *vm, char *cmd);
 Int interpret(VirtualMachine *vm, char* cmd);
 IntList* parse(VirtualMachine *vm, char *cmd);
-Int direct_parser(VirtualMachine *vm, char *cmd);
-Int direct_byte_parser(VirtualMachine *vm, char *cmd);
-Int direct_bit_parser(VirtualMachine *vm, char *cmd);
 
 void collect_garbage(VirtualMachine *vm);
 
