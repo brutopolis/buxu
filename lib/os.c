@@ -128,7 +128,7 @@ Int os_time_sleep(VirtualMachine *vm, IntList *args)
 
 #ifndef _WIN32
 
-
+/*
 // process type
 typedef struct {
     int parent_to_child[2]; // Pipe para comunicação: Pai -> Filho
@@ -476,7 +476,7 @@ void _br_processes_at_exit_handler()
     }
     stack_free(*br_processes);
 }
-
+*/
 #else //if windows
 // no process functions for windows yet
 #endif
@@ -501,7 +501,7 @@ void init_os(VirtualMachine *vm)
     #ifdef _WIN32 
     // no process functions for windows yet
     #else
-    atexit(_br_processes_at_exit_handler);
+    /*atexit(_br_processes_at_exit_handler);
 
     br_processes = (ProcessList*)malloc(sizeof(ProcessList));
     stack_init(*br_processes);
@@ -512,7 +512,7 @@ void init_os(VirtualMachine *vm)
     registerBuiltin(vm, "process.destroy", os_process_destroy);
     registerBuiltin(vm, "process.receive", os_process_host_receive);
     registerBuiltin(vm, "process.child.send", os_process_child_send);
-    registerBuiltin(vm, "process.child.receive", os_process_child_receive);
+    registerBuiltin(vm, "process.child.receive", os_process_child_receive);*/
     
     #endif
 }

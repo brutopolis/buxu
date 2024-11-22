@@ -1,13 +1,12 @@
 (22/11/2024) - version 0.6.5
 
-- no more direct commands, everything in bruter must be optional;
+- no more direct commands, everything in bruter must be optional, so hardcoded commands are not a thing anymore;
 - new lib tcc.c, to compile and run c code on the fly;
 - new alias to IntList*: Args;
 - (. ) is now a string delimiter;
 - (// ) is now a comment delimiter;
 - 'repeat', 'while' and 'each' are now separated from 'do';
-- processes are now auto-destroyed on exit(tcc allocations as well);
-- process.fork must receive a name now, it does not return the process anymore;
+- processes are no more a thing, they will be back, but in far future(uncomment it from os.c if you want to use it, should work but not officially supported for now);
 
 (12/11/2024) - version 0.6.4b
 
