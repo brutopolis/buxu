@@ -128,12 +128,16 @@ Int os_time_sleep(VirtualMachine *vm, IntList *args)
 
 #ifndef _WIN32
 
+
 // process type
 typedef struct {
     int parent_to_child[2]; // Pipe para comunicação: Pai -> Filho
     int child_to_parent[2]; // Pipe para comunicação: Filho -> Pai
     pid_t pid;              // PID do processo filho
 } process_t;
+
+typedef Stack(process_t*) ProcessList;
+ProcessList *br_processes;
 
 // Função para criar um processo filho e configurar os pipes
 int fork_process(process_t* process, void (*child_function)(process_t*, VirtualMachine*), VirtualMachine* vm) {
@@ -361,42 +365,39 @@ void default_interpreter(process_t* process, VirtualMachine* vm)
 // process function declarations
 Int os_process_fork(VirtualMachine *vm, IntList *args)
 {
-    Int name = -1;
-    if (args->size > 0)
+    Int name = stack_shift(*args);
+    if (name == -1)
     {
-        name = stack_shift(*args);
+        printf("Error: process name not provided.\n");
+        return -1;
     }
     process_t *process = (process_t*)malloc(sizeof(process_t));
-    // Criar o processo filho
+    
+    
     if (fork_process(process, default_interpreter, vm) == -1) 
     {
         perror("Erro ao criar processo");
         exit(EXIT_FAILURE);
     }
 
-    Int result = new_var(vm);
-    
-    
 
     if (process->pid == 0) 
     {
-        vm->stack->data[result].pointer = NULL;
-        vm->typestack->data[result] = TYPE_NIL;
-        vm->stack->data[result].integer = 0;
+        
         free(process);
         return new_number(vm, 0);
     }
+
+    Int result = new_var(vm);
+
+    stack_push(*br_processes, process);
+
     vm->typestack->data[result] = TYPE_OTHER;
     vm->stack->data[result].pointer = process;
     hold_var(vm, result);
-    
-    if (name >= 0)
-    {
-        hash_set(vm, vm->stack->data[name].string, result);
-        return -1;
-    }
-    
-    return result;
+
+    hash_set(vm, vm->stack->data[name].string, result);
+    return -1;
 }
 
 Int os_process_host_send(VirtualMachine *vm, IntList *args)
@@ -459,9 +460,23 @@ Int os_process_destroy(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     process_destroy((process_t*)vm->stack->data[process].pointer);
+    stack_remove(*br_processes, stack_find(*br_processes, (process_t*)vm->stack->data[process].pointer));
     unuse_var(vm, process);
     return -1;
 }
+
+void _br_processes_at_exit_handler()
+{
+    printf("Encerrando processos\n");
+    while (br_processes->size > 0)
+    {
+        process_t *process = stack_shift(*br_processes);
+        printf("Processo %d encerrado\n", process->pid);
+        process_destroy(process);
+    }
+    stack_free(*br_processes);
+}
+
 #else //if windows
 // no process functions for windows yet
 #endif
@@ -486,6 +501,11 @@ void init_os(VirtualMachine *vm)
     #ifdef _WIN32 
     // no process functions for windows yet
     #else
+    atexit(_br_processes_at_exit_handler);
+
+    br_processes = (ProcessList*)malloc(sizeof(ProcessList));
+    stack_init(*br_processes);
+
     registerBuiltin(vm, "process.fork", os_process_fork);
     registerBuiltin(vm, "process.send", os_process_host_send);
     registerBuiltin(vm, "process.await", os_process_host_await);
@@ -493,6 +513,7 @@ void init_os(VirtualMachine *vm)
     registerBuiltin(vm, "process.receive", os_process_host_receive);
     registerBuiltin(vm, "process.child.send", os_process_child_send);
     registerBuiltin(vm, "process.child.receive", os_process_child_receive);
+    
     #endif
 }
 

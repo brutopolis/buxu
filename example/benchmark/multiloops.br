@@ -2,16 +2,15 @@ hash.set "_index" 0;
 hash.set "_size" 50000;
 process.fork 'proc1';
 process.send proc1 
-'
+(.
     mem.set _index 50000;
-    do 
-    "
+    repeat _size 
+    (.
         print _index;
         incr _index;
-    " repeat _size;
-';
+    );
+);
 
-do "print _index;incr _index;" repeat _size;
-process.destroy proc1;
+repeat _size "print _index;incr _index;";
 ls;
 return 0;

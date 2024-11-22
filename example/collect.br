@@ -1,12 +1,11 @@
 hash.set "_index" 0;
 hash.set "_size" 100000;
 hash.set "condition" 0;
-do 
-"
+while "< _index _size" 
+(.
     print _index;
     incr _index;
     mem.next condition;
-" 
-while "< _index _size";
+);
 
 return 0;

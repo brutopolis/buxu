@@ -1,8 +1,0 @@
-# (raw.from.string "aaaaassssccccc") (raw.from.bytes 112 46 45 88 99 3 4 5 6);
-ls;
-hash.set "n" 44;
-type.set n type.raw;
-byte.set n 3 8;
-ls;
-print (byte.get n 6);
-return 0;

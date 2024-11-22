@@ -21,7 +21,7 @@ if [ -n "$EXCLUDE" ]; then # EXCLUDE="filename.c" ./build.sh
     cd ..
 fi
 
-#if all libs are excluded we don't need to build anything
+#if all libs are excluded we don't need to do anything but build the main file
 if [ -z "$(ls -A lib)" ]; then
     echo "no libraries to build"
     gcc ./include/main.c ./include/bruter.c -o bruter -O3 -lm -I./include

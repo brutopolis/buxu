@@ -9,7 +9,6 @@
 #include <time.h>
 
 #ifndef ARDUINO
-
 #ifdef _WIN32
 #include <windows.h>
 
@@ -18,7 +17,7 @@
 #endif
 #endif
 
-#define VERSION "0.6.4b"
+#define VERSION "0.6.5"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -168,6 +167,9 @@ typedef Stack(Hash) HashList;
 typedef Stack(char*) StringList;
 typedef Stack(Int) IntList;
 typedef Stack(char) CharList;
+
+#define Args IntList*
+
 typedef struct
 {
     ValueList *stack;

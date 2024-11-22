@@ -778,6 +778,8 @@ void free_vm(VirtualMachine *vm)
         stack_shift(*vm->temp);
     }
 
+    
+
     stack_free(*vm->stack);
     stack_free(*vm->typestack);
 
@@ -857,11 +859,23 @@ IntList* parse(VirtualMachine *vm, char *cmd)
         char* str = stack_shift(*splited);
         if (str[0] == '(')
         {
-            char* temp = str + 1;
-            temp[strlen(temp) - 1] = '\0';
-            Int index = eval(vm, temp);
-            stack_push(*result, index);
-            //free(temp);
+            if(str[1] == '.')//string
+            {
+                char* temp = str + 2;
+                temp[strlen(temp) - 1] = '\0';
+                Int var = new_string(vm, temp);
+                stack_push(*result, var);            
+            }
+            else if(str[1] == '/' && str[2] == '/') // a comment
+            {}
+            else
+            {
+                char* temp = str + 1;
+                temp[strlen(temp) - 1] = '\0';
+                Int index = eval(vm, temp);
+                stack_push(*result, index);
+                //free(temp);
+            }
         }
         else if (str[0] == '@') 
         {

@@ -1,5 +1,5 @@
 hash.set "_size" 100000;
 hash.set "_index" 0;
-do "print _index;incr _index;" repeat _size;
+repeat _size "print _index;incr _index;";
 
 return 0;
