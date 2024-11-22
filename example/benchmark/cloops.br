@@ -7,5 +7,3 @@ hash.set "teste.func" (c.new
     return -1;
 ));
 teste.func;
-c.delete teste.func;
-teste.func; (// This should fail)
