@@ -1,6 +1,13 @@
 #include "bruter.h"
 #ifndef ARDUINO
 
+#include <poll.h>
+#include <errno.h>
+#include <fcntl.h>
+
+
+#include <sys/wait.h>
+
 Int os_file_read(VirtualMachine *vm, IntList *args)
 {
     Int filename = stack_shift(*args);

@@ -46,8 +46,8 @@ else
     gcc ./include/bruter.c -c -O3 -lm -I./include -g
     gcc ./lib/*.c -c -O3 -lm -I./include -g
     ar rcs lib/bruter.a *.o
-    rm -rf lib/*.c
-    gcc ./include/main.c lib/* -o bruter -O3 -lm -g
+    rm -rf lib/*.c lib/*.o
+    gcc ./include/main.c lib/*.a -o bruter -O3 -lm -g -ltcc
 fi
 
 rm -rf *.o

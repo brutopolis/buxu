@@ -9,15 +9,12 @@
 #include <time.h>
 
 #ifndef ARDUINO
-#include <poll.h>
-#include <errno.h>
-#include <fcntl.h>
+
 #ifdef _WIN32
 #include <windows.h>
 
 #else // Linux
 #include <unistd.h>
-#include <sys/wait.h>
 #endif
 #endif
 
@@ -184,19 +181,19 @@ typedef struct
 typedef Int (*Function)(VirtualMachine*, IntList*);
 
 //String
-char* str_duplicate(const char *str);
-char* str_nduplicate(const char *str, Int n);
-char* str_format(const char *fmt, ...);
-char* str_sub(const char *str, Int start, Int end);
-char* str_concat(const char *str1, const char *str2);
-Int str_find(const char *str, const char *substr);
-char* str_replace(const char *str, const char *substr, const char *replacement);
-char* str_replace_all(const char *str, const char *substr, const char *replacement);
+extern char* str_duplicate(const char *str);
+extern char* str_nduplicate(const char *str, Int n);
+extern char* str_format(const char *fmt, ...);
+extern char* str_sub(const char *str, Int start, Int end);
+extern char* str_concat(const char *str1, const char *str2);
+extern Int str_find(const char *str, const char *substr);
+extern char* str_replace(const char *str, const char *substr, const char *replacement);
+extern char* str_replace_all(const char *str, const char *substr, const char *replacement);
 
-StringList* split_string(char *str, char *delim);
-StringList* split_string_by_char(char *str, char delim);
-StringList* special_space_split(char *str);
-StringList* special_split(char *str, char delim);
+extern StringList* split_string(char *str, char *delim);
+extern StringList* split_string_by_char(char *str, char delim);
+extern StringList* special_space_split(char *str);
+extern StringList* special_split(char *str, char delim);
 
 #define is_true(value, __type) (__type == TYPE_NUMBER ? (round(value.number) != 0) : (__type == TYPE_NIL ? 0 : 1))
 
@@ -204,63 +201,118 @@ StringList* special_split(char *str, char delim);
 
 // variable
 
-ValueList* make_value_list();
-IntList* make_int_list();
-StringList* make_string_list();
-CharList* make_char_list();
+extern ValueList* make_value_list();
+extern IntList* make_int_list();
+extern StringList* make_string_list();
+extern CharList* make_char_list();
 
-VirtualMachine* make_vm();
-void free_vm(VirtualMachine *vm);
-void free_var(VirtualMachine *vm, Int index);
-void unuse_var(VirtualMachine *vm, Int index);
-void use_var(VirtualMachine *vm, Int index);
+extern VirtualMachine* make_vm();
+extern void free_vm(VirtualMachine *vm);
+extern void free_var(VirtualMachine *vm, Int index);
+extern void unuse_var(VirtualMachine *vm, Int index);
+extern void use_var(VirtualMachine *vm, Int index);
 
-Int new_number(VirtualMachine *vm, Float number);
-Int new_string(VirtualMachine *vm, char *str);
-Int new_builtin(VirtualMachine *vm, Function function);
-Int new_var(VirtualMachine *vm);
-Int new_list(VirtualMachine *vm);
+extern Int new_number(VirtualMachine *vm, Float number);
+extern Int new_string(VirtualMachine *vm, char *str);
+extern Int new_builtin(VirtualMachine *vm, Function function);
+extern Int new_var(VirtualMachine *vm);
+extern Int new_list(VirtualMachine *vm);
 
-void hold_var(VirtualMachine *vm, Int index);
-void unhold_var(VirtualMachine *vm, Int index);
+extern void hold_var(VirtualMachine *vm, Int index);
+extern void unhold_var(VirtualMachine *vm, Int index);
 
-Value value_duplicate(Value value, char type);
+extern Value value_duplicate(Value value, char type);
 
-Int spawn_var(VirtualMachine *vm, char* varname);
-Int spawn_string(VirtualMachine *vm, char* varname, char* string);
-Int spawn_number(VirtualMachine *vm, char* varname, Float number);
-Int spawn_builtin(VirtualMachine *vm, char* varname, Function function);
-Int spawn_list(VirtualMachine *vm, char* varname);
-
-
-void registerBuiltin(VirtualMachine *vm, char* name, Function function);
-void registerNumber(VirtualMachine *vm, char* name, Float number);
-void registerString(VirtualMachine *vm, char* name, char* string);
-void registerList(VirtualMachine *vm, char* name);
+extern Int spawn_var(VirtualMachine *vm, char* varname);
+extern Int spawn_string(VirtualMachine *vm, char* varname, char* string);
+extern Int spawn_number(VirtualMachine *vm, char* varname, Float number);
+extern Int spawn_builtin(VirtualMachine *vm, char* varname, Function function);
+extern Int spawn_list(VirtualMachine *vm, char* varname);
 
 
-Int hash_find(VirtualMachine *vm, char *key);
-void hash_set(VirtualMachine *vm, char *key, Int index);
-void hash_unset(VirtualMachine *vm, char *key);
+extern void registerBuiltin(VirtualMachine *vm, char* name, Function function);
+extern void registerNumber(VirtualMachine *vm, char* name, Float number);
+extern void registerString(VirtualMachine *vm, char* name, char* string);
+extern void registerList(VirtualMachine *vm, char* name);
+
+
+extern Int hash_find(VirtualMachine *vm, char *key);
+extern void hash_set(VirtualMachine *vm, char *key, Int index);
+extern void hash_unset(VirtualMachine *vm, char *key);
 
 // eval
-Int eval(VirtualMachine *vm, char *cmd);
-Int interpret(VirtualMachine *vm, char* cmd);
-IntList* parse(VirtualMachine *vm, char *cmd);
+extern Int eval(VirtualMachine *vm, char *cmd);
+extern Int interpret(VirtualMachine *vm, char* cmd);
+extern IntList* parse(VirtualMachine *vm, char *cmd);
 
-void collect_garbage(VirtualMachine *vm);
+extern void collect_garbage(VirtualMachine *vm);
 
 //print
-void print_element(VirtualMachine *vm, Int index);
+extern void print_element(VirtualMachine *vm, Int index);
+
+// Declarações das funções disponíveis no programa mestre
+extern int multiply(int a, int b);
+extern double divide(double a, double b);
 
 // <libraries header>
 
 #ifndef ARDUINO
 
-char* readfile(char *filename);
-void writefile(char *filename, char *content);
-Int repl(VirtualMachine *vm);
-void print_element(VirtualMachine *vm, Int index);
+extern char* readfile(char *filename);
+extern void writefile(char *filename, char *content);
+extern Int repl(VirtualMachine *vm);
+extern void print_element(VirtualMachine *vm, Int index);
 #endif
 
 #endif
+/*
+char* func_names[] = {
+    "str_duplicate",
+    "str_nduplicate",
+    "str_format",
+    "str_sub",
+    "str_concat",
+    "str_find",
+    "str_replace",
+    "str_replace_all",
+    "split_string",
+    "split_string_by_char",
+    "special_space_split",
+    "special_split",
+    "is_true",
+    "is_space",
+    "make_value_list",
+    "make_int_list",
+    "make_string_list",
+    "make_char_list",
+    "make_vm",
+    "free_vm",
+    "free_var",
+    "unuse_var",
+    "use_var",
+    "new_number",
+    "new_string",
+    "new_builtin",
+    "new_var",
+    "new_list",
+    "hold_var",
+    "unhold_var",
+    "value_duplicate",
+    "spawn_var",
+    "spawn_string",
+    "spawn_number",
+    "spawn_builtin",
+    "spawn_list",
+    "registerBuiltin",
+    "registerNumber",
+    "registerString",
+    "registerList",
+    "hash_find",
+    "hash_set",
+    "hash_unset",
+    "eval",
+    "interpret",
+    "parse",
+    "collect_garbage",
+    "print_element"
+};*/

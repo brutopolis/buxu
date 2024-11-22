@@ -36,10 +36,10 @@ else
     done
     echo "building bruter"
     gcc ./include/bruter.c -c -O3 -lm -I./include
-    gcc ./lib/*.c -c -O3 -lm -I./include
+    gcc ./lib/*.c -c -O3 -lm -I./include 
     ar rcs lib/bruter.a *.o
-    rm -rf lib/*.c
-    gcc ./include/main.c lib/* -o bruter -O3 -lm
+    rm -rf lib/*.c lib/*.o
+    gcc ./include/main.c lib/*.a -o bruter -O3 -lm -ltcc
 fi
 
 
