@@ -1,6 +1,7 @@
 (22/11/2024) - version 0.6.5a
 
 - some examples updated;
+- new function tcc.add.symbol;
 
 (22/11/2024) - version 0.6.5
 

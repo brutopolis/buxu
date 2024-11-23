@@ -111,6 +111,18 @@ Int clear_tcc_states(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+Int br_tcc_add_symbol(VirtualMachine *vm, IntList *args)
+{
+    Int _tcc = stack_shift(*args);
+    Int _symbol = stack_shift(*args);
+    Int _func = stack_shift(*args);
+    TCCState *tcc = (TCCState *)vm->stack->data[_tcc].pointer;
+    char *symbol = vm->stack->data[_symbol].string;
+    void *func = vm->stack->data[_func].pointer;
+    tcc_add_symbol(tcc, symbol, func);
+    return -1;
+}
+
 Int br_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_state + compile + relocate + get_symbol
 {
     TCCState *tcc = tcc_new();
@@ -207,6 +219,7 @@ void init_tcc(VirtualMachine* vm)
     registerBuiltin(vm, "tcc.get.symbol", get_symbol);
     registerBuiltin(vm, "tcc.add.path", add_path);
     registerBuiltin(vm, "tcc.clear", clear_tcc_states);
+    registerBuiltin(vm, "tcc.add.symbol", br_tcc_add_symbol);
 
     registerBuiltin(vm, "c.new", br_c_new_function);
     registerBuiltin(vm, "c.delete", br_c_delete_function);
