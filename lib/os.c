@@ -8,7 +8,7 @@
 
 #include <sys/wait.h>
 
-Int os_file_read(VirtualMachine *vm, IntList *args)
+Int brl_os_file_read(VirtualMachine *vm, IntList *args)
 {
     Int filename = stack_shift(*args);
     char *code = readfile(vm->stack->data[filename].string);
@@ -22,7 +22,7 @@ Int os_file_read(VirtualMachine *vm, IntList *args)
     return index;
 }
 
-Int os_file_write(VirtualMachine *vm, IntList *args)
+Int brl_os_file_write(VirtualMachine *vm, IntList *args)
 {
     Int filename = stack_shift(*args);
     Int code = stack_shift(*args);
@@ -30,19 +30,19 @@ Int os_file_write(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int os_file_delete(VirtualMachine *vm, IntList *args)
+Int brl_os_file_delete(VirtualMachine *vm, IntList *args)
 {
     Int filename = stack_shift(*args);
     remove(vm->stack->data[filename].string);
     return -1;
 }
 
-Int os_repl(VirtualMachine *vm, IntList *args)
+Int brl_os_repl(VirtualMachine *vm, IntList *args)
 {
     return repl(vm);
 }
 
-Int os_dofile(VirtualMachine *vm, IntList *args)
+Int brl_os_dofile(VirtualMachine *vm, IntList *args)
 {
     Int filename = stack_shift(*args);
     char *code = readfile(vm->stack->data[filename].string);
@@ -59,7 +59,7 @@ Int os_dofile(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-Int os_file_exists(VirtualMachine *vm, IntList *args)
+Int brl_os_file_exists(VirtualMachine *vm, IntList *args)
 {
     Int filename = stack_shift(*args);
     FILE *file = fopen(vm->stack->data[filename].string, "r");
@@ -71,7 +71,7 @@ Int os_file_exists(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-Int os_file_rename(VirtualMachine *vm, IntList *args)
+Int brl_os_file_rename(VirtualMachine *vm, IntList *args)
 {
     Int filename = stack_shift(*args);
     Int newname = stack_shift(*args);
@@ -79,7 +79,7 @@ Int os_file_rename(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int os_file_copy(VirtualMachine *vm, IntList *args)
+Int brl_os_file_copy(VirtualMachine *vm, IntList *args)
 {
     Int filename = stack_shift(*args);
     Int newname = stack_shift(*args);
@@ -95,7 +95,7 @@ Int os_file_copy(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int os_file_size (VirtualMachine *vm, IntList *args)
+Int brl_os_file_size (VirtualMachine *vm, IntList *args)
 {
     Int filename = stack_shift(*args);
     FILE *file = fopen(vm->stack->data[filename].string, "r");
@@ -109,17 +109,17 @@ Int os_file_size (VirtualMachine *vm, IntList *args)
     return result;
 }
 
-Int os_time_now(VirtualMachine *vm, IntList *args)
+Int brl_os_time_now(VirtualMachine *vm, IntList *args)
 {
     return new_number(vm, time(NULL));
 }
 
-Int os_time_clock(VirtualMachine *vm, IntList *args)
+Int brl_os_time_clock(VirtualMachine *vm, IntList *args)
 {
     return new_number(vm, clock());
 }
 
-Int os_time_sleep(VirtualMachine *vm, IntList *args)
+Int brl_os_time_sleep(VirtualMachine *vm, IntList *args)
 {
     Int seconds = stack_shift(*args);
     sleep(vm->stack->data[seconds].number);
@@ -363,7 +363,7 @@ void default_interpreter(process_t* process, VirtualMachine* vm)
 }
 
 // process function declarations
-Int os_process_fork(VirtualMachine *vm, IntList *args)
+Int brl_os_process_fork(VirtualMachine *vm, IntList *args)
 {
     Int name = stack_shift(*args);
     if (name == -1)
@@ -400,7 +400,7 @@ Int os_process_fork(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int os_process_host_send(VirtualMachine *vm, IntList *args)
+Int brl_os_process_host_send(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     Int message = stack_shift(*args);
@@ -408,7 +408,7 @@ Int os_process_host_send(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int os_process_host_receive(VirtualMachine *vm, IntList *args)
+Int brl_os_process_host_receive(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     char *received = receive_dynamic_string((process_t*)vm->stack->data[process].pointer, 0);
@@ -425,7 +425,7 @@ Int os_process_host_receive(VirtualMachine *vm, IntList *args)
     }
 }
 
-Int os_process_host_await(VirtualMachine *vm, IntList *args)
+Int brl_os_process_host_await(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     char *received = receive_dynamic_string((process_t*)vm->stack->data[process].pointer, 0);
@@ -439,7 +439,7 @@ Int os_process_host_await(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-Int os_process_child_send(VirtualMachine *vm, IntList *args)
+Int brl_os_process_child_send(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     Int message = stack_shift(*args);
@@ -447,7 +447,7 @@ Int os_process_child_send(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int os_process_child_receive(VirtualMachine *vm, IntList *args)
+Int brl_os_process_child_receive(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     char *received = receive_dynamic_string((process_t*)vm->stack->data[process].pointer, 1);
@@ -456,7 +456,7 @@ Int os_process_child_receive(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-Int os_process_destroy(VirtualMachine *vm, IntList *args)
+Int brl_os_process_destroy(VirtualMachine *vm, IntList *args)
 {
     Int process = stack_shift(*args);
     process_destroy((process_t*)vm->stack->data[process].pointer);
@@ -483,20 +483,20 @@ void _br_processes_at_exit_handler()
 
 void init_os(VirtualMachine *vm)
 {
-    registerBuiltin(vm, "file.read", os_file_read);
-    registerBuiltin(vm, "file.write", os_file_write);
-    registerBuiltin(vm, "file.delete", os_file_delete);
-    registerBuiltin(vm, "file.exists", os_file_exists);
-    registerBuiltin(vm, "file.rename", os_file_rename);
-    registerBuiltin(vm, "file.copy", os_file_copy);
-    registerBuiltin(vm, "file.size", os_file_size);
+    register_builtin(vm, "file.read", brl_os_file_read);
+    register_builtin(vm, "file.write", brl_os_file_write);
+    register_builtin(vm, "file.delete", brl_os_file_delete);
+    register_builtin(vm, "file.exists", brl_os_file_exists);
+    register_builtin(vm, "file.rename", brl_os_file_rename);
+    register_builtin(vm, "file.copy", brl_os_file_copy);
+    register_builtin(vm, "file.size", brl_os_file_size);
 
-    registerBuiltin(vm, "os.time", os_time_now);
-    registerBuiltin(vm, "os.clock", os_time_clock);
-    registerBuiltin(vm, "os.sleep", os_time_sleep);
+    register_builtin(vm, "os.time", brl_os_time_now);
+    register_builtin(vm, "os.clock", brl_os_time_clock);
+    register_builtin(vm, "os.sleep", brl_os_time_sleep);
 
-    registerBuiltin(vm, "dofile", os_dofile);
-    registerBuiltin(vm, "repl", os_repl);
+    register_builtin(vm, "dofile", brl_os_dofile);
+    register_builtin(vm, "repl", brl_os_repl);
 
     #ifdef _WIN32 
     // no process functions for windows yet
@@ -506,13 +506,13 @@ void init_os(VirtualMachine *vm)
     br_processes = (ProcessList*)malloc(sizeof(ProcessList));
     stack_init(*br_processes);
 
-    registerBuiltin(vm, "process.fork", os_process_fork);
-    registerBuiltin(vm, "process.send", os_process_host_send);
-    registerBuiltin(vm, "process.await", os_process_host_await);
-    registerBuiltin(vm, "process.destroy", os_process_destroy);
-    registerBuiltin(vm, "process.receive", os_process_host_receive);
-    registerBuiltin(vm, "process.child.send", os_process_child_send);
-    registerBuiltin(vm, "process.child.receive", os_process_child_receive);*/
+    register_builtin(vm, "process.fork", brl_os_process_fork);
+    register_builtin(vm, "process.send", brl_os_process_host_send);
+    register_builtin(vm, "process.await", brl_os_process_host_await);
+    register_builtin(vm, "process.destroy", brl_os_process_destroy);
+    register_builtin(vm, "process.receive", brl_os_process_host_receive);
+    register_builtin(vm, "process.child.send", brl_os_process_child_send);
+    register_builtin(vm, "process.child.receive", brl_os_process_child_receive);*/
     
     #endif
 }

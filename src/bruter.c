@@ -712,23 +712,23 @@ Int spawn_list(VirtualMachine *vm, char* varname)
 
 // var register
 
-void registerBuiltin(VirtualMachine *vm, char *name, Function function)
+void register_builtin(VirtualMachine *vm, char *name, Function function)
 {
     hold_var(vm,spawn_builtin(vm, name, function));
 }
 
 
-void registerNumber(VirtualMachine *vm, char *name, Float number)
+void register_number(VirtualMachine *vm, char *name, Float number)
 {
     hold_var(vm,spawn_number(vm, name, number));
 }
 
-void registerString(VirtualMachine *vm, char *name, char *string)
+void register_string(VirtualMachine *vm, char *name, char *string)
 {
     hold_var(vm,spawn_string(vm, name, string));
 }
 
-void registerList(VirtualMachine *vm, char *name)
+void register_list(VirtualMachine *vm, char *name)
 {
     hold_var(vm,spawn_list(vm, name));
 }

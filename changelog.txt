@@ -1,3 +1,8 @@
+(23/11/2024) - version 0.6.7
+
+- renamed all hardcoded functions(vm/core functions) putting the br_ prefix to it;
+- renamed all lib functions putting the brl_ prefix to it;
+
 (22/11/2024) - version 0.6.5a
 
 - some examples updated;

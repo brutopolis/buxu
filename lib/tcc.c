@@ -13,7 +13,7 @@ typedef Stack(SymbolAssociation) SymbolAssociationList;
 IntList *tcc_states;
 SymbolAssociationList *tcc_states_temp;
 
-Int new_state(VirtualMachine *vm, IntList *args)
+Int brl_tcc_new_state(VirtualMachine *vm, IntList *args)
 {
     TCCState *tcc = tcc_new();
     if (!tcc) 
@@ -32,7 +32,7 @@ Int new_state(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-Int delete_state(VirtualMachine *vm, IntList *args)
+Int brl_tcc_delete_state(VirtualMachine *vm, IntList *args)
 {
     Int index = stack_shift(*args);
     TCCState *tcc = (TCCState *)vm->stack->data[index].pointer;
@@ -46,7 +46,7 @@ Int delete_state(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int compile_string(VirtualMachine *vm, IntList *args)
+Int brl_tcc_compile_string(VirtualMachine *vm, IntList *args)
 {
     Int _state = stack_shift(*args);
     Int _code = stack_shift(*args);
@@ -60,7 +60,7 @@ Int compile_string(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int br_tcc_relocate(VirtualMachine *vm, IntList *args)
+Int brl_tcc_relocate(VirtualMachine *vm, IntList *args)
 {
     Int index = stack_shift(*args);
     TCCState *tcc = (TCCState *)vm->stack->data[index].pointer;
@@ -72,7 +72,7 @@ Int br_tcc_relocate(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int get_symbol(VirtualMachine *vm, IntList *args)
+Int brl_tcc_get_symbol(VirtualMachine *vm, IntList *args)
 {
     Int _tcc = stack_shift(*args);
     Int _symbol = stack_shift(*args);
@@ -91,7 +91,7 @@ Int get_symbol(VirtualMachine *vm, IntList *args)
     return result;
 }
 
-Int add_path(VirtualMachine *vm, IntList *args)
+Int brl_tcc_add_path(VirtualMachine *vm, IntList *args)
 {
     Int _tcc = stack_shift(*args);
     Int _path = stack_shift(*args);
@@ -101,7 +101,7 @@ Int add_path(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int clear_tcc_states(VirtualMachine *vm, IntList *args)
+Int brl_tcc_clear_states(VirtualMachine *vm, IntList *args)
 {
     while (tcc_states->size > 0) 
     {
@@ -111,7 +111,7 @@ Int clear_tcc_states(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int br_tcc_add_symbol(VirtualMachine *vm, IntList *args)
+Int brl_tcc_add_symbol(VirtualMachine *vm, IntList *args)
 {
     Int _tcc = stack_shift(*args);
     Int _symbol = stack_shift(*args);
@@ -123,7 +123,7 @@ Int br_tcc_add_symbol(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int br_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_state + compile + relocate + get_symbol
+Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_state + compile + relocate + get_symbol
 {
     TCCState *tcc = tcc_new();
     if (!tcc) 
@@ -182,7 +182,7 @@ Int br_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_state
     return result2;
 }
 
-Int br_c_delete_function(VirtualMachine *vm, IntList *args)
+Int brl_tcc_c_delete_function(VirtualMachine *vm, IntList *args)
 {
     Int index = stack_shift(*args);
     void *func = vm->stack->data[index].pointer;
@@ -202,7 +202,7 @@ Int br_c_delete_function(VirtualMachine *vm, IntList *args)
 
 void _terminate_tcc_at_exit_handler()
 {
-    clear_tcc_states(NULL, NULL);
+    brl_tcc_clear_states(NULL, NULL);
     stack_free(*tcc_states_temp);
     stack_free(*tcc_states);
 }
@@ -212,17 +212,17 @@ void init_tcc(VirtualMachine* vm)
     tcc_states = make_int_list(vm);
     tcc_states_temp = (SymbolAssociationList*)malloc(sizeof(SymbolAssociationList));
     stack_init(*tcc_states_temp);
-    registerBuiltin(vm, "tcc.new", new_state);
-    registerBuiltin(vm, "tcc.delete", delete_state);
-    registerBuiltin(vm, "tcc.compile", compile_string);
-    registerBuiltin(vm, "tcc.relocate", br_tcc_relocate);
-    registerBuiltin(vm, "tcc.get.symbol", get_symbol);
-    registerBuiltin(vm, "tcc.add.path", add_path);
-    registerBuiltin(vm, "tcc.clear", clear_tcc_states);
-    registerBuiltin(vm, "tcc.add.symbol", br_tcc_add_symbol);
+    register_builtin(vm, "tcc.new", brl_tcc_new_state);
+    register_builtin(vm, "tcc.delete", brl_tcc_delete_state);
+    register_builtin(vm, "tcc.compile", brl_tcc_compile_string);
+    register_builtin(vm, "tcc.relocate", brl_tcc_relocate);
+    register_builtin(vm, "tcc.get.symbol", brl_tcc_get_symbol);
+    register_builtin(vm, "tcc.add.path", brl_tcc_add_path);
+    register_builtin(vm, "tcc.clear", brl_tcc_clear_states);
+    register_builtin(vm, "tcc.add.symbol", brl_tcc_add_symbol);
 
-    registerBuiltin(vm, "c.new", br_c_new_function);
-    registerBuiltin(vm, "c.delete", br_c_delete_function);
+    register_builtin(vm, "c.new", brl_tcc_c_new_function);
+    register_builtin(vm, "c.delete", brl_tcc_c_delete_function);
 
     atexit(_terminate_tcc_at_exit_handler);
 }
