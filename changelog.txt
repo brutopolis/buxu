@@ -1,3 +1,7 @@
+(25/11/2024) - version 0.6.7a
+
+- minor changes;
+
 (24/11/2024) - version 0.6.7
 
 - renamed all lib functions putting the brl_ prefix to it;
