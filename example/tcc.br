@@ -1,10 +1,10 @@
 hash.set "state" (tcc.new);
-tcc.add.path state "./include/";
+tcc.include state "./include/";
 tcc.compile state 
 (.
     #include "bruter.h"
 
-    Int teste(VirtualMachine *vm, Args args)
+    Int teste(VirtualMachine *vm, IntList* args)
     {
         for (int i = 0; i < 100000; i++)
         {
@@ -14,8 +14,6 @@ tcc.compile state
     }
 );
 tcc.relocate state;
-hash.set "teste.func" (tcc.get.symbol state "teste");
+hash.set "teste.func" (tcc.get state "teste");
 print teste.func;
 teste.func;
-print '1234';
-ls;

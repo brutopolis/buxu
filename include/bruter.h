@@ -8,15 +8,6 @@
 #include <stdarg.h>
 #include <time.h>
 
-#ifndef ARDUINO
-#ifdef _WIN32
-#include <windows.h>
-
-#else // Linux
-#include <unistd.h>
-#endif
-#endif
-
 #define VERSION "0.6.7"
 
 #define TYPE_NIL 0
@@ -29,28 +20,12 @@
 #define TYPE_OTHER 8
 
 
-#if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(__LP64__) || defined(_WIN64) || defined(__amd64__) || defined(__x86_64) || defined(__x86_64__) || defined(__x86_64)
+#if __SIZEOF_POINTER__ == 8
     #define Int long
     #define Float double
-#elif defined(__i386__) || defined(_M_IX86) || defined(__ARM_ARCH_7__)
-    #define Int int
-    #define Float float
-#elif defined(__AVR__)
-    #define Int short
-    // maybe i should implement a 16-bit float in far future
-    #define Float float 
-#elif defined(ESP8266) || defined(ESP32)
-    #define Int int
-    #define Float float
 #else
     #define Int int
     #define Float float
-#endif
-
-#define Nil -1
-
-#ifndef __null
-#define __null 0
 #endif
 
 #ifndef NULL
@@ -168,8 +143,6 @@ typedef Stack(char*) StringList;
 typedef Stack(Int) IntList;
 typedef Stack(char) CharList;
 
-#define Args IntList*
-
 typedef struct
 {
     ValueList *stack;
@@ -249,109 +222,6 @@ extern IntList* parse(VirtualMachine *vm, char *cmd);
 
 extern void collect_garbage(VirtualMachine *vm);
 
-// aliases starting with br_
-#define br_VERSION VERSION
-#define br_TYPE_NIL TYPE_NIL
-#define br_TYPE_NUMBER TYPE_NUMBER
-#define br_TYPE_STRING TYPE_STRING
-#define br_TYPE_LIST TYPE_LIST
-#define br_TYPE_BUILTIN TYPE_BUILTIN
-#define br_TYPE_RAW TYPE_RAW
-#define br_TYPE_INTEGER TYPE_INTEGER
-#define br_TYPE_OTHER TYPE_OTHER
-
-#define br_Nil Nil
-
-#define br_Float Float
-#define br_Int Int
-
-#define br_Stack Stack
-#define br_stack_init stack_init
-#define br_stack_push stack_push
-#define br_stack_unshift stack_unshift
-#define br_stack_pop stack_pop
-#define br_stack_shift stack_shift
-#define br_stack_free stack_free
-#define br_stack_move stack_move
-#define br_stack_insert stack_insert
-#define br_stack_remove stack_remove
-#define br_stack_find stack_find
-
-#define br_Value Value
-#define br_Hash Hash
-#define br_ValueList ValueList
-#define br_HashList HashList
-#define br_StringList StringList
-#define br_IntList IntList
-#define br_CharList CharList
-
-#define br_Args Args
-
-#define br_Function Function
-
-#define br_str_duplicate str_duplicate
-#define br_str_nduplicate str_nduplicate
-#define br_str_format str_format
-#define br_str_sub str_sub
-#define br_str_concat str_concat
-#define br_str_find str_find
-#define br_str_replace str_replace
-#define br_str_replace_all str_replace_all
-
-#define br_split_string split_string
-#define br_split_string_by_char split_string_by_char
-#define br_special_space_split special_space_split
-#define br_special_split special_split
-
-#define br_is_true is_true
-#define br_is_space is_space
-
-#define br_make_value_list make_value_list
-#define br_make_int_list make_int_list
-#define br_make_string_list make_string_list
-#define br_make_char_list make_char_list
-
-#define br_make_vm make_vm
-#define br_free_vm free_vm
-
-#define br_free_var free_var
-#define br_unuse_var unuse_var
-#define br_use_var use_var
-
-#define br_new_number new_number
-#define br_new_string new_string
-#define br_new_builtin new_builtin
-#define br_new_var new_var
-#define br_new_list new_list
-
-#define br_hold_var hold_var
-#define br_unhold_var unhold_var
-
-#define br_value_duplicate value_duplicate
-
-#define br_spawn_var spawn_var
-#define br_spawn_string spawn_string
-#define br_spawn_number spawn_number
-#define br_spawn_builtin spawn_builtin
-#define br_spawn_list spawn_list
-
-#define br_register_builtin register_builtin
-#define br_register_number register_number
-#define br_register_string register_string
-#define br_register_list register_list
-
-#define br_hash_find hash_find
-#define br_hash_set hash_set
-#define br_hash_unset hash_unset
-
-#define br_eval eval
-#define br_interpret interpret
-#define br_parse parse
-
-#define br_collect_garbage collect_garbage
-
-
-
 // <libraries header>
 
 #ifndef ARDUINO
@@ -360,11 +230,6 @@ extern char* readfile(char *filename);
 extern void writefile(char *filename, char *content);
 extern Int repl(VirtualMachine *vm);
 extern void print_element(VirtualMachine *vm, Int index);
-
-#define br_readfile readfile
-#define br_writefile writefile
-#define br_repl repl
-#define br_print_element print_element
 
 #endif
 
