@@ -1,19 +1,9 @@
-hash.set "state" (tcc.new);
-tcc.include state "./include/";
-tcc.compile state 
+hash.set "teste.func" (dyc.new 
 (.
-    #include "bruter.h"
-
-    Int teste(VirtualMachine *vm, IntList* args)
+    for (int i = 0; i < 100000; i++)
     {
-        for (int i = 0; i < 100000; i++)
-        {
-            printf("%d\n", i);
-        }
-        return -1;
+        printf("%d\n", i);
     }
-);
-tcc.relocate state;
-hash.set "teste.func" (tcc.get state "teste");
-print teste.func;
+    return -1;
+));
 teste.func;

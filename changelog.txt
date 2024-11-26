@@ -1,6 +1,9 @@
 (25/11/2024) - version 0.6.7a
 
 - minor changes;
+- no more direct tcc commands, use dyc. functions instead;
+- if dyc.new receive 2 arguments, the first one will be the extra code(any c code that will be added before the new function), the second one will be the function code;
+- some examples updated;
 
 (24/11/2024) - version 0.6.7
 

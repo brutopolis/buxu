@@ -250,141 +250,8 @@ VERSION
 "#endif";
 
 
-
-Int brl_tcc_new_state(VirtualMachine *vm, IntList *args)
+void add_common_symbols(TCCState *tcc)
 {
-    TCCState *tcc = tcc_new();
-    if (!tcc) 
-    {
-        fprintf(stderr, "error initializing TCC\n");
-        return -1;
-    }
-
-    // Configurar saída para memória
-    tcc_set_output_type(tcc, TCC_OUTPUT_MEMORY);
-    Int result = new_var(vm);
-    vm->stack->data[result].pointer = tcc;
-    vm->typestack->data[result] = TYPE_OTHER;
-    hold_var(vm, result);
-    stack_push(*tcc_states, (Int)tcc);
-    return result;
-}
-
-Int brl_tcc_delete_state(VirtualMachine *vm, IntList *args)
-{
-    Int index = stack_shift(*args);
-    TCCState *tcc = (TCCState *)vm->stack->data[index].pointer;
-    tcc_delete(tcc);
-    unuse_var(vm, index);
-    index = stack_find(*tcc_states, (Int)tcc);
-    if (index >= 0) 
-    {
-        stack_remove(*tcc_states, index);
-    }
-    return -1;
-}
-
-Int brl_tcc_compile_string(VirtualMachine *vm, IntList *args)
-{
-    Int _state = stack_shift(*args);
-    Int _code = stack_shift(*args);
-    TCCState *tcc = (TCCState *)vm->stack->data[_state].pointer;
-    char *code = vm->stack->data[_code].string;
-    if (tcc_compile_string(tcc, code) < 0) 
-    {
-        fprintf(stderr, "could not compile the string\n");
-        return -1;
-    }
-    return -1;
-}
-
-Int brl_tcc_relocate(VirtualMachine *vm, IntList *args)
-{
-    Int index = stack_shift(*args);
-    TCCState *tcc = (TCCState *)vm->stack->data[index].pointer;
-    if (tcc_relocate(tcc) < 0) 
-    {
-        fprintf(stderr, "could not relocate the code\n");
-        return -1;
-    }
-    return -1;
-}
-
-Int brl_tcc_get_symbol(VirtualMachine *vm, IntList *args)
-{
-    Int _tcc = stack_shift(*args);
-    Int _symbol = stack_shift(*args);
-    TCCState *tcc = (TCCState *)vm->stack->data[_tcc].pointer;
-    char *symbol = vm->stack->data[_symbol].string;
-    void *func = tcc_get_symbol(tcc, symbol);
-    if (!func) 
-    {
-        fprintf(stderr, "could not obtain '%s' symbol\n", symbol);
-        return -1;
-    }
-    Int result = new_var(vm);
-    vm->stack->data[result].pointer = func;
-    vm->typestack->data[result] = TYPE_BUILTIN;
-    hold_var(vm, result);
-    return result;
-}
-
-Int brl_tcc_add_path(VirtualMachine *vm, IntList *args)
-{
-    Int _tcc = stack_shift(*args);
-    Int _path = stack_shift(*args);
-    TCCState *tcc = (TCCState *)vm->stack->data[_tcc].pointer;
-    char *path = vm->stack->data[_path].string;
-    tcc_add_include_path(tcc, path);
-    return -1;
-}
-
-Int brl_tcc_clear_states(VirtualMachine *vm, IntList *args)
-{
-    while (tcc_states->size > 0) 
-    {
-        TCCState *tcc = (TCCState *)stack_shift(*tcc_states);
-        tcc_delete(tcc);
-    }
-    return -1;
-}
-
-Int brl_tcc_add_symbol(VirtualMachine *vm, IntList *args)
-{
-    Int _tcc = stack_shift(*args);
-    Int _symbol = stack_shift(*args);
-    Int _func = stack_shift(*args);
-    TCCState *tcc = (TCCState *)vm->stack->data[_tcc].pointer;
-    char *symbol = vm->stack->data[_symbol].string;
-    void *func = vm->stack->data[_func].pointer;
-    tcc_add_symbol(tcc, symbol, func);
-    return -1;
-}
-
-Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_state + compile + relocate + get_symbol
-{
-    TCCState *tcc = tcc_new();
-    if (!tcc) 
-    {
-        fprintf(stderr, "error initializing TCC\n");
-        return -1;
-    }
-
-    // Configurar saída para memória
-    tcc_set_output_type(tcc, TCC_OUTPUT_MEMORY);
-
-    Int result = new_var(vm);
-    vm->stack->data[result].pointer = tcc;
-    vm->typestack->data[result] = TYPE_OTHER;
-    hold_var(vm, result);
-    stack_push(*tcc_states, (Int)tcc);
-
-
-    char* _symbol = str_format("_symbol%d", clock() + time(NULL) + vm->stack->size);
-    Int _code = stack_shift(*args);
-    printf("%s\n", bruter_header);
-    char *code = str_format("%s\n\n Int %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, _symbol, vm->stack->data[stack_shift(*args)].string);
-    printf("%s\n", code);
     const void *core_funcs[] = {
         str_duplicate,
         str_nduplicate,
@@ -499,6 +366,56 @@ Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_
         tcc_add_symbol(tcc, core_names[i], core_funcs[i]);
     }
 
+}
+
+Int brl_tcc_clear_states(VirtualMachine *vm, IntList *args)
+{
+    while (tcc_states->size > 0) 
+    {
+        TCCState *tcc = (TCCState *)stack_shift(*tcc_states);
+        tcc_delete(tcc);
+    }
+    while (tcc_states_temp->size > 0) 
+    {
+        stack_shift(*tcc_states_temp);
+    }
+    return -1;
+}
+
+Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_state + compile + relocate + get_symbol
+{
+    TCCState *tcc = tcc_new();
+    if (!tcc) 
+    {
+        fprintf(stderr, "error initializing TCC\n");
+        return -1;
+    }
+
+    // Configurar saída para memória
+    tcc_set_output_type(tcc, TCC_OUTPUT_MEMORY);
+
+    Int result = new_var(vm);
+    vm->stack->data[result].pointer = tcc;
+    vm->typestack->data[result] = TYPE_OTHER;
+    hold_var(vm, result);
+    stack_push(*tcc_states, (Int)tcc);
+
+
+    char* _symbol = str_format("_symbol%d", clock() + time(NULL) + vm->stack->size);
+    Int _code = stack_shift(*args);
+    char *code;
+
+    if (args->size > 1)
+    {
+        code = str_format("%s\n\n%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, vm->stack->data[stack_shift(*args)].string, _symbol, vm->stack->data[stack_shift(*args)].string);
+    }
+    else
+    {
+        code = str_format("%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, _symbol, vm->stack->data[_code].string);
+    }
+    
+    add_common_symbols(tcc);
+
     if (tcc_compile_string(tcc, code) < 0) 
     {
         fprintf(stderr, "could not compilar string\n");
@@ -563,15 +480,8 @@ void init_dyc(VirtualMachine* vm)
     tcc_states = make_int_list(vm);
     tcc_states_temp = (SymbolAssociationList*)malloc(sizeof(SymbolAssociationList));
     stack_init(*tcc_states_temp);
-    register_builtin(vm, "tcc.new", brl_tcc_new_state);
-    register_builtin(vm, "tcc.delete", brl_tcc_delete_state);
-    register_builtin(vm, "tcc.compile", brl_tcc_compile_string);
-    register_builtin(vm, "tcc.relocate", brl_tcc_relocate);
-    register_builtin(vm, "tcc.include", brl_tcc_add_path);
-    register_builtin(vm, "tcc.clear", brl_tcc_clear_states);
-    register_builtin(vm, "tcc.get", brl_tcc_get_symbol);
-    register_builtin(vm, "tcc.add", brl_tcc_add_symbol);
 
+    register_builtin(vm, "dyc.clear", brl_tcc_clear_states);
     register_builtin(vm, "dyc.new", brl_tcc_c_new_function);
     register_builtin(vm, "dyc.delete", brl_tcc_c_delete_function);
 
