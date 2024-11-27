@@ -1,9 +1,11 @@
-(25/11/2024) - version 0.6.7a
+(27/11/2024) - version 0.6.7a
 
 - minor changes;
-- no more direct tcc commands, use dyc. functions instead;
+- no more direct tcc functions(tcc.*), use dyc functions instead;
 - if dyc.new receive 2 arguments, the first one will be the extra code(any c code that will be added before the new function), the second one will be the function code;
 - some examples updated;
+- fixed mem functions not being initialized;
+- new function dyc.include, it includes a C file just like a builtin library and return a handler to it, so you can delete it later(it will not delete the hashes created by it, be careful);
 
 (24/11/2024) - version 0.6.7
 

@@ -1618,11 +1618,6 @@ void init_mem(VirtualMachine *vm)
     init_sector(vm);
 }
 
-void init_default_vars(VirtualMachine *vm)
-{
-    hold_var(vm,spawn_string(vm, "VERSION", VERSION));// version
-}
-
 // std init presets
 void init_std(VirtualMachine *vm)
 {
@@ -1637,5 +1632,6 @@ void init_std(VirtualMachine *vm)
     init_math(vm);
     init_string(vm);
     init_condition(vm);
-    init_default_vars(vm);
+    init_mem(vm);
+    hold_var(vm,spawn_string(vm, "VERSION", VERSION));// version
 }

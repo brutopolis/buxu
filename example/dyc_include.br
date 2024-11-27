@@ -1,0 +1,5 @@
+ls.hash;
+hash.set "handler" (dyc.include "example/dyc_test.c");
+dyc.test;
+dyc.delete handler;
+return;

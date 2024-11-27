@@ -9,8 +9,8 @@ typedef struct {
 } SymbolAssociation;
 
 typedef Stack(SymbolAssociation) SymbolAssociationList;
+typedef void (*InitFunction)(VirtualMachine*);
 
-IntList *tcc_states;
 SymbolAssociationList *tcc_states_temp;
 const char *bruter_header = "#ifndef BRUTER_H\n"
 "#define BRUTER_H 1\n"
@@ -370,14 +370,9 @@ void add_common_symbols(TCCState *tcc)
 
 Int brl_tcc_clear_states(VirtualMachine *vm, IntList *args)
 {
-    while (tcc_states->size > 0) 
-    {
-        TCCState *tcc = (TCCState *)stack_shift(*tcc_states);
-        tcc_delete(tcc);
-    }
     while (tcc_states_temp->size > 0) 
     {
-        stack_shift(*tcc_states_temp);
+        tcc_delete((TCCState *)(stack_shift(*tcc_states_temp)).statePointer);
     }
     return -1;
 }
@@ -398,7 +393,6 @@ Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_
     vm->stack->data[result].pointer = tcc;
     vm->typestack->data[result] = TYPE_OTHER;
     hold_var(vm, result);
-    stack_push(*tcc_states, (Int)tcc);
 
 
     char* _symbol = str_format("_symbol%d", clock() + time(NULL) + vm->stack->size);
@@ -460,7 +454,6 @@ Int brl_tcc_c_delete_function(VirtualMachine *vm, IntList *args)
         {
             tcc_delete((TCCState *)tcc_states_temp->data[i].statePointer);
             stack_remove(*tcc_states_temp, i);
-            stack_remove(*tcc_states, stack_find(*tcc_states, (Int)tcc_states_temp->data[i].statePointer));
             unuse_var(vm, index);
             return -1;
         }
@@ -468,22 +461,75 @@ Int brl_tcc_c_delete_function(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+Int brl_tcc_c_include(VirtualMachine *vm, IntList *args)
+{
+    Int _filepath_id = stack_shift(*args);
+    char* _filepath = vm->stack->data[_filepath_id].string;
+    char* _filename_without_extension_and_path = str_sub(_filepath, str_find(_filepath, "/") + 1, str_find(_filepath, "."));
+    char* _code = readfile(_filepath);
+    char* ___special_header = str_format("%s\n\nvoid _libr_%s_handler() {};", bruter_header, _filename_without_extension_and_path);
+    char* __code = str_replace(_code, "#include \"bruter.h\"", ___special_header);
+    char* _symbol = str_format("init_%s", _filename_without_extension_and_path);
+    char* _dummy_symbol = str_format("_libr_%s_handler", _filename_without_extension_and_path);
+    printf("Including %s\n", _filepath);
+    TCCState *tcc = tcc_new();
+    if (!tcc) 
+    {
+        fprintf(stderr, "error initializing TCC\n");
+        return -1;
+    }
+
+    // Configurar saída para memória
+    tcc_set_output_type(tcc, TCC_OUTPUT_MEMORY);
+
+    add_common_symbols(tcc);
+
+    tcc_compile_string(tcc, __code);
+    
+    tcc_relocate(tcc);
+
+    void *_init_func = tcc_get_symbol(tcc, _symbol);
+    void *_dummy_func = tcc_get_symbol(tcc, _dummy_symbol);
+    
+    SymbolAssociation _syass;
+    _syass.symbolPointer = _dummy_func;
+    _syass.statePointer = tcc;
+
+    stack_push(*tcc_states_temp, _syass);
+    
+    Int result = new_var(vm);
+    vm->stack->data[result].pointer = _dummy_func;
+    vm->typestack->data[result] = TYPE_OTHER;
+    hold_var(vm, result);
+
+    //declare function type
+    ((InitFunction)_init_func)(vm); 
+
+    free(_filename_without_extension_and_path);
+    free(_code);
+    free(___special_header);
+    free(__code);
+    free(_symbol);
+    free(_dummy_symbol);
+
+    return result;
+}
+
 void _terminate_tcc_at_exit_handler()
 {
     brl_tcc_clear_states(NULL, NULL);
     stack_free(*tcc_states_temp);
-    stack_free(*tcc_states);
 }
 
 void init_dyc(VirtualMachine* vm)
 {
-    tcc_states = make_int_list(vm);
     tcc_states_temp = (SymbolAssociationList*)malloc(sizeof(SymbolAssociationList));
     stack_init(*tcc_states_temp);
 
     register_builtin(vm, "dyc.clear", brl_tcc_clear_states);
     register_builtin(vm, "dyc.new", brl_tcc_c_new_function);
     register_builtin(vm, "dyc.delete", brl_tcc_c_delete_function);
+    register_builtin(vm, "dyc.include", brl_tcc_c_include);
 
     atexit(_terminate_tcc_at_exit_handler);
 }
