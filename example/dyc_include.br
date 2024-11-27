@@ -1,5 +1,9 @@
 ls.hash;
 hash.set "handler" (dyc.include "example/dyc_test.c");
 dyc.test;
+
+(// dyc.delete is optional because all tcc states are deleted when the script ends, but its usefull to free memory);
+(// also, deleting the handler does not remove the hashes, be careful);
 dyc.delete handler;
+
 return;
