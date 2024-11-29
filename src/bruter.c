@@ -616,7 +616,6 @@ VirtualMachine* make_vm()
     vm->unused = make_int_list();
     vm->temp = make_int_list();
 
-
     return vm;
 }
 

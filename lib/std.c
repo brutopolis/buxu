@@ -1,13 +1,15 @@
 #include "bruter.h"
 
+typedef struct {
+    ValueList *stack;
+    CharList *typestack;
+} Context;
+
+typedef Stack(Context) ContextList;
+ContextList *locals;
+Int current_local = -1;
+
 #ifndef ARDUINO
-
-#include <poll.h>
-#include <errno.h>
-#include <fcntl.h>
-
-
-#include <sys/wait.h>
 
 Int brl_os_file_read(VirtualMachine *vm, IntList *args)
 {
@@ -288,14 +290,10 @@ Int brl_std_do(VirtualMachine *vm, IntList *args)
 {
     Int str = stack_shift(*args);
     char* _str = vm->stack->data[str].string;
+    IntList *_args = make_int_list();
     if (args->size > 0)
     {
-        Int _args = new_list(vm);
-        while (args->size > 0)
-        {
-            stack_push(*((IntList*)vm->stack->data[_args].pointer), stack_shift(*args));
-        }
-        hash_set(vm, "args", _args);
+        stack_push(*_args, stack_shift(*args));
     }
 
     Int result = eval(vm, _str);
@@ -660,17 +658,6 @@ Int brl_std_list_length(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-/*Int brl_std_list_first(VirtualMachine *vm, IntList *args)
-{
-    Int list = stack_shift(*args);
-    if (vm->typestack->data[list] == TYPE_LIST)
-    {
-        IntList *lst = (IntList*)vm->stack->data[list].pointer;
-        return lst->data[0];
-    }
-    return -1;
-}*/
-
 Int brl_std_list_last(VirtualMachine *vm, IntList *args)
 {
     Int list = stack_shift(*args);
@@ -682,6 +669,259 @@ Int brl_std_list_last(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+// global (same as list, but treating the stack as a list, except concat and new)
+
+Int brl_std_global_push(VirtualMachine *vm, IntList *args)
+{
+    Int value;
+    while (args->size > 0)
+    {
+        value = stack_shift(*args);
+        stack_push(*vm->stack, vm->stack->data[value]);
+        stack_push(*vm->typestack, vm->typestack->data[value]);
+    }
+    return -1;
+}
+
+Int brl_std_global_unshift(VirtualMachine *vm, IntList *args)
+{
+    Int value;
+    while (args->size > 0)
+    {
+        value = stack_shift(*args);
+        stack_unshift(*vm->stack, vm->stack->data[value]);
+        stack_unshift(*vm->typestack, vm->typestack->data[value]);
+    }
+
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        vm->hashes->data[i].index++;
+    }
+
+    for (Int i = 0; i < vm->temp->size; i++)
+    {
+        vm->temp->data[i]++;
+    }
+
+    for (Int i = 0; i < vm->unused->size; i++)
+    {
+        vm->unused->data[i]++;
+    }
+    
+    return -1;
+}
+
+Int brl_std_global_pop(VirtualMachine *vm, IntList *args)
+{
+    unuse_var(vm, vm->stack->size-1);
+    stack_pop(*vm->stack);
+    stack_pop(*vm->typestack);
+    return -1;
+}
+
+Int brl_std_global_shift(VirtualMachine *vm, IntList *args)
+{
+    unuse_var(vm, 0);
+    stack_shift(*vm->stack);
+    stack_shift(*vm->typestack);
+
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        vm->hashes->data[i].index--;
+    }
+
+    for (Int i = 0; i < vm->temp->size; i++)
+    {
+        vm->temp->data[i]--;
+    }
+
+    for (Int i = 0; i < vm->unused->size; i++)
+    {
+        vm->unused->data[i]--;
+    }
+
+    return -1;
+}
+
+Int brl_std_global_find(VirtualMachine *vm, IntList *args)
+{
+    Int value = stack_shift(*args);
+    for (Int i = 0; i < vm->stack->size; i++)
+    {
+        if (vm->stack->data[i].integer == vm->stack->data[value].integer)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// local
+
+void local_new(VirtualMachine *vm)
+{
+    Context context;
+    context.stack = make_value_stack();
+    context.typestack = make_char_stack();
+    stack_push(*locals, context);
+}
+
+void local_push(VirtualMachine *vm, Int value)
+{
+    Context *context = &locals->data[current_local];
+    stack_push(*context->stack, vm->stack->data[value]);
+    stack_push(*context->typestack, vm->typestack->data[value]);
+}
+
+void local_unshift(VirtualMachine *vm, Int value)
+{
+    Context *context = &locals->data[current_local];
+    stack_unshift(*context->stack, vm->stack->data[value]);
+    stack_unshift(*context->typestack, vm->typestack->data[value]);
+}
+
+Int local_pop(VirtualMachine *vm)
+{
+    Context *context = &locals->data[current_local];
+    Int value = new_var(vm);
+    vm->stack->data[value] = stack_pop(*context->stack);
+    vm->typestack->data[value] = stack_pop(*context->typestack);
+    return value;
+}
+
+Int local_shift(VirtualMachine *vm)
+{
+    Context *context = &locals->data[current_local];
+    Int value = new_var(vm);
+    vm->stack->data[value] = stack_shift(*context->stack);
+    vm->typestack->data[value] = stack_shift(*context->typestack);
+    return value;
+}
+
+Int local_find(VirtualMachine *vm, Int value)
+{
+    Context *context = &locals->data[current_local];
+    for (Int i = 0; i < context->stack->size; i++)
+    {
+        if (context->stack->data[i].integer == vm->stack->data[value].integer)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void local_free()
+{
+    Context *context = &locals->data[current_local];
+    for (Int i = 0; i < context->stack->size; i++)
+    {
+        if (context->typestack->data[i] == TYPE_STRING)
+        {
+            free(context->stack->data[i].string);
+        }
+        else if (context->typestack->data[i] == TYPE_LIST)
+        {
+            stack_free(*((IntList*)context->stack->data[i].pointer));
+            free(context->stack->data[i].pointer);
+        }
+    }
+    stack_free(*context->stack);
+    stack_free(*context->typestack);
+    stack_remove(*locals, current_local);
+}
+
+void local_clear()
+{
+    Context *context = &locals->data[current_local];
+    for (Int i = 0; i < context->stack->size; i++)
+    {
+        if (context->typestack->data[i] == TYPE_STRING)
+        {
+            free(context->stack->data[i].string);
+        }
+        else if (context->typestack->data[i] == TYPE_LIST)
+        {
+            stack_free(*((IntList*)context->stack->data[i].pointer));
+            free(context->stack->data[i].pointer);
+        }
+    }
+    stack_free(*context->stack);
+    stack_free(*context->typestack);
+    context->stack = make_value_stack();
+    context->typestack = make_char_stack();
+}
+
+Int brl_std_local_new(VirtualMachine *vm, IntList *args)
+{
+    local_new(vm);
+    return -1;
+}
+
+Int brl_std_local_push(VirtualMachine *vm, IntList *args)
+{
+    Int value = stack_shift(*args);
+    local_push(vm, value);
+    return -1;
+}
+
+Int brl_std_local_unshift(VirtualMachine *vm, IntList *args)
+{
+    Int value = stack_shift(*args);
+    local_unshift(vm, value);
+    return -1;
+}
+
+Int brl_std_local_pop(VirtualMachine *vm, IntList *args)
+{
+    return local_pop(vm);
+}
+
+Int brl_std_local_shift(VirtualMachine *vm, IntList *args)
+{
+    return local_shift(vm);
+}
+
+Int brl_std_local_find(VirtualMachine *vm, IntList *args)
+{
+    Int value = stack_shift(*args);
+    return new_number(vm, local_find(vm, value));
+}
+
+Int brl_std_local_clear(VirtualMachine *vm, IntList *args)
+{
+    local_clear();
+    return -1;
+}
+
+Int brl_std_local_free(VirtualMachine *vm, IntList *args)
+{
+    local_free();
+    return -1;
+}
+
+Int brl_std_local_set(VirtualMachine *vm, IntList *args)
+{
+    Int varid = stack_shift(*args);
+    Int value = stack_shift(*args);
+    locals->data[current_local].stack->data[varid] = vm->stack->data[value];
+    locals->data[current_local].typestack->data[varid] = vm->typestack->data[value];
+    return -1;
+}
+
+Int brl_std_local_get(VirtualMachine *vm, IntList *args)
+{
+    Int varid = stack_shift(*args);
+    Int result = new_var(vm);
+    vm->stack->data[result] = locals->data[current_local].stack->data[varid];
+    vm->typestack->data[result] = locals->data[current_local].typestack->data[varid];
+    return result;
+}
+
+Int brl_std_local_length(VirtualMachine *vm, IntList *args)
+{
+    return new_number(vm, locals->data[current_local].stack->size);
+}
 
 // std string
 
@@ -1468,7 +1708,6 @@ void init_os(VirtualMachine *vm)
 
     register_builtin(vm, "os.time", brl_os_time_now);
     register_builtin(vm, "os.clock", brl_os_time_clock);
-    //register_builtin(vm, "os.sleep", brl_os_time_sleep);
 
     register_builtin(vm, "dofile", brl_os_dofile);
     register_builtin(vm, "repl", brl_os_repl);
@@ -1589,6 +1828,24 @@ void init_list(VirtualMachine *vm)
     register_builtin(vm, "list.last", brl_std_list_last);
 }
 
+void init_global(VirtualMachine *vm)
+{
+    register_builtin(vm, "global.push", brl_std_global_push);
+    register_builtin(vm, "global.unshift", brl_std_global_unshift);
+    register_builtin(vm, "global.pop", brl_std_global_pop);
+    register_builtin(vm, "global.shift", brl_std_global_shift);
+    register_builtin(vm, "global.find", brl_std_global_find);
+}
+
+void init_local(VirtualMachine *vm)
+{
+    register_builtin(vm, "local.push", brl_std_local_push);
+    register_builtin(vm, "local.unshift", brl_std_local_unshift);
+    register_builtin(vm, "local.pop", brl_std_local_pop);
+    register_builtin(vm, "local.shift", brl_std_local_shift);
+    register_builtin(vm, "local.find", brl_std_local_find);
+}
+
 void init_sector(VirtualMachine *vm)
 {
     register_builtin(vm, "sector.new", brl_mem_sector_new);
@@ -1629,6 +1886,8 @@ void init_std(VirtualMachine *vm)
     init_loop(vm);
     init_hash(vm);
     init_list(vm);
+    init_global(vm);
+    init_local(vm);
     init_math(vm);
     init_string(vm);
     init_condition(vm);

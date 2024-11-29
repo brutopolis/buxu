@@ -1,0 +1,23 @@
+hash.set "arg0" 0;
+hash.set "sum" 0;
+hash.set "fib0" 0;
+hash.set "fib1" 1;
+hash.set "minus1" 0;
+hash.set "minus2" 0;
+
+hash.set "fib" (. 
+    mem.set  (list.shift args);
+
+    if (.< arg0 2) (.return 1);
+    mem.set minus1 (sub arg0 1);
+    mem.set minus2 (sub arg0 2);
+    mem.set fib0 (do fib minus1);
+    mem.set fib1 (do fib minus2);
+    mem.set sum (add fib0 fib1);
+
+    print "fib: " arg0 " sum: " sum;
+
+    return sum;
+);
+
+print (do fib 10);
