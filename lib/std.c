@@ -1,21 +1,5 @@
 #include "bruter.h"
 
-typedef struct {
-    ValueList *stack;
-    CharList *typestack;
-} Context;
-
-typedef Stack(Context*) ContextList;
-ContextList *locals;
-Int current_local = -1;
-
-// some function declarations to avoid errors
-Int local_new(VirtualMachine *vm);
-void local_free();
-void local_unshift(VirtualMachine *vm, Int index);
-Int local_shift(VirtualMachine *vm);
-void local_clear();
-
 #ifndef ARDUINO
 
 Int brl_os_file_read(VirtualMachine *vm, IntList *args)
@@ -287,13 +271,45 @@ Int brl_std_do(VirtualMachine *vm, IntList *args)
 {
     Int str = stack_shift(*args);
     char* _str = vm->stack->data[str].string;
-    Int ctx_index = local_new(vm);
-    Int last_local = current_local;
-    current_local = ctx_index;
-    printf("ctx_index: %s\n", _str);
+    Int last_local = hash_find(vm, "local");
+    Int local_index = new_list(vm);
+    hold_var(vm, local_index);
+    if (last_local == -1)
+    {
+        hash_set(vm, "local", local_index);
+    }
+    else 
+    {
+        for (Int i = 0; i < vm->hashes->size; i++)
+        {
+            if (strcmp(vm->hashes->data[i].key, "local") == 0)
+            {
+                vm->hashes->data[i].index = local_index;
+                break;
+            }
+        }
+    }
+    //hash_set(vm, "local", local_index);
+    
+
+    for (Int i = 0; i < args->size; i++)
+    {
+        stack_push(*((IntList*)vm->stack->data[local_index].pointer), args->data[i]);
+    }
     Int result = eval(vm, _str);
-    current_local = last_local;
-    local_free();
+    while (((IntList*)vm->stack->data[local_index].pointer)->size > 0)
+    {
+        stack_shift(*((IntList*)vm->stack->data[local_index].pointer));
+    }
+    unuse_var(vm, local_index);
+    if (last_local == -1)
+    {
+        hash_unset(vm, "local");
+    }
+    else 
+    {
+        hash_set(vm, "local", last_local);
+    }
     return result;
 }
 
@@ -763,243 +779,6 @@ Int brl_std_global_find(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-// local
-
-Int local_new(VirtualMachine *vm)
-{
-    Context *context = malloc(sizeof(Context));
-    context->stack = make_value_list();
-    context->typestack = make_char_list();
-    stack_push(*locals, context);
-    return locals->size-1;
-}
-
-void local_push(VirtualMachine *vm, Int value)
-{
-    if (current_local >= 0)
-    {
-        stack_push(*locals->data[current_local]->stack, vm->stack->data[value]);
-        stack_push(*locals->data[current_local]->typestack, vm->typestack->data[value]);
-    }
-    else 
-    {
-        printf("Error: no local context\n");
-    }
-}
-
-void local_unshift(VirtualMachine *vm, Int value)
-{
-    if (current_local >= 0)
-    {
-        stack_unshift(*locals->data[current_local]->stack, vm->stack->data[value]);
-        stack_unshift(*locals->data[current_local]->typestack, vm->typestack->data[value]);
-    }
-    else 
-    {
-        printf("Error: no local context\n");
-    }
-}
-
-Int local_pop(VirtualMachine *vm)
-{
-    Int result = -1;
-    if (current_local >= 0)
-    {
-        result = new_var(vm);
-        vm->stack->data[result] = stack_pop(*locals->data[current_local]->stack);
-        vm->typestack->data[result] = stack_pop(*locals->data[current_local]->typestack);
-    }
-    else 
-    {
-        printf("Error: no local context\n");
-    }
-    return result;
-}
-
-Int local_shift(VirtualMachine *vm)
-{
-    Int result = -1;
-    if (current_local >= 0)
-    {
-        result = new_var(vm);
-        printf("local_shift: %d\n", result);
-        vm->stack->data[result] = stack_shift(*locals->data[current_local]->stack);
-        vm->typestack->data[result] = stack_shift(*locals->data[current_local]->typestack);
-    }
-    else 
-    {
-        printf("Error: no local context\n");
-    }
-    return result;
-}
-
-void local_clear()
-{
-    if (current_local >= 0)
-    {
-        while (locals->data[current_local]->stack->size > 0)
-        {
-            Value value = stack_pop(*locals->data[current_local]->stack);
-            char _t = stack_pop(*locals->data[current_local]->typestack);
-            if (_t == TYPE_STRING)
-            {
-                free(value.string);
-            }
-            else if (_t == TYPE_LIST)
-            {
-                IntList *list = value.pointer;
-                stack_free(*list);
-                free(list);
-            }
-        }
-    }
-    else 
-    {
-        printf("Error: no local context\n");
-    }
-}
-
-void local_free()
-{
-    if (current_local >= 0)
-    {
-        while (locals->data[current_local]->stack->size > 0)
-        {
-            Value value = stack_pop(*locals->data[current_local]->stack);
-            char _t = stack_pop(*locals->data[current_local]->typestack);
-            if (_t == TYPE_STRING)
-            {
-                free(value.string);
-            }
-            else if (_t == TYPE_LIST)
-            {
-                IntList *list = value.pointer;
-                stack_free(*list);
-                free(list);
-            }
-        }
-        stack_remove(*locals, current_local);
-    }
-    else 
-    {
-        printf("Error: no local context\n");
-    }
-}
-
-Int local_find(VirtualMachine *vm, Int value)
-{
-    if (current_local >= 0)
-    {
-        for (Int i = 0; i < locals->data[current_local]->stack->size; i++)
-        {
-            if (locals->data[current_local]->stack->data[i].integer == vm->stack->data[value].integer)
-            {
-                return i;
-            }
-        }
-    }
-    else 
-    {
-        printf("Error: no local context\n");
-    }
-    return -1;
-}
-
-
-
-Int brl_std_local_new(VirtualMachine *vm, IntList *args)
-{
-    local_new(vm);
-    return -1;
-}
-
-Int brl_std_local_push(VirtualMachine *vm, IntList *args)
-{
-    Int value = stack_shift(*args);
-    local_push(vm, value);
-    return -1;
-}
-
-Int brl_std_local_unshift(VirtualMachine *vm, IntList *args)
-{
-    Int value = stack_shift(*args);
-    local_unshift(vm, value);
-    return -1;
-}
-
-Int brl_std_local_pop(VirtualMachine *vm, IntList *args)
-{
-    return local_pop(vm);
-}
-
-Int brl_std_local_shift(VirtualMachine *vm, IntList *args)
-{
-    return local_shift(vm);
-}
-
-Int brl_std_local_find(VirtualMachine *vm, IntList *args)
-{
-    Int value = stack_shift(*args);
-    return new_number(vm, local_find(vm, value));
-}
-
-Int brl_std_local_clear(VirtualMachine *vm, IntList *args)
-{
-    local_clear();
-    return -1;
-}
-
-Int brl_std_local_free(VirtualMachine *vm, IntList *args)
-{
-    local_free();
-    return -1;
-}
-
-Int brl_std_local_set(VirtualMachine *vm, IntList *args)
-{
-    Int index = stack_shift(*args);
-    Int value = stack_shift(*args);
-    if (current_local >= 0)
-    {
-        locals->data[current_local]->stack->data[index] = vm->stack->data[value];
-        locals->data[current_local]->typestack->data[index] = vm->typestack->data[value];
-    }
-    else 
-    {
-        printf("Error: no local context\n");
-    }
-    return -1;
-}
-
-Int brl_std_local_get(VirtualMachine *vm, IntList *args)
-{
-    Int index = stack_shift(*args);
-    if (current_local >= 0)
-    {
-        return locals->data[current_local]->stack->data[index].integer;
-    }
-    else 
-    {
-        printf("Error: no local context\n");
-    }
-    return -1;
-}
-
-Int brl_std_local_length(VirtualMachine *vm, IntList *args)
-{
-    if (current_local >= 0)
-    {
-        return new_number(vm, locals->data[current_local]->stack->size);
-    }
-    else 
-    {
-        printf("Error: no local context\n");
-    }
-    return -1;
-}
-
-
-
 // std string
 
 Int brl_std_string_concat(VirtualMachine *vm, IntList *args)
@@ -1397,6 +1176,10 @@ Int brl_std_condition_if(VirtualMachine *vm, IntList *args)
     if (is_true(vm->stack->data[result], vm->typestack->data[result]))
     {
         result = eval(vm, vm->stack->data[_then].string);
+    }
+    else 
+    {
+        result = -1;
     }
     return result;
 }
@@ -1914,23 +1697,6 @@ void init_global(VirtualMachine *vm)
     register_builtin(vm, "global.find", brl_std_global_find);
 }
 
-void init_local(VirtualMachine *vm)
-{
-    locals = malloc(sizeof(ContextList));
-    stack_init(*locals);
-    register_builtin(vm, "local.new", brl_std_local_new);
-    register_builtin(vm, "local.push", brl_std_local_push);
-    register_builtin(vm, "local.unshift", brl_std_local_unshift);
-    register_builtin(vm, "local.pop", brl_std_local_pop);
-    register_builtin(vm, "local.shift", brl_std_local_shift);   
-    register_builtin(vm, "local.find", brl_std_local_find);
-    register_builtin(vm, "local.free", brl_std_local_free);
-    register_builtin(vm, "local.clear", brl_std_local_clear);
-    register_builtin(vm, "local.len", brl_std_local_length);
-    register_builtin(vm, "local.set", brl_std_local_set);
-    register_builtin(vm, "local.get", brl_std_local_get);
-}
-
 void init_sector(VirtualMachine *vm)
 {
     register_builtin(vm, "sector.new", brl_mem_sector_new);
@@ -1972,10 +1738,9 @@ void init_std(VirtualMachine *vm)
     init_hash(vm);
     init_list(vm);
     init_global(vm);
-    init_local(vm);
     init_math(vm);
     init_string(vm);
     init_condition(vm);
     init_mem(vm);
-    hold_var(vm,spawn_string(vm, "VERSION", VERSION));// version
+    register_string(vm, "VERSION", VERSION);// version
 }

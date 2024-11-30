@@ -170,7 +170,8 @@ extern StringList* split_string_by_char(char *str, char delim);
 extern StringList* special_space_split(char *str);
 extern StringList* special_split(char *str, char delim);
 
-#define is_true(value, __type) (__type == TYPE_NUMBER ? (round(value.number) != 0) : (__type == TYPE_NIL ? 0 : 1))
+// if integer == 0 or type == TYPE_NIL return 0, else return 1
+#define is_true(value, __type) (__type == TYPE_NIL ? 0 : (value.integer == 0 ? 0 : 1))
 
 #define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
 
