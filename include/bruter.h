@@ -150,6 +150,8 @@ typedef struct
     HashList *hashes;
     IntList *unused;
     IntList *temp;
+    IntList* (*parse)(void*, char*);
+    Int (*interpret)(void*, char*);
 } VirtualMachine;
 
 //Function
@@ -218,8 +220,6 @@ extern void hash_unset(VirtualMachine *vm, char *key);
 
 // eval
 extern Int eval(VirtualMachine *vm, char *cmd);
-extern Int interpret(VirtualMachine *vm, char* cmd);
-extern IntList* parse(VirtualMachine *vm, char *cmd);
 
 extern void collect_garbage(VirtualMachine *vm);
 

@@ -2,6 +2,10 @@
 
 - new function set global.*;
 - new std variable: local, works as a context, its defined each time "do" is called and is destroyed when the function ends, it is a default list, so you can manipulate it with list functions, it also save the pointer to the last local if there was one;
+- interpret is now vm->interpret and can be replaced;
+- parse is now vm->parse and can be replaced;
+- new function default_interpreter;
+- new function default_parser;
 
 (27/11/2024) - version 0.6.7a
 

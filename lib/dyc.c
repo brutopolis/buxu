@@ -166,6 +166,8 @@ VERSION
 "    HashList *hashes;\n"
 "    IntList *unused;\n"
 "    IntList *temp;\n"
+"    IntList* (*parse)(void*, char*);\n"
+"    Int (*interpret)(void*, char*);\n"
 "} VirtualMachine;\n"
 "\n"
 "//Function\n"
@@ -233,8 +235,6 @@ VERSION
 "\n"
 "// eval\n"
 "extern Int eval(VirtualMachine *vm, char *cmd);\n"
-"extern Int interpret(VirtualMachine *vm, char* cmd);\n"
-"extern IntList* parse(VirtualMachine *vm, char *cmd);\n"
 "\n"
 "extern void collect_garbage(VirtualMachine *vm);\n"
 "\n"
@@ -295,8 +295,6 @@ void add_common_symbols(TCCState *tcc)
         hash_set,
         hash_unset,
         eval,
-        interpret,
-        parse,
         collect_garbage,
         #ifndef ARDUINO
         readfile,
@@ -349,8 +347,6 @@ void add_common_symbols(TCCState *tcc)
         "hash_set",
         "hash_unset",
         "eval",
-        "interpret",
-        "parse",
         "collect_garbage",
     #ifndef ARDUINO
         "readfile",
