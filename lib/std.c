@@ -1176,12 +1176,10 @@ Int brl_std_condition_if(VirtualMachine *vm, IntList *args)
     if (is_true(vm->stack->data[result], vm->typestack->data[result]))
     {
         result = eval(vm, vm->stack->data[_then].string);
+        return result;
     }
-    else 
-    {
-        result = -1;
-    }
-    return result;
+    unuse_var(vm, result);
+    return -1;
 }
 
 Int brl_std_condition_ifelse(VirtualMachine *vm, IntList *args)
@@ -1489,6 +1487,11 @@ Int brl_mem_length(VirtualMachine *vm, IntList *args)
 Int brl_mem_next(VirtualMachine *vm, IntList *args)
 {
     Int index = stack_shift(*args);
+    if (index < 0)
+    {
+        return -1;
+    }
+    
     stack_unshift(*vm->unused, index);
     while (args->size > 0)
     {

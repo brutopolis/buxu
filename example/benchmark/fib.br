@@ -4,14 +4,17 @@ hash.set "_2" 2;
 hash.set "_3" 3;
 hash.set "condition" (.< (list.get local _0) _2);
 hash.set "_then" (.return (list.get local _0));
-hash.set "fib" (. (// 0 = count, 1 = n-1, 2 = n-2, 3 = result)
-    
+hash.set "fib" (.
     if condition _then;
     list.push local (do fib (sub (mem.copy (list.get local _0)) _1));
+
+    
     list.push local (do fib (sub (list.get local _0) _2));
-    list.push local (add (list.get local _1) (list.get local _2));
     mem.next (list.get local _2);
+    
+    list.push local (add (list.get local _1) (list.get local _2));
     return (list.get local _3);
 );
-
-return (do fib 20) (ls);
+hash.set "res" (do fib 22);
+ls;
+return res;

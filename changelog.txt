@@ -1,4 +1,4 @@
-(30/11/2024) - version 0.6.8
+(03/12/2024) - version 0.6.7b
 
 - new function set global.*;
 - new std variable: local, works as a context, its defined each time "do" is called and is destroyed when the function ends, it is a default list, so you can manipulate it with list functions, it also save the pointer to the last local if there was one;

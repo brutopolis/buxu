@@ -10,7 +10,7 @@ hash.set "script"
         print _index;
         incr _index;
     );
-    print (list.pop args);
+    print (list.pop local);
 );
 do script 444 555 777;
 return 4;

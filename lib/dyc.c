@@ -399,20 +399,19 @@ Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_
     Int _code = stack_shift(*args);
     char *code;
 
-    if (args->size > 1)
+    if (args->size > 0)
     {
-        code = str_format("%s\n\n%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, vm->stack->data[stack_shift(*args)].string, _symbol, vm->stack->data[stack_shift(*args)].string);
+        code = str_format("%s\n\n%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, vm->stack->data[_code].string, _symbol, vm->stack->data[stack_shift(*args)].string);
     }
     else
     {
         code = str_format("%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, _symbol, vm->stack->data[_code].string);
     }
-    
     add_common_symbols(tcc);
 
     if (tcc_compile_string(tcc, code) < 0) 
     {
-        fprintf(stderr, "could not compilar string\n");
+        fprintf(stderr, "could not compile string\n");
         return -1;
     }
 
