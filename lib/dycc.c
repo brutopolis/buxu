@@ -456,7 +456,7 @@ Int brl_tcc_c_delete_function(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int brl_tcc_c_include(VirtualMachine *vm, IntList *args)
+Int brl_tcc_c_dofile(VirtualMachine *vm, IntList *args)
 {
     Int _filepath_id = stack_shift(*args);
     char* _filepath = vm->stack->data[_filepath_id].string;
@@ -516,15 +516,15 @@ void _terminate_tcc_at_exit_handler()
     stack_free(*tcc_states_temp);
 }
 
-void init_dyc(VirtualMachine* vm)
+void init_dycc(VirtualMachine* vm)
 {
     tcc_states_temp = (SymbolAssociationList*)malloc(sizeof(SymbolAssociationList));
     stack_init(*tcc_states_temp);
 
-    register_builtin(vm, "dyc.clear", brl_tcc_clear_states);
-    register_builtin(vm, "dyc.new", brl_tcc_c_new_function);
-    register_builtin(vm, "dyc.delete", brl_tcc_c_delete_function);
-    register_builtin(vm, "dyc.include", brl_tcc_c_include);
+    register_builtin(vm, "dycc.clear", brl_tcc_clear_states);
+    register_builtin(vm, "dycc.new", brl_tcc_c_new_function);
+    register_builtin(vm, "dycc.delete", brl_tcc_c_delete_function);
+    register_builtin(vm, "dycc.dofile", brl_tcc_c_dofile);
 
     atexit(_terminate_tcc_at_exit_handler);
 }

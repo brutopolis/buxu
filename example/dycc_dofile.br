@@ -1,0 +1,9 @@
+ls.hash;
+hash.set "handler" (dycc.dofile "example/dycc_test.c");
+dycc.test;
+
+# (// dycc.delete is optional because all tcc states are deleted when the script ends, but its usefull to free memory);
+# (// also, deleting the handler does not remove the hashes, be careful);
+dycc.delete handler;
+
+return;
