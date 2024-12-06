@@ -5,13 +5,33 @@ void* previous_interpreter;
 
 enum {
     EXIT,
+    SET,
+    FSET,
     PUSH,
     POP,
     UNSHIFT,
     SHIFT,
     INSERT,
     REMOVE,
-    PRINT
+    PRINT,
+    SWAP,
+    COPY,
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    MOD,
+    FADD,
+    FSUB,
+    FMUL,
+    FDIV,
+    FMOD,
+    FLOOR,
+    CEIL,
+    ROUND,
+    TRUNC,
+    POW,
+    FLOAT,
 };
 
 // PUSH 4
@@ -91,10 +111,19 @@ Int stacky_interpreter(void *_vm, char* cmd)
     // teste
     // teste
     Int inst = get_next_arg(vm,current).integer;
+    Int a, b, c;
     switch (inst)
     {
     case EXIT:
         vm->interpret = previous_interpreter;
+        break;
+
+    case SET:
+        vm->stack->data[get_next_arg(vm,current).integer].integer = get_next_arg(vm,current).integer;
+        break;
+
+    case FSET:
+        vm->stack->data[get_next_arg(vm,current).integer].number = get_next_arg(vm,current).number;
         break;
 
     case PRINT:
@@ -121,6 +150,86 @@ Int stacky_interpreter(void *_vm, char* cmd)
         stack_shift(*vm->typestack);
         break;
 
+    case INSERT:
+        a = get_next_arg(vm, current).integer;
+        stack_insert(*vm->stack, a, get_next_arg(vm, current));
+        stack_insert(*vm->typestack, a, TYPE_INTEGER);
+        break;
+
+    case REMOVE:
+        a = get_next_arg(vm, current).integer;
+        stack_remove(*vm->stack, a);
+        stack_remove(*vm->typestack, a);
+        break;
+
+    case COPY:
+        vm->stack->data[get_next_arg(vm, current).integer].integer = get_next_arg(vm, current).integer;
+        break;
+
+    case SWAP:
+        a = get_next_arg(vm, current).integer;
+        b = get_next_arg(vm, current).integer;
+        c = vm->stack->data[a].integer;
+        vm->stack->data[a].integer = vm->stack->data[b].integer;
+        vm->stack->data[b].integer = c;
+        break;
+
+    case ADD:
+        vm->stack->data[get_next_arg(vm, current).integer].integer += get_next_arg(vm, current).integer;
+        break;
+
+    case SUB:
+        vm->stack->data[get_next_arg(vm, current).integer].integer -= get_next_arg(vm, current).integer;
+        break;
+
+    case MUL:
+        vm->stack->data[get_next_arg(vm, current).integer].integer *= get_next_arg(vm, current).integer;
+        break;
+
+    case DIV:
+        vm->stack->data[get_next_arg(vm, current).integer].integer /= get_next_arg(vm, current).integer;
+        break;
+
+    case MOD:
+        vm->stack->data[get_next_arg(vm, current).integer].integer %= get_next_arg(vm, current).integer;
+        break;
+
+    case FADD:
+        vm->stack->data[get_next_arg(vm, current).integer].number += get_next_arg(vm, current).number;
+        break;
+
+    case FSUB:
+        vm->stack->data[get_next_arg(vm, current).integer].number -= get_next_arg(vm, current).number;
+        break;
+    
+    case FMUL:
+        vm->stack->data[get_next_arg(vm, current).integer].number *= get_next_arg(vm, current).number;
+        break;
+
+    case FDIV:
+        vm->stack->data[get_next_arg(vm, current).integer].number /= get_next_arg(vm, current).number;
+        break;
+
+    case FMOD:
+        vm->stack->data[get_next_arg(vm, current).integer].number = fmod(vm->stack->data[get_next_arg(vm, current).integer].number, get_next_arg(vm, current).number);
+        break;
+
+    case FLOOR:
+        vm->stack->data[get_next_arg(vm, current).integer].integer = floor(vm->stack->data[get_next_arg(vm, current).integer].number);
+        break;
+
+    case CEIL:
+        vm->stack->data[get_next_arg(vm, current).integer].integer = ceil(vm->stack->data[get_next_arg(vm, current).integer].number);
+        break;
+
+    case ROUND:
+        vm->stack->data[get_next_arg(vm, current).integer].integer = round(vm->stack->data[get_next_arg(vm, current).integer].number);
+        break;
+
+    case FLOAT:
+        a = get_next_arg(vm, current).integer;
+        vm->stack->data[a].number = (Float)vm->stack->data[a].integer;
+    break;
     
 
     default:
