@@ -466,7 +466,7 @@ Int brl_tcc_c_dofile(VirtualMachine *vm, IntList *args)
     char* __code = str_replace(_code, "#include \"bruter.h\"", ___special_header);
     char* _symbol = str_format("init_%s", _filename_without_extension_and_path);
     char* _dummy_symbol = str_format("_libr_%s_handler", _filename_without_extension_and_path);
-    printf("Including %s\n", _filepath);
+    printf("compiling %s\n", _filepath);
     TCCState *tcc = tcc_new();
     if (!tcc) 
     {

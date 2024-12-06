@@ -503,7 +503,7 @@ Int brl_std_math_decrement(VirtualMachine *vm, IntList *args)
 Int int_from_float(VirtualMachine *vm, IntList *args)
 {
     Int result = new_var(vm);
-    vm->typestack->data[result] = TYPE_RAW;
+    vm->typestack->data[result] = TYPE_INTEGER;
     vm->stack->data[result].integer = (Int)vm->stack->data[stack_shift(*args)].number;
     return result;
 }
