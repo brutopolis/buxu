@@ -32,6 +32,7 @@ enum {
     TRUNC,
     POW,
     FLOAT,
+    REPEAT
 };
 
 // PUSH 4
@@ -172,6 +173,20 @@ Int stacky_interpreter(void *_vm, char* cmd)
         c = vm->stack->data[a].integer;
         vm->stack->data[a].integer = vm->stack->data[b].integer;
         vm->stack->data[b].integer = c;
+        break;
+
+    case REPEAT:
+        a = get_next_arg(vm, current).integer;
+        c = (Int)*current;
+        printf("teste: %s\n", c);
+        char* newstr = str_replace_all(*current, ",", ";");
+
+
+        for (Int i = 0; i < a; i++)
+        {
+            eval(vm, newstr);
+        }
+        free(newstr);
         break;
 
     case ADD:

@@ -1,0 +1,6 @@
+hash.set "handler" (dycc.dofile "example/stacky.c");
+hash.set "_index" 0;
+type.set _index type.integer;
+print (stacky.preparse "REPEAT 100000 PRINT @125,ADD 125 1;EXIT");
+
+return 0;
