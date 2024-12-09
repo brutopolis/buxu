@@ -183,8 +183,8 @@ VERSION
 "extern char* str_replace(const char *str, const char *substr, const char *replacement);\n"
 "extern char* str_replace_all(const char *str, const char *substr, const char *replacement);\n"
 "\n"
-"extern StringList* split_string(char *str, char *delim);\n"
-"extern StringList* split_string_by_char(char *str, char delim);\n"
+"extern StringList* str_split(char *str, char *delim);\n"
+"extern StringList* str_split_char(char *str, char delim);\n"
 "extern StringList* special_space_split(char *str);\n"
 "extern StringList* special_split(char *str, char delim);\n"
 "\n"
@@ -261,8 +261,8 @@ void add_common_symbols(TCCState *tcc)
         str_find,
         str_replace,
         str_replace_all,
-        split_string,
-        split_string_by_char,
+        str_split,
+        str_split_char,
         special_space_split,
         special_split,
         make_value_list,
@@ -313,8 +313,8 @@ void add_common_symbols(TCCState *tcc)
         "str_find",
         "str_replace",
         "str_replace_all",
-        "split_string",
-        "split_string_by_char",
+        "str_split",
+        "str_split_char",
         "special_space_split",
         "special_split",
         "make_value_list",

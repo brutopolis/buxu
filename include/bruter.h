@@ -167,8 +167,8 @@ extern Int str_find(const char *str, const char *substr);
 extern char* str_replace(const char *str, const char *substr, const char *replacement);
 extern char* str_replace_all(const char *str, const char *substr, const char *replacement);
 
-extern StringList* split_string(char *str, char *delim);
-extern StringList* split_string_by_char(char *str, char delim);
+extern StringList* str_split(char *str, char *delim);
+extern StringList* str_split_char(char *str, char delim);
 extern StringList* special_space_split(char *str);
 extern StringList* special_split(char *str, char delim);
 

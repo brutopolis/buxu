@@ -836,7 +836,7 @@ Int brl_std_string_split(VirtualMachine *vm, IntList *args)
     Int delim = stack_shift(*args);
     if ((vm->typestack->data[str] == TYPE_STRING) && (vm->typestack->data[delim] == TYPE_STRING))
     {
-        StringList *list = split_string(vm->stack->data[str].string, vm->stack->data[delim].string);
+        StringList *list = str_split(vm->stack->data[str].string, vm->stack->data[delim].string);
         char * _tmp = str_format("list.new", list->size);
         Int _arr = eval(vm, _tmp);
         free(_tmp);

@@ -311,7 +311,7 @@ StringList* special_split(char *str, char delim)
     return splited;
 }
 
-StringList* split_string(char *str, char *delim)
+StringList* str_split(char *str, char *delim)
 {
     StringList *splited;
     splited = (StringList*)malloc(sizeof(StringList));
@@ -340,7 +340,7 @@ StringList* split_string(char *str, char *delim)
 }
 
 
-StringList* split_string_by_char(char *str, char delim)
+StringList* str_split_char(char *str, char delim)
 {
     StringList *splited;
     splited = (StringList*)malloc(sizeof(StringList));
@@ -886,7 +886,7 @@ IntList* default_parser(void *_vm, char *cmd)
         {
             if (strchr(str, ':') != NULL)
             {
-                StringList *splited = split_string(str, ":");
+                StringList *splited = str_split(str, ":");
                 char* s_left =  splited->data[0] + 1;
                 char* s_right = splited->data[1];
 

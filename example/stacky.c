@@ -35,6 +35,39 @@ enum {
     REPEAT
 };
 
+const char* instruction_names[] = 
+{
+    "EXIT",
+    "SET",
+    "FSET",
+    "PUSH",
+    "POP",
+    "UNSHIFT",
+    "SHIFT",
+    "INSERT",
+    "REMOVE",
+    "PRINT",
+    "SWAP",
+    "COPY",
+    "ADD",
+    "SUB",
+    "MUL",
+    "DIV",
+    "MOD",
+    "FADD",
+    "FSUB",
+    "FMUL",
+    "FDIV",
+    "FMOD",
+    "FLOOR",
+    "CEIL",
+    "ROUND",
+    "TRUNC",
+    "POW",
+    "FLOAT",
+    "REPEAT"
+};
+
 // PUSH 4
 
 Int next_int(char** _str)
@@ -263,8 +296,107 @@ Int use_stacky(VirtualMachine* vm, IntList* args)
     return -1;
 }
 
+Int stacky_preparse(VirtualMachine* vm, IntList* args)
+{   
+    Int index = stack_shift(*args);
+    Int _new_index = new_var(vm);
+    vm->typestack->data[_new_index] = TYPE_STRING;
+    char* oldstr = str_duplicate(vm->stack->data[stack_shift(*args)].string);
+
+    char* newstr = str_replace_all(oldstr, "EXIT", "0");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "SET", "1");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "FSET", "2");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "PUSH", "3");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "POP", "4");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "UNSHIFT", "5");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "SHIFT", "6");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "INSERT", "7");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "REMOVE", "8");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "PRINT", "9");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "SWAP", "10");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "COPY", "11");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "ADD", "12");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "SUB", "13");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "MUL", "14");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "DIV", "15");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "MOD", "16");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "FADD", "17");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "FSUB", "18");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "FMUL", "19");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "FDIV", "20");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "FMOD", "21");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "FLOOR", "22");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "CEIL", "23");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "ROUND", "24");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "TRUNC", "25");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "POW", "26");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "FLOAT", "27");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "REPEAT",  "28");
+    free(oldstr);
+    
+    vm->stack->data[_new_index].string = newstr;
+    return _new_index;
+}
+
 void init_stacky(VirtualMachine* vm)
 {
     register_builtin(vm,"stacky",use_stacky);
+    register_builtin(vm,"stacky.preparse",stacky_preparse);
 
 }
