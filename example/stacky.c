@@ -301,7 +301,7 @@ Int use_stacky(VirtualMachine* vm, IntList* args)
     return -1;
 }
 
-Int stacky_preparse(VirtualMachine* vm, IntList* args)
+Int stacky_preprocess(VirtualMachine* vm, IntList* args)
 {   
     Int index = stack_shift(*args);
     Int _new_index = new_var(vm);
@@ -405,6 +405,6 @@ Int stacky_preparse(VirtualMachine* vm, IntList* args)
 void init_stacky(VirtualMachine* vm)
 {
     register_builtin(vm,"stacky",use_stacky);
-    register_builtin(vm,"stacky.preparse",stacky_preparse);
+    register_builtin(vm,"stacky.preprocess",stacky_preprocess);
 
 }
