@@ -271,9 +271,11 @@ Int brl_std_do(VirtualMachine *vm, IntList *args)
 {
     Int str = stack_shift(*args);
     char* _str = vm->stack->data[str].string;
+    
     Int last_local = hash_find(vm, "local");
     Int local_index = new_list(vm);
     hold_var(vm, local_index);
+
     if (last_local == -1)
     {
         hash_set(vm, "local", local_index);

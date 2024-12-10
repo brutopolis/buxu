@@ -32,7 +32,9 @@ enum {
     TRUNC,
     POW,
     FLOAT,
-    REPEAT
+    REPEAT,
+    RETURN,
+
 };
 
 const char* instruction_names[] = 
@@ -277,8 +279,11 @@ Int stacky_interpreter(void *_vm, char* cmd)
     case FLOAT:
         a = get_next_arg(vm, current).integer;
         vm->stack->data[a].number = (Float)vm->stack->data[a].integer;
-    break;
+        break;
     
+    case RETURN:
+        return get_next_arg(vm, current).integer;
+        break;
 
     default:
         printf("instruction %d not found.\n", inst);
@@ -388,6 +393,9 @@ Int stacky_preparse(VirtualMachine* vm, IntList* args)
     free(oldstr);
     oldstr = newstr;
     newstr = str_replace_all(newstr, "REPEAT",  "28");
+    free(oldstr);
+    oldstr = newstr;
+    newstr = str_replace_all(newstr, "RETURN",  "29");
     free(oldstr);
     
     vm->stack->data[_new_index].string = newstr;
