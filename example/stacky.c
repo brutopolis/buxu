@@ -34,7 +34,6 @@ enum {
     FLOAT,
     REPEAT,
     RETURN,
-
 };
 
 const char* instruction_names[] = 
@@ -67,7 +66,8 @@ const char* instruction_names[] =
     "TRUNC",
     "POW",
     "FLOAT",
-    "REPEAT"
+    "REPEAT",
+    "RETURN"
 };
 
 // PUSH 4
