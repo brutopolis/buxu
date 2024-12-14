@@ -10,16 +10,11 @@ Value get_next_arg(VirtualMachine *vm)
 
     if (token[0] == '@')
     {
-        token += 1;
-        result.integer = vm->stack->data[atoi(token)].integer;
-    }
-    else if(strchr(token,'.') > 0)
-    {
-        result.number = atof(token);
+        result.number = vm->stack->data[atoi(token+1)].number;
     }
     else
     {
-        result.integer = atoi(token);
+        result.number = atof(token);
     }
 
     return result;
@@ -29,7 +24,6 @@ Int texty_interpreter(void *_vm, char* cmd)
 {
     VirtualMachine* vm = (VirtualMachine*) _vm;
     char* token = strtok(cmd, " \n\r\t");
-    Int a, b, c;
 
     if(strcmp(token, "EXIT")==0)
     {
@@ -37,22 +31,21 @@ Int texty_interpreter(void *_vm, char* cmd)
     } 
     else if(strcmp(token, "SET")==0)
     {
-        vm->stack->data[get_next_arg(vm).integer].integer = get_next_arg(vm).integer;
+        vm->stack->data[(Int)get_next_arg(vm).number].number = get_next_arg(vm).number;
     }
     else if(strcmp(token, "PRINT")==0)
     {
-        
-        printf("%d\n", get_next_arg(vm));
+        printf("%f\n", get_next_arg(vm).number);
     }
     else if(strcmp(token, "PUSH")==0)
     {
         stack_push(*vm->stack, get_next_arg(vm));
-        stack_push(*vm->typestack, TYPE_INTEGER);
+        stack_push(*vm->typestack, TYPE_NUMBER);
     } 
     else if(strcmp(token, "UNSHIFT")==0)
     {
         stack_unshift(*vm->stack, get_next_arg(vm));
-        stack_unshift(*vm->typestack, TYPE_INTEGER);
+        stack_unshift(*vm->typestack, TYPE_NUMBER);
     } 
     else if(strcmp(token, "POP")==0)
     {
@@ -66,35 +59,35 @@ Int texty_interpreter(void *_vm, char* cmd)
     } 
     else if(strcmp(token, "INSERT")==0)
     {
-        a = get_next_arg(vm).integer;
-        stack_insert(*vm->stack, a, get_next_arg(vm));
-        stack_insert(*vm->typestack, a, TYPE_INTEGER);
+        Int index = get_next_arg(vm).number;
+        stack_insert(*vm->stack, index, get_next_arg(vm));
+        stack_insert(*vm->typestack, index, TYPE_NUMBER);
     } 
     else if(strcmp(token, "REMOVE")==0)
     {
-        a = get_next_arg(vm).integer;
-        stack_remove(*vm->stack, a);
-        stack_remove(*vm->typestack, a);
+        Int index = get_next_arg(vm).number;
+        stack_remove(*vm->stack, index);
+        stack_remove(*vm->typestack, index);
     } 
     else if(strcmp(token, "COPY")==0)
     {
-        vm->stack->data[get_next_arg(vm).integer].integer = get_next_arg(vm).integer;
+        vm->stack->data[(Int)get_next_arg(vm).number].number = get_next_arg(vm).number;
     } 
     else if(strcmp(token, "SWAP")==0)
     {
-        a = get_next_arg(vm).integer;
-        b = get_next_arg(vm).integer;
-        c = vm->stack->data[a].integer;
-        vm->stack->data[a].integer = vm->stack->data[b].integer;
-        vm->stack->data[b].integer = c;
+        Int a = get_next_arg(vm).number;
+        Int b = get_next_arg(vm).number;
+        Int c = vm->stack->data[a].number;
+        vm->stack->data[a].number = vm->stack->data[b].number;
+        vm->stack->data[b].number = c;
     } 
     else if(strcmp(token, "REPEAT")==0)
     {
-        a = get_next_arg(vm).integer;
+        Int index = (Int)get_next_arg(vm).number;
         token = strtok(NULL, "\0");
         char* newstr = str_replace_all(token, ",", ";");
 
-        for (Int i = 0; i < a; i++)
+        for (Int i = 0; i < index; i++)
         {
             eval(vm, newstr);
         }
@@ -103,27 +96,32 @@ Int texty_interpreter(void *_vm, char* cmd)
     } 
     else if(strcmp(token, "ADD")==0)
     {
-        vm->stack->data[get_next_arg(vm).integer].integer += get_next_arg(vm).integer;
+        vm->stack->data[(Int)get_next_arg(vm).number].number += get_next_arg(vm).number;
     } 
     else if(strcmp(token, "SUB")==0)
     {
-        vm->stack->data[get_next_arg(vm).integer].integer -= get_next_arg(vm).integer;
+        vm->stack->data[(Int)get_next_arg(vm).number].number -= get_next_arg(vm).number;
     } 
     else if(strcmp(token, "MUL")==0)
     {
-        vm->stack->data[get_next_arg(vm).integer].integer *= get_next_arg(vm).integer;
+        vm->stack->data[(Int)get_next_arg(vm).number].number *= get_next_arg(vm).number;
     } 
     else if(strcmp(token, "DIV")==0)
     {
-        vm->stack->data[get_next_arg(vm).integer].integer /= get_next_arg(vm).integer;
+        vm->stack->data[(Int)get_next_arg(vm).number].number /= get_next_arg(vm).number;
     } 
     else if(strcmp(token, "MOD")==0)
     {
-        vm->stack->data[get_next_arg(vm).integer].integer %= get_next_arg(vm).integer;
+        Int index = (Int)get_next_arg(vm).number;
+        vm->stack->data[index].number = fmod(vm->stack->data[index].number, get_next_arg(vm).number);
     }
     else if(strcmp(token, "RETURN")==0)
     {
-        return get_next_arg(vm).integer;
+        return get_next_arg(vm).number;
+    }
+    else if(strcmp(token, "REGISTER")==0)
+    {
+        hash_set(vm, strtok(NULL, " \n\r\t"), (Int)get_next_arg(vm).number);
     }
     else
     {
