@@ -1,3 +1,7 @@
+// this is just a simple and easy abstraction over TinyCC
+// a proper libtcc wrapper is planned but not any soon
+
+
 #ifndef ARDUINO
 
 #include "bruter.h"

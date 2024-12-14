@@ -1,5 +1,5 @@
 
-hash.set "_code" (.
+hash.set "_code" (@@
     int fib(int n) 
     {
         if (n <= 2) 
@@ -10,10 +10,10 @@ hash.set "_code" (.
     }
 );
  
-hash.set "fib" (dyc.new _code (. 
+hash.set "fib" (dycc.new _code (@@ 
     int result = fib(vm->stack->data[(int)stack_shift(*args)].number);
     return new_number(vm,result);
     )
 );
 
-return (fib 42);
+return (fib 22);

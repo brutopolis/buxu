@@ -253,20 +253,6 @@ Int brl_std_io_ls_unused(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int brl_std_loop_each(VirtualMachine *vm, IntList *args)
-{
-    Int _list = stack_shift(*args);
-    Int _varname = stack_shift(*args);
-    Int _cmd = stack_shift(*args);
-    IntList *list = (IntList*)vm->stack->data[_list].pointer;
-    for (Int i = 0; i < list->size; i++)
-    {
-        hash_set(vm, vm->stack->data[_varname].string, list->data[i]);
-        eval(vm, vm->stack->data[_cmd].string);
-    }
-    return -1;
-}
-
 Int brl_std_do(VirtualMachine *vm, IntList *args)
 {
     Int str = stack_shift(*args);
@@ -690,93 +676,6 @@ Int brl_std_list_last(VirtualMachine *vm, IntList *args)
     {
         IntList *lst = (IntList*)vm->stack->data[list].pointer;
         return lst->data[lst->size-1];
-    }
-    return -1;
-}
-
-// global (same as list, but treating the stack as a list, except concat and new)
-
-Int brl_std_global_push(VirtualMachine *vm, IntList *args)
-{
-    Int value;
-    while (args->size > 0)
-    {
-        value = stack_shift(*args);
-        stack_push(*vm->stack, vm->stack->data[value]);
-        stack_push(*vm->typestack, vm->typestack->data[value]);
-    }
-    return -1;
-}
-
-Int brl_std_global_unshift(VirtualMachine *vm, IntList *args)
-{
-    Int value;
-    while (args->size > 0)
-    {
-        value = stack_shift(*args);
-        stack_unshift(*vm->stack, vm->stack->data[value]);
-        stack_unshift(*vm->typestack, vm->typestack->data[value]);
-    }
-
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {
-        vm->hashes->data[i].index++;
-    }
-
-    for (Int i = 0; i < vm->temp->size; i++)
-    {
-        vm->temp->data[i]++;
-    }
-
-    for (Int i = 0; i < vm->unused->size; i++)
-    {
-        vm->unused->data[i]++;
-    }
-    
-    return -1;
-}
-
-Int brl_std_global_pop(VirtualMachine *vm, IntList *args)
-{
-    unuse_var(vm, vm->stack->size-1);
-    stack_pop(*vm->stack);
-    stack_pop(*vm->typestack);
-    return -1;
-}
-
-Int brl_std_global_shift(VirtualMachine *vm, IntList *args)
-{
-    unuse_var(vm, 0);
-    stack_shift(*vm->stack);
-    stack_shift(*vm->typestack);
-
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {
-        vm->hashes->data[i].index--;
-    }
-
-    for (Int i = 0; i < vm->temp->size; i++)
-    {
-        vm->temp->data[i]--;
-    }
-
-    for (Int i = 0; i < vm->unused->size; i++)
-    {
-        vm->unused->data[i]--;
-    }
-
-    return -1;
-}
-
-Int brl_std_global_find(VirtualMachine *vm, IntList *args)
-{
-    Int value = stack_shift(*args);
-    for (Int i = 0; i < vm->stack->size; i++)
-    {
-        if (vm->stack->data[i].integer == vm->stack->data[value].integer)
-        {
-            return i;
-        }
     }
     return -1;
 }
@@ -1229,6 +1128,20 @@ Int brl_std_loop_repeat(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+Int brl_std_loop_each(VirtualMachine *vm, IntList *args)
+{
+    Int _list = stack_shift(*args);
+    Int _varname = stack_shift(*args);
+    Int _cmd = stack_shift(*args);
+    IntList *list = (IntList*)vm->stack->data[_list].pointer;
+    for (Int i = 0; i < list->size; i++)
+    {
+        hash_set(vm, vm->stack->data[_varname].string, list->data[i]);
+        eval(vm, vm->stack->data[_cmd].string);
+    }
+    return -1;
+}
+
 // memory functions
 
 
@@ -1559,6 +1472,92 @@ Int brl_mem_sector_swap(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
+
+Int brl_std_mem_push(VirtualMachine *vm, IntList *args)
+{
+    Int value;
+    while (args->size > 0)
+    {
+        value = stack_shift(*args);
+        stack_push(*vm->stack, vm->stack->data[value]);
+        stack_push(*vm->typestack, vm->typestack->data[value]);
+    }
+    return -1;
+}
+
+Int brl_std_mem_unshift(VirtualMachine *vm, IntList *args)
+{
+    Int value;
+    while (args->size > 0)
+    {
+        value = stack_shift(*args);
+        stack_unshift(*vm->stack, vm->stack->data[value]);
+        stack_unshift(*vm->typestack, vm->typestack->data[value]);
+    }
+
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        vm->hashes->data[i].index++;
+    }
+
+    for (Int i = 0; i < vm->temp->size; i++)
+    {
+        vm->temp->data[i]++;
+    }
+
+    for (Int i = 0; i < vm->unused->size; i++)
+    {
+        vm->unused->data[i]++;
+    }
+    
+    return -1;
+}
+
+Int brl_std_mem_pop(VirtualMachine *vm, IntList *args)
+{
+    unuse_var(vm, vm->stack->size-1);
+    stack_pop(*vm->stack);
+    stack_pop(*vm->typestack);
+    return -1;
+}
+
+Int brl_std_mem_shift(VirtualMachine *vm, IntList *args)
+{
+    unuse_var(vm, 0);
+    stack_shift(*vm->stack);
+    stack_shift(*vm->typestack);
+
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        vm->hashes->data[i].index--;
+    }
+
+    for (Int i = 0; i < vm->temp->size; i++)
+    {
+        vm->temp->data[i]--;
+    }
+
+    for (Int i = 0; i < vm->unused->size; i++)
+    {
+        vm->unused->data[i]--;
+    }
+
+    return -1;
+}
+
+Int brl_std_mem_find(VirtualMachine *vm, IntList *args)
+{
+    Int value = stack_shift(*args);
+    for (Int i = 0; i < vm->stack->size; i++)
+    {
+        if (vm->stack->data[i].integer == vm->stack->data[value].integer)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 // inits
 #ifndef ARDUINO
 void init_os(VirtualMachine *vm)
@@ -1693,15 +1692,6 @@ void init_list(VirtualMachine *vm)
     register_builtin(vm, "list.last", brl_std_list_last);
 }
 
-void init_global(VirtualMachine *vm)
-{
-    register_builtin(vm, "global.push", brl_std_global_push);
-    register_builtin(vm, "global.unshift", brl_std_global_unshift);
-    register_builtin(vm, "global.pop", brl_std_global_pop);
-    register_builtin(vm, "global.shift", brl_std_global_shift);
-    register_builtin(vm, "global.find", brl_std_global_find);
-}
-
 void init_sector(VirtualMachine *vm)
 {
     register_builtin(vm, "sector.new", brl_mem_sector_new);
@@ -1727,6 +1717,11 @@ void init_mem(VirtualMachine *vm)
     register_builtin(vm, "mem.collect", brl_mem_collect);
     register_builtin(vm, "mem.swap", brl_mem_swap);
     register_builtin(vm, "mem.next", brl_mem_next);
+    register_builtin(vm, "mem.push", brl_std_mem_push);
+    register_builtin(vm, "mem.unshift", brl_std_mem_unshift);
+    register_builtin(vm, "mem.pop", brl_std_mem_pop);
+    register_builtin(vm, "mem.shift", brl_std_mem_shift);
+    register_builtin(vm, "mem.find", brl_std_mem_find);
 
     init_sector(vm);
 }
@@ -1742,7 +1737,6 @@ void init_std(VirtualMachine *vm)
     init_loop(vm);
     init_hash(vm);
     init_list(vm);
-    init_global(vm);
     init_math(vm);
     init_string(vm);
     init_condition(vm);

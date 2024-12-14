@@ -2,9 +2,9 @@ hash.set "_0" 0;
 hash.set "_1" 1;
 hash.set "_2" 2;
 hash.set "_3" 3;
-hash.set "condition" (.< (list.get local _0) _2);
-hash.set "_then" (.return (list.get local _0));
-hash.set "fib" (.
+hash.set "condition" (@@< (list.get local _0) _2);
+hash.set "_then" (@@return (list.get local _0));
+hash.set "fib" (@@
     if condition _then;
     list.push local (do fib (sub (mem.copy (list.get local _0)) _1));
 

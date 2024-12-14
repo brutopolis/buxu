@@ -864,9 +864,9 @@ IntList* default_parser(void *_vm, char *cmd)
         char* str = stack_shift(*splited);
         if (str[0] == '(')
         {
-            if(str[1] == '.')//string
+            if(str[1] == '@' && str[2] == '@')//string
             {
-                char* temp = str + 2;
+                char* temp = str + 3;
                 temp[strlen(temp) - 1] = '\0';
                 Int var = new_string(vm, temp);
                 stack_push(*result, var);            

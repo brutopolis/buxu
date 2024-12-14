@@ -213,7 +213,6 @@ Int stacky_interpreter(void *_vm, char* cmd)
     case REPEAT:
         a = get_next_arg(vm, current).integer;
         c = (Int)*current;
-        printf("teste: %s\n", c);
         char* newstr = str_replace_all(*current, ",", ";");
 
 

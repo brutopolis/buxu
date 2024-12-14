@@ -4,24 +4,34 @@
 ## Description
 
 
-bruter is a metaprogramable lightweight language written in C;
+bruter is a metaprogramable lightweight virtual machine written;
+
+bruter does include its own language "brl"(bruter language) but it is intended to be easy to implement other languages and on-the-fly compilers on it, even multiple languages at once;
 
 *`UNDER HEAVY DEVELOPMENT`*
 
+
 ## Table of Contents
 
+
 - [bruter](#bruter)
-  - [Description](#description)
-  - [Table of Contents](#table-of-contents)
-  - [Arg Types](#arg-types)
-  - [Usage](#usage)
-  - [Reserved](#reserved)
-  
-## Arg Types
+  - [bruter language](#bruter-language)
+    - [description](#description)
+    - [table of contents](#table-of-contents)
+    - [arg types](#arg-types)
+    - [usage](#usage)
+    - [reserved](#reserved)
+
+
+
+# bruter language
+
+## Types
+
 
 - `number` = starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -;
 
-- `string` = enclosed by double quotes;
+- `string` = enclosed by double or single quotes, or by (@@ );
 
 - `nil` = nil;
 
@@ -35,16 +45,14 @@ bruter is a metaprogramable lightweight language written in C;
     hash.set "name" (function ...);
     function name;
     do "code";
-    do "code" repeat number;
-    do "code" while (function ...);
-    do "code" each variable;
-    # (.p 1);
-    # (.r 5000) (.= 1 7);
+    repeat amount "code";
+    while "condition" "code";
+    each list "name" "code";
     
 ## Reserved
 
 - `()` = expression
-- `(. )` = direct command delimiter
+- `(@@ )` = string delimiter
 - `""` = string delimiter
 - `''` = string delimiter
 - `;` = end of command separator

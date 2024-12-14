@@ -4,9 +4,9 @@ hash.set "cond" "< _index _size";
 hash.set "code" "print _index;incr _index;";
 
 hash.set "script" 
-(.
+(@@
     while '< _index _size' 
-    (.
+    (@@
         print _index;
         incr _index;
     );
