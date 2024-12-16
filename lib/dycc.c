@@ -372,7 +372,7 @@ Int brl_tcc_clear_states(VirtualMachine *vm, IntList *args)
 {
     while (tcc_states_temp->size > 0) 
     {
-        tcc_delete((TCCState *)(stack_shift(*tcc_states_temp)).statePointer);
+        tcc_delete((TCCState *)(stack_pop(*tcc_states_temp)).statePointer);
     }
     return -1;
 }
@@ -396,12 +396,12 @@ Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_
 
 
     char* _symbol = str_format("_symbol%d", clock() + time(NULL) + vm->stack->size);
-    Int _code = stack_shift(*args);
+    Int _code = stack_pop(*args);
     char *code;
 
     if (args->size > 0)
     {
-        code = str_format("%s\n\n%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, vm->stack->data[_code].string, _symbol, vm->stack->data[stack_shift(*args)].string);
+        code = str_format("%s\n\n%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, vm->stack->data[_code].string, _symbol, vm->stack->data[stack_pop(*args)].string);
     }
     else
     {
@@ -445,7 +445,7 @@ Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_
 
 Int brl_tcc_c_delete_function(VirtualMachine *vm, IntList *args)
 {
-    Int index = stack_shift(*args);
+    Int index = stack_pop(*args);
     void *func = vm->stack->data[index].pointer;
     for (Int i = 0; i < tcc_states_temp->size; i++) 
     {
@@ -462,7 +462,7 @@ Int brl_tcc_c_delete_function(VirtualMachine *vm, IntList *args)
 
 Int brl_tcc_c_dofile(VirtualMachine *vm, IntList *args)
 {
-    Int _filepath_id = stack_shift(*args);
+    Int _filepath_id = stack_pop(*args);
     char* _filepath = vm->stack->data[_filepath_id].string;
     char* _filename_without_extension_and_path = str_sub(_filepath, str_find(_filepath, "/") + 1, str_find(_filepath, "."));
     char* _code = readfile(_filepath);

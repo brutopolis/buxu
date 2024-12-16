@@ -1,7 +1,11 @@
-(14/12/2024) - version 0.6.9
+(16/12/2024) - version 0.6.9
 
 - global.* are now part of std.mem as mem.*;
 - string delimiter changed from (.) to (@@);
+- stack order changed, now the first element is the last one, prefer using pop instead of shift;
+- to keep it simple, do commmand does not deals with scopes or args anymore, its just a eval;
+- some cleanup;
+- some example removed;
 - some README updates;
 
 (09/12/2024) - version 0.6.8
