@@ -35,8 +35,6 @@ VERSION
 "#define TYPE_STRING 2\n"
 "#define TYPE_LIST 3\n"
 "#define TYPE_BUILTIN 4\n"
-"#define TYPE_RAW 5\n"
-"#define TYPE_INTEGER 6\n"
 "#define TYPE_OTHER 8\n"
 "\n"
 "\n"
@@ -181,8 +179,6 @@ VERSION
 "    CharList *typestack;\n"
 "    HashList *hashes;\n"
 "    IntList *unused;\n"
-"    IntList *temp;\n"
-"    IntList* (*parse)(void*, char*);\n"
 "    Int (*interpret)(void*, char*);\n"
 "} VirtualMachine;\n"
 "\n"
@@ -219,16 +215,12 @@ VERSION
 "extern void free_vm(VirtualMachine *vm);\n"
 "extern void free_var(VirtualMachine *vm, Int index);\n"
 "extern void unuse_var(VirtualMachine *vm, Int index);\n"
-"extern void use_var(VirtualMachine *vm, Int index);\n"
 "\n"
 "extern Int new_number(VirtualMachine *vm, Float number);\n"
 "extern Int new_string(VirtualMachine *vm, char *str);\n"
 "extern Int new_builtin(VirtualMachine *vm, Function function);\n"
 "extern Int new_var(VirtualMachine *vm);\n"
 "extern Int new_list(VirtualMachine *vm);\n"
-"\n"
-"extern void hold_var(VirtualMachine *vm, Int index);\n"
-"extern void unhold_var(VirtualMachine *vm, Int index);\n"
 "\n"
 "extern Value value_duplicate(Value value, char type);\n"
 "\n"
@@ -288,15 +280,11 @@ void add_common_symbols(TCCState *tcc)
         make_vm,
         free_vm,
         free_var,
-        unuse_var,
-        use_var,
         new_number,
         new_string,
         new_builtin,
         new_var,
         new_list,
-        hold_var,
-        unhold_var,
         value_duplicate,
         spawn_var,
         spawn_string,
@@ -311,7 +299,6 @@ void add_common_symbols(TCCState *tcc)
         hash_set,
         hash_unset,
         eval,
-        collect_garbage,
         #ifndef ARDUINO
         readfile,
         writefile,
@@ -340,15 +327,11 @@ void add_common_symbols(TCCState *tcc)
         "make_vm",
         "free_vm",
         "free_var",
-        "unuse_var",
-        "use_var",
         "new_number",
         "new_string",
         "new_builtin",
         "new_var",
         "new_list",
-        "hold_var",
-        "unhold_var",
         "value_duplicate",
         "spawn_var",
         "spawn_string",
@@ -363,7 +346,6 @@ void add_common_symbols(TCCState *tcc)
         "hash_set",
         "hash_unset",
         "eval",
-        "collect_garbage",
     #ifndef ARDUINO
         "readfile",
         "writefile",
@@ -404,7 +386,6 @@ Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_
     Int result = new_var(vm);
     data(result).pointer = tcc;
     data_t(result) = TYPE_OTHER;
-    hold_var(vm, result);
 
 
     char* _symbol = str_format("_symbol%d", clock() + time(NULL) + vm->stack->size);
@@ -449,7 +430,6 @@ Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_
     Int result2 = new_var(vm);
     data(result2).pointer = func;
     data_t(result2) = TYPE_BUILTIN;
-    hold_var(vm, result2);
     free(_symbol);
     free(code);
     return result2;
@@ -465,7 +445,6 @@ function(brl_tcc_c_delete_function)
         {
             tcc_delete((TCCState *)tcc_states_temp->data[i].statePointer);
             stack_remove(*tcc_states_temp, i);
-            unuse_var(vm, index);
             return -1;
         }
     }
@@ -511,7 +490,6 @@ function(brl_tcc_c_dofile)
     Int result = new_var(vm);
     data(result).pointer = _dummy_func;
     data_t(result) = TYPE_OTHER;
-    hold_var(vm, result);
 
     //declare function type
     ((InitFunction)_init_func)(vm); 

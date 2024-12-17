@@ -1,5 +1,0 @@
-hash.set "handler" (dycc.dofile "example/stacky.c");
-hash.set "_index" 0;
-type.set _index type.integer;
-do (stacky.preprocess (string.format "stacky;REPEAT 100000 PRINT @%d,ADD %d 1;EXIT" (gindex _index) (gindex _index)));
-return 0;

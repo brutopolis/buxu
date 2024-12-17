@@ -354,7 +354,6 @@ StringList* str_split_char(char *str, char delim)
 #ifndef ARDUINO
 
 // print 
-
 void print_element(VirtualMachine *vm, Int index)
 {
     if (index < 0 || index >= vm->stack->size)
@@ -363,70 +362,52 @@ void print_element(VirtualMachine *vm, Int index)
         return;
     }
 
-    Int _type = -1;
     Value temp = vm->stack->data[index];
-    _type = vm->typestack->data[index];
-    
-    if (_type == TYPE_BUILTIN)
+
+    switch (data_t(index))
     {
-        printf("{builtin} %ld", temp.pointer);
-    }
-    else if (_type == TYPE_NUMBER)
-    {
-        if (round(temp.number) == temp.number)
-        {
-            printf("{number} %ld", (Int)temp.number);
-        }
-        else
-        {
-            printf("{number} %f", temp.number);
-        }
-    }
-    else if (_type == TYPE_INTEGER)
-    {
-        printf("{integer} %ld", temp.integer);
-    }
-    else if (_type == TYPE_STRING)
-    {
-        printf("%s", temp.string);
-    }
-    else if (_type == TYPE_LIST)
-    {
-        printf("{list} [");
-        IntList *list = (IntList*)temp.pointer;
-        for (Int i = 0; i < (list->size-1); i++)
-        {
-            printf("%ld, ", list->data[i]);
-        }
-        if (list->size > 0)
-        {
-            printf("%ld]", list->data[list->size-1]);
-        }
-        else
-        {
+        case TYPE_NIL:
+            printf("{nil}");
+            break;
+        case TYPE_INTEGER:
+            printf("%ld", data(index).integer);
+            break;
+        case TYPE_BUILTIN:
+            printf("%ld", data(index).pointer);
+            break;
+        case TYPE_LIST:
+            printf("[");
+            IntList *list = (IntList*)data(index).pointer;
+            for (Int i = 0; i < list->size; i++)
+            {
+                printf("%ld", list->data[i]);
+                if (i < list->size - 1)
+                {
+                    printf(", ");
+                }
+            }
             printf("]");
-        }
-    }
-    else if (_type == TYPE_RAW)
-    {
-        printf("{raw} [");
-        for (Int i = 0; i < sizeof(Float)-1; i++)
-        {
-            printf("%d, ", temp.byte[i]);
-        }
-        printf("%d]", temp.byte[sizeof(Float)-1]);
-    }
-    else if (_type == TYPE_OTHER)
-    {
-        printf("{other} %ld", temp.pointer);
-    }
-    else if (_type == TYPE_NIL)
-    {
-        printf("{nil} %ld", temp.integer);
-    }
-    else
-    {
-        printf("{unknown} %ld", temp.integer);
+            break;
+        case TYPE_OTHER:
+            printf("%ld", data(index).pointer);
+            break;
+        case TYPE_NUMBER:
+            if (round(data(index).number) == data(index).number)
+            {
+                printf("%ld", (Int)data(index).number);
+            }
+            else
+            {
+                printf("%f", data(index).number);
+            }
+            break;
+        case TYPE_STRING:
+            printf("%s", data(index).string);
+            break;
+
+        default:
+            printf("{unknown} %d", data(index).pointer);
+            break;
     }
 }
 
@@ -497,26 +478,25 @@ Value value_duplicate(Value value, char type)
 {
     Value dup;
 
-    if (type == TYPE_STRING)
+    switch (type)
     {
-        dup.string = str_duplicate(value.string);
-    }
-    else if (type == TYPE_LIST)
-    {
-        dup.pointer = make_int_list();
-        IntList *list = (IntList*)value.pointer;
-        for (Int i = 0; i < list->size; i++)
-        {
-            stack_push(*((IntList*)dup.pointer), list->data[i]);
-        }
-    }
-    else if (type == TYPE_BUILTIN)
-    {
-        dup.pointer = value.pointer;
-    }
-    else 
-    {
-        dup.integer = value.integer;
+        case TYPE_STRING:
+            dup.string = str_duplicate(value.string);
+            break;
+        case TYPE_LIST:
+            dup.pointer = make_int_list();
+            IntList *list = (IntList*)value.pointer;
+            for (Int i = 0; i < list->size; i++)
+            {
+                stack_push(*((IntList*)dup.pointer), list->data[i]);
+            }
+            break;
+        case TYPE_BUILTIN:
+            dup.pointer = value.pointer;
+            break;
+        default:
+            dup.integer = value.integer;
+            break;
     }
 
     return dup;
@@ -600,30 +580,26 @@ VirtualMachine* make_vm()
     vm->typestack = make_char_list();
     vm->hashes = (HashList*)malloc(sizeof(HashList));
     stack_init(*vm->hashes);
-    vm->unused = make_int_list();
-    vm->temp = make_int_list();
     vm->interpret = default_interpreter;
-    vm->parse = default_parser;
+    vm->unused = make_int_list();
     return vm;
 }
 
 // var new 
-
 Int new_var(VirtualMachine *vm)
-{
+{ 
     if (vm->unused->size > 0)
     {
-        Int id = stack_shift(*vm->unused);
-        stack_push(*vm->temp, id);
-        return id;
+        Int index = stack_pop(*vm->unused);
+        unuse_var(vm, index);
+        return index;
     }
     else
     {
         Value value;
         value.pointer = NULL;
         stack_push(*vm->stack, value);
-        stack_push(*vm->typestack, TYPE_NIL);
-        stack_push(*vm->temp, vm->stack->size-1);
+        stack_push(*vm->typestack, TYPE_OTHER);
         return vm->stack->size-1;
     }
 }
@@ -701,40 +677,41 @@ Int spawn_list(VirtualMachine *vm, char* varname)
 
 void register_builtin(VirtualMachine *vm, char *name, Function function)
 {
-    hold_var(vm,spawn_builtin(vm, name, function));
+    spawn_builtin(vm, name, function);
 }
 
 
 void register_number(VirtualMachine *vm, char *name, Float number)
 {
-    hold_var(vm,spawn_number(vm, name, number));
+    spawn_number(vm, name, number);
 }
 
 void register_string(VirtualMachine *vm, char *name, char *string)
 {
-    hold_var(vm,spawn_string(vm, name, string));
+    spawn_string(vm, name, string);
 }
 
 void register_list(VirtualMachine *vm, char *name)
 {
-    hold_var(vm,spawn_list(vm, name));
+    spawn_list(vm, name);
 }
 
 //frees
 
 void free_var(VirtualMachine *vm, Int index)
 {
-    if (vm->typestack->data[index] == TYPE_STRING)
+    switch (vm->typestack->data[index])
     {
-        free(vm->stack->data[index].string);
-    }
-    else if (vm->typestack->data[index] == TYPE_LIST)
-    {
-        while (((IntList*)vm->stack->data[index].pointer)->size > 0)
-        {
-            stack_shift(*((IntList*)vm->stack->data[index].pointer));
-        }
-        stack_free(*((IntList*)vm->stack->data[index].pointer));
+        case TYPE_STRING:
+            free(vm->stack->data[index].string);
+            break;
+        case TYPE_LIST:
+            while (((IntList*)vm->stack->data[index].pointer)->size > 0)
+            {
+                stack_shift(*((IntList*)vm->stack->data[index].pointer));
+            }
+            stack_free(*((IntList*)vm->stack->data[index].pointer));
+            break;
     }
     
     stack_remove(*vm->stack, index);
@@ -754,89 +731,18 @@ void free_vm(VirtualMachine *vm)
         free(hash.key);
     }
 
-    while (vm->unused->size > 0)
-    {
-
-        stack_shift(*vm->unused);
-    }
-
-    while (vm->temp->size > 0)
-    {
-        stack_shift(*vm->temp);
-    }
-
-    
+    stack_free(*vm->unused);
 
     stack_free(*vm->stack);
     stack_free(*vm->typestack);
 
     stack_free(*vm->hashes);
-    stack_free(*vm->unused);
-    stack_free(*vm->temp);
 
     free(vm);
 }
 
-void unuse_var(VirtualMachine *vm, Int index)
-{
-    //if type is string free the string, if type is list free the list
-    if (vm->typestack->data[index] == TYPE_STRING)
-    {
-        free(vm->stack->data[index].string);
-    }
-    else if (vm->typestack->data[index] == TYPE_LIST)
-    {
-        while (((IntList*)vm->stack->data[index].pointer)->size > 0)
-        {
-            stack_shift(*((IntList*)vm->stack->data[index].pointer));
-        }
-        stack_free(*((IntList*)vm->stack->data[index].pointer));
-    }
-
-    vm->typestack->data[index] = TYPE_NIL;
-    
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {
-        if (vm->hashes->data[i].index == index)
-        {
-            free(vm->hashes->data[i].key);
-            stack_remove(*vm->hashes, i);
-        }
-    }
-    for (Int i = 0; i < vm->temp->size; i++)
-    {
-        if (vm->temp->data[i] == index)
-        {
-            stack_remove(*vm->temp, i);
-        }
-    }
-    stack_push(*vm->unused, index);
-}
-
-void use_var(VirtualMachine *vm, Int index)
-{
-    stack_remove(*vm->unused, index);
-}
-
-void hold_var(VirtualMachine *vm, Int index)
-{
-    for (Int i = 0; i < vm->temp->size; i++)
-    {
-        if (vm->temp->data[i] == index)
-        {
-            stack_remove(*vm->temp, i);
-            break;
-        }
-    }
-}
-
-void unhold_var(VirtualMachine *vm, Int index)
-{
-    stack_push(*vm->temp, index);
-}
-
 // Parser functions
-IntList* default_parser(void *_vm, char *cmd) 
+IntList* parse(void *_vm, char *cmd) 
 {
     VirtualMachine* vm = (VirtualMachine*)_vm;
     IntList *result = make_int_list();
@@ -963,7 +869,7 @@ IntList* default_parser(void *_vm, char *cmd)
 Int default_interpreter(void *_vm, char* cmd)
 {
     VirtualMachine* vm = (VirtualMachine*) _vm;
-    IntList *args = vm->parse(vm, cmd);
+    IntList *args = parse(vm, cmd);
     Int func = stack_shift(*args);
     Int result = -1;
 
@@ -1041,55 +947,27 @@ Int eval(VirtualMachine *vm, char *cmd)
     return result;
 }
 
-
-void collect_garbage(VirtualMachine *vm)
+void unuse_var(VirtualMachine *vm, Int index)
 {
-    for (Int i = 0; i < vm->stack->size; i++)
+    //if type is string free the string, if type is list free the list
+    if (vm->typestack->data[index] == TYPE_STRING)
     {
-        if (vm->typestack->data[i] != TYPE_NIL)
+        free(vm->stack->data[index].string);
+    }
+    else if (vm->typestack->data[index] == TYPE_LIST)
+    {
+        stack_free(*((IntList*)vm->stack->data[index].pointer));
+    }
+
+    data_t(index) = TYPE_NIL;
+    
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        if (vm->hashes->data[i].index == index)
         {
-            char used = 0;
-            for (Int j = 0; j < vm->hashes->size; j++)
-            {
-                if (vm->hashes->data[j].index == i)
-                {
-                    used = 1;
-                    break;
-                }
-            }
-
-            //lists references
-            for (Int j = 0; j < vm->stack->size; j++)
-            {
-                if (vm->typestack->data[j] == TYPE_LIST)
-                {
-                    IntList *list = (IntList*)vm->stack->data[j].pointer;
-                    for (Int k = 0; k < list->size; k++)
-                    {
-                        if (list->data[k] == i)
-                        {
-                            used = 1;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            //temp references
-            for (Int j = 0; j < vm->temp->size; j++)
-            {
-                if (vm->temp->data[j] == i)
-                {
-                    used = 1;
-                    break;
-                }
-            }
-            
-
-            if (!used)
-            {
-                unuse_var(vm, i);
-            }
+            free(vm->hashes->data[i].key);
+            stack_remove(*vm->hashes, i);
         }
     }
+    stack_push(*vm->unused, index);
 }

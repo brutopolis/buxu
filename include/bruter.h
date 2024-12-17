@@ -15,7 +15,6 @@
 #define TYPE_STRING 2
 #define TYPE_LIST 3
 #define TYPE_BUILTIN 4
-#define TYPE_RAW 5
 #define TYPE_INTEGER 6
 #define TYPE_OTHER 8
 
@@ -163,8 +162,6 @@ typedef struct
     CharList *typestack;
     HashList *hashes;
     IntList *unused;
-    IntList *temp;
-    IntList* (*parse)(void*, char*);
     Int (*interpret)(void*, char*);
 } VirtualMachine;
 
@@ -202,16 +199,12 @@ extern VirtualMachine* make_vm();
 extern void free_vm(VirtualMachine *vm);
 extern void free_var(VirtualMachine *vm, Int index);
 extern void unuse_var(VirtualMachine *vm, Int index);
-extern void use_var(VirtualMachine *vm, Int index);
 
 extern Int new_number(VirtualMachine *vm, Float number);
 extern Int new_string(VirtualMachine *vm, char *str);
 extern Int new_builtin(VirtualMachine *vm, Function function);
 extern Int new_var(VirtualMachine *vm);
 extern Int new_list(VirtualMachine *vm);
-
-extern void hold_var(VirtualMachine *vm, Int index);
-extern void unhold_var(VirtualMachine *vm, Int index);
 
 extern Value value_duplicate(Value value, char type);
 
@@ -234,8 +227,6 @@ extern void hash_unset(VirtualMachine *vm, char *key);
 
 // eval
 extern Int eval(VirtualMachine *vm, char *cmd);
-
-extern void collect_garbage(VirtualMachine *vm);
 
 // <libraries header>
 

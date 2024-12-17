@@ -6,9 +6,14 @@
 - some new macros, check bruter.h;
 - std.c lib rewritten using the new macros;
 - some std functions fixed;
-- some cleanup;
+- default_parser renamed to parse;
+- no more vm->parse;
+- rewritten everything related to temporary variables;
+- math functions fully rewritten, some removed;
+- some cleanup, about 1k lines removed;
 - some example removed;
 - some README updates;
+- this is probably the biggest update so far, lot of code rewritten and removed, yet, it almost dindt broke the api.
 
 (09/12/2024) - version 0.6.8
 
