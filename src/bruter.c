@@ -168,24 +168,7 @@ char* str_replace_all(const char *str, const char *substr, const char *replaceme
 
 Int str_find(const char *str, const char *substr)
 {
-    Int len = strlen(str);
-    Int sublen = strlen(substr);
-    for (Int i = 0; i < len; i++)
-    {
-        if (str[i] == substr[0])
-        {
-            Int j = 0;
-            while (j < sublen && str[i + j] == substr[j])
-            {
-                j++;
-            }
-            if (j == sublen)
-            {
-                return i;
-            }
-        }
-    }
-    return -1;
+    return strstr(str, substr) - str;
 }
 
 StringList* special_space_split(char *str)
@@ -630,7 +613,7 @@ Int new_var(VirtualMachine *vm)
 {
     if (vm->unused->size > 0)
     {
-        Int id = stack_pop(*vm->unused);
+        Int id = stack_shift(*vm->unused);
         stack_push(*vm->temp, id);
         return id;
     }
@@ -749,7 +732,7 @@ void free_var(VirtualMachine *vm, Int index)
     {
         while (((IntList*)vm->stack->data[index].pointer)->size > 0)
         {
-            stack_pop(*((IntList*)vm->stack->data[index].pointer));
+            stack_shift(*((IntList*)vm->stack->data[index].pointer));
         }
         stack_free(*((IntList*)vm->stack->data[index].pointer));
     }
@@ -767,19 +750,19 @@ void free_vm(VirtualMachine *vm)
 
     while (vm->hashes->size > 0)
     {
-        Hash hash = stack_pop(*vm->hashes);
+        Hash hash = stack_shift(*vm->hashes);
         free(hash.key);
     }
 
     while (vm->unused->size > 0)
     {
 
-        stack_pop(*vm->unused);
+        stack_shift(*vm->unused);
     }
 
     while (vm->temp->size > 0)
     {
-        stack_pop(*vm->temp);
+        stack_shift(*vm->temp);
     }
 
     
@@ -805,7 +788,7 @@ void unuse_var(VirtualMachine *vm, Int index)
     {
         while (((IntList*)vm->stack->data[index].pointer)->size > 0)
         {
-            stack_pop(*((IntList*)vm->stack->data[index].pointer));
+            stack_shift(*((IntList*)vm->stack->data[index].pointer));
         }
         stack_free(*((IntList*)vm->stack->data[index].pointer));
     }
@@ -861,7 +844,7 @@ IntList* default_parser(void *_vm, char *cmd)
     //Int current = 0;
     while (splited->size > 0)
     {
-        char* str = stack_pop(*splited);
+        char* str = stack_shift(*splited);
         if (str[0] == '(')
         {
             if(str[1] == '@' && str[2] == '@')//string
@@ -936,7 +919,7 @@ IntList* default_parser(void *_vm, char *cmd)
 
                 while (splited->size > 0)
                 {
-                    free(stack_pop(*splited));
+                    free(stack_shift(*splited));
                 }
 
                 stack_free(*splited);
@@ -981,13 +964,13 @@ Int default_interpreter(void *_vm, char* cmd)
 {
     VirtualMachine* vm = (VirtualMachine*) _vm;
     IntList *args = vm->parse(vm, cmd);
-    Int func = stack_pop(*args);
+    Int func = stack_shift(*args);
     Int result = -1;
 
     if (func > -1 && vm->typestack->data[func] == TYPE_BUILTIN)
     {
-        Function function = vm->stack->data[func].pointer;
-        result = function(vm, args);
+        Function _function = vm->stack->data[func].pointer;
+        result = _function(vm, args);
     }
     else 
     {
@@ -1014,7 +997,7 @@ Int eval(VirtualMachine *vm, char *cmd)
         if (strlen(splited->data[last]) == 0)
         {
             free(splited->data[last]);
-            stack_pop(*splited);
+            stack_remove(*splited, last);
         }
         else
         {
@@ -1049,7 +1032,7 @@ Int eval(VirtualMachine *vm, char *cmd)
         {
             while (splited->size > 0)
             {
-                free(stack_pop(*splited));
+                free(stack_shift(*splited));
             }
             break;
         }

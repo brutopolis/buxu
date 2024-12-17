@@ -139,6 +139,18 @@ VERSION
 "    i == (s).size ? -1 : i; \\\n"
 "})\n"
 "\n"
+"\n"
+"#define data(index) (data(index))\n"
+"#define data_t(index) (data_t(index))\n"
+"#define data_unused(index) (vm->unused->data[index])\n"
+"#define data_temp(index) (vm->temp->data[index])\n"
+"#define hash(index) (vm->hashes->data[index])\n"
+"#define arg(index) (vm->stack->data[args->data[index]])\n"
+"#define arg_i(index) (args->data[index])\n"
+"#define arg_t(index) (vm->typestack->data[args->data[index]])\n"
+"#define function(name) Int name(VirtualMachine *vm, IntList *args)\n"
+"#define init(name) void init_##name(VirtualMachine *vm)\n"
+"\n"
 "//Value\n"
 "typedef union \n"
 "{\n"
@@ -368,11 +380,11 @@ void add_common_symbols(TCCState *tcc)
 
 }
 
-Int brl_tcc_clear_states(VirtualMachine *vm, IntList *args)
+function(brl_tcc_clear_states)
 {
     while (tcc_states_temp->size > 0) 
     {
-        tcc_delete((TCCState *)(stack_pop(*tcc_states_temp)).statePointer);
+        tcc_delete((TCCState *)(stack_shift(*tcc_states_temp)).statePointer);
     }
     return -1;
 }
@@ -390,22 +402,22 @@ Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_
     tcc_set_output_type(tcc, TCC_OUTPUT_MEMORY);
 
     Int result = new_var(vm);
-    vm->stack->data[result].pointer = tcc;
-    vm->typestack->data[result] = TYPE_OTHER;
+    data(result).pointer = tcc;
+    data_t(result) = TYPE_OTHER;
     hold_var(vm, result);
 
 
     char* _symbol = str_format("_symbol%d", clock() + time(NULL) + vm->stack->size);
-    Int _code = stack_pop(*args);
+    Int _code = stack_shift(*args);
     char *code;
 
     if (args->size > 0)
     {
-        code = str_format("%s\n\n%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, vm->stack->data[_code].string, _symbol, vm->stack->data[stack_pop(*args)].string);
+        code = str_format("%s\n\n%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, data(_code).string, _symbol, vm->stack->data[stack_shift(*args)].string);
     }
     else
     {
-        code = str_format("%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, _symbol, vm->stack->data[_code].string);
+        code = str_format("%s\n\nInt %s(VirtualMachine *vm, IntList *args) {%s}", bruter_header, _symbol, data(_code).string);
     }
     add_common_symbols(tcc);
 
@@ -435,18 +447,18 @@ Int brl_tcc_c_new_function(VirtualMachine *vm, IntList *args) // a combo of new_
     stack_push(*tcc_states_temp, _syass);
 
     Int result2 = new_var(vm);
-    vm->stack->data[result2].pointer = func;
-    vm->typestack->data[result2] = TYPE_BUILTIN;
+    data(result2).pointer = func;
+    data_t(result2) = TYPE_BUILTIN;
     hold_var(vm, result2);
     free(_symbol);
     free(code);
     return result2;
 }
 
-Int brl_tcc_c_delete_function(VirtualMachine *vm, IntList *args)
+function(brl_tcc_c_delete_function)
 {
-    Int index = stack_pop(*args);
-    void *func = vm->stack->data[index].pointer;
+    Int index = stack_shift(*args);
+    void *func = data(index).pointer;
     for (Int i = 0; i < tcc_states_temp->size; i++) 
     {
         if (tcc_states_temp->data[i].symbolPointer == func) 
@@ -460,10 +472,10 @@ Int brl_tcc_c_delete_function(VirtualMachine *vm, IntList *args)
     return -1;
 }
 
-Int brl_tcc_c_dofile(VirtualMachine *vm, IntList *args)
+function(brl_tcc_c_dofile)
 {
-    Int _filepath_id = stack_pop(*args);
-    char* _filepath = vm->stack->data[_filepath_id].string;
+    Int _filepath_id = stack_shift(*args);
+    char* _filepath = data(_filepath_id).string;
     char* _filename_without_extension_and_path = str_sub(_filepath, str_find(_filepath, "/") + 1, str_find(_filepath, "."));
     char* _code = readfile(_filepath);
     char* ___special_header = str_format("%s\n\nvoid _libr_%s_handler() {};", bruter_header, _filename_without_extension_and_path);
@@ -497,8 +509,8 @@ Int brl_tcc_c_dofile(VirtualMachine *vm, IntList *args)
     stack_push(*tcc_states_temp, _syass);
     
     Int result = new_var(vm);
-    vm->stack->data[result].pointer = _dummy_func;
-    vm->typestack->data[result] = TYPE_OTHER;
+    data(result).pointer = _dummy_func;
+    data_t(result) = TYPE_OTHER;
     hold_var(vm, result);
 
     //declare function type
@@ -520,7 +532,7 @@ void _terminate_tcc_at_exit_handler()
     stack_free(*tcc_states_temp);
 }
 
-void init_dycc(VirtualMachine* vm)
+init(dycc)
 {
     tcc_states_temp = (SymbolAssociationList*)malloc(sizeof(SymbolAssociationList));
     stack_init(*tcc_states_temp);

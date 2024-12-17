@@ -1,13 +1,13 @@
 #include "bruter.h"
 
-Int brl_dycc_test(VirtualMachine* vm, IntList* args)
+function(brl_dycc_test)
 {
     printf("Hello, World!\n");
     printf("its working\n");
     return 0;
 }
 
-void init_dycc_test(VirtualMachine* vm)
+init(dycc_test)
 {
     register_builtin(vm, "dycc.test", brl_dycc_test);
 }

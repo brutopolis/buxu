@@ -1,0 +1,4 @@
+hash.set "handler" (dycc.dofile "example/stacky.c");
+stacky;
+PRINT @2;
+EXIT
