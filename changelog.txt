@@ -1,3 +1,10 @@
+(19/12/2024) - version 0.7.0
+
+- no more @: operator;
+- no more (//) delimiter, use // instead;
+- new operators @+, @-, @> and @<;
+- proper commentary with // instead of (//) are now possible; 
+
 (17/12/2024) - version 0.6.9
 
 - global.* are now part of std.mem as mem.*;

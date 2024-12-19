@@ -57,114 +57,74 @@ char* str_concat(const char *str1, const char *str2)
 
 char* str_replace(const char *str, const char *substr, const char *replacement)
 {
-    Int len = strlen(str);
-    Int sublen = strlen(substr);
-    Int replen = strlen(replacement);
-    
-    // Encontrar a primeira ocorrência de 'substr'
-    Int i = 0;
-    Int pos = -1;  // Posição da primeira ocorrência
-    while (str[i] != '\0')
+    const char *pos = strstr(str, substr); // Localiza a primeira ocorrência de 'substr'
+    if (!pos)
     {
-        if (str[i] == substr[0])
-        {
-            Int j = 0;
-            while (j < sublen && str[i + j] == substr[j])
-            {
-                j++;
-            }
-            if (j == sublen)
-            {
-                pos = i;
-                break;  // Encontrou a primeira ocorrência, sair do loop
-            }
-        }
-        i++;
-    }
-
-    // Se não encontrou a substring, retornar a string original
-    if (pos == -1)
-    {
-        char *newstr = (char*)malloc(len + 1);
+        // Se não encontrou, retorna uma cópia da string original
+        char *newstr = (char *)malloc(strlen(str) + 1);
         strcpy(newstr, str);
         return newstr;
     }
 
-    // Calcular o novo tamanho e alocar memória para a nova string
-    char *newstr = (char*)malloc(len - sublen + replen + 1);
+    // Calcula os tamanhos
+    size_t len_before = pos - str;
+    size_t substr_len = strlen(substr);
+    size_t replacement_len = strlen(replacement);
+    size_t new_len = strlen(str) - substr_len + replacement_len;
 
-    // Copiar a parte antes da substring encontrada
-    strncpy(newstr, str, pos);
-    
-    // Copiar o replacement
-    strcpy(newstr + pos, replacement);
-    
-    // Copiar o restante da string após a substring substituída
-    strcpy(newstr + pos + replen, str + pos + sublen);
-    
+    // Aloca memória para a nova string
+    char *newstr = (char *)malloc(new_len + 1);
+
+    // Constrói a nova string
+    strncpy(newstr, str, len_before); // Parte antes da substring
+    strcpy(newstr + len_before, replacement); // Substituição
+    strcpy(newstr + len_before + replacement_len, pos + substr_len); // Parte após a substring
+
     return newstr;
 }
 
 
 char* str_replace_all(const char *str, const char *substr, const char *replacement)
 {
-    Int len = strlen(str);
-    Int sublen = strlen(substr);
-    Int replen = strlen(replacement);
-    Int count = 0;
-    for (Int i = 0; i < len; i++)
+    size_t substr_len = strlen(substr);
+    size_t replacement_len = strlen(replacement);
+
+    // Contar substrings e calcular tamanho necessário em uma única passagem
+    size_t new_len = 0;
+    size_t count = 0;
+    for (const char *p = strstr(str, substr); p; p = strstr(p + substr_len, substr))
     {
-        if (str[i] == substr[0])
-        {
-            Int j = 0;
-            while (j < sublen && str[i + j] == substr[j])
-            {
-                j++;
-            }
-            if (j == sublen)
-            {
-                count++;
-            }
-        }
+        count++;
+        new_len += (p - str) - new_len; // Adiciona a parte antes da substring
+        new_len += replacement_len;    // Adiciona o tamanho da substituição
+        str = p + substr_len;          // Avança para o próximo trecho
     }
-    char *newstr = (char*)malloc(len + count * (replen - sublen) + 1);
-    Int i = 0;
-    Int k = 0;
-    while (str[i] != '\0')
+    new_len += strlen(str); // Adiciona o restante da string
+
+    // Aloca memória para a nova string
+    char *newstr = (char *)malloc(new_len + 1);
+    char *dest = newstr;
+
+    // Construir a nova string
+    str = str - new_len + strlen(newstr); // Reiniciar ponteiro para o início da string original
+    const char *p = strstr(str, substr);
+    while (p)
     {
-        if (str[i] == substr[0])
-        {
-            Int j = 0;
-            while (j < sublen && str[i + j] == substr[j])
-            {
-                j++;
-            }
-            if (j == sublen)
-            {
-                for (Int l = 0; l < replen; l++)
-                {
-                    newstr[k] = replacement[l];
-                    k++;
-                }
-                i += sublen;
-            }
-            else
-            {
-                newstr[k] = str[i];
-                k++;
-                i++;
-            }
-        }
-        else
-        {
-            newstr[k] = str[i];
-            k++;
-            i++;
-        }
+        size_t len_before = p - str;
+        strncpy(dest, str, len_before);    // Copiar parte antes da substring
+        dest += len_before;
+
+        strcpy(dest, replacement);        // Copiar substituição
+        dest += replacement_len;
+
+        str = p + substr_len;             // Avançar na string original
+        p = strstr(str, substr);
     }
-    newstr[k] = '\0';
+    strcpy(dest, str);                    // Copiar o restante da string original
+
     return newstr;
 }
+
 
 Int str_find(const char *str, const char *substr)
 {
@@ -760,8 +720,7 @@ IntList* parse(void *_vm, char *cmd)
                 Int var = new_string(vm, temp);
                 stack_push(*result, var);            
             }
-            else if(str[1] == '/' && str[2] == '/') // a comment
-            {}
+            else if (str[1] == '/' && str[2] == '/') {}
             else
             {
                 char* temp = str + 1;
@@ -773,67 +732,158 @@ IntList* parse(void *_vm, char *cmd)
         }
         else if (str[0] == '@') 
         {
-            if (strchr(str, ':') != NULL)
+            if (strchr(str, '+') != NULL) // @name+10 or @30+10, or @name+name2, get all elements in the range from 30 to (30 + 10)
             {
-                StringList *splited = str_split(str, ":");
-                char* s_left =  splited->data[0] + 1;
-                char* s_right = splited->data[1];
-
-                Int n_left = atoi(s_left);
-                Int n_right = atoi(s_right);
-                
-                if (n_left == 0 && strlen(s_left) > 0)
+                char* strptr = str + 1;
+                Int a = -1;
+                Int b = -1;
+                if (str[1] >= '0' && str[1] <= '9')
                 {
-                    n_left = hash_find(vm, s_left);
-                    
+                    a = atoi(strptr);
                 }
-
-                if (n_right == 0 && strlen(s_right) > 0)
+                else
                 {
-                    n_right = hash_find(vm, s_right);
-                    
+                    char* cpy = str_sub(strptr, 0, strchr(strptr, '+') - strptr);
+                    a = hash_find(vm, cpy);
+                    free(cpy);
                 }
                 
-                if (n_right == -1)
+                strptr = strchr(strptr, '+') + 1;
+                
+                if (strptr[0] >= '0' && strptr[0] <= '9')
                 {
-                    n_right = vm->stack->size;
+                    b = atoi(strptr);
+                }
+                else if (strptr[0] == '*')
+                {
+                    b = vm->stack->size - a - 1;
+                }
+                else
+                {
+                    b = hash_find(vm, strptr);
                 }
 
-                if (n_left == -1)
+                for (Int i = a; i < a + b + 1; i++)
                 {
-                    n_left = 0;
+                    stack_push(*result, i);
+                }
+            }
+            else if (strchr(str, '-') != NULL) // @name-10 or @30-10, get all elements in the range from 30 to (30 - 10)
+            {
+                char* strptr = str + 1;
+                Int a = -1;
+                Int b = -1;
+                if (str[1] >= '0' && str[1] <= '9')
+                {
+                    a = atoi(strptr);
+                }
+                else
+                {
+                    char* cpy = str_sub(strptr, 0, strchr(strptr, '-') - strptr);
+                    a = hash_find(vm, cpy);
+                    free(cpy);
                 }
                 
-                if (n_left < n_right)
+                strptr = strchr(strptr, '-') + 1;
+                
+                if (strptr[0] >= '0' && strptr[0] <= '9')
                 {
-                    for (Int i = n_left; i <= n_right; i++)
-                    {
-                        stack_push(*result, i);
-                    }
+                    b = atoi(strptr);
                 }
-                else if (n_left > n_right)
+                else if (strptr[0] == '*')
                 {
-                    for (Int i = n_left; i >= n_right; i--)
-                    {
-                        stack_push(*result, i);
-                    }
+                    b = vm->stack->size - a - 1;
                 }
-                else 
+                else
                 {
-                    stack_push(*result, n_left);
+                    b = hash_find(vm, strptr);
                 }
 
-                while (splited->size > 0)
+                for (Int i = a; i > a - b - 1; i--)
                 {
-                    free(stack_shift(*splited));
+                    stack_push(*result, i);
+                }
+            }
+            else if (strchr(str, '>') != NULL) // @a>b get all elements in order from a to b
+            {
+                char* strptr = str + 1;
+                Int a = -1;
+                Int b = -1;
+                if (str[1] >= '0' && str[1] <= '9')
+                {
+                    a = atoi(strptr);
+                }
+                else
+                {
+                    char* cpy = str_sub(strptr, 0, strchr(strptr, '>') - strptr);
+                    a = hash_find(vm, cpy);
+                    free(cpy);
+                }
+                
+                strptr = strchr(strptr, '>') + 1;
+                
+                if (strptr[0] >= '0' && strptr[0] <= '9')
+                {
+                    b = atoi(strptr);
+                }
+                else if (strptr[0] == '*')
+                {
+                    b = vm->stack->size - a - 1;
+                }
+                else
+                {
+                    b = hash_find(vm, strptr);
                 }
 
-                stack_free(*splited);
+                for (Int i = a; i < b + 1; i++)
+                {
+                    stack_push(*result, i);
+                }
+            }
+            else if (strchr(str, '<') != NULL) // @a<b get all elements in order from b to a 
+            {
+                char* strptr = str + 1;
+                Int a = -1;
+                Int b = -1;
+                if (str[1] >= '0' && str[1] <= '9')
+                {
+                    a = atoi(strptr);
+                }
+                else
+                {
+                    char* cpy = str_sub(strptr, 0, strchr(strptr, '<') - strptr);
+                    a = hash_find(vm, cpy);
+                    free(cpy);
+                }
+                
+                strptr = strchr(strptr, '<') + 1;
+                
+                if (strptr[0] >= '0' && strptr[0] <= '9')
+                {
+                    b = atoi(strptr);
+                }
+                else if (strptr[0] == '*')
+                {
+                    b = vm->stack->size - a - 1;
+                }
+                else
+                {
+                    b = hash_find(vm, strptr);
+                }
+
+                for (Int i = a; i > b - 1; i--)
+                {
+                    stack_push(*result, i);
+                }
             }
             else
             {
                 stack_push(*result, atoi(str + 1));
             }
+        }
+        else if (str[0] == '/' && str[1] == '/') // comment
+        {
+            break;
         }
         else if (str[0] == '"' || str[0] == '\'') // string
         {
@@ -870,6 +920,11 @@ Int default_interpreter(void *_vm, char* cmd)
 {
     VirtualMachine* vm = (VirtualMachine*) _vm;
     IntList *args = parse(vm, cmd);
+    if (args->size == 0)
+    {
+        stack_free(*args);
+        return -1;
+    }
     Int func = stack_shift(*args);
     Int result = -1;
 

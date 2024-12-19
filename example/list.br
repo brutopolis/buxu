@@ -8,7 +8,7 @@ list.unshift l 6;
 list.unshift l 7;
 hash.set '_min' (list.pop l);
 hash.set '_max' (list.shift l);
-print @2:8;
+print @2>40;
 print (list.get l 0);
 print l;
 print (list.get l 0);
