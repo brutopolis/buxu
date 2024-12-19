@@ -365,8 +365,10 @@ function(brl_std_list_push)
     if (arg_t(0) == TYPE_LIST)
     {
         IntList *list = (IntList*)arg(0).pointer;
-        Int value = arg_i(1);
-        stack_push(*list, value);
+        for (Int i = 1; i < args->size; i++)
+        {
+            stack_push(*list, arg_i(i));
+        }
     }
     return -1;
 }
@@ -376,8 +378,10 @@ function(brl_std_list_unshift)
     if (arg_t(0) == TYPE_LIST)
     {
         IntList *list = (IntList*)arg(0).pointer;
-        Int value = arg_i(1);
-        stack_unshift(*list, value);
+        for (Int i = 1; i < args->size; i++)
+        {
+            stack_unshift(*list, arg_i(i));
+        }
     }
     return -1;   
 }
@@ -454,6 +458,27 @@ function(brl_std_list_get)
             printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
             print_element(vm, list);
             return -1;
+        }
+    }
+    return -1;
+}
+
+function(brl_std_list_set)
+{
+    Int list = arg_i(0);
+    Int index = arg(1).number;
+    Int value = arg_i(2);
+    if (arg_t(0) == TYPE_LIST)
+    {
+        IntList *lst = (IntList*)data(list).pointer;
+        if (index >= 0 && index < lst->size)
+        {
+            lst->data[index] = value;
+        }
+        else 
+        {
+            printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
+            print_element(vm, list);
         }
     }
     return -1;
@@ -1167,6 +1192,7 @@ void init_list(VirtualMachine *vm)
     register_builtin(vm, "list.concat", brl_std_list_concat);
     register_builtin(vm, "list.unshift", brl_std_list_unshift);
     register_builtin(vm, "list.last", brl_std_list_last);
+    register_builtin(vm, "list.set", brl_std_list_set);
 }
 
 void init_sector(VirtualMachine *vm)

@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include <time.h>
 
-#define VERSION "0.6.9"
+#define VERSION "0.7.0"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
