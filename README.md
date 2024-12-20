@@ -6,8 +6,6 @@
 
 bruter is a metaprogramable lightweight virtual machine;
 
-bruter does include its own language "brl"(bruter language) but it is intended to be as easy as possive to implement other languages and on-the-fly compilers on it, even multiple languages at once, bruter can modify itself realtime using on-the-fly compilers like libtcc(tinycc) and such;
-
 *`UNDER HEAVY DEVELOPMENT`*
 
 

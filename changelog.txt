@@ -1,10 +1,11 @@
 (20/12/2024) - version 0.7.0
 
 - no more @: operator;
-- no more (//) delimiter, use // instead;
 - new operators @+, @-, @> and @<;
+- no more (//) delimiter, use // instead;
 - proper commentary with // instead of (//) are now possible;
-- dycc.c will be moved to a separated repository for libs;
+- dycc.c removed, it will be a avaliable in a separated repository soon;
+- arduino code in main.c updated (ACTUALLY NOT YET, UPDATE THIS MESSAGE WHEN ITS TRUE BEFORE MOVING 0.7.0 TO MAIN);
 
 (17/12/2024) - version 0.6.9
 
