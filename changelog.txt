@@ -1,9 +1,10 @@
-(19/12/2024) - version 0.7.0
+(20/12/2024) - version 0.7.0
 
 - no more @: operator;
 - no more (//) delimiter, use // instead;
 - new operators @+, @-, @> and @<;
-- proper commentary with // instead of (//) are now possible; 
+- proper commentary with // instead of (//) are now possible;
+- dycc.c will be moved to a separated repository for libs;
 
 (17/12/2024) - version 0.6.9
 
