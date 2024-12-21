@@ -1,11 +1,16 @@
-(20/12/2024) - version 0.7.0
+(21/12/2024) - version 0.7.0
 
 - no more @: operator;
 - new operators @+, @-, @> and @<;
 - no more (//) delimiter, use // instead;
 - proper commentary with // instead of (//) are now possible;
 - dycc.c removed, it will be a avaliable in a separated repository soon;
-- arduino code in main.c updated (ACTUALLY NOT YET, UPDATE THIS MESSAGE WHEN ITS TRUE BEFORE MOVING 0.7.0 TO MAIN);
+- register_* functions removed;
+- spawn_* functions renamed to register_*;
+- arduino code in main.c completely updated;
+
+- TODO: new local context system;
+- TODO: new function system;
 
 (17/12/2024) - version 0.6.9
 

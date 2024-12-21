@@ -208,18 +208,11 @@ extern Int new_list(VirtualMachine *vm);
 
 extern Value value_duplicate(Value value, char type);
 
-extern Int spawn_var(VirtualMachine *vm, char* varname);
-extern Int spawn_string(VirtualMachine *vm, char* varname, char* string);
-extern Int spawn_number(VirtualMachine *vm, char* varname, Float number);
-extern Int spawn_builtin(VirtualMachine *vm, char* varname, Function function);
-extern Int spawn_list(VirtualMachine *vm, char* varname);
-
-
-extern void register_builtin(VirtualMachine *vm, char* name, Function function);
-extern void register_number(VirtualMachine *vm, char* name, Float number);
-extern void register_string(VirtualMachine *vm, char* name, char* string);
-extern void register_list(VirtualMachine *vm, char* name);
-
+extern Int register_var(VirtualMachine *vm, char* varname);
+extern Int register_string(VirtualMachine *vm, char* varname, char* string);
+extern Int register_number(VirtualMachine *vm, char* varname, Float number);
+extern Int register_builtin(VirtualMachine *vm, char* varname, Function function);
+extern Int register_list(VirtualMachine *vm, char* varname);
 
 extern Int hash_find(VirtualMachine *vm, char *key);
 extern void hash_set(VirtualMachine *vm, char *key, Int index);
@@ -228,6 +221,7 @@ extern void hash_unset(VirtualMachine *vm, char *key);
 // eval
 extern Int eval(VirtualMachine *vm, char *cmd);
 
+extern void print_element(VirtualMachine *vm, Int index);
 // <libraries header>
 
 #ifndef ARDUINO
@@ -235,7 +229,6 @@ extern Int eval(VirtualMachine *vm, char *cmd);
 extern char* readfile(char *filename);
 extern void writefile(char *filename, char *content);
 extern Int repl(VirtualMachine *vm);
-extern void print_element(VirtualMachine *vm, Int index);
 
 #endif
 

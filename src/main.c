@@ -62,19 +62,16 @@ extern "C"
 
 Int _ino_serial_begin(VirtualMachine *vm, IntList *args)
 {
-    Int _ref = stack_shift(*args);
-    Serial.begin((Int)vm->stack->data[_ref].number);
+    Serial.begin((Int)arg(0).number);
     return -1;
 }
 
 Int _ino_print(VirtualMachine *vm, IntList *args)
 {
-    Int var = stack_shift(*args);
-    Int _type = -1;
     //printf("Type: %d\n", vm->typestack->data[var]);
 
-    Value temp = vm->stack->data[var];
-    _type = vm->typestack->data[var];
+    Value temp = arg(0);
+    Int _type = data_t(0);
     
     if (_type == TYPE_NUMBER)
     {
@@ -98,8 +95,7 @@ Int _ino_print(VirtualMachine *vm, IntList *args)
 
 Int _ino_delay(VirtualMachine *vm, IntList *args)
 {
-    Int _ref = stack_shift(*args);
-    delay((Int)vm->stack->data[_ref].number);
+    delay((Int)arg(0).number);
     return -1;
 }
 
@@ -110,54 +106,43 @@ Int _ino_millis(VirtualMachine *vm, IntList *args)
 
 Int _ino_tone(VirtualMachine *vm, IntList *args)
 {
-    Int _ref = stack_shift(*args);
-    Int _ref2 = stack_shift(*args);
-    tone((int)vm->stack->data[_ref].number, (int)vm->stack->data[_ref2].number);
+    tone((int)arg(0).number, (int)arg(1).number);
     return -1;
 }
 
 
 Int _ino_noTone(VirtualMachine *vm, IntList *args)
 {
-    Int _ref = stack_shift(*args);
-    noTone((Int)vm->stack->data[_ref].number);
+    noTone((Int)arg(0).number);
     return -1;
 }
 
 Int _ino_pinmode(VirtualMachine *vm, IntList *args)
 {
-    Int _ref = stack_shift(*args);
-    Int _ref2 = stack_shift(*args);
-    pinMode((Int)vm->stack->data[_ref].number, (Int)vm->stack->data[_ref2].number);
+    pinMode((Int)arg(0).number, (Int)arg(1).number);
     return -1;
 }
 
 Int _ino_digitalwrite(VirtualMachine *vm, IntList *args)
 {
-    Int _ref = stack_shift(*args);
-    Int _ref2 = stack_shift(*args);
-    digitalWrite((Int)vm->stack->data[_ref].number, (Int)vm->stack->data[_ref2].number);
+    digitalWrite((Int)arg(0).number, (Int)arg(1).number);
     return -1;
 }
 
 Int _ino_digitalread(VirtualMachine *vm, IntList *args)
 {
-    Int _ref = stack_shift(*args);
-    return digitalRead((Int)vm->stack->data[_ref].number);
+    return digitalRead((Int)arg(0).number);
 }
 
 Int _ino_analogwrite(VirtualMachine *vm, IntList *args)
 {
-    Int _ref = stack_shift(*args);
-    Int _ref2 = stack_shift(*args);
-    analogWrite((Int)vm->stack->data[_ref].number, (Int)vm->stack->data[_ref2].number);
+    analogWrite((Int)arg(0).number, (Int)arg(1).number);
     return -1;
 }
 
 Int _ino_analogread(VirtualMachine *vm, IntList *args)
 {
-    Int _ref = stack_shift(*args);
-    return analogRead((Int)vm->stack->data[_ref].number);
+    return analogRead((Int)arg(0).number);
 }
 
 
@@ -171,7 +156,7 @@ class Bruter
     };
     void registerFunction(char *name, Function func)
     {
-        spawn_builtin(this->vm, name, func);
+        register_builtin(this->vm, name, func);
     };
     Int run(char *str)
     {
@@ -193,7 +178,6 @@ class Bruter
         this->registerFunction((char*)"digitalRead", _ino_digitalread);
         this->registerFunction((char*)"analogWrite", _ino_analogwrite);
         this->registerFunction((char*)"analogRead", _ino_analogread);
-
     }
 };
 

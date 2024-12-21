@@ -311,7 +311,6 @@ StringList* str_split_char(char *str, char delim)
     return splited;
 }
 
-#ifndef ARDUINO
 
 // print 
 void print_element(VirtualMachine *vm, Int index)
@@ -370,6 +369,8 @@ void print_element(VirtualMachine *vm, Int index)
             break;
     }
 }
+
+#ifndef ARDUINO
 
 // repl 
 Int repl(VirtualMachine *vm)
@@ -596,64 +597,41 @@ Int new_list(VirtualMachine *vm)
     return id;
 }
 
-// var spawn
+// var register
 
-Int spawn_var(VirtualMachine *vm, char* varname)
+Int register_var(VirtualMachine *vm, char* varname)
 {
     Int index = new_var(vm);
     hash_set(vm, varname, index);
     return index;
 }
 
-Int spawn_number(VirtualMachine *vm, char* varname, Float number)
+Int register_number(VirtualMachine *vm, char* varname, Float number)
 {
     Int index = new_number(vm, number);
     hash_set(vm, varname, index);
     return index;
 }
 
-Int spawn_string(VirtualMachine *vm, char* varname, char* string)
+Int register_string(VirtualMachine *vm, char* varname, char* string)
 {
     Int index = new_string(vm, string);
     hash_set(vm, varname, index);
     return index;
 }
 
-Int spawn_builtin(VirtualMachine *vm, char* varname, Function function)
+Int register_builtin(VirtualMachine *vm, char* varname, Function function)
 {
     Int index = new_builtin(vm, function);
     hash_set(vm, varname, index);
     return index;
 }
 
-Int spawn_list(VirtualMachine *vm, char* varname)
+Int register_list(VirtualMachine *vm, char* varname)
 {
     Int index = new_list(vm);
     hash_set(vm, varname, index);
     return index;
-}
-
-// var register
-
-void register_builtin(VirtualMachine *vm, char *name, Function function)
-{
-    spawn_builtin(vm, name, function);
-}
-
-
-void register_number(VirtualMachine *vm, char *name, Float number)
-{
-    spawn_number(vm, name, number);
-}
-
-void register_string(VirtualMachine *vm, char *name, char *string)
-{
-    spawn_string(vm, name, string);
-}
-
-void register_list(VirtualMachine *vm, char *name)
-{
-    spawn_list(vm, name);
 }
 
 //frees
