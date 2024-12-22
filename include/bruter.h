@@ -16,6 +16,7 @@
 #define TYPE_LIST 3
 #define TYPE_BUILTIN 4
 #define TYPE_INTEGER 6
+#define TYPE_FUNCTION 7
 #define TYPE_OTHER 8
 
 
@@ -132,6 +133,7 @@
 #define function(name) Int name(VirtualMachine *vm, IntList *args)
 #define init(name) void init_##name(VirtualMachine *vm)
 
+
 //Value
 typedef union 
 {
@@ -158,11 +160,17 @@ typedef Stack(char) CharList;
 
 typedef struct
 {
+    StringList *varnames;
+    char *code;
+} InternalFunction;
+
+typedef struct
+{
     ValueList *stack;
     CharList *typestack;
     HashList *hashes;
     IntList *unused;
-    Int (*interpret)(void*, char*);
+    Int (*interpret)(void*, char*, HashList*);
 } VirtualMachine;
 
 //Function
@@ -219,7 +227,8 @@ extern void hash_set(VirtualMachine *vm, char *key, Int index);
 extern void hash_unset(VirtualMachine *vm, char *key);
 
 // eval
-extern Int eval(VirtualMachine *vm, char *cmd);
+// pass NULL as context if you don't want to use a local context
+extern Int eval(VirtualMachine *vm, char *cmd, HashList *context);
 
 extern void print_element(VirtualMachine *vm, Int index);
 // <libraries header>

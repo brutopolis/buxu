@@ -1,8 +1,7 @@
 #include "bruter.h"
 
-// parser and interpreter declarations
-IntList *default_parser(void *_vm, char *cmd);
-Int default_interpreter(void *_vm, char *cmd);
+// interpreter declaration
+Int default_interpreter(void *_vm, char *cmd, HashList *context);
 
 //string functions
 char* str_duplicate(const char *str)
@@ -389,7 +388,7 @@ Int repl(VirtualMachine *vm)
             free(cmd);
             break;
         }
-        result = eval(vm, cmd);
+        result = eval(vm, cmd, NULL);
         free(cmd);
     }
 
@@ -680,7 +679,7 @@ void free_vm(VirtualMachine *vm)
 }
 
 // Parser functions
-IntList* parse(void *_vm, char *cmd) 
+IntList* parse(void *_vm, char *cmd, HashList *context) 
 {
     VirtualMachine* vm = (VirtualMachine*)_vm;
     IntList *result = make_int_list();
@@ -698,14 +697,16 @@ IntList* parse(void *_vm, char *cmd)
                 Int var = new_string(vm, temp);
                 stack_push(*result, var);            
             }
-            else if (str[1] == '/' && str[2] == '/') {}
+            else if (str[1] == '/' && str[2] == '/') 
+            {
+                // comment
+            }
             else
             {
                 char* temp = str + 1;
                 temp[strlen(temp) - 1] = '\0';
-                Int index = eval(vm, temp);
+                Int index = eval(vm, temp, NULL);
                 stack_push(*result, index);
-                //free(temp);
             }
         }
         else if (str[0] == '@') 
@@ -877,7 +878,23 @@ IntList* parse(void *_vm, char *cmd)
         }
         else //variable 
         {
-            Int index = hash_find(vm, str);
+            Int index;
+            if (context != NULL)
+            {
+                HashList* _global_context = vm->hashes;
+                vm->hashes = context;
+                index = hash_find(vm, str);
+                if (index == -1)
+                {
+                    index = hash_find(vm, str);
+                }
+                vm->hashes = _global_context;
+            }
+            else
+            {
+                index = hash_find(vm, str);
+            }
+
             if (index == -1) 
             {
                 printf("Variable %s not found\n", str);
@@ -894,10 +911,10 @@ IntList* parse(void *_vm, char *cmd)
     return result;
 }
 
-Int default_interpreter(void *_vm, char* cmd)
+Int default_interpreter(void *_vm, char* cmd, HashList *context)
 {
     VirtualMachine* vm = (VirtualMachine*) _vm;
-    IntList *args = parse(vm, cmd);
+    IntList *args = parse(vm, cmd, context);
     if (args->size == 0)
     {
         stack_free(*args);
@@ -920,11 +937,11 @@ Int default_interpreter(void *_vm, char* cmd)
     return result;
 }
 
-Int eval(VirtualMachine *vm, char *cmd)
+Int eval(VirtualMachine *vm, char *cmd, HashList *context)
 {
     if(strchr(cmd, ';') == NULL)
     {
-        return vm->interpret(vm, cmd);
+        return vm->interpret(vm, cmd, context);
     }
 
     StringList *splited = special_split(cmd, ';');
@@ -965,7 +982,7 @@ Int eval(VirtualMachine *vm, char *cmd)
             free(str);
             continue;
         }
-        result = vm->interpret(vm, str);
+        result = vm->interpret(vm, str, context);
         free(str);
         if (result > 0)
         {
@@ -983,15 +1000,15 @@ Int eval(VirtualMachine *vm, char *cmd)
 void unuse_var(VirtualMachine *vm, Int index)
 {
     //if type is string free the string, if type is list free the list
-    if (vm->typestack->data[index] == TYPE_STRING)
+    if (data_t(index) == TYPE_STRING)
     {
-        free(vm->stack->data[index].string);
+        free(data(index).string);
     }
     else if (vm->typestack->data[index] == TYPE_LIST)
     {
-        stack_free(*((IntList*)vm->stack->data[index].pointer));
+        stack_free(*((IntList*)data(index).pointer));
     }
-
+    
     data_t(index) = TYPE_NIL;
     
     for (Int i = 0; i < vm->hashes->size; i++)

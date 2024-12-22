@@ -43,10 +43,10 @@ int main(int argc, char **argv)
             vm->stack->data[filepathindex].string = str_nduplicate(path, last - path + 1);
         }
         hash_set(vm, "file.path", filepathindex);
-        Int result = eval(vm, _code);
+        Int result = eval(vm, _code, NULL);
         free(_code);
         char * str = str_format("print 'returned:' @%d", result);
-        eval(vm, str);
+        eval(vm, str, NULL);
         free(str);
     }
     stack_free(*args);
@@ -70,8 +70,8 @@ Int _ino_print(VirtualMachine *vm, IntList *args)
 {
     //printf("Type: %d\n", vm->typestack->data[var]);
 
-    Value temp = arg(0);
-    Int _type = data_t(0);
+    Value temp = arg(1);
+    Int _type = arg_t(1);
     
     if (_type == TYPE_NUMBER)
     {
@@ -186,16 +186,16 @@ Bruter *session = new Bruter();
 void setup()
 {
     Serial.begin(115200);
-    session->run((char*)"hash.set 'str' 'looping';");
-    session->run((char*)"Serial.println str;");
-    session->run((char*)"Serial.println str;");
+    session->run((char*)"hash.set 'str' (@@looping);");
+    session->run((char*)"Serial.println (gindex str);");
+    session->run((char*)"Serial.println (gindex str);");
 }
 
 void loop()
 {
     delay(1000);
 
-    session->run((char*)"Serial.println str;");
+    session->run((char*)"Serial.println (gindex str);");
 }
 
 #endif

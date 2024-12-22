@@ -38,7 +38,7 @@ function(brl_os_dofile)
     Int result = -1;
     if (code != NULL)
     {
-        result = eval(vm, code);
+        result = eval(vm, code, NULL);
         free(code);
     }
     else 
@@ -212,8 +212,69 @@ function(brl_std_io_ls_hashes)
 
 function(brl_std_do)
 {
-    return eval(vm, arg(0).string);
+    return eval(vm, arg(0).string, NULL);
 }
+
+
+
+// functions
+
+
+
+function(brl_std_function)
+{
+    char *code = str_duplicate(arg(args->size - 1).string);
+    StringList *varnames = (StringList*)malloc(sizeof(StringList));
+    stack_init(*vm->hashes);
+    for (Int i = 0; i < args->size - 1; i++)
+    {
+        stack_push(*varnames, arg(i).string);
+    }
+    stack_free(*varnames);
+
+    Int index = new_var(vm);
+    InternalFunction *func = (InternalFunction*)malloc(sizeof(InternalFunction));
+    func->varnames = varnames;
+    func->code = code;
+    data(index).pointer = func;
+    data_t(index) = TYPE_FUNCTION;
+    return index;
+}
+
+function(brl_std_call)
+{
+    InternalFunction *func = (InternalFunction*)arg(0).pointer;
+    HashList *context = (HashList*)malloc(sizeof(HashList));
+    stack_init(*context);
+    for (Int i = 1; i < func->varnames->size; i++)
+    {
+        Hash hash;
+        hash.key = func->varnames->data[i];
+        if (i < args->size)
+        {
+            hash.index = arg_i(i);
+        }
+        else 
+        {
+            hash.index = -1;
+        }
+        stack_push(*context, hash);
+    }
+
+    if (args->size > 0)
+    {
+        Int etc = new_var(vm);
+        data(etc).pointer = args;
+        data_t(etc) = TYPE_LIST;
+        Hash etc_hash;
+        etc_hash.key = "...";
+    }
+
+    Int result = eval(vm, func->code, NULL);
+}
+
+
+
 
 function(brl_std_ignore)
 {
@@ -824,10 +885,10 @@ function(brl_std_condition_not)
 
 function(brl_std_condition_if)
 {
-    Int result = eval(vm, arg(0).string);
+    Int result = eval(vm, arg(0).string, NULL);
     if (is_true(data(result), data_t(result)))
     {
-        result = eval(vm, arg(1).string);
+        result = eval(vm, arg(1).string, NULL);
         return result;
     }
     unuse_var(vm, result);
@@ -836,14 +897,14 @@ function(brl_std_condition_if)
 
 function(brl_std_condition_ifelse)
 {
-    Int result = eval(vm, arg(0).string);
+    Int result = eval(vm, arg(0).string, NULL);
     if (is_true(data(result), data_t(result)))
     {
-        result = eval(vm, arg(1).string);
+        result = eval(vm, arg(1).string, NULL);
     }
     else
     {
-        result = eval(vm, arg(2).string);
+        result = eval(vm, arg(2).string, NULL);
     }
     return result;
 }
@@ -857,7 +918,7 @@ function(brl_std_loop_while)
     Int result = -1;
     while (is_true(arg(0), arg_t(0)))
     {
-        result = eval(vm, arg(1).string);
+        result = eval(vm, arg(1).string, NULL);
 
         if (result >= 0)
         {
@@ -871,7 +932,7 @@ function(brl_std_loop_repeat)
 {
     for (Int i = 0; i < arg(0).number; i++)
     {
-        eval(vm, arg(1).string);
+        eval(vm, arg(1).string, NULL);
     }
     return -1;
 }
@@ -882,7 +943,7 @@ function(brl_std_loop_each)
     for (Int i = 0; i < list->size; i++)
     {
         hash_set(vm, arg(1).string, list->data[i]);
-        eval(vm, arg(2).string);
+        eval(vm, arg(2).string, NULL);
     }
     return -1;
 }
@@ -1094,12 +1155,11 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "do", brl_std_do);
     register_builtin(vm, "return", brl_std_return);
     register_builtin(vm, "gindex", brl_std_gindex);
-#ifndef ARDUINO
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.type", brl_std_io_ls_types);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
     register_builtin(vm, "print", brl_std_io_print);
-#endif
+    register_builtin(vm, "fn", brl_std_function);
 }
 
 void init_type(VirtualMachine *vm)
