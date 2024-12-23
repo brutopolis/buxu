@@ -1,4 +1,4 @@
-(21/12/2024) - version 0.7.0
+(23/12/2024) - version 0.7.0
 
 - no more @: operator;
 - new operators @+, @-, @> and @<;
@@ -8,9 +8,10 @@
 - register_* functions removed;
 - spawn_* functions renamed to register_*;
 - arduino code in main.c completely updated;
+- new local context system;
+- new function system;
 
-- TODO: new local context system;
-- TODO: new function system;
+- TODO: reduce fib example memory usage;
 
 (17/12/2024) - version 0.6.9
 

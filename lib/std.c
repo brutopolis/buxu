@@ -38,7 +38,7 @@ function(brl_os_dofile)
     Int result = -1;
     if (code != NULL)
     {
-        result = eval(vm, code, NULL);
+        result = eval(vm, code, context);
         free(code);
     }
     else 
@@ -106,33 +106,75 @@ function(brl_os_time_clock)
 
 function(brl_std_hash_set)
 {
-    hash_set(vm, arg(0).string, arg_i(1));
+    if (context != NULL)
+    {
+        HashList *global_context = vm->hashes;
+        vm->hashes = context;
+        hash_set(vm, arg(0).string, arg_i(1));
+        vm->hashes = global_context;
+    }
+    else 
+    {
+        hash_set(vm, arg(0).string, arg_i(1));
+    }
     return -1;
 }
 
 function(brl_std_hash_get)
 {
-    Int index = hash_find(vm, arg(0).string);
-    if (index >= 0)
+    if (context != NULL)
     {
-        return hash(index).index;
+        HashList *global_context = vm->hashes;
+        vm->hashes = context;
+        Int index = hash_find(vm, arg(0).string);
+        vm->hashes = global_context;
+        return index;
+    }
+    else 
+    {
+        return hash_find(vm, arg(0).string);
     }
     return -1;
 }
 
 function(brl_std_hash_delete)
 {
-    hash_unset(vm, arg(0).string);
+    if (context != NULL)
+    {
+        HashList *global_context = vm->hashes;
+        vm->hashes = context;
+        hash_unset(vm, arg(0).string);
+        vm->hashes = global_context;
+    }
+    else 
+    {
+        hash_unset(vm, arg(0).string);
+    }
     return -1;
 }
 
 function(brl_std_hash_rename)
 {
-    Int index = hash_find(vm, arg(0).string);
-    if (index >= 0)
+    if (context != NULL)
     {
-        free(hash(index).key);
-        hash(index).key = strdup(arg(1).string);
+        HashList *global_context = vm->hashes;
+        vm->hashes = context;
+        Int index = hash_find(vm, arg(0).string);
+        if (index != -1)
+        {
+            hash_set(vm, arg(1).string, index);
+            hash_unset(vm, arg(0).string);
+        }
+        vm->hashes = global_context;
+    }
+    else 
+    {
+        Int index = hash_find(vm, arg(0).string);
+        if (index != -1)
+        {
+            hash_set(vm, arg(1).string, index);
+            hash_unset(vm, arg(0).string);
+        }
     }
     return -1;
 }
@@ -201,18 +243,30 @@ function(brl_std_io_ls_types)
 
 function(brl_std_io_ls_hashes)
 {
-    for (Int i = 0; i < vm->hashes->size; i++)
+    if (context != NULL)
     {
-        printf("[%s] {%d} @%ld: ", hash(i).key, vm->typestack->data[hash(i).index], hash(i).index);
-        print_element(vm, hash(i).index);
-        printf("\n");
+        for (Int i = 0; i < context->size; i++)
+        {
+            printf("[%s] {%d} @%ld: ", context->data[i].key, vm->typestack->data[context->data[i].index], context->data[i].index);
+            print_element(vm, context->data[i].index);
+            printf("\n");
+        }
+    }
+    else 
+    {
+        for (Int i = 0; i < vm->hashes->size; i++)
+        {
+            printf("[%s] {%d} @%ld: ", hash(i).key, vm->typestack->data[hash(i).index], hash(i).index);
+            print_element(vm, hash(i).index);
+            printf("\n");
+        }
     }
     return -1;
 }
 
 function(brl_std_do)
 {
-    return eval(vm, arg(0).string, NULL);
+    return eval(vm, arg(0).string, context);
 }
 
 
@@ -223,19 +277,20 @@ function(brl_std_do)
 
 function(brl_std_function)
 {
-    char *code = str_duplicate(arg(args->size - 1).string);
     StringList *varnames = (StringList*)malloc(sizeof(StringList));
-    stack_init(*vm->hashes);
-    for (Int i = 0; i < args->size - 1; i++)
+    stack_init(*varnames);
+    while (args->size > 1)
     {
-        stack_push(*varnames, arg(i).string);
+        stack_push(*varnames, str_duplicate(data(stack_shift(*args)).string));
     }
-    stack_free(*varnames);
 
-    Int index = new_var(vm);
+    char *code = str_duplicate(arg(args->size - 1).string);
+
     InternalFunction *func = (InternalFunction*)malloc(sizeof(InternalFunction));
     func->varnames = varnames;
     func->code = code;
+
+    Int index = new_var(vm);
     data(index).pointer = func;
     data_t(index) = TYPE_FUNCTION;
     return index;
@@ -243,23 +298,21 @@ function(brl_std_function)
 
 function(brl_std_call)
 {
-    InternalFunction *func = (InternalFunction*)arg(0).pointer;
-    HashList *context = (HashList*)malloc(sizeof(HashList));
-    stack_init(*context);
-    for (Int i = 1; i < func->varnames->size; i++)
+    InternalFunction *func = (InternalFunction*)data(stack_shift(*args)).pointer;
+    HashList *_context = (HashList*)malloc(sizeof(HashList));
+    
+    HashList *global_context = vm->hashes;
+    stack_init(*_context);
+
+    vm->hashes = _context;
+
+
+    for (Int i = 0; i < func->varnames->size; i++)
     {
-        Hash hash;
-        hash.key = func->varnames->data[i];
-        if (i < args->size)
-        {
-            hash.index = arg_i(i);
-        }
-        else 
-        {
-            hash.index = -1;
-        }
-        stack_push(*context, hash);
+        hash_set(vm, func->varnames->data[i], stack_shift(*args));
     }
+    
+    vm->hashes = global_context;
 
     if (args->size > 0)
     {
@@ -270,7 +323,17 @@ function(brl_std_call)
         etc_hash.key = "...";
     }
 
-    Int result = eval(vm, func->code, NULL);
+    Int result = eval(vm, func->code, _context);
+    
+    while (_context->size > 0)
+    {
+        Hash hash = stack_shift(*_context);
+        free(hash.key);
+    }
+
+    stack_free(*_context);
+    
+    return result;
 }
 
 
@@ -885,10 +948,10 @@ function(brl_std_condition_not)
 
 function(brl_std_condition_if)
 {
-    Int result = eval(vm, arg(0).string, NULL);
+    Int result = eval(vm, arg(0).string, context);
     if (is_true(data(result), data_t(result)))
     {
-        result = eval(vm, arg(1).string, NULL);
+        result = eval(vm, arg(1).string, context);
         return result;
     }
     unuse_var(vm, result);
@@ -897,14 +960,14 @@ function(brl_std_condition_if)
 
 function(brl_std_condition_ifelse)
 {
-    Int result = eval(vm, arg(0).string, NULL);
+    Int result = eval(vm, arg(0).string, context);
     if (is_true(data(result), data_t(result)))
     {
-        result = eval(vm, arg(1).string, NULL);
+        result = eval(vm, arg(1).string, context);
     }
     else
     {
-        result = eval(vm, arg(2).string, NULL);
+        result = eval(vm, arg(2).string, context);
     }
     return result;
 }
@@ -918,7 +981,7 @@ function(brl_std_loop_while)
     Int result = -1;
     while (is_true(arg(0), arg_t(0)))
     {
-        result = eval(vm, arg(1).string, NULL);
+        result = eval(vm, arg(1).string, context);
 
         if (result >= 0)
         {
@@ -932,7 +995,7 @@ function(brl_std_loop_repeat)
 {
     for (Int i = 0; i < arg(0).number; i++)
     {
-        eval(vm, arg(1).string, NULL);
+        eval(vm, arg(1).string, context);
     }
     return -1;
 }
@@ -943,7 +1006,7 @@ function(brl_std_loop_each)
     for (Int i = 0; i < list->size; i++)
     {
         hash_set(vm, arg(1).string, list->data[i]);
-        eval(vm, arg(2).string, NULL);
+        eval(vm, arg(2).string, context);
     }
     return -1;
 }
@@ -1001,7 +1064,6 @@ function(brl_mem_delete)
     }
     return -1;
 }
-
 
 function(brl_mem_length)
 {
@@ -1159,7 +1221,9 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "ls.type", brl_std_io_ls_types);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
     register_builtin(vm, "print", brl_std_io_print);
+
     register_builtin(vm, "fn", brl_std_function);
+    register_builtin(vm, "call", brl_std_call);
 }
 
 void init_type(VirtualMachine *vm)
@@ -1172,6 +1236,7 @@ void init_type(VirtualMachine *vm)
     register_number(vm, "type.string", TYPE_STRING);
     register_number(vm, "type.builtin", TYPE_BUILTIN);
     register_number(vm, "type.list", TYPE_LIST);
+    register_number(vm, "type.function", TYPE_FUNCTION);
     register_number(vm, "type.other", TYPE_OTHER);
 
     // type functions

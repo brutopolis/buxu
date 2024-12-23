@@ -649,6 +649,17 @@ void free_var(VirtualMachine *vm, Int index)
             }
             stack_free(*((IntList*)vm->stack->data[index].pointer));
             break;
+        case TYPE_FUNCTION:
+            for (Int i = 0; i < ((InternalFunction*)vm->stack->data[index].pointer)->varnames->size; i++)
+            {
+                free(((InternalFunction*)vm->stack->data[index].pointer)->varnames->data[i]);
+            }
+            stack_free(*((InternalFunction*)vm->stack->data[index].pointer)->varnames);
+            free(((InternalFunction*)vm->stack->data[index].pointer)->code);
+            free(vm->stack->data[index].pointer);
+            break;
+        default:
+            break;
     }
     
     stack_remove(*vm->stack, index);
@@ -705,7 +716,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             {
                 char* temp = str + 1;
                 temp[strlen(temp) - 1] = '\0';
-                Int index = eval(vm, temp, NULL);
+                Int index = eval(vm, temp, context);
                 stack_push(*result, index);
             }
         }
@@ -884,11 +895,11 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 HashList* _global_context = vm->hashes;
                 vm->hashes = context;
                 index = hash_find(vm, str);
+                vm->hashes = _global_context;
                 if (index == -1)
                 {
                     index = hash_find(vm, str);
                 }
-                vm->hashes = _global_context;
             }
             else
             {
@@ -926,7 +937,7 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
     if (func > -1 && vm->typestack->data[func] == TYPE_BUILTIN)
     {
         Function _function = vm->stack->data[func].pointer;
-        result = _function(vm, args);
+        result = _function(vm, args, context);
     }
     else 
     {
@@ -1007,6 +1018,17 @@ void unuse_var(VirtualMachine *vm, Int index)
     else if (vm->typestack->data[index] == TYPE_LIST)
     {
         stack_free(*((IntList*)data(index).pointer));
+    }
+    else if (vm->typestack->data[index] == TYPE_FUNCTION)
+    {
+        for (Int i = 0; i < vm->hashes->size; i++)
+        {
+            if (vm->hashes->data[i].index == index)
+            {
+                free(vm->hashes->data[i].key);
+                stack_remove(*vm->hashes, i);
+            }
+        }
     }
     
     data_t(index) = TYPE_NIL;

@@ -1,0 +1,18 @@
+hash.set "variavel" 1;
+hash.set "vv2" 1;
+print "aqui fora é" variavel;
+
+hash.set "func" 
+(fn "variavel"
+    (@@
+        print "aqui dentro é" variavel;
+        mem.set variavel 2;
+        mem.set vv2 897;
+        print "aqui dentro agora é" variavel;
+        ls.hash;
+    )
+);
+call func 40;
+print "aqui continua" variavel;
+print "aqui continua" vv2;
+return 0;

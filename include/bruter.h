@@ -119,21 +119,6 @@
     i == (s).size ? -1 : i; \
 })
 
-#define data(index) (vm->stack->data[index])
-#define data_t(index) (vm->typestack->data[index])
-#define data_unused(index) (vm->unused->data[index])
-#define data_temp(index) (vm->temp->data[index])
-
-#define hash(index) (vm->hashes->data[index])
-
-#define arg(index) (vm->stack->data[args->data[index]])
-#define arg_i(index) (args->data[index])
-#define arg_t(index) (vm->typestack->data[args->data[index]])
-
-#define function(name) Int name(VirtualMachine *vm, IntList *args)
-#define init(name) void init_##name(VirtualMachine *vm)
-
-
 //Value
 typedef union 
 {
@@ -174,7 +159,7 @@ typedef struct
 } VirtualMachine;
 
 //Function
-typedef Int (*Function)(VirtualMachine*, IntList*);
+typedef Int (*Function)(VirtualMachine*, IntList*, HashList*);
 
 //String
 extern char* str_duplicate(const char *str);
@@ -231,6 +216,23 @@ extern void hash_unset(VirtualMachine *vm, char *key);
 extern Int eval(VirtualMachine *vm, char *cmd, HashList *context);
 
 extern void print_element(VirtualMachine *vm, Int index);
+
+// macros
+
+#define data(index) (vm->stack->data[index])
+#define data_t(index) (vm->typestack->data[index])
+#define data_unused(index) (vm->unused->data[index])
+#define data_temp(index) (vm->temp->data[index])
+
+#define hash(index) (vm->hashes->data[index])
+
+#define arg(index) (vm->stack->data[args->data[index]])
+#define arg_i(index) (args->data[index])
+#define arg_t(index) (vm->typestack->data[args->data[index]])
+
+#define function(name) Int name(VirtualMachine *vm, IntList *args, HashList *context)
+#define init(name) void init_##name(VirtualMachine *vm)
+
 // <libraries header>
 
 #ifndef ARDUINO

@@ -160,7 +160,7 @@ class Bruter
     };
     Int run(char *str)
     {
-        return eval(this->vm, str);
+        return eval(this->vm, str, NULL);
     };
     VirtualMachine *vm;
     Bruter()

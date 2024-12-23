@@ -1,0 +1,39 @@
+hash.set "_0" 0;
+hash.set "_1" 1;
+hash.set "_2" 2;
+hash.set "mem_buffer" (sector.new 8);
+
+hash.set "factorial" (fn "n"
+    (@@
+        ifelse (@@== n _0)
+        (@@
+            return _1;
+        )
+        (@@
+            return (mul n (call factorial (sub n _1)));
+        );
+    )
+);
+hash.set 'i' 0;
+hash.set "fib" (fn "n"
+    (@@
+        
+        ifelse (@@== n _0)
+        (@@
+            return _0;
+        )
+        (@@
+            ifelse (@@== n _1)
+            (@@
+                return _1;
+            )
+            (@@
+                hash.set "result" (add (call fib (sub n _1)) (call fib (sub n _2)));
+                return (add (call fib (sub n _1)) (call fib (sub n _2)));
+            );
+        );
+    )
+);
+
+# (call fib 10);
+ls;
