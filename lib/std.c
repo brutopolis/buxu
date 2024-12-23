@@ -1065,6 +1065,15 @@ function(brl_mem_delete)
     return -1;
 }
 
+function(brl_mem_next)
+{
+    for (Int i = 0; i < args->size; i++)
+    {
+        stack_push(*vm->unused, arg_i(i));
+    }
+    return -1;
+}
+
 function(brl_mem_length)
 {
     return new_number(vm, vm->stack->size);
@@ -1335,6 +1344,7 @@ void init_mem(VirtualMachine *vm)
     register_builtin(vm, "mem.copy", brl_mem_copy);
     register_builtin(vm, "mem.len", brl_mem_length);
     register_builtin(vm, "mem.delete", brl_mem_delete);
+    register_builtin(vm, "mem.next", brl_mem_next);
     register_builtin(vm, "mem.swap", brl_mem_swap);
     register_builtin(vm, "mem.push", brl_std_mem_push);
     register_builtin(vm, "mem.unshift", brl_std_mem_unshift);

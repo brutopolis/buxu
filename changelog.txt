@@ -12,6 +12,9 @@
 - new function system;
 
 - TODO: reduce fib example memory usage;
+- TODO: new if system hardcoded into the parser;
+- TODO: new loop system hardcoded into the parser;
+- TODO: move function system to the parser instead of using functions to create functions;
 
 (17/12/2024) - version 0.6.9
 

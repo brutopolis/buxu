@@ -15,25 +15,27 @@ hash.set "factorial" (fn "n"
     )
 );
 hash.set 'i' 0;
+
+hash.set "result_word" "result";
+
+hash.set 'innerinnertext' (@@hash.set result_word (add (call fib (sub n _1)) (call fib (sub n _2)));return (add (call fib (sub n _1)) (call fib (sub n _2))););
+
+hash.set 'innertext' (@@ifelse _cond1 return_1 innerinnertext;);
+
+hash.set "condition" (@@== n _0);
+
+hash.set "return_0" (@@return _0;);
+hash.set "return_1" (@@return _1;);
+
+hash.set "_cond0" (@@== n _0);
+hash.set "_cond1" (@@== n _1);
+
 hash.set "fib" (fn "n"
     (@@
-        
-        ifelse (@@== n _0)
-        (@@
-            return _0;
-        )
-        (@@
-            ifelse (@@== n _1)
-            (@@
-                return _1;
-            )
-            (@@
-                hash.set "result" (add (call fib (sub n _1)) (call fib (sub n _2)));
-                return (add (call fib (sub n _1)) (call fib (sub n _2)));
-            );
-        );
+        ifelse _cond0 return_0 innertext;
     )
 );
+ls.hash;
 
 # (call fib 10);
 ls;
