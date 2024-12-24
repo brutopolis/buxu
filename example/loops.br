@@ -1,5 +1,6 @@
 
 hash.set "_size" 100000;
 hash.set "___index" 0;
-repeat _size "incr ___index;print ___index";
+while "@98 < @96"
+"incr ___index;print ___index";
 return 0;

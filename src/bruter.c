@@ -689,11 +689,163 @@ void free_vm(VirtualMachine *vm)
     free(vm);
 }
 
+char is(VirtualMachine *vm, char* str, HashList *context)
+{
+    char condition_result = 0;
+    Float cond[4] = {0, 0, 0, 0};
+    StringList *splited = special_split(str, ' ');
+    Int index = -1;
+    Int step = -1;
+    char _new_condition_result = 0;
+    
+    while (index < splited->size+1)
+    {
+        index++;
+        step++;
+        switch(step)
+        {
+            case 1:
+                if (index >= splited->size)
+                {
+                    _new_condition_result = (cond[0] != 0);
+                    goto condition_processing;
+                }
+
+                switch (splited->data[index][0])
+                {
+                    case '=':
+                        cond[1] = 1;
+                        break;
+                    case '!':
+                        cond[1] = 2;
+                        break;
+                    case '>':
+                        cond[1] = 3;
+                        break;
+                    case '<': 
+                        cond[1] = 4;
+                        break;
+                    default:
+                        // error
+                        printf("error: cant handle this condition (%s)\n", splited->data[index]);
+                        exit(1);
+                        break;
+                }
+                break;
+            case 3:
+                _new_condition_result = 0;
+
+                switch ((Int)cond[1])
+                {
+                    case 1: // ==
+                        _new_condition_result = (cond[0] == cond[2]);
+                        break;
+                    case 2: // !=
+                        _new_condition_result = (cond[0] != cond[2]);
+                        break;
+                    case 3: // >
+                        _new_condition_result = (cond[0] >  cond[2]);
+                        break;
+                    case 4: // <
+                        _new_condition_result = (cond[0] <  cond[2]);
+                        break;
+                    case 5: // >=
+                        _new_condition_result = (cond[0] >= cond[2]);
+                        break;
+                    case 6: // <=
+                        _new_condition_result = (cond[0] <= cond[2]);
+                        break;
+                }
+                condition_processing:
+
+                switch ((Int)cond[3])
+                {    
+                    case 1:
+                        _new_condition_result = condition_result && _new_condition_result;
+                        break;
+                    case 2:
+                        _new_condition_result = condition_result || _new_condition_result;
+                        break;
+                }
+
+                
+                condition_result = _new_condition_result;
+
+
+                if (index < splited->size-1)
+                {
+                    if (strcmp(splited->data[index], "&&") == 0)
+                    {
+                        cond[3] = 1;
+                    }
+                    else if (strcmp(splited->data[index], "||") == 0)
+                    {
+                        cond[3] = 2;
+                    }
+                    else
+                    {
+                        // error
+                        printf("error: cant handle this symbol (%s)\n", splited->data[index]);
+                        exit(1);
+                    }
+                }
+                else 
+                {
+                    return condition_result;
+                }
+
+                step = -1;
+                break;
+            default:// 0 or 2
+                if (splited->data[index][0] == '@')
+                {
+                    cond[step] = data(atoi(splited->data[index]+1)).number;
+                }
+                else if ((splited->data[index][0] >= '0' && splited->data[index][0] <= '9') || splited->data[index][0] == '-')
+                {
+                    cond[step] = atof(splited->data[index]);
+                }
+                else if (splited->data[index][0] == '(')
+                {
+                    char* _str = str_sub(splited->data[index], 1, strlen(splited->data[index]) - 1);
+                    cond[step] = is(vm, _str, context);
+                    free(_str);
+                }
+                else
+                {
+                    Int _index;
+                    if (context != NULL)
+                    {
+                        void *backup = vm->hashes;
+                        vm->hashes = context;
+                        _index = hash_find(vm, splited->data[index]);
+                        vm->hashes = backup;
+                        if (_index == -1)
+                        {
+                            _index = hash_find(vm, splited->data[index]);
+                        }
+                        cond[step] = data(_index).number;
+                    }
+                    else 
+                    {
+                        _index = hash_find(vm, splited->data[index]);
+                        cond[step] = data(_index).number;
+                    }
+                }
+                break;
+        }
+        
+    }
+    printf("error: misformed condition: %s\n", str);
+    return -1;
+}
+
 // Parser functions
 IntList* parse(void *_vm, char *cmd, HashList *context) 
 {
     VirtualMachine* vm = (VirtualMachine*)_vm;
     IntList *result = make_int_list();
+    
     StringList *splited = special_space_split(cmd);
     //Int current = 0;
     while (splited->size > 0)
@@ -707,6 +859,12 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 temp[strlen(temp) - 1] = '\0';
                 Int var = new_string(vm, temp);
                 stack_push(*result, var);            
+            }
+            else if(str[1] == 'i' && str[2] == 's')
+            {
+                char* _str = str_nduplicate(str+4, strlen(str)-5);
+                stack_push(*result, is(vm, _str, context));
+                free(_str);
             }
             else if (str[1] == '/' && str[2] == '/') 
             {

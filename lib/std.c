@@ -792,107 +792,6 @@ function(brl_std_string_format)
 // std conditions
 // std conditions
 // std conditions
-function(brl_std_condition_equals)
-{
-    if (arg_t(0) == arg_t(1))
-    {
-        if (arg_t(0) == TYPE_NUMBER)
-        {
-            return new_number(vm, arg(0).number == arg(1).number);
-        }
-        else if (arg_t(0) == TYPE_STRING)
-        {
-            return new_number(vm, strcmp(arg(0).string, arg(1).string) == 0);
-        }
-    }
-    return (new_number(vm, 0));
-}
-
-function(brl_std_condition_not_equals)
-{
-    if (arg_t(0) == arg_t(1))
-    {
-        if (arg_t(0) == TYPE_NUMBER)
-        {
-            return new_number(vm, arg(0).number != arg(1).number);
-        }
-        else if (arg_t(0) == TYPE_STRING)
-        {
-            return new_number(vm, strcmp(arg(0).string, arg(1).string) != 0);
-        }
-    }
-    return (new_number(vm, 0));
-}
-
-function(brl_std_condition_greater)
-{
-    if (arg_t(0) == arg_t(1))
-    {
-        if (arg_t(0) == TYPE_NUMBER)
-        {
-            return new_number(vm, arg(0).number > arg(1).number);
-        }
-        else if (arg_t(0) == TYPE_STRING)
-        {
-            return new_number(vm, strcmp(arg(0).string, arg(1).string) > 0);
-        }
-    }
-    return (new_number(vm, 0));
-}
-
-function(brl_std_condition_less)
-{
-    if (arg_t(0) == arg_t(1))
-    {
-        if (arg_t(0) == TYPE_NUMBER)
-        {
-            return new_number(vm, arg(0).number < arg(1).number);
-        }
-        else if (arg_t(0) == TYPE_STRING)
-        {
-            return new_number(vm, strcmp(arg(0).string, arg(1).string) < 0);
-        }
-    }
-    return (new_number(vm, 0));
-}
-
-function(brl_std_condition_greater_equals)
-{
-    if (arg_t(0) == arg_t(1))
-    {
-        if (arg_t(0) == TYPE_NUMBER)
-        {
-            return new_number(vm, arg(0).number >= arg(1).number);
-        }
-        else if (arg_t(0) == TYPE_STRING)
-        {
-            return new_number(vm, strcmp(arg(0).string, arg(1).string) >= 0);
-        }
-    }
-    return (new_number(vm, 0));
-}
-
-function(brl_std_condition_less_equals)
-{
-    if (arg_t(0) == arg_t(1))
-    {
-        if (arg_t(0) == TYPE_NUMBER)
-        {
-            return new_number(vm, arg(0).number <= arg(1).number);
-        }
-        else if (arg_t(0) == TYPE_STRING)
-        {
-            return new_number(vm, strcmp(arg(0).string, arg(1).string) <= 0);
-        }
-    }
-    return (new_number(vm, 0));
-}
-
-function(brl_std_condition_and)
-{
-    return new_number(vm, (is_true(arg(0), arg_t(0)) && is_true(arg(1), arg_t(1))));
-}
-
 function(brl_std_condition_or)
 {
     Int result = 0;
@@ -924,25 +823,6 @@ function(brl_std_condition_or)
         arg_t(0) = arg_t(1);
         result = index;
     }
-    return result;
-}
-
-function(brl_std_condition_not)
-{
-    Int result = 0;
-    if (arg_t(0) == TYPE_NUMBER)
-    {
-        result = new_number(vm, !arg(0).number);
-    }
-    else if (is_true(arg(0), arg_t(0)))
-    {
-        result = new_number(vm, 0);
-    }
-    else
-    {
-        result = new_number(vm, 1);
-    }
-
     return result;
 }
 
@@ -979,7 +859,7 @@ function(brl_std_condition_ifelse)
 function(brl_std_loop_while)
 {
     Int result = -1;
-    while (is_true(arg(0), arg_t(0)))
+    while (is(vm, arg(0).string, context))
     {
         result = eval(vm, arg(1).string, context);
 
@@ -1303,15 +1183,7 @@ void init_condition(VirtualMachine *vm)
 {
     register_builtin(vm, "or", brl_std_condition_or);
     register_builtin(vm, "if", brl_std_condition_if);
-    register_builtin(vm, "<", brl_std_condition_less);
-    register_builtin(vm, "and", brl_std_condition_and);
-    register_builtin(vm, "not", brl_std_condition_not);
-    register_builtin(vm, "==", brl_std_condition_equals);
-    register_builtin(vm, ">", brl_std_condition_greater);
     register_builtin(vm, "ifelse", brl_std_condition_ifelse);
-    register_builtin(vm, "!=", brl_std_condition_not_equals);
-    register_builtin(vm, "<=", brl_std_condition_less_equals);
-    register_builtin(vm, ">=", brl_std_condition_greater_equals);
 }
 
 void init_list(VirtualMachine *vm)

@@ -211,6 +211,8 @@ extern Int hash_find(VirtualMachine *vm, char *key);
 extern void hash_set(VirtualMachine *vm, char *key, Int index);
 extern void hash_unset(VirtualMachine *vm, char *key);
 
+extern char is(VirtualMachine *vm, char *str, HashList *context);
+
 // eval
 // pass NULL as context if you don't want to use a local context
 extern Int eval(VirtualMachine *vm, char *cmd, HashList *context);
