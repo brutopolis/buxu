@@ -430,7 +430,7 @@ function(brl_std_math_decrement)
 
 
 
-Int math(VirtualMachine *vm, char* str, HashList *context)
+Float math(VirtualMachine *vm, char* str, HashList *context)
 {
     Float a = 0;
     Float b = 0;
@@ -558,8 +558,7 @@ Int math(VirtualMachine *vm, char* str, HashList *context)
 
         token = strtok(NULL, " ");
     }
-
-    return new_number(vm, a);
+    return a;
 }
 
 function(brl_std_math)
