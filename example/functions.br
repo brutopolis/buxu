@@ -1,18 +1,20 @@
 hash.set "variavel" 1;
-hash.set "vv2" 1;
-print "aqui fora é" variavel;
-
-hash.set "func" 
-(fn "variavel"
+hash.set "vglobal" 1;
+print "aqui fora variavel é" variavel;
+print "aqui fora vglobal é" vglobal;
+hash.set "func" (fn "variavel"
     (@@
         print "aqui dentro é" variavel;
+        print "aqui dentro vglobal é" vglobal;
+        print;
         mem.set variavel 2;
-        mem.set vv2 897;
+        mem.set vglobal 897;
         print "aqui dentro agora é" variavel;
-        ls.hash;
+        print "aqui dentro agora vglobal é" vglobal;
+        print;
     )
 );
-call func 40;
-print "aqui continua" variavel;
-print "aqui continua" vv2;
+func 40;
+print "aqui fora variavel é" variavel;
+print "aqui fora vglobal é" vglobal;
 return 0;

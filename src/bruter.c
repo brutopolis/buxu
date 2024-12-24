@@ -860,7 +860,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 Int var = new_string(vm, temp);
                 stack_push(*result, var);            
             }
-            else if(str[1] == 'i' && str[2] == 's')
+            else if (str[1] == 'i' && str[2] == 's')
             {
                 char* _str = str_nduplicate(str+4, strlen(str)-5);
                 stack_push(*result, is(vm, _str, context));
@@ -1096,6 +1096,44 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
     {
         Function _function = vm->stack->data[func].pointer;
         result = _function(vm, args, context);
+    }
+    else if (func > -1 && vm->typestack->data[func] == TYPE_FUNCTION)
+    {
+        InternalFunction *_func = (InternalFunction*)data(func).pointer;
+        HashList *_context = (HashList*)malloc(sizeof(HashList));
+        stack_init(*_context);
+        
+        HashList *global_context = vm->hashes;
+
+        vm->hashes = _context;
+
+
+        for (Int i = 0; i < _func->varnames->size; i++)
+        {
+            hash_set(vm, _func->varnames->data[i], stack_shift(*args));
+        }
+        
+        vm->hashes = global_context;
+        if (args->size > 0)
+        {
+            Int etc = new_var(vm);
+            data(etc).pointer = args;
+            data_t(etc) = TYPE_LIST;
+            Hash etc_hash;
+            etc_hash.key = "...";
+        }
+
+
+        Int result = eval(vm, _func->code, _context);
+        
+        
+        while (_context->size > 0)
+        {
+            Hash hash = stack_shift(*_context);
+            free(hash.key);
+        }
+
+        stack_free(*_context);
     }
     else 
     {
