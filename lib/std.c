@@ -426,6 +426,152 @@ function(brl_std_math_decrement)
     return -1;
 }
 
+// tree-walker math
+
+
+
+Int math(VirtualMachine *vm, char* str, HashList *context)
+{
+    Float a = 0;
+    Float b = 0;
+    char* token = strtok(str, " ");
+    char operator = 0;
+
+    if (token[0] == '@')
+    {
+        a = data(atoi(token+1)).number;
+    }
+    else if ((token[0] >= '0' && token[0] <= '9') || token[0] == '-')
+    {
+        a = atof(token);
+    }
+    else if (token[0] == '(')
+    {
+        char* _str = str_sub(token, 1, strlen(token) - 1);
+        a = math(vm, _str, context);
+        free(_str);
+    }
+    else
+    {
+        Int _index;
+        if (context != NULL)
+        {
+            void *backup = vm->hashes;
+            vm->hashes = context;
+            _index = hash_find(vm, token);
+            vm->hashes = backup;
+            if (_index == -1)
+            {
+                _index = hash_find(vm, token);
+            }
+            a = data(_index).number;
+        }
+        else 
+        {
+            _index = hash_find(vm, token);
+            a = data(_index).number;
+        }
+    }
+
+    token = strtok(NULL, " ");
+    while (token != NULL)
+    {
+        operator = token[0];
+        token = strtok(NULL, " ");
+        if (token[0] == '@')
+        {
+            b = data(atoi(token+1)).number;
+        }
+        else if ((token[0] >= '0' && token[0] <= '9') || token[0] == '-')
+        {
+            b = atof(token);
+        }
+        else if (token[0] == '(')
+        {
+            char* _str = str_sub(token, 1, strlen(token) - 1);
+            b = math(vm, _str, context);
+            free(_str);
+        }
+        else
+        {
+            Int _index;
+            if (context != NULL)
+            {
+                void *backup = vm->hashes;
+                vm->hashes = context;
+                _index = hash_find(vm, token);
+                vm->hashes = backup;
+                if (_index == -1)
+                {
+                    _index = hash_find(vm, token);
+                }
+                b = data(_index).number;
+            }
+            else 
+            {
+                _index = hash_find(vm, token);
+                b = data(_index).number;
+            }
+        }
+        printf("a: %f, b: %f, operator: %c\n", a, b, operator);
+        switch (operator)
+        {
+            case '+':
+                a += b;
+                break;
+            case '-':
+                a -= b;
+                break;
+            case '*':
+                a *= b;
+                break;
+            case '/':
+                a /= b;
+                break;
+            case '%':
+                a = fmod(a, b);
+                break;
+            case '^':
+                a = pow(a, b);
+                break;
+            case '&': // bitwise and
+                a = (Int)a & (Int)b;
+                break;
+            case '|':
+                a = (Int)a | (Int)b;
+                break;
+            case '~':
+                a = (Int)a ^ (Int)b;
+                break;
+            case '>':
+                a = (Int)a >> (Int)b;
+                break;
+            case '<':
+                a = (Int)a << (Int)b;
+                break;
+            default:
+                // error
+                printf("error: cant handle this operator (%c)\n", operator);
+                exit(1);
+                break;
+        }
+
+        token = strtok(NULL, " ");
+    }
+
+    return new_number(vm, a);
+}
+
+function(brl_std_math)
+{
+    char* str = arg(0).string;
+    char* _str = str_nduplicate(str, strlen(str));
+    Int result = new_number(vm, math(vm, _str, context));
+    free(_str);
+    return result;
+}
+
+
 // list functions
 // list functions
 // list functions
@@ -782,20 +928,20 @@ function(brl_std_condition_or)
 
 function(brl_std_condition_if)
 {
-    Int result = eval(vm, arg(0).string, context);
-    if (is_true(data(result), data_t(result)))
+    Int result = -1;
+    if (is(vm, arg(0).string, context))
     {
         result = eval(vm, arg(1).string, context);
-        return result;
+
     }
     unuse_var(vm, result);
-    return -1;
+    return result;
 }
 
 function(brl_std_condition_ifelse)
 {
-    Int result = eval(vm, arg(0).string, context);
-    if (is_true(data(result), data_t(result)))
+    Int result = -1;
+    if (is(vm, arg(0).string, context))
     {
         result = eval(vm, arg(1).string, context);
     }
@@ -803,6 +949,15 @@ function(brl_std_condition_ifelse)
     {
         result = eval(vm, arg(2).string, context);
     }
+    return result;
+}
+
+function(brl_std_is)
+{
+    char* str = arg(0).string;
+    char* _str = str_nduplicate(str, strlen(str));
+    Int result = new_number(vm, is(vm, _str, context));
+    free(_str);
     return result;
 }
 
@@ -1117,6 +1272,7 @@ void init_math(VirtualMachine *vm)
     register_builtin(vm, "random", brl_std_math_random);
     register_builtin(vm, "incr", brl_std_math_increment);
     register_builtin(vm, "decr", brl_std_math_decrement);
+    register_builtin(vm, "math", brl_std_math);
 }
 
 void init_string(VirtualMachine *vm)
@@ -1137,6 +1293,7 @@ void init_condition(VirtualMachine *vm)
     register_builtin(vm, "or", brl_std_condition_or);
     register_builtin(vm, "if", brl_std_condition_if);
     register_builtin(vm, "ifelse", brl_std_condition_ifelse);
+    register_builtin(vm, "is", brl_std_is);
 }
 
 void init_list(VirtualMachine *vm)

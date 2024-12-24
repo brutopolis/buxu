@@ -1,4 +1,4 @@
 hash.set 'a' 88;
 hash.set 'b' 99;
 
-print (is a < b);
+print (is (@@a > b));

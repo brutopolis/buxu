@@ -698,7 +698,7 @@ char is(VirtualMachine *vm, char* str, HashList *context)
     Int step = -1;
     char _new_condition_result = 0;
     
-    while (index < splited->size+1)
+    while (index < splited->size)
     {
         index++;
         step++;
@@ -859,12 +859,6 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 temp[strlen(temp) - 1] = '\0';
                 Int var = new_string(vm, temp);
                 stack_push(*result, var);            
-            }
-            else if (str[1] == 'i' && str[2] == 's')
-            {
-                char* _str = str_nduplicate(str+4, strlen(str)-5);
-                stack_push(*result, is(vm, _str, context));
-                free(_str);
             }
             else if (str[1] == '/' && str[2] == '/') 
             {

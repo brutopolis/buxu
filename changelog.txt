@@ -12,10 +12,7 @@
 - new function system;
 - new condition system, using tree-walking;
 - removed old condition functions;
-
-- TODO: implement a tree walking math system, just as alternative to the current math functions which are focused on mass operations instead lots of single operations;
-- TODO: reduce fib example memory usage;
-- TODO: move function system to the parser instead of using functions to create functions;
+- new tree-walking math function;
 
 (17/12/2024) - version 0.6.9
 
