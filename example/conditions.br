@@ -1,4 +1,8 @@
 hash.set 'a' 88;
 hash.set 'b' 99;
-
-print (is (@@a > b));
+ifelse 'a == b' (@@
+    print 'a == b';
+)
+(@@
+    print 'a != b';
+);

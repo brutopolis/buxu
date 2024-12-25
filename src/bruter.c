@@ -1096,7 +1096,7 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
         InternalFunction *_func = (InternalFunction*)data(func).pointer;
         HashList *_context = (HashList*)malloc(sizeof(HashList));
         stack_init(*_context);
-        
+
         HashList *global_context = vm->hashes;
 
         vm->hashes = _context;
@@ -1107,18 +1107,18 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
             hash_set(vm, _func->varnames->data[i], stack_shift(*args));
         }
         
-        vm->hashes = global_context;
         if (args->size > 0)
         {
-            Int etc = new_var(vm);
-            data(etc).pointer = args;
-            data_t(etc) = TYPE_LIST;
-            Hash etc_hash;
-            etc_hash.key = "...";
+            Int etc = register_list(vm, "...");
+            while (args->size > 0)
+            {
+                stack_push(*((IntList*)data(etc).pointer), stack_shift(*args));
+            }
         }
 
+        vm->hashes = global_context;
 
-        Int result = eval(vm, _func->code, _context);
+        result = eval(vm, _func->code, _context);
         
         
         while (_context->size > 0)

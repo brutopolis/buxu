@@ -937,7 +937,6 @@ function(brl_std_condition_if)
         result = eval(vm, arg(1).string, context);
 
     }
-    unuse_var(vm, result);
     return result;
 }
 
@@ -950,7 +949,6 @@ function(brl_std_condition_ifelse)
     }
     else
     {
-        printf("%s\n", arg(2).string);
         result = eval(vm, arg(2).string, context);
     }
     return result;
@@ -962,6 +960,40 @@ function(brl_std_is)
     char* _str = str_nduplicate(str, strlen(str));
     Int result = new_number(vm, is(vm, _str, context));
     free(_str);
+    return result;
+}
+
+function(brl_std_call)
+{
+    InternalFunction *func = (InternalFunction*)data(stack_shift(*args)).pointer;
+    HashList *_context = (HashList*)malloc(sizeof(HashList));
+        
+    HashList *global_context = vm->hashes;
+    stack_init(*_context);
+    vm->hashes = _context;
+    for (Int i = 0; i < func->varnames->size; i++)
+    {
+        hash_set(vm, func->varnames->data[i], stack_shift(*args));
+    }
+    
+    vm->hashes = global_context;
+    if (args->size > 0)
+    {
+        Int etc = new_var(vm);
+        data(etc).pointer = args;
+        data_t(etc) = TYPE_LIST;
+        Hash etc_hash;
+        etc_hash.key = "...";
+    }
+    Int result = eval(vm, func->code, _context);
+    
+    while (_context->size > 0)
+    {
+        Hash hash = stack_shift(*_context);
+        free(hash.key);
+    }
+    stack_free(*_context);
+    
     return result;
 }
 
@@ -1225,6 +1257,7 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "print", brl_std_io_print);
 
     register_builtin(vm, "fn", brl_std_function);
+    register_builtin(vm, "call", brl_std_call);
 }
 
 void init_type(VirtualMachine *vm)
