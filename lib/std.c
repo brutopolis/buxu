@@ -434,7 +434,9 @@ Float math(VirtualMachine *vm, char* str, HashList *context)
 {
     Float a = 0;
     Float b = 0;
-    char* token = strtok(str, " ");
+    Int index = -1;
+    StringList *splited = special_split(str, ' ');
+    char* token = stack_shift(*splited);
     char operator = 0;
 
     if (token[0] == '@')
@@ -472,12 +474,15 @@ Float math(VirtualMachine *vm, char* str, HashList *context)
             a = data(_index).number;
         }
     }
-
-    token = strtok(NULL, " ");
-    while (token != NULL)
+    free(token);
+    token = stack_shift(*splited);
+    
+    while (splited->size > 0)
     {
+        printf("a: %f\n", a);
         operator = token[0];
-        token = strtok(NULL, " ");
+        free(token);
+        token = stack_shift(*splited);
         if (token[0] == '@')
         {
             b = data(atoi(token+1)).number;
@@ -513,7 +518,6 @@ Float math(VirtualMachine *vm, char* str, HashList *context)
                 b = data(_index).number;
             }
         }
-        printf("a: %f, b: %f, operator: %c\n", a, b, operator);
         switch (operator)
         {
             case '+':
@@ -531,17 +535,11 @@ Float math(VirtualMachine *vm, char* str, HashList *context)
             case '%':
                 a = fmod(a, b);
                 break;
-            case '^':
-                a = pow(a, b);
-                break;
             case '&': // bitwise and
                 a = (Int)a & (Int)b;
                 break;
             case '|':
                 a = (Int)a | (Int)b;
-                break;
-            case '~':
-                a = (Int)a ^ (Int)b;
                 break;
             case '>':
                 a = (Int)a >> (Int)b;
@@ -549,14 +547,20 @@ Float math(VirtualMachine *vm, char* str, HashList *context)
             case '<':
                 a = (Int)a << (Int)b;
                 break;
+            case '^':
+                a = (Int)a ^ (Int)b;
+                break;
+            case '~':
+                a = ~(Int)a;
+                break;
             default:
                 // error
                 printf("error: cant handle this operator (%c)\n", operator);
                 exit(1);
                 break;
         }
-
-        token = strtok(NULL, " ");
+        free(token);
+        token = stack_shift(*splited);
     }
     return a;
 }
@@ -946,6 +950,7 @@ function(brl_std_condition_ifelse)
     }
     else
     {
+        printf("%s\n", arg(2).string);
         result = eval(vm, arg(2).string, context);
     }
     return result;
