@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include <time.h>
 
-#define VERSION "0.7.0"
+#define VERSION "0.7.1"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -211,8 +211,6 @@ extern Int hash_find(VirtualMachine *vm, char *key);
 extern void hash_set(VirtualMachine *vm, char *key, Int index);
 extern void hash_unset(VirtualMachine *vm, char *key);
 
-extern char is(VirtualMachine *vm, char *str, HashList *context);
-
 // eval
 // pass NULL as context if you don't want to use a local context
 extern Int eval(VirtualMachine *vm, char *cmd, HashList *context);
@@ -234,6 +232,12 @@ extern void print_element(VirtualMachine *vm, Int index);
 
 #define function(name) Int name(VirtualMachine *vm, IntList *args, HashList *context)
 #define init(name) void init_##name(VirtualMachine *vm)
+
+Float solve_number(VirtualMachine *vm, char* token, HashList *context);
+Float math(VirtualMachine *vm, char* str, HashList *context);
+
+Int solve_index(VirtualMachine *vm, char* token, HashList *context);
+Int imath(VirtualMachine *vm, char* str, HashList *context);
 
 // <libraries header>
 

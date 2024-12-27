@@ -689,155 +689,60 @@ void free_vm(VirtualMachine *vm)
     free(vm);
 }
 
-char is(VirtualMachine *vm, char* str, HashList *context)
+// interpreter core
+function(direct_interpret)
 {
-    char condition_result = 0;
-    Float cond[4] = {0, 0, 0, 0};
-    StringList *splited = special_split(str, ' ');
-    Int index = -1;
-    Int step = -1;
-    char _new_condition_result = 0;
-    
-    while (index < splited->size)
+    Int func = stack_shift(*args);
+    Int result = -1;
+
+    if (func > -1 && vm->typestack->data[func] == TYPE_BUILTIN)
     {
-        index++;
-        step++;
-        switch(step)
+        Function _function = vm->stack->data[func].pointer;
+        result = _function(vm, args, context);
+    }
+    else if (func > -1 && vm->typestack->data[func] == TYPE_FUNCTION)
+    {
+        InternalFunction *_func = (InternalFunction*)data(func).pointer;
+        HashList *_context = (HashList*)malloc(sizeof(HashList));
+        stack_init(*_context);
+
+        HashList *global_context = vm->hashes;
+
+        vm->hashes = _context;
+
+
+        for (Int i = 0; i < _func->varnames->size; i++)
         {
-            case 1:
-                if (index >= splited->size)
-                {
-                    _new_condition_result = (cond[0] != 0);
-                    goto condition_processing;
-                }
-
-                switch (splited->data[index][0])
-                {
-                    case '=':
-                        cond[1] = 1;
-                        break;
-                    case '!':
-                        cond[1] = 2;
-                        break;
-                    case '>':
-                        cond[1] = 3;
-                        break;
-                    case '<': 
-                        cond[1] = 4;
-                        break;
-                    default:
-                        // error
-                        printf("error: cant handle this condition (%s)\n", splited->data[index]);
-                        exit(1);
-                        break;
-                }
-                break;
-            case 3:
-                _new_condition_result = 0;
-
-                switch ((Int)cond[1])
-                {
-                    case 1: // ==
-                        _new_condition_result = (cond[0] == cond[2]);
-                        break;
-                    case 2: // !=
-                        _new_condition_result = (cond[0] != cond[2]);
-                        break;
-                    case 3: // >
-                        _new_condition_result = (cond[0] >  cond[2]);
-                        break;
-                    case 4: // <
-                        _new_condition_result = (cond[0] <  cond[2]);
-                        break;
-                    case 5: // >=
-                        _new_condition_result = (cond[0] >= cond[2]);
-                        break;
-                    case 6: // <=
-                        _new_condition_result = (cond[0] <= cond[2]);
-                        break;
-                }
-                condition_processing:
-
-                switch ((Int)cond[3])
-                {    
-                    case 1:
-                        _new_condition_result = condition_result && _new_condition_result;
-                        break;
-                    case 2:
-                        _new_condition_result = condition_result || _new_condition_result;
-                        break;
-                }
-
-                
-                condition_result = _new_condition_result;
-
-
-                if (index < splited->size-1)
-                {
-                    if (strcmp(splited->data[index], "&&") == 0)
-                    {
-                        cond[3] = 1;
-                    }
-                    else if (strcmp(splited->data[index], "||") == 0)
-                    {
-                        cond[3] = 2;
-                    }
-                    else
-                    {
-                        // error
-                        printf("error: cant handle this symbol (%s)\n", splited->data[index]);
-                        exit(1);
-                    }
-                }
-                else 
-                {
-                    return condition_result;
-                }
-
-                step = -1;
-                break;
-            default:// 0 or 2
-                if (splited->data[index][0] == '@')
-                {
-                    cond[step] = data(atoi(splited->data[index]+1)).number;
-                }
-                else if ((splited->data[index][0] >= '0' && splited->data[index][0] <= '9') || splited->data[index][0] == '-')
-                {
-                    cond[step] = atof(splited->data[index]);
-                }
-                else if (splited->data[index][0] == '(')
-                {
-                    char* _str = str_sub(splited->data[index], 1, strlen(splited->data[index]) - 1);
-                    cond[step] = is(vm, _str, context);
-                    free(_str);
-                }
-                else
-                {
-                    Int _index;
-                    if (context != NULL)
-                    {
-                        void *backup = vm->hashes;
-                        vm->hashes = context;
-                        _index = hash_find(vm, splited->data[index]);
-                        vm->hashes = backup;
-                        if (_index == -1)
-                        {
-                            _index = hash_find(vm, splited->data[index]);
-                        }
-                        cond[step] = data(_index).number;
-                    }
-                    else 
-                    {
-                        _index = hash_find(vm, splited->data[index]);
-                        cond[step] = data(_index).number;
-                    }
-                }
-                break;
+            hash_set(vm, _func->varnames->data[i], stack_shift(*args));
         }
         
+        if (args->size > 0)
+        {
+            Int etc = register_list(vm, "etc");
+            while (args->size > 0)
+            {
+                stack_push(*((IntList*)data(etc).pointer), stack_shift(*args));
+            }
+        }
+
+        vm->hashes = global_context;
+
+        result = eval(vm, _func->code, _context);
+        
+        
+        while (_context->size > 0)
+        {
+            Hash hash = stack_shift(*_context);
+            free(hash.key);
+        }
+
+        stack_free(*_context);
     }
-    printf("error: misformed condition: %s\n", str);
-    return -1;
+    else 
+    {
+        printf("Error: %d is not a function\n", func);
+    }
+    return result;
 }
 
 // Parser functions
@@ -864,6 +769,29 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             {
                 // comment
             }
+            else if(str[1] == '$')
+            {
+                char* temp = str + 2;
+                // temp to next space
+                Int nextspace = str_find(temp, " ");
+                char* funcname = str_nduplicate(temp, nextspace);
+                temp += nextspace + 1;
+                char* code = str_sub(temp, 0, strlen(temp)-1);
+                Int __code = new_string(vm, code);
+                Int __func = hash_find(vm, funcname);
+                free(code);
+                Int __arglist = new_list(vm);
+                IntList *arglist = (IntList*)data(__arglist).pointer;
+                stack_push(*arglist, __func);
+                stack_push(*arglist, __code);
+
+                Int _result = direct_interpret(vm, arglist, context);
+                stack_push(*result, _result);
+                //frees
+                free(funcname);
+                unuse_var(vm, __arglist);
+                data_t(__arglist) = TYPE_NIL;
+            }
             else
             {
                 char* temp = str + 1;
@@ -874,158 +802,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         }
         else if (str[0] == '@') 
         {
-            if (strchr(str, '+') != NULL) // @name+10 or @30+10, or @name+name2, get all elements in the range from 30 to (30 + 10)
-            {
-                char* strptr = str + 1;
-                Int a = -1;
-                Int b = -1;
-                if (str[1] >= '0' && str[1] <= '9')
-                {
-                    a = atoi(strptr);
-                }
-                else
-                {
-                    char* cpy = str_sub(strptr, 0, strchr(strptr, '+') - strptr);
-                    a = hash_find(vm, cpy);
-                    free(cpy);
-                }
-                
-                strptr = strchr(strptr, '+') + 1;
-                
-                if (strptr[0] >= '0' && strptr[0] <= '9')
-                {
-                    b = atoi(strptr);
-                }
-                else if (strptr[0] == '*')
-                {
-                    b = vm->stack->size - a - 1;
-                }
-                else
-                {
-                    b = hash_find(vm, strptr);
-                }
-
-                for (Int i = a; i < a + b + 1; i++)
-                {
-                    stack_push(*result, i);
-                }
-            }
-            else if (strchr(str, '-') != NULL) // @name-10 or @30-10, get all elements in the range from 30 to (30 - 10)
-            {
-                char* strptr = str + 1;
-                Int a = -1;
-                Int b = -1;
-                if (str[1] >= '0' && str[1] <= '9')
-                {
-                    a = atoi(strptr);
-                }
-                else
-                {
-                    char* cpy = str_sub(strptr, 0, strchr(strptr, '-') - strptr);
-                    a = hash_find(vm, cpy);
-                    free(cpy);
-                }
-                
-                strptr = strchr(strptr, '-') + 1;
-                
-                if (strptr[0] >= '0' && strptr[0] <= '9')
-                {
-                    b = atoi(strptr);
-                }
-                else if (strptr[0] == '*')
-                {
-                    b = vm->stack->size - a - 1;
-                }
-                else
-                {
-                    b = hash_find(vm, strptr);
-                }
-
-                for (Int i = a; i > a - b - 1; i--)
-                {
-                    stack_push(*result, i);
-                }
-            }
-            else if (strchr(str, '>') != NULL) // @a>b get all elements in order from a to b
-            {
-                char* strptr = str + 1;
-                Int a = -1;
-                Int b = -1;
-                if (str[1] >= '0' && str[1] <= '9')
-                {
-                    a = atoi(strptr);
-                }
-                else
-                {
-                    char* cpy = str_sub(strptr, 0, strchr(strptr, '>') - strptr);
-                    a = hash_find(vm, cpy);
-                    free(cpy);
-                }
-                
-                strptr = strchr(strptr, '>') + 1;
-                
-                if (strptr[0] >= '0' && strptr[0] <= '9')
-                {
-                    b = atoi(strptr);
-                }
-                else if (strptr[0] == '*')
-                {
-                    b = vm->stack->size - a - 1;
-                }
-                else
-                {
-                    b = hash_find(vm, strptr);
-                }
-
-                for (Int i = a; i < b + 1; i++)
-                {
-                    stack_push(*result, i);
-                }
-            }
-            else if (strchr(str, '<') != NULL) // @a<b get all elements in order from b to a 
-            {
-                char* strptr = str + 1;
-                Int a = -1;
-                Int b = -1;
-                if (str[1] >= '0' && str[1] <= '9')
-                {
-                    a = atoi(strptr);
-                }
-                else
-                {
-                    char* cpy = str_sub(strptr, 0, strchr(strptr, '<') - strptr);
-                    a = hash_find(vm, cpy);
-                    free(cpy);
-                }
-                
-                strptr = strchr(strptr, '<') + 1;
-                
-                if (strptr[0] >= '0' && strptr[0] <= '9')
-                {
-                    b = atoi(strptr);
-                }
-                else if (strptr[0] == '*')
-                {
-                    b = vm->stack->size - a - 1;
-                }
-                else
-                {
-                    b = hash_find(vm, strptr);
-                }
-
-                for (Int i = a; i > b - 1; i--)
-                {
-                    stack_push(*result, i);
-                }
-            }
-            else
-            {
-                stack_push(*result, atoi(str + 1));
-            }
-        }
-        else if (str[0] == '/' && str[1] == '/') // comment
-        {
-            break;
+            stack_push(*result, atoi(str + 1));
         }
         else if (str[0] == '"' || str[0] == '\'') // string
         {
@@ -1038,6 +815,27 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         {
             Int var = new_number(vm, atof(str));
             stack_push(*result, var);
+        }
+        else if(str[0] == '.' && str[1] == '.' && str[2] == '.')
+        {
+            char* _str = str+3;
+            Int lst = hash_find(vm, _str);
+            if (lst == -1)
+            {
+                printf("cannot spread non-existent list: %s\n", _str);
+                stack_push(*result, -1);
+                free(str);
+                continue;
+            }
+            IntList *list = data(lst).pointer;
+            for (Int i = 0; i < list->size; i++)
+            {
+                stack_push(*result, list->data[i]);
+            }
+        }
+        else if (str[0] == '/' && str[1] == '/') // comment
+        {
+            break;
         }
         else //variable 
         {
@@ -1083,56 +881,7 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
         stack_free(*args);
         return -1;
     }
-    Int func = stack_shift(*args);
-    Int result = -1;
-
-    if (func > -1 && vm->typestack->data[func] == TYPE_BUILTIN)
-    {
-        Function _function = vm->stack->data[func].pointer;
-        result = _function(vm, args, context);
-    }
-    else if (func > -1 && vm->typestack->data[func] == TYPE_FUNCTION)
-    {
-        InternalFunction *_func = (InternalFunction*)data(func).pointer;
-        HashList *_context = (HashList*)malloc(sizeof(HashList));
-        stack_init(*_context);
-
-        HashList *global_context = vm->hashes;
-
-        vm->hashes = _context;
-
-
-        for (Int i = 0; i < _func->varnames->size; i++)
-        {
-            hash_set(vm, _func->varnames->data[i], stack_shift(*args));
-        }
-        
-        if (args->size > 0)
-        {
-            Int etc = register_list(vm, "...");
-            while (args->size > 0)
-            {
-                stack_push(*((IntList*)data(etc).pointer), stack_shift(*args));
-            }
-        }
-
-        vm->hashes = global_context;
-
-        result = eval(vm, _func->code, _context);
-        
-        
-        while (_context->size > 0)
-        {
-            Hash hash = stack_shift(*_context);
-            free(hash.key);
-        }
-
-        stack_free(*_context);
-    }
-    else 
-    {
-        printf("Error: %d is not a function\n", func);
-    }
+    Int result = direct_interpret(vm, args, context);
 
     stack_free(*args);
     return result;
