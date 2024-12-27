@@ -1,10 +1,11 @@
-(26/12/2024) - version 0.7.1
+(27/12/2024) - version 0.7.1
 
 - new tree-walking math interpreter for indexes;
 - new function: group;
 - new operator, spread: ...;
 - @: operator removed, use group + spread instead;
 - new way to call functions: ($function ...), where the rest of the line is treated as a single string and passed as first argument;
+- bruter code can be run inside math, index, and condition interpreters using (:function etc)
 
 (24/12/2024) - version 0.7.0
 

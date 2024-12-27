@@ -125,9 +125,18 @@ char is(VirtualMachine *vm, char* str, HashList *context)
                 }
                 else if (splited->data[index][0] == '(')
                 {
-                    char* _str = str_sub(splited->data[index], 1, strlen(splited->data[index]) - 1);
-                    cond[step] = is(vm, _str, context);
-                    free(_str);
+                    if (splited->data[index][1] == ':')
+                    {
+                        char* _str = str_nduplicate(splited->data[index]+2, strlen(splited->data[index]) - 3);
+                        cond[step] = eval(vm, _str, context);
+                        free(_str);
+                    }
+                    else 
+                    {
+                        char* _str = str_sub(splited->data[index], 1, strlen(splited->data[index]) - 1);
+                        cond[step] = is(vm, _str, context);
+                        free(_str);
+                    }
                 }
                 else
                 {
@@ -171,9 +180,18 @@ Int solve_index(VirtualMachine *vm, char* token, HashList *context)
     }
     else if (token[0] == '(')
     {
-        char* _str = str_sub(token, 1, strlen(token) - 1);
-        result = imath(vm, _str, context);
-        free(_str);
+        if (token[1] == ':')
+        {
+            char* _str = str_nduplicate(token+2, strlen(token) - 3);
+            result = eval(vm, _str, context);
+            free(_str);
+        }
+        else
+        {
+            char* _str = str_sub(token, 1, strlen(token) - 1);
+            result = imath(vm, _str, context);
+            free(_str);
+        }
     }
     else
     {
@@ -277,9 +295,18 @@ Float solve_number(VirtualMachine *vm, char* token, HashList *context)
     }
     else if (token[0] == '(')
     {
-        char* _str = str_sub(token, 1, strlen(token) - 1);
-        result = math(vm, _str, context);
-        free(_str);
+        if (token[1] == ':')
+        {
+            char* _str = str_nduplicate(token+2, strlen(token) - 3);
+            result = data(eval(vm, _str, context)).number;
+            free(_str);
+        }
+        else
+        {
+            char* _str = str_sub(token, 1, strlen(token) - 1);
+            result = math(vm, _str, context);
+            free(_str);
+        }
     }
     else
     {
@@ -805,9 +832,7 @@ function(brl_std_math)
 {
     char* str = arg(0).string;
     char* _str = str_nduplicate(str, strlen(str));
-    printf("math: %s\n", _str);
     Int result = new_number(vm, math(vm, _str, context));
-    printf("result: %ld\n", result);
     free(_str);
     return result;
 }
