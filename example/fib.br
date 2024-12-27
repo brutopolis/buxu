@@ -9,6 +9,7 @@ hash.set "fib" (fn "n"
     (@@
         if cond1 ret1;
         if cond2 ret1;
+        print ($math n - 1);
         return (add (fib (sub n _1)) (fib (sub n _2)));
     )
 );
