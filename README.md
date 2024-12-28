@@ -53,4 +53,5 @@ bruter is a metaprogramable lightweight virtual machine;
 - `(@@ )` = string delimiter
 - `""` = string delimiter
 - `''` = string delimiter
+- `...` = spread operator
 - `;` = end of command separator

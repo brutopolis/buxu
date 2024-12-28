@@ -82,7 +82,7 @@
 #define stack_free(s) ({free((s).data);free(&s);})
 
 //swap elements from index i1 to index i2
-#define stack_move(s, i1, i2) do { \
+#define stack_swap(s, i1, i2) do { \
     typeof((s).data[i1]) tmp = (s).data[i1]; \
     (s).data[i1] = (s).data[i2]; \
     (s).data[i2] = tmp; \
@@ -118,6 +118,12 @@
     } \
     i == (s).size ? -1 : i; \
 })
+
+#define stack_reverse(s) do { \
+    for (Int i = 0; i < (s).size / 2; i++) { \
+        stack_swap((s), i, (s).size - i - 1); \
+    } \
+} while (0)
 
 //Value
 typedef union 
@@ -190,7 +196,6 @@ extern CharList* make_char_list();
 
 extern VirtualMachine* make_vm();
 extern void free_vm(VirtualMachine *vm);
-extern void free_var(VirtualMachine *vm, Int index);
 extern void unuse_var(VirtualMachine *vm, Int index);
 
 extern Int new_number(VirtualMachine *vm, Float number);

@@ -635,47 +635,37 @@ Int register_list(VirtualMachine *vm, char* varname)
 
 //frees
 
-void free_var(VirtualMachine *vm, Int index)
-{
-    switch (vm->typestack->data[index])
-    {
-        case TYPE_STRING:
-            free(vm->stack->data[index].string);
-            break;
-        case TYPE_LIST:
-            while (((IntList*)vm->stack->data[index].pointer)->size > 0)
-            {
-                stack_shift(*((IntList*)vm->stack->data[index].pointer));
-            }
-            stack_free(*((IntList*)vm->stack->data[index].pointer));
-            break;
-        case TYPE_FUNCTION:
-            for (Int i = 0; i < ((InternalFunction*)vm->stack->data[index].pointer)->varnames->size; i++)
-            {
-                free(((InternalFunction*)vm->stack->data[index].pointer)->varnames->data[i]);
-            }
-            stack_free(*((InternalFunction*)vm->stack->data[index].pointer)->varnames);
-            free(((InternalFunction*)vm->stack->data[index].pointer)->code);
-            free(vm->stack->data[index].pointer);
-            break;
-        default:
-            break;
-    }
-    
-    stack_remove(*vm->stack, index);
-    stack_remove(*vm->typestack, index);
-}
-
 void free_vm(VirtualMachine *vm)
 {
+    Value value;
     while (vm->stack->size > 0)
     {
-        free_var(vm, 0);
+        value = stack_pop(*vm->stack);
+        switch (stack_pop(*vm->typestack))
+        {
+            case TYPE_STRING:
+                free(value.string);
+                break;
+            case TYPE_LIST:
+                stack_free(*((IntList*)value.pointer));
+                break;
+            case TYPE_FUNCTION:
+                for (Int i = 0; i < ((InternalFunction*)value.pointer)->varnames->size; i++)
+                {
+                    free(((InternalFunction*)value.pointer)->varnames->data[i]);
+                }
+                stack_free(*((InternalFunction*)value.pointer)->varnames);
+                free(((InternalFunction*)value.pointer)->code);
+                free(value.pointer);
+                break;
+            default:
+                break;
+        }
     }
 
     while (vm->hashes->size > 0)
     {
-        Hash hash = stack_shift(*vm->hashes);
+        Hash hash = stack_pop(*vm->hashes);
         free(hash.key);
     }
 
@@ -689,62 +679,6 @@ void free_vm(VirtualMachine *vm)
     free(vm);
 }
 
-// interpreter core
-function(direct_interpret)
-{
-    Int func = stack_shift(*args);
-    Int result = -1;
-
-    if (func > -1 && vm->typestack->data[func] == TYPE_BUILTIN)
-    {
-        Function _function = vm->stack->data[func].pointer;
-        result = _function(vm, args, context);
-    }
-    else if (func > -1 && vm->typestack->data[func] == TYPE_FUNCTION)
-    {
-        InternalFunction *_func = (InternalFunction*)data(func).pointer;
-        HashList *_context = (HashList*)malloc(sizeof(HashList));
-        stack_init(*_context);
-
-        HashList *global_context = vm->hashes;
-
-        vm->hashes = _context;
-
-
-        for (Int i = 0; i < _func->varnames->size; i++)
-        {
-            hash_set(vm, _func->varnames->data[i], stack_shift(*args));
-        }
-        
-        if (args->size > 0)
-        {
-            Int etc = register_list(vm, "etc");
-            while (args->size > 0)
-            {
-                stack_push(*((IntList*)data(etc).pointer), stack_shift(*args));
-            }
-        }
-
-        vm->hashes = global_context;
-
-        result = eval(vm, _func->code, _context);
-        
-        
-        while (_context->size > 0)
-        {
-            Hash hash = stack_shift(*_context);
-            free(hash.key);
-        }
-
-        stack_free(*_context);
-    }
-    else 
-    {
-        printf("Error: %d is not a function\n", func);
-    }
-    return result;
-}
-
 // Parser functions
 IntList* parse(void *_vm, char *cmd, HashList *context) 
 {
@@ -752,10 +686,11 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
     IntList *result = make_int_list();
     
     StringList *splited = special_space_split(cmd);
+    stack_reverse(*splited);
     //Int current = 0;
     while (splited->size > 0)
     {
-        char* str = stack_shift(*splited);
+        char* str = stack_pop(*splited);
         if (str[0] == '(')
         {
             if(str[1] == '@' && str[2] == '@')//string
@@ -764,33 +699,6 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 temp[strlen(temp) - 1] = '\0';
                 Int var = new_string(vm, temp);
                 stack_push(*result, var);            
-            }
-            else if (str[1] == '/' && str[2] == '/') 
-            {
-                // comment
-            }
-            else if(str[1] == '$')
-            {
-                char* temp = str + 2;
-                // temp to next space
-                Int nextspace = str_find(temp, " ");
-                char* funcname = str_nduplicate(temp, nextspace);
-                temp += nextspace + 1;
-                char* code = str_sub(temp, 0, strlen(temp)-1);
-                Int __code = new_string(vm, code);
-                Int __func = hash_find(vm, funcname);
-                free(code);
-                Int __arglist = new_list(vm);
-                IntList *arglist = (IntList*)data(__arglist).pointer;
-                stack_push(*arglist, __func);
-                stack_push(*arglist, __code);
-
-                Int _result = direct_interpret(vm, arglist, context);
-                stack_push(*result, _result);
-                //frees
-                free(funcname);
-                unuse_var(vm, __arglist);
-                data_t(__arglist) = TYPE_NIL;
             }
             else
             {
@@ -881,8 +789,56 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
         stack_free(*args);
         return -1;
     }
-    Int result = direct_interpret(vm, args, context);
+    Int func = stack_shift(*args);
+    Int result = -1;
 
+    if (func > -1 && vm->typestack->data[func] == TYPE_BUILTIN)
+    {
+        Function _function = vm->stack->data[func].pointer;
+        result = _function(vm, args, context);
+    }
+    else if (func > -1 && vm->typestack->data[func] == TYPE_FUNCTION)
+    {
+        InternalFunction *_func = (InternalFunction*)data(func).pointer;
+        HashList *_context = (HashList*)malloc(sizeof(HashList));
+        stack_init(*_context);
+
+        HashList *global_context = vm->hashes;
+
+        vm->hashes = _context;
+
+
+        for (Int i = 0; i < _func->varnames->size; i++)
+        {
+            hash_set(vm, _func->varnames->data[i], stack_shift(*args));
+        }
+        
+        if (args->size > 0)
+        {
+            Int etc = register_list(vm, "etc");
+            while (args->size > 0)
+            {
+                stack_push(*((IntList*)data(etc).pointer), stack_shift(*args));
+            }
+        }
+
+        vm->hashes = global_context;
+
+        result = eval(vm, _func->code, _context);
+        
+        
+        while (_context->size > 0)
+        {
+            Hash hash = stack_shift(*_context);
+            free(hash.key);
+        }
+
+        stack_free(*_context);
+    }
+    else 
+    {
+        printf("Error: %d is not a function\n", func);
+    }
     stack_free(*args);
     return result;
 }
@@ -903,7 +859,7 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
         if (strlen(splited->data[last]) == 0)
         {
             free(splited->data[last]);
-            stack_remove(*splited, last);
+            stack_pop(*splited);
         }
         else
         {
@@ -915,18 +871,18 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
             if (splited->data[last][i] == '\0')
             {
                 free(splited->data[last]);
-                stack_remove(*splited, last);
+                stack_pop(*splited);
             }
         }
         last--;
     }
 
-
+    stack_reverse(*splited);
     Int result = -1;
     while (splited->size > 0)
     {
         
-        char *str = stack_shift(*splited);
+        char *str = stack_pop(*splited);
         if (strlen(str) == 0)
         {
             free(str);
@@ -938,7 +894,7 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
         {
             while (splited->size > 0)
             {
-                free(stack_shift(*splited));
+                free(stack_pop(*splited));
             }
             break;
         }

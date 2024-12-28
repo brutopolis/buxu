@@ -109,6 +109,11 @@ char is(VirtualMachine *vm, char* str, HashList *context)
                 }
                 else 
                 {
+                    for (Int i = 0; i < splited->size; i++)
+                    {
+                        free(splited->data[i]);
+                    }
+                    stack_free(*splited);
                     return condition_result;
                 }
 
@@ -125,18 +130,9 @@ char is(VirtualMachine *vm, char* str, HashList *context)
                 }
                 else if (splited->data[index][0] == '(')
                 {
-                    if (splited->data[index][1] == ':')
-                    {
-                        char* _str = str_nduplicate(splited->data[index]+2, strlen(splited->data[index]) - 3);
-                        cond[step] = eval(vm, _str, context);
-                        free(_str);
-                    }
-                    else 
-                    {
-                        char* _str = str_sub(splited->data[index], 1, strlen(splited->data[index]) - 1);
-                        cond[step] = is(vm, _str, context);
-                        free(_str);
-                    }
+                    char* _str = str_sub(splited->data[index], 1, strlen(splited->data[index]) - 1);
+                    cond[step] = is(vm, _str, context);
+                    free(_str);
                 }
                 else
                 {
@@ -163,6 +159,11 @@ char is(VirtualMachine *vm, char* str, HashList *context)
         }
         
     }
+    for (Int i = 0; i < splited->size; i++)
+    {
+        free(splited->data[i]);
+    }
+    stack_free(*splited);
     printf("error: misformed condition: %s\n", str);
     return -1;
 }
@@ -295,18 +296,9 @@ Float solve_number(VirtualMachine *vm, char* token, HashList *context)
     }
     else if (token[0] == '(')
     {
-        if (token[1] == ':')
-        {
-            char* _str = str_nduplicate(token+2, strlen(token) - 3);
-            result = data(eval(vm, _str, context)).number;
-            free(_str);
-        }
-        else
-        {
-            char* _str = str_sub(token, 1, strlen(token) - 1);
-            result = math(vm, _str, context);
-            free(_str);
-        }
+        char* _str = str_sub(token, 1, strlen(token) - 1);
+        result = math(vm, _str, context);
+        free(_str);
     }
     else
     {

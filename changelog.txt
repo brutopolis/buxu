@@ -1,3 +1,13 @@
+(28/12/2024) - version 0.7.1a
+
+- removed free_var function;
+- removed (:function) operator;
+- removed ($function) operator;
+- removed direct_interpreter function(merged with default_interpreter again);
+- renamed stack_move macro to stack_swap;
+- new macro stack_reverse;
+- stack_pop is now default instead of stack_shift, reverse the stack before if needed;
+
 (27/12/2024) - version 0.7.1
 
 - new tree-walking math interpreter for indexes;
@@ -5,14 +15,14 @@
 - new operator, spread: ...;
 - @: operator removed, use group + spread instead;
 - new way to call functions: ($function ...), where the rest of the line is treated as a single string and passed as first argument;
-- bruter code can be run inside math, index, and condition interpreters using (:function etc)
+- bruter code can be run inside math, index, and condition interpreters using (:function etc);
+- no more @+, @-, @> and @< operators, use group function instead;
 
 (24/12/2024) - version 0.7.0
 
 - no more @: operator;
 - new operators @+, @-, @> and @<;
 - no more (//) delimiter, use // instead;
-- proper commentary with // instead of (//) are now possible;
 - dycc.c removed, it will be a avaliable in a separated repository soon;
 - register_* functions removed;
 - spawn_* functions renamed to register_*;

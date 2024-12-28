@@ -5,13 +5,13 @@ hash.set "ret1" (@@return _1);
 hash.set "cond1" (@@n == _1);
 hash.set "cond2" (@@n == _2);
 hash.set "mem_buffer" (sector.new 8);
+hash.set "sub1" "n - 1";
+hash.set "sub2" "n - 2";
 hash.set "fib" (fn "n" 
     (@@
         if cond1 ret1;
         if cond2 ret1;
-        print ($math n - 1);
         return (add (fib (sub n _1)) (fib (sub n _2)));
     )
 );
 print (fib 20);
-ls;
