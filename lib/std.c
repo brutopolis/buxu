@@ -485,6 +485,7 @@ function(brl_os_file_size)
     return result;
 }
 
+#ifndef __wasm__
 function(brl_os_time_now)
 {
     return new_number(vm, time(NULL));
@@ -494,6 +495,7 @@ function(brl_os_time_clock)
 {
     return new_number(vm, clock());
 }
+#endif
 
 #endif
 
@@ -1585,8 +1587,10 @@ void init_os(VirtualMachine *vm)
     register_builtin(vm, "file.copy", brl_os_file_copy);
     register_builtin(vm, "file.size", brl_os_file_size);
 
+#ifndef __wasm__
     register_builtin(vm, "os.time", brl_os_time_now);
     register_builtin(vm, "os.clock", brl_os_time_clock);
+#endif
 
     register_builtin(vm, "dofile", brl_os_dofile);
     register_builtin(vm, "repl", brl_os_repl);

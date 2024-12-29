@@ -5,3 +5,4 @@ main
 valgrind-out.txt
 build/
 arduino/
+*.wasm

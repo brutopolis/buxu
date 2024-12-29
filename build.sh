@@ -14,6 +14,12 @@ cd build
 
 rm -rf bruter.a
 
+if [ -z "$CC" ]; then 
+    CC="gcc"
+fi
+
+echo "using $CC as compiler"
+
 if [ -n "$EXCLUDE" ]; then # EXCLUDE="filename.c" ./build.sh
     cd lib
     rm $EXCLUDE
@@ -24,7 +30,7 @@ fi
 #if all libs are excluded we don't need to do anything but build the main file
 if [ -z "$(ls -A lib)" ]; then
     echo "no libraries to build"
-    gcc ./include/main.c ./include/bruter.c -o bruter -O3 -lm -I./include
+    $CC ./include/main.c ./include/bruter.c -o bruter -O3 -lm -I./include
 else
     for file in ./lib/*.c; do
         filename="${file##*/}"  
@@ -35,11 +41,15 @@ else
         sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" lib/*.c
     done
     echo "building bruter"
-    gcc ./include/bruter.c -c -O3 -lm -I./include
-    gcc ./lib/*.c -c -O3 -lm -I./include 
+    if [ -n "$WASMCC" ]; then
+        $WASMCC -o bruter.wasm ./include/main.c ./include/bruter.c ./lib/*.c -O3 -lm -I./include
+        echo 'wasmtime --dir=. bruter.wasm $@' > run_bruter.sh && chmod +x run_bruter.sh
+    fi
+    $CC ./include/bruter.c -c -O3 -lm -I./include
+    $CC ./lib/*.c -c -O3 -lm -I./include 
     ar rcs lib/bruter.a *.o
     rm -rf lib/*.c lib/*.o
-    gcc ./include/main.c lib/*.a -o bruter -O3 -lm -ltcc
+    $CC ./include/main.c lib/*.a -o bruter -O3 -lm
 fi
 
 

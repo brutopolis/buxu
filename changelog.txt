@@ -1,3 +1,9 @@
+(29/12/2024) - version 0.7.1b
+
+- experimental wasm support, set WASMCC to a wasi-sdk clang path when calling build.sh to compile a bruter.wasm too;
+
+TODO: add a way to compile wasm for browser specific using emscripten in the build.sh;
+
 (28/12/2024) - version 0.7.1a
 
 - removed free_var function;
