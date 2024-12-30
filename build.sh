@@ -40,11 +40,23 @@ else
         sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" include/*.c 
         sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" lib/*.c
     done
+    
     echo "building bruter"
-    if [ -n "$WASMCC" ]; then
+
+    # experimental
+    if [ -n "$WASICC" ]; then
         $WASMCC -o bruter.wasm ./include/main.c ./include/bruter.c ./lib/*.c -O3 -lm -I./include
         echo 'wasmtime --dir=. bruter.wasm $@' > run_bruter.sh && chmod +x run_bruter.sh
     fi
+
+    # experimental
+    if [ -n "$EMCC" ]; then
+        mkdir web
+        cd web
+        $EMCC -o index.html ../include/main.c ../include/bruter.c ../lib/*.c -O3 -lm -I../include
+        cd ..
+    fi
+
     $CC ./include/bruter.c -c -O3 -lm -I./include
     $CC ./lib/*.c -c -O3 -lm -I./include 
     ar rcs lib/bruter.a *.o
