@@ -43,18 +43,26 @@ else
     
     echo "building bruter"
 
-    # experimental
+    if [ -n "$EMCC" ]; then
+        cp ../web ./ -r
+        cd web
+        $EMCC ../include/wasm.c \
+            ../include/bruter.c \
+            ../lib/std.c \
+            -o bruter_module.js \
+            -sEXPORTED_FUNCTIONS='["_main", "_wasm_new_vm", "_wasm_destroy_vm", "_wasm_eval", "_malloc", "_free"]' \
+            -sEXPORTED_RUNTIME_METHODS='["UTF8ToString", "stringToUTF8", "lengthBytesUTF8"]' \
+            -sNO_EXIT_RUNTIME=1 \
+            -O3 \
+            -lm \
+            -I../include
+        cd ..
+    fi
+
+    # experimental wasi support, working, but not tested, you might not want to use this
     if [ -n "$WASICC" ]; then
         $WASMCC -o bruter.wasm ./include/main.c ./include/bruter.c ./lib/*.c -O3 -lm -I./include
         echo 'wasmtime --dir=. bruter.wasm $@' > run_bruter.sh && chmod +x run_bruter.sh
-    fi
-
-    # experimental
-    if [ -n "$EMCC" ]; then
-        mkdir web
-        cd web
-        $EMCC -o index.html ../include/main.c ../include/bruter.c ../lib/*.c -O3 -lm -I../include
-        cd ..
     fi
 
     $CC ./include/bruter.c -c -O3 -lm -I./include

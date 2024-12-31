@@ -485,7 +485,7 @@ function(brl_os_file_size)
     return result;
 }
 
-#ifndef __wasm__
+#ifndef __EMSCRIPTEN__
 function(brl_os_time_now)
 {
     return new_number(vm, time(NULL));

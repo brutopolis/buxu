@@ -1,7 +1,6 @@
-(29/12/2024) - version 0.7.1b
+(31/12/2024) - version 0.7.2
 
-- experimental wasm support, set WASICC to wasi-sdk clang path when calling build.sh to compile a bruter.wasm too;
-- experimental wasm support, set EMCC to emscripten path when calling build.sh;
+- experimental web (wasm) support, set EMCC to emscripten path when calling build.sh, it will create the folder build/web;
 
 (28/12/2024) - version 0.7.1a
 
