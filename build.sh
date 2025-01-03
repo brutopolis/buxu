@@ -61,7 +61,7 @@ else
 
     # experimental wasi support, working, but not tested, you might not want to use this
     if [ -n "$WASICC" ]; then
-        $WASMCC -o bruter.wasm ./include/main.c ./include/bruter.c ./lib/*.c -O3 -lm -I./include
+        $WASICC -o bruter.wasm ./include/main.c ./include/bruter.c ./lib/*.c -O3 -lm -I./include
         echo 'wasmtime --dir=. bruter.wasm $@' > run_bruter.sh && chmod +x run_bruter.sh
     fi
 
