@@ -97,7 +97,8 @@ if [ -n "$EMCC" ]; then
         -O3 \
         -lm \
         -Wformat=0 \
-        -I../include $EMARGS $DEBUGARGS
+        -sALLOW_MEMORY_GROWTH=1 \
+        -I../include $DEBUGARGS
     
     cat ../src/bruter.js >> bruter.js
     cd ..
