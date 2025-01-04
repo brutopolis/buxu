@@ -57,12 +57,12 @@ bruter is a metaprogramable lightweight virtual machine;
 
   bruter include its own build script;
 
-  ### clean:
+  ### CLEAN:
 
     # build for the current system;
     ./build.sh
 
-  ### debug:
+  ### DEBUG:
 
     # this can also be used with WEB flag(add some debug flags to the wasm file);
     # this mostly checks for memory leaks and add some debug flags;
