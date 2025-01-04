@@ -1,6 +1,10 @@
-(31/12/2024) - version 0.7.2
+(04/01/2025) - version 0.7.2
 
-- experimental web (wasm) support, set EMCC to emscripten path when calling build.sh, it will create the folder build/web;
+- experimental web (wasm) support, set $EMCC to emscripten path when calling build.sh, it will create the folder build/web;
+- experimental WASI support, set $WASI to wasi path when calling build.sh, it will create the file build/bruter.wasm;
+- every build/prepare script have been merged into build.sh, use $INO and $DEBUG;
+- src is now copied to build/ instead copying it contents to include/
+- build instructions are now avaliable at README.md;
 
 (28/12/2024) - version 0.7.1a
 

@@ -77,15 +77,5 @@ char* wasm_eval(Int index, char *cmd)
     }
 }
 
-int main()
-{
-    vms = (VMList*)malloc(sizeof(VMList));
-    stack_init(*vms);
-    unused_vms = (IntList*)malloc(sizeof(IntList));
-    stack_init(*unused_vms);
-    
-    atexit(free_vms_atexit);
-    return 0;
-}
 
 #endif

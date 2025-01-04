@@ -3,7 +3,7 @@
 #ifndef ARDUINO
 
 // bruter header
-#include "./bruter.h"
+#include "../include/bruter.h"
 
 int main(int argc, char **argv)
 {

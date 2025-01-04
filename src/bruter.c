@@ -395,6 +395,7 @@ Int repl(VirtualMachine *vm)
     printf("repl returned: @%ld\n", result);
     print_element(vm, result);
     printf("\n");
+    return result;
 }
 
 // file functions
