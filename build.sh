@@ -76,6 +76,11 @@ else
 fi
 
 if [ -n "$EMCC" ]; then
+
+    if [ -z "$WOUT" ]; then
+        WOUT="bruter.js"
+    fi
+
     mkdir web
     cd web
     cp ../example/example.html ./index.html
@@ -83,7 +88,7 @@ if [ -n "$EMCC" ]; then
     $EMCC ../src/wasm_wrapper.c \
         ../src/bruter.c \
         ../lib/* \
-        -o bruter.js \
+        -o $WOUT \
         -s EXPORT_NAME="'_Bruter'" \
         -sEXPORTED_FUNCTIONS='["_wasm_new_vm", "_wasm_destroy_vm", "_wasm_eval", "_malloc", "_free"]' \
         -sEXPORTED_RUNTIME_METHODS='["UTF8ToString", "stringToUTF8", "lengthBytesUTF8"]' \
