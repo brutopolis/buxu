@@ -12,7 +12,7 @@
 #include <emscripten.h>
 #endif
 
-#define VERSION "0.7.2"
+#define VERSION "0.7.2a"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -152,6 +152,7 @@ typedef Stack(Hash) HashList;
 typedef Stack(char*) StringList;
 typedef Stack(Int) IntList;
 typedef Stack(char) CharList;
+
 
 typedef struct
 {

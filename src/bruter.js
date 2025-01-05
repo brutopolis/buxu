@@ -40,12 +40,14 @@ let bruter_loader = async function()
         return result;
     };
     
-    BruterAPI.new = () => {
-        let _vm = { index: _module._wasm_new_vm() };
+    BruterAPI.new = (index) => {
+        let _vm = { index: index || _module._wasm_new_vm() };
         _vm.eval = (code) => BruterAPI.eval(_vm.index, code);
         _vm.destroy = () => BruterAPI.destroy(_vm.index);
         return _vm;
     };
+
+    BruterAPI.module = _module;
 
     return BruterAPI;
 }

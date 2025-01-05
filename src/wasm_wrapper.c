@@ -77,5 +77,4 @@ char* wasm_eval(Int index, char *cmd)
     }
 }
 
-
 #endif

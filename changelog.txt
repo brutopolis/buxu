@@ -1,3 +1,7 @@
+(05/01/2025) - version 0.7.2a
+
+- minor changes;
+
 (04/01/2025) - version 0.7.2
 
 - experimental web (wasm) support, set $EMCC to emscripten path when calling build.sh, it will create the folder build/web;

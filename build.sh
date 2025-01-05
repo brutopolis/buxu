@@ -87,7 +87,7 @@ if [ -n "$EMCC" ]; then
     echo "building bruter-web"
     $EMCC ../src/wasm_wrapper.c \
         ../src/bruter.c \
-        ../lib/* \
+        ../lib/*.c \
         -o $WOUT \
         -s EXPORT_NAME="'_Bruter'" \
         -sEXPORTED_FUNCTIONS='["_wasm_new_vm", "_wasm_destroy_vm", "_wasm_eval", "_malloc", "_free"]' \
@@ -98,6 +98,7 @@ if [ -n "$EMCC" ]; then
         -lm \
         -Wformat=0 \
         -sALLOW_MEMORY_GROWTH=1 \
+        -L../lib \
         -I../include $DEBUGARGS
     
     cat ../src/bruter.js >> bruter.js
