@@ -1,6 +1,9 @@
 (05/01/2025) - version 0.7.2a
 
 - minor changes;
+- experimental bruter-build script;
+- wasm_wrapper.c merged into bruter.c;
+- bruter can now receive some arguments from the command line, use -h to see them;
 
 (04/01/2025) - version 0.7.2
 

@@ -7,6 +7,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <time.h>
+#include <unistd.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>

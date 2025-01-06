@@ -1,16 +1,20 @@
-# this is for linux, should work on macos and cygwin also, though I haven't tested it
+# this is for linux, should work on macos and mingw also, though I haven't tested it
 # in future i might add build scripts for other platforms
 
-rm -rf build
-mkdir build
-mkdir build/lib
-mkdir build/include
-mkdir build/example
-cp ./src build/src -r
-cp ./lib/* build/lib/ -r
-cp ./include/* build/include/ -r
-cp ./example/* build/example/ -r
-cd build
+if [ -z "$OUTPATH" ]; then 
+    OUTPATH=build
+fi
+
+rm -rf $OUTPATH
+mkdir $OUTPATH
+mkdir $OUTPATH/lib
+mkdir $OUTPATH/include
+mkdir $OUTPATH/example
+cp ./src $OUTPATH/src -r
+cp ./lib/* $OUTPATH/lib/ -r
+cp ./include/* $OUTPATH/include/ -r
+cp ./example/* $OUTPATH/example/ -r
+cd $OUTPATH
 
 rm -rf bruter.a
 
@@ -85,8 +89,7 @@ if [ -n "$EMCC" ]; then
     cd web
     cp ../example/example.html ./index.html
     echo "building bruter-web"
-    $EMCC ../src/wasm_wrapper.c \
-        ../src/bruter.c \
+    $EMCC ../src/bruter.c \
         ../lib/*.c \
         -o $WOUT \
         -s EXPORT_NAME="'_Bruter'" \
@@ -126,6 +129,8 @@ rm -rf lib/*.c
 rm -rf lib/*.o
 rm -rf src
 
+cp ../src/bruter-build ./bruter-build
+
 if [ -n "$DEBUG" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter $FILE
     ms_print massif.out.* > massif-out.txt
@@ -138,3 +143,5 @@ if [ -n "$DEBUG" ]; then
         --log-file=valgrind-out.txt \
         --verbose ./bruter $FILE
 fi
+
+cd ..

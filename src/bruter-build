@@ -1,0 +1,13 @@
+#!/bin/bash
+if [ -n "$EXPERIMENTAL" ]; then
+    EXPERIMENTAL="-b experimental"
+fi
+
+rm -rf bruter
+git clone https://github.com/jardimdanificado/bruter --depth 1 $EXPERIMENTAL
+cp lib/* bruter/lib/
+cp -r src/* bruter/src/
+cp -r include/* bruter/include/
+
+cd bruter
+source ./build.sh

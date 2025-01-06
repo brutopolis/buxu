@@ -10,8 +10,26 @@ int main(int argc, char **argv)
     StringList *args = make_string_list();
     for (int i = 1; i < argc; i++)
     {
-        stack_push(*args, argv[i]);
+        if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
+        {
+            printf("bruter v%s\n", VERSION);
+            return 0;
+        }
+        else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
+        {
+            printf("bruter v%s\n", VERSION);
+            printf("usage: %s [file]\n", argv[0]);
+            printf("  -v, --version\t\tprint version\n");
+            printf("  -h, --help\t\tprint this help\n");
+            //printf("  -b, --build\t\tbuild\n");
+            return 0;
+        }
+        else
+        {
+            stack_push(*args, argv[i]);
+        }
     }
+    
     VirtualMachine *vm = make_vm();
 
     // <libraries init>
