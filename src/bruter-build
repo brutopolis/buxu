@@ -3,11 +3,40 @@ if [ -n "$EXPERIMENTAL" ]; then
     EXPERIMENTAL="-b experimental"
 fi
 
+if [ -n "$CLEAN" ]; then
+    rm -rf build bruter
+fi
+
+#check if $OUTPUT already exists
+if [ -n "$OUTPUT" ]; then
+    if [ -d "$OUTPUT" ]; then
+        echo "Output directory already exists. Please remove it or choose another name."
+        exit 1
+    fi
+fi
+
 rm -rf bruter
-git clone https://github.com/jardimdanificado/bruter --depth 1 $EXPERIMENTAL
+
+if [ -z "$ORIGIN" ]; then
+    git clone https://github.com/jardimdanificado/bruter --depth 1 $EXPERIMENTAL
+else
+    cp -r $ORIGIN bruter
+fi
+
 cp lib/* bruter/lib/
 cp -r src/* bruter/src/
 cp -r include/* bruter/include/
 
 cd bruter
 source ./build.sh
+cd ..
+mv build ..
+cd ..
+
+if [ -n "$OUTPUT" ]; then
+    mv build $OUTPUT
+fi
+
+if [ -z "$KEEPBRUTER" ]; then
+    rm -rf bruter
+fi

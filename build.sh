@@ -87,7 +87,7 @@ if [ -n "$EMCC" ]; then
 
     mkdir web
     cd web
-    cp ../example/example.html ./index.html
+    cp ../src/index.html ./index.html
     echo "building bruter-web"
     $EMCC ../src/bruter.c \
         ../lib/*.c \

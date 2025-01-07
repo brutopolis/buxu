@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="EN-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <title>bruter web example</title>
+
+    </head>
+    <body>
+        <script src="./bruter.js"></script>
+        <script>
+            async function bruter_start()
+            {
+                window.Bruter = await Bruter;
+                window.vm = Bruter.new();
+                console.log("bruter is ready");
+                console.log("pretty simple right?");
+                //alert(vm.eval("return 'if you see this message, then it works, this message was returned by the bruter vm we just created'"));
+            }
+            bruter_start();
+        </script>
+    </body>
+</html>
