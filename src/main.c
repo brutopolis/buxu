@@ -63,9 +63,6 @@ int main(int argc, char **argv)
         hash_set(vm, "file.path", filepathindex);
         Int result = eval(vm, _code, NULL);
         free(_code);
-        char * str = str_format("print 'returned:' @%d", result);
-        eval(vm, str, NULL);
-        free(str);
     }
     stack_free(*args);
     free_vm(vm);

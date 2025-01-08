@@ -1,9 +1,12 @@
-(05/01/2025) - version 0.7.2a
+(08/01/2025) - version 0.7.3
 
 - minor changes;
 - experimental bruter-build script;
 - wasm_wrapper.c merged into bruter.c;
 - bruter can now receive some arguments from the command line, use -h to see them;
+- new std functions for conditions, brl_std_equals, brl_std_not_equals, brl_std_greater_than, brl_std_less_than, brl_std_greater_or_equals, brl_std_less_or_equals, brl_std_and, brl_std_or, brl_std_not, brl_std_xor;
+- note: new condition functions return 0 or 1, it does NOT create a new variable, keep that in mind;
+- reduced std_group operators to 4: to, from, + and -;
 
 (04/01/2025) - version 0.7.2
 

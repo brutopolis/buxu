@@ -392,7 +392,7 @@ Int repl(VirtualMachine *vm)
         free(cmd);
     }
 
-    printf("repl returned: @%ld\n", result);
+    printf("repl returned: [@%ld]", result);
     print_element(vm, result);
     printf("\n");
     return result;

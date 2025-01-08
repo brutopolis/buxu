@@ -10,7 +10,7 @@ fi
 #check if $OUTPUT already exists
 if [ -n "$OUTPUT" ]; then
     if [ -d "$OUTPUT" ]; then
-        echo "Output directory already exists. Please remove it or choose another name."
+        echo "output directory already exists. Please remove it or choose another name."
         exit 1
     fi
 fi
