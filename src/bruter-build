@@ -4,7 +4,7 @@ if [ -n "$EXPERIMENTAL" ]; then
 fi
 
 if [ -n "$CLEAN" ]; then
-    rm -rf build bruter
+    rm -rf build bruter $OUTPUT
 fi
 
 #check if $OUTPUT already exists
