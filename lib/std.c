@@ -1294,7 +1294,7 @@ function(brl_std_is)
 {
     char* str = arg(0).string;
     char* _str = str_nduplicate(str, strlen(str));
-    Int result = new_number(vm, is(vm, _str, context));
+    Int result = is(vm, _str, context);
     free(_str);
     return result;
 }

@@ -21,7 +21,6 @@ int main(int argc, char **argv)
             printf("usage: %s [file]\n", argv[0]);
             printf("  -v, --version\t\tprint version\n");
             printf("  -h, --help\t\tprint this help\n");
-            //printf("  -b, --build\t\tbuild\n");
             return 0;
         }
         else
