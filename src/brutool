@@ -1,0 +1,120 @@
+#!/bin/bash
+
+# Inicializa as variáveis com valores padrão
+EXPERIMENTAL=""
+CLEAN=""
+OUTPUT=""
+ORIGIN=""
+KEEPBRUTER=""
+OPERATION=""
+
+# Processa os argumentos passados ao script
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --experimental)
+            EXPERIMENTAL="-b experimental"
+            ;;
+        --clean)
+            CLEAN="1"
+            ;;
+        --output | -o)
+            OUTPUT="$2"
+            shift
+            ;;
+        --origin)
+            ORIGIN="$2"
+            shift
+            ;;
+        --keep)
+            KEEPBRUTER="1"
+            ;;
+        build)
+            OPERATION="build"
+            ;;
+        new)
+            OPERATION="new"
+            OUTPUT="$2"
+            shift
+            ;;
+        *)
+            echo "unknown option: $1"
+            echo "usage: $0 [build|new] [options]"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+if [ "$OPERATION" = "build" ]; then
+
+    if [ -n "$CLEAN" ]; then
+        rm -rf build bruter "$OUTPUT"
+    fi
+
+    # Verifica se $OUTPUT já existe
+    if [ -n "$OUTPUT" ]; then
+        if [ -d "$OUTPUT" ]; then
+            echo "the given directory already exists."
+            exit 1
+        fi
+    fi
+
+    rm -rf bruter
+
+    if [ -z "$ORIGIN" ]; then
+        git clone https://github.com/jardimdanificado/bruter --depth 1 $EXPERIMENTAL
+    else
+        cp -r "$ORIGIN" bruter
+    fi
+
+    cp lib/* bruter/lib/
+    cp -r src/* bruter/src/
+    cp -r include/* bruter/include/
+
+    cd bruter
+    source ./build.sh
+    cd ..
+    mv build ..
+    cd ..
+
+    if [ -n "$OUTPUT" ]; then
+        mv build "$OUTPUT"
+    fi
+
+    if [ -z "$KEEPBRUTER" ]; then
+        rm -rf bruter
+    fi
+
+    echo "project built at $OUTPUT"
+elif [ "$OPERATION" = "new" ]; then
+    if [ -z "$OUTPUT" ]; then
+        echo "please provide a name for the new project"
+        exit 1
+    fi
+
+    if [ -d "$OUTPUT" ]; then
+        echo "directory already exists. please remove it or choose another name."
+        exit 1
+    fi
+
+    mkdir "$OUTPUT"
+    cd "$OUTPUT"
+    mkdir src include lib
+    #example lib file
+    echo "function(example_function)\
+    {\
+    // code goes here...\
+    }\
+    \
+    init(example)\
+    {\
+        register_function(vm,\"example.function\",example_function)\
+    }" > lib/example.c
+    
+    cd ..
+    echo "project created at $OUTPUT"
+else
+    echo "unknown operation"
+    echo "usage: $0 [build|new] [options]"
+    exit 1
+fi

@@ -129,7 +129,7 @@ rm -rf lib/*.c
 rm -rf lib/*.o
 rm -rf src
 
-cp ../src/bruter-build ./bruter-build
+cp ../src/brutool ./brutool
 
 if [ -n "$DEBUG" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter $FILE
