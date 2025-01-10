@@ -1,6 +1,6 @@
 
 hash.set "_size" 100000;
 hash.set "___index" 0;
-while "___index < _size"
+while.is "___index < _size"
 "incr ___index;print ___index";
 return 0;

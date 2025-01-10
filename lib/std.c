@@ -1195,7 +1195,7 @@ function(brl_std_condition_or)
     return result;
 }
 
-function(brl_std_condition_if)
+function(brl_std_condition_if_is)
 {
     Int result = -1;
     if (is(vm, arg(0).string, context))
@@ -1206,10 +1206,35 @@ function(brl_std_condition_if)
     return result;
 }
 
-function(brl_std_condition_ifelse)
+function(brl_std_condition_ifelse_is)
 {
     Int result = -1;
     if (is(vm, arg(0).string, context))
+    {
+        result = eval(vm, arg(1).string, context);
+    }
+    else
+    {
+        result = eval(vm, arg(2).string, context);
+    }
+    return result;
+}
+
+function(brl_std_condition_if)
+{
+    Int result = -1;
+    if (eval(vm, arg(0).string, context))
+    {
+        result = eval(vm, arg(1).string, context);
+
+    }
+    return result;
+}
+
+function(brl_std_condition_ifelse)
+{
+    Int result = -1;
+    if (eval(vm, arg(0).string, context))
     {
         result = eval(vm, arg(1).string, context);
     }
@@ -1382,6 +1407,21 @@ function(brl_std_group)//group interpreter
 // std loop
 
 function(brl_std_loop_while)
+{
+    Int result = -1;
+    while (eval(vm, arg(0).string, context))
+    {
+        result = eval(vm, arg(1).string, context);
+
+        if (result >= 0)
+        {
+            break;
+        }
+    }
+    return result;
+}
+
+function(brl_std_loop_while_is)
 {
     Int result = -1;
     while (is(vm, arg(0).string, context))
@@ -1665,6 +1705,8 @@ void init_loop(VirtualMachine *vm)
     register_builtin(vm, "while", brl_std_loop_while);
     register_builtin(vm, "repeat", brl_std_loop_repeat);
     register_builtin(vm, "each", brl_std_loop_each);
+
+    register_builtin(vm, "while.is", brl_std_loop_while_is);
 }
 
 void init_hash(VirtualMachine *vm)
@@ -1711,6 +1753,7 @@ void init_string(VirtualMachine *vm)
 void init_condition(VirtualMachine *vm)
 {
     register_builtin(vm, "or", brl_std_condition_or);
+    
     register_builtin(vm, "if", brl_std_condition_if);
     register_builtin(vm, "ifelse", brl_std_condition_ifelse);
 
@@ -1729,6 +1772,9 @@ void init_condition(VirtualMachine *vm)
 
     // slow
     register_builtin(vm, "is", brl_std_is);
+    register_builtin(vm, "if.is", brl_std_condition_if_is);
+    register_builtin(vm, "ifelse.is", brl_std_condition_ifelse_is);
+
 }
 
 void init_list(VirtualMachine *vm)

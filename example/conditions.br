@@ -1,6 +1,6 @@
 hash.set 'a' 88;
 hash.set 'b' 99;
-ifelse 'a == b' (@@
+ifelse.is 'a == b' (@@
     print 'a == b';
 )
 (@@

@@ -9,8 +9,8 @@ hash.set "sub1" "n - 1";
 hash.set "sub2" "n - 2";
 hash.set "fib" (fn "n" 
     (@@
-        if cond1 ret1;
-        if cond2 ret1;
+        if.is cond1 ret1;
+        if.is cond2 ret1;
         return (add (fib (sub n _1)) (fib (sub n _2)));
     )
 );
