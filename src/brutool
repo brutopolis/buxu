@@ -101,14 +101,25 @@ elif [ "$OPERATION" = "new" ]; then
     cd "$OUTPUT"
     mkdir src include lib
     #example lib file
-    echo "function(example_function)\
-    {\
-    // code goes here...\
-    }\
-    \
-    init(example)\
-    {\
-        register_function(vm,\"example.function\",example_function)\
+    echo "#include \"bruter.h\"
+
+    function(example_function)
+
+    {
+
+        // code goes here...
+
+        return -1;
+
+    }
+    
+
+    init(example)
+
+    {
+
+        register_builtin(vm,\"example.function\",example_function);
+
     }" > lib/example.c
     
     cd ..
