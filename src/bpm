@@ -1,0 +1,202 @@
+#!/bin/bash
+
+# Inicializa as variáveis com valores padrão
+EXPERIMENTAL=""
+OUTPUT=""
+OPERATION=""
+REPOSRC="https://github.com/"
+REPO=""
+BRANCH=""
+ARGS=""
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --experimental)
+            EXPERIMENTAL="-b experimental"
+            ;;
+        --output | -o)
+            OUTPUT="$2"
+            shift
+            ;;
+        --origin)
+            rm -rf ./bruter
+            cp -rf $2 .
+            shift
+            ;;
+        --branch | -b)
+            BRANCH="-b $2"
+            shift
+            ;;
+        --git)
+            REPOSRC="$2"
+            shift
+            ;;
+        --args)
+            ARGS="$2"
+            shift
+            ;;
+        --help | -h | help)
+            echo "usage: bpm [install|remove|build|new] [options]"
+            echo "options:"
+            echo "  --experimental: use the experimental branch of bruter"
+            echo "  --output, -o: specify the output directory"
+            echo "  --origin: specify the origin of the project"
+            echo "  --branch, -b: specify the branch of the project"
+            echo "  --git: specify the git repository"
+
+            echo "  --help, -h: show this help message"
+            exit 0
+            ;;
+        install)
+            OPERATION="install"
+            REPO="$2"
+            shift
+            ;;
+        remove)
+            OPERATION="remove"
+            REPO="$2"
+            shift
+            ;;
+        build)
+            OPERATION="build"
+            ;;
+        new)
+            OPERATION="new"
+            OUTPUT="$2"
+            shift
+            ;;
+        *)
+            echo "unknown option: $1"
+            echo "usage: $0 [build|new] [options]"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+if [ "$OPERATION" = "build" ]; then
+
+    rm -rf build "$OUTPUT"
+
+    if [ -n "$OUTPUT" ]; then
+        if [ -d "$OUTPUT" ]; then
+            echo "the given directory already exists."
+            exit 1
+        fi
+    fi
+
+    if [ -d "bruter" ]; then
+        echo "using pre-existing bruter folder"
+    else
+        git clone https://github.com/jardimdanificado/bruter --depth 1 $EXPERIMENTAL
+    fi
+
+    # if folder modules exists copy the contents of lib, src and include of each folder that is inside modules to bruter folder
+    if [ -d ".modules" ]; then
+        for author in ./.modules/*; do
+            for package in ./.modules/$author/*; do
+                cp -r $author/$package/lib/* bruter/lib/
+                cp -r $author/$package/src/* bruter/src/
+                cp -r $author/$package/include/* bruter/include/
+            done
+        done
+    fi
+
+    cp -r lib/* bruter/lib/
+    cp -r src/* bruter/src/
+    cp -r include/* bruter/include/
+
+    cd bruter
+    source ./build.sh
+    mv build ..
+    cd ..
+
+    if [ -n "$OUTPUT" ]; then
+        mv build "$OUTPUT"
+    fi
+
+    if [ "$OUTPUT" == "" ]; then 
+        echo "project built at ./build"
+    else
+        echo "project built at $OUTPUT"
+    fi
+
+elif [ "$OPERATION" = "new" ]; then
+    if [ -z "$OUTPUT" ]; then
+        echo "please provide a name for the new project"
+        exit 1
+    fi
+
+    if [ -d "$OUTPUT" ]; then
+        echo "directory already exists. please remove it or choose another name."
+        exit 1
+    fi
+
+    mkdir "$OUTPUT"
+    cd "$OUTPUT"
+    mkdir src include lib
+    #example lib file
+    echo "#include \"bruter.h\"
+
+    function(example_function)
+
+    {
+
+        // code goes here...
+
+        return -1;
+
+    }
+    
+
+    init(example)
+
+    {
+
+        register_builtin(vm,\"example.function\",example_function);
+
+    }" > lib/example.c
+
+    echo "name: \"modulename\";
+version: \"version\";
+description: \"whatever\";
+dependencies: 
+" > package.br;
+    
+    cd ..
+    echo "project created at $OUTPUT"
+elif [ "$OPERATION" = "install" ]; then
+
+    if [ -z "$REPO" ]; then
+        echo "please provide a repository to install"
+        exit 1
+    fi
+
+    if [ -d ".modules" ]; then
+        cd .modules
+        git clone $REPOSRC$REPO $REPO $BRANCH $ARGS
+        cd ..
+    else
+        mkdir .modules
+        cd .modules
+        git clone $REPOSRC$REPO $REPO $BRANCH $ARGS
+        cd ..
+    fi
+
+    # concat the author and package name to the package.br file
+    echo "\"$REPO\" " >> package.br
+elif [ "$OPERATION" = "remove" ]; then
+    if [ -z "$REPO" ]; then
+        echo "please provide a repository to remove"
+        exit 1
+    fi
+
+    rm -rf .modules/$REPO
+    
+    # remove the author and package name from the package.br file
+    sed -i "s|\"$REPO\"||g" package.br
+else
+    echo "unknown operation"
+    echo "usage: bpm [install|remove|build|new] [options]"
+    exit 1
+fi

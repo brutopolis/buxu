@@ -102,7 +102,7 @@ if [ -n "$EMCC" ]; then
         -Wformat=0 \
         -sALLOW_MEMORY_GROWTH=1 \
         -L../lib \
-        -I../include $DEBUGARGS
+        -I../include $DEBUGARGS $EMCCARGS
     
     cat ../src/bruter.js >> bruter.js
     cd ..
@@ -129,7 +129,7 @@ rm -rf lib/*.c
 rm -rf lib/*.o
 rm -rf src
 
-cp ../src/brutool ./brutool
+cp ../src/bpm ./bpm
 
 if [ -n "$DEBUG" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter $FILE
