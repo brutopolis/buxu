@@ -4,7 +4,7 @@
 ## Description
 
 
-bruter is a metaprogramable lightweight virtual machine;
+bruter is a metaprogramable lightweight virtual machine/interpreted programming language;
 
 *`UNDER HEAVY DEVELOPMENT`*
 
@@ -17,6 +17,7 @@ bruter is a metaprogramable lightweight virtual machine;
     - [description](#description)
     - [table of contents](#table-of-contents)
     - [arg types](#arg-types)
+    - [reserved](#reserved)
     - [usage](#usage)
     - [building instructions](#building-instructions)
       - [clean](#clean)
@@ -24,7 +25,12 @@ bruter is a metaprogramable lightweight virtual machine;
       - [wasi](#wasi)
       - [web](#web)
       - [arduino](#arduino)
-    - [reserved](#reserved)
+  - [bruter package manager](#bruter-package-manager)
+    - [new](#new)
+    - [build](#build)
+    - [install](#install)
+    - [remove](#remove)
+    - [help](#help)
 
 
 
@@ -39,6 +45,22 @@ bruter is a metaprogramable lightweight virtual machine;
 
 - `nil` = nil;
 
+## Reserved
+
+- `()` = expression
+
+- `(@@ )` = string delimiter
+
+- `""` = string delimiter
+
+- `''` = string delimiter
+
+- `...` = spread operator
+
+- `;` = end of command separator
+
+- `//` = comment
+
 ## Usage
 
     function;
@@ -52,7 +74,17 @@ bruter is a metaprogramable lightweight virtual machine;
     repeat amount "code";
     while "condition" "code";
     each list "name" "code";
-    
+    ...a_list; // spread operator;
+    // comment;
+    function "string";
+    function 'string';
+    function (@@ string);
+    if "condition" "code";
+    if.is "condition" "code";
+    ifelse "condition" "code" "code";
+    ifelse.is "condition" "code" "code";
+    function (group "from x to y");
+
 ## Building instructions
 
   bruter include its own build script;
@@ -88,12 +120,38 @@ bruter is a metaprogramable lightweight virtual machine;
 
   note that, the clean build is always compiled, even with WASI, INO, or WEB flags;
 
+# bruter package manager
 
-## Reserved
+  bpm(bruter package manager) is a simple package manager for bruter, heavily based in git, the packages doesnt have any centralized repository yet, therefore they can be stored in any git repository, also, there is no global install or such, the packages are installed locally in the current directory;
 
-- `()` = expression
-- `(@@ )` = string delimiter
-- `""` = string delimiter
-- `''` = string delimiter
-- `...` = spread operator
-- `;` = end of command separator
+  it does only have few commands: new, build, install and remove(and help);
+
+  ## new
+
+    bpm new package_name
+  
+  creates a new package in the current directory at package_name folder;
+
+  ## build
+
+    bpm build package_name
+
+  builds bruter with the packages;
+
+  ## install
+
+    bpm install package_name
+
+  installs the package in the current directory(into .modules folder);
+
+  ## remove
+
+    bpm remove package_name
+
+  removes the package from the current directory(from .modules folder);
+
+  ## help
+
+    bpm help
+
+  shows the help message;

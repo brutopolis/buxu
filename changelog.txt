@@ -1,6 +1,7 @@
-(10/01/2025) - version 0.7.3
+(11/01/2025) - version 0.7.3
 
 - minor changes;
+- README.md updated;
 - experimental bruter "package manager": bpm;
 - wasm_wrapper.c merged into bruter.c;
 - bruter can now receive some arguments from the command line, use -h to see them;
@@ -8,6 +9,7 @@
 - condition functions now does return @0 or @1, it does NOT create a new variable, keep that in mind;
 - reduced std_group operators to 4: to, from, + and -;
 - new std functions: std_loop_while_is, std_condition_if_is, std_condition_ifelse_is;
+- new lib: pkg, used to deal with package.br file;
 
 (04/01/2025) - version 0.7.2
 
