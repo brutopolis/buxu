@@ -157,8 +157,8 @@ elif [ "$OPERATION" = "new" ]; then
 
     }" > lib/example.c
 
-    echo "name: \"modulename\";
-version: \"version\";
+    echo "name: \"$OUTPUT\";
+version: \"0.0.0";
 description: \"whatever\";
 dependencies: 
 " > package.br;

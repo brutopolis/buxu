@@ -124,7 +124,9 @@ bruter is a metaprogramable lightweight virtual machine/interpreted programming 
 
   bpm(bruter package manager) is a simple package manager for bruter, heavily based in git, the packages doesnt have any centralized repository yet, therefore they can be stored in any git repository, also, there is no global install or such, the packages are installed locally in the current directory;
 
-  it does only have few commands: new, build, install and remove(and help);
+  note: for now bpm does not solve any dependencies at all, but it is stored in the package.br so you can do it manually;
+
+  bpm have just a few commands: new, build, install and remove(and help);
 
   ## new
 
@@ -154,4 +156,4 @@ bruter is a metaprogramable lightweight virtual machine/interpreted programming 
 
     bpm help
 
-  shows the help message;
+  shows the help message, good to see the options;
