@@ -76,13 +76,10 @@ done
 
 if [ "$OPERATION" = "build" ]; then
 
-    rm -rf build "$OUTPUT"
+    rm -rf "$OUTPUT" build
 
-    if [ -n "$OUTPUT" ]; then
-        if [ -d "$OUTPUT" ]; then
-            echo "the given directory already exists."
-            exit 1
-        fi
+    if [ -d "$OUTPUT" ]; then
+        rm -rf "$OUTPUT" 
     fi
 
     if [ -d "bruter" ]; then
@@ -94,11 +91,9 @@ if [ "$OPERATION" = "build" ]; then
     # if folder modules exists copy the contents of lib, src and include of each folder that is inside modules to bruter folder
     if [ -d ".modules" ]; then
         for author in ./.modules/*; do
-            for package in ./.modules/$author/*; do
-                cp -r $author/$package/lib/* bruter/lib/
-                cp -r $author/$package/src/* bruter/src/
-                cp -r $author/$package/include/* bruter/include/
-            done
+            cp -r $author/*/lib/* bruter/lib/
+            cp -r $author/*/src/* bruter/src/
+            cp -r $author/*/include/* bruter/include/
         done
     fi
 
@@ -138,27 +133,20 @@ elif [ "$OPERATION" = "new" ]; then
     #example lib file
     echo "#include \"bruter.h\"
 
-    function(example_function)
+function(example_function)
+{
+    // code goes here...
+    return -1;
+}
 
-    {
+init(example)
+{
+    register_builtin(vm,\"example.function\",example_function);
 
-        // code goes here...
-
-        return -1;
-
-    }
-    
-
-    init(example)
-
-    {
-
-        register_builtin(vm,\"example.function\",example_function);
-
-    }" > lib/example.c
+}" > lib/example.c
 
     echo "name: \"$OUTPUT\";
-version: \"0.0.0";
+version: \"0.0.0\";
 description: \"whatever\";
 dependencies: 
 " > package.br;

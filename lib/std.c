@@ -223,7 +223,8 @@ Int imath(VirtualMachine *vm, char* str, HashList *context)
     Int a = 0;
     Int b = 0;
     StringList *splited = special_split(str, ' ');
-    char* token = stack_shift(*splited);
+    stack_reverse(*splited);
+    char* token = stack_pop(*splited);
     char operator = 0;
 
     a = solve_index(vm, token, context);
@@ -231,10 +232,10 @@ Int imath(VirtualMachine *vm, char* str, HashList *context)
     
     while (splited->size > 0)
     {
-        token = stack_shift(*splited);
+        token = stack_pop(*splited);
         operator = token[0];
         free(token);
-        token = stack_shift(*splited);
+        token = stack_pop(*splited);
         b = solve_index(vm, token, context);
         free(token);
         switch (operator)
@@ -329,18 +330,19 @@ Float math(VirtualMachine *vm, char* str, HashList *context)
     Float a = 0;
     Float b = 0;
     StringList *splited = special_split(str, ' ');
-    char* token = stack_shift(*splited);
+    stack_reverse(*splited);
+    char* token = stack_pop(*splited);
     char operator = 0;
-
+    
     a = solve_number(vm, token, context);
     free(token);
     
     while (splited->size > 0)
     {
-        token = stack_shift(*splited);
+        token = stack_pop(*splited);
         operator = token[0];
         free(token);
-        token = stack_shift(*splited);
+        token = stack_pop(*splited);
         b = solve_number(vm, token, context);
         free(token);
         switch (operator)
@@ -671,9 +673,10 @@ function(brl_std_function)
 {
     StringList *varnames = (StringList*)malloc(sizeof(StringList));
     stack_init(*varnames);
+    stack_reverse(*args);
     while (args->size > 1)
     {
-        stack_push(*varnames, str_duplicate(data(stack_shift(*args)).string));
+        stack_push(*varnames, str_duplicate(data(stack_pop(*args)).string));
     }
 
     char *code = str_duplicate(arg(args->size - 1).string);
@@ -838,6 +841,15 @@ function(brl_std_imath)
     Int result = imath(vm, _str, context);
     free(_str);
     return result;
+}
+
+function(brl_std_inplace)
+{
+    char* str = arg(1).string;
+    char* _str = str_nduplicate(str, strlen(str));
+    arg(0).number = math(vm, _str, context);
+    free(_str);
+    return -1;
 }
 
 
@@ -1084,7 +1096,8 @@ function(brl_std_string_length)
 
 function(brl_std_string_format)
 {
-    Int str = stack_shift(*args);
+    stack_reverse(*args);
+    Int str = stack_pop(*args);
     Int result = -1;
     char* _str = str_duplicate(data(str).string);
     for (Int i = 0; i < strlen(_str); i++)
@@ -1093,7 +1106,7 @@ function(brl_std_string_format)
         {
             if (_str[i+1] == 'd')
             {
-                Int value = stack_shift(*args);
+                Int value = stack_pop(*args);
                 char* _value = str_format("%ld", (Int)data(value).number);
                 char* _newstr = str_replace(_str, "\%d", _value);
                 free(_str);
@@ -1101,7 +1114,7 @@ function(brl_std_string_format)
             }
             else if (_str[i+1] == 's')
             {
-                Int value = stack_shift(*args);
+                Int value = stack_pop(*args);
                 char* _value = data(value).string;
                 char* _newstr = str_replace(_str, "\%s", _value);
                 free(_str);
@@ -1109,7 +1122,7 @@ function(brl_std_string_format)
             }
             else if (_str[i+1] == 'f')
             {
-                Int value = stack_shift(*args);
+                Int value = stack_pop(*args);
                 char* _value = str_format("%f", data(value).number);
                 char* _newstr = str_replace(_str, "\%f", _value);
                 free(_str);
@@ -1117,7 +1130,7 @@ function(brl_std_string_format)
             }
             else if (_str[i+1] == 'p')
             {
-                Int value = stack_shift(*args);
+                Int value = stack_pop(*args);
                 char* _value = str_format("%p", data(value).pointer);
                 char* _newstr = str_replace(_str, "\%p", _value);
                 free(_str);
@@ -1157,6 +1170,29 @@ function(brl_std_string_format)
     data_t(result) = TYPE_STRING;
     return result;
 }
+
+function(brl_std_string_set)
+{
+    Int str = arg_i(0);
+    Int index = arg(1).number;
+    Int value = arg_i(2);
+    if (arg_t(0) == TYPE_STRING)
+    {
+        char* _str = data(str).string;
+        if (index >= 0 && index < strlen(_str))
+        {
+            _str[index] = data(value).number;
+        }
+        else 
+        {
+            printf("error: index %d out of range in string %d of size %d\n", index, str, strlen(_str));
+            print_element(vm, str);
+        }
+    }
+    return -1;
+}
+
+
 
 // std conditions
 // std conditions
@@ -1326,7 +1362,8 @@ function(brl_std_is)
 
 function(brl_std_group)//group interpreter
 {
-    Int _str = stack_shift(*args);
+    stack_reverse(*args);
+    Int _str = stack_pop(*args);
     StringList *splited = special_split(data(_str).string, ' ');
 
     Int lst = new_list(vm);
@@ -1337,29 +1374,29 @@ function(brl_std_group)//group interpreter
     to = vm->stack->size-1;
     while (splited->size > 0)
     {
-        char* str = stack_shift(*splited);
+        char* str = stack_pop(*splited);
         if (strcmp(str, "from") == 0)
         {
             free(str);
-            str = stack_shift(*splited);
+            str = stack_pop(*splited);
             from = atoi(str);
         }
         else if (strcmp(str, "to") == 0)
         {
             free(str);
-            str = stack_shift(*splited);
+            str = stack_pop(*splited);
             to = atoi(str);
         }
         else if (strcmp(str, "+") == 0)
         {
             free(str);
-            str = stack_shift(*splited);
+            str = stack_pop(*splited);
             to = from + atoi(str);
         }
         else if (strcmp(str, "-") == 0)
         {
             free(str);
-            str = stack_shift(*splited);
+            str = stack_pop(*splited);
             to = from - atoi(str);
         }
         free(str);
@@ -1735,10 +1772,12 @@ void init_math(VirtualMachine *vm)
     register_builtin(vm, "decr", brl_std_math_decrement);
     register_builtin(vm, "math", brl_std_math);
     register_builtin(vm, "index", brl_std_imath);
+    register_builtin(vm, "inplace", brl_std_inplace);
 }
 
 void init_string(VirtualMachine *vm)
 {
+    register_builtin(vm, "string.set", brl_std_string_set);
     register_builtin(vm, "string.sub", brl_std_string_ndup);
     register_builtin(vm, "string.find", brl_std_string_find);
     register_builtin(vm, "string.len", brl_std_string_length);

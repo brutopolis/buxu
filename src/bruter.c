@@ -804,6 +804,8 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
         HashList *_context = (HashList*)malloc(sizeof(HashList));
         stack_init(*_context);
 
+        stack_reverse(*args);
+
         HashList *global_context = vm->hashes;
 
         vm->hashes = _context;
@@ -811,7 +813,7 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
 
         for (Int i = 0; i < _func->varnames->size; i++)
         {
-            hash_set(vm, _func->varnames->data[i], stack_shift(*args));
+            hash_set(vm, _func->varnames->data[i], stack_pop(*args));
         }
         
         if (args->size > 0)
@@ -819,7 +821,7 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
             Int etc = register_list(vm, "etc");
             while (args->size > 0)
             {
-                stack_push(*((IntList*)data(etc).pointer), stack_shift(*args));
+                stack_push(*((IntList*)data(etc).pointer), stack_pop(*args));
             }
         }
 
@@ -827,10 +829,9 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
 
         result = eval(vm, _func->code, _context);
         
-        
         while (_context->size > 0)
         {
-            Hash hash = stack_shift(*_context);
+            Hash hash = stack_pop(*_context);
             free(hash.key);
         }
 
