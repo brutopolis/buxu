@@ -4,8 +4,7 @@
 EXPERIMENTAL=""
 OUTPUT=""
 OPERATION=""
-REPOSRC="https://github.com/"
-REPO=""
+REPO="https://github.com/jardimdanificado/bpm_packages"
 BRANCH=""
 ARGS=""
 
@@ -27,8 +26,8 @@ while [ "$#" -gt 0 ]; do
             BRANCH="-b $2"
             shift
             ;;
-        --git)
-            REPOSRC="$2"
+        --from)
+            REPO="$2"
             shift
             ;;
         --args)
@@ -36,38 +35,58 @@ while [ "$#" -gt 0 ]; do
             shift
             ;;
         --help | -h | help)
-            echo "usage: bpm [install|remove|build|new] [options]"
+            echo "usage: bpm [install|remove|build|new|update] [options]"
             echo "options:"
             echo "  --experimental: use the experimental branch of bruter"
             echo "  --output, -o: specify the output directory"
             echo "  --origin: specify the origin of the project"
             echo "  --branch, -b: specify the branch of the project"
             echo "  --git: specify the git repository"
+            echo "  --args: specify the arguments to be passed to the build script"
+
 
             echo "  --help, -h: show this help message"
             exit 0
             ;;
         install)
             OPERATION="install"
-            REPO="$2"
+            NAME="$2"
             shift
             ;;
         remove)
             OPERATION="remove"
-            REPO="$2"
+            NAME="$2"
             shift
             ;;
         build)
             OPERATION="build"
+            ;;
+        update)
+            OPERATION="update"
             ;;
         new)
             OPERATION="new"
             OUTPUT="$2"
             shift
             ;;
+        edit)
+            shift
+            if [ "$1" = "repository" ]; then
+                shift
+                bpm-edit repository . $@
+            elif [ "$1" = "package" ]; then
+                shift
+                bpm-edit package . $@
+            else
+                echo "unknown option: $1"
+                echo "usage: bpm edit [repository|package] [options]"
+                exit 1
+            fi
+            exit 0
+            ;;
         *)
             echo "unknown option: $1"
-            echo "usage: $0 [build|new] [options]"
+            echo "usage: bpm [build|package|update|edit|new] [options]"
             exit 1
             ;;
     esac
@@ -82,29 +101,37 @@ if [ "$OPERATION" = "build" ]; then
         rm -rf "$OUTPUT" 
     fi
 
+    if [ -f ".bpm/repository.br" ]; then
+        echo "using pre-existing .bpm folder"
+    fi
+
+    cd .bpm
+
     if [ -d "bruter" ]; then
         echo "using pre-existing bruter folder"
     else
         git clone https://github.com/jardimdanificado/bruter --depth 1 $EXPERIMENTAL
     fi
 
+    cd ..
+
     # if folder modules exists copy the contents of lib, src and include of each folder that is inside modules to bruter folder
-    if [ -d ".modules" ]; then
-        for author in ./.modules/*; do
-            cp -r $author/*/lib/* bruter/lib/
-            cp -r $author/*/src/* bruter/src/
-            cp -r $author/*/include/* bruter/include/
+    if [ -f ".bpm/repository.br" ]; then
+        for _pkg in ./.bpm/packages/*; do
+            cp -r $_pkg/lib/* bruter/lib/
+            cp -r $_pkg/src/* bruter/src/
+            cp -r $_pkg/include/* bruter/include/
         done
     fi
 
-    cp -r lib/* bruter/lib/
-    cp -r src/* bruter/src/
-    cp -r include/* bruter/include/
+    cp -r lib/* .bpm/bruter/lib/
+    cp -r src/* .bpm/bruter/src/
+    cp -r include/* .bpm/bruter/include/
 
-    cd bruter
+    cd .bpm/bruter
     source ./build.sh
-    mv build ..
-    cd ..
+    mv build ../../
+    cd ../..
 
     if [ -n "$OUTPUT" ]; then
         mv build "$OUTPUT"
@@ -145,46 +172,73 @@ init(example)
 
 }" > lib/example.c
 
-    echo "name: \"$OUTPUT\";
-version: \"0.0.0\";
-description: \"whatever\";
-dependencies: 
+    echo "package.name: \"$OUTPUT\";
+package.version: \"0.0.0\";
+package.description: \"whatever\";
 " > package.br;
     
     cd ..
     echo "project created at $OUTPUT"
 elif [ "$OPERATION" = "install" ]; then
 
-    if [ -z "$REPO" ]; then
-        echo "please provide a repository to install"
+    if [ -z "$NAME" ]; then
+        echo "please provide a package name to install"
         exit 1
     fi
 
-    if [ -d ".modules" ]; then
-        cd .modules
-        git clone $REPOSRC$REPO $REPO $BRANCH $ARGS
-        cd ..
+    if [ -f ".bpm/repository.br" ]; then
+        cd .bpm/packages
+        git clone $(bpm edit repository . url $NAME) $NAME
+        cd ../..
     else
-        mkdir .modules
-        cd .modules
-        git clone $REPOSRC$REPO $REPO $BRANCH $ARGS
+        rm -rf .bpm
+        mkdir .bpm
+        mkdir .bpm/packages
+        cd .bpm/
+        git clone $REPO bpm_repo
+        mv bpm_repo/repository.br ./
+        rm -rf bpm_repo
         cd ..
+        cd .bpm/packages
+        git clone $(bpm edit repository . url $NAME) $NAME
+        cd ../..
     fi
 
     # concat the author and package name to the package.br file
-    echo "\"$REPO\" " >> package.br
+    # check if the package is already in the file
+    if [ -z "$(grep "package.dependency: \"$NAME\"" package.br)" ]; then
+        echo "package.dependency: \"$NAME\" " >> package.br
+    fi
 elif [ "$OPERATION" = "remove" ]; then
-    if [ -z "$REPO" ]; then
+    if [ -z "$NAME" ]; then
         echo "please provide a repository to remove"
         exit 1
     fi
 
-    rm -rf .modules/$REPO
+    rm -rf .bpm/packages/$NAME
     
-    # remove the author and package name from the package.br file
-    sed -i "s|\"$REPO\"||g" package.br
+    # remove package name from the package.br file
+    sed -i "s|package.dependency: \"$NAME\"||g" package.br
+elif [ "$OPERATION" = "update" ]; then
+    if [ -f ".bpm/repository.br" ]; then
+        rm -rf .bpm/bpm_repo
+        git clone $(bpm-edit repository . get url) .bpm/bpm_repo
+        rm -rf .bpm/repository.br
+        mv .bpm/bpm_repo/repository.br ./.bpm
+        rm -rf .bpm/bpm_repo
+        cd ..
+    else
+        rm -rf .bpm
+        mkdir .bpm
+        mkdir .bpm/packages
+        cd .bpm/
+        git clone $REPO bpm_repo
+        mv bpm_repo/repository.br ./
+        rm -rf bpm_repo
+        cd ..
+    fi
 else
     echo "unknown operation"
-    echo "usage: bpm [install|remove|build|new] [options]"
+    echo "usage: bpm [install|remove|build|new|update|edit] [options]"
     exit 1
 fi

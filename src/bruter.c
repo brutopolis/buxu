@@ -364,7 +364,7 @@ void print_element(VirtualMachine *vm, Int index)
             break;
 
         default:
-            printf("{unknown} %d", data(index).pointer);
+            printf("%d", data(index).pointer);
             break;
     }
 }

@@ -16,7 +16,7 @@ cp ./include/* $OUTPATH/include/ -r
 cp ./example/* $OUTPATH/example/ -r
 cd $OUTPATH
 
-rm -rf bruter.a
+rm -rf libbruter.a
 
 
 
@@ -79,6 +79,8 @@ else
     done
 fi
 
+
+
 if [ -n "$EMCC" ]; then
 
     if [ -z "$WOUT" ]; then
@@ -119,7 +121,7 @@ if [ -n "$(ls -A lib)" ]; then
     echo "building bruter"
     $CC ./src/bruter.c -c -O3 -lm -I./include $DEBUGARGS
     $CC ./lib/*.c -c -O3 -lm -I./include $DEBUGARGS
-    ar rcs lib/bruter.a *.o
+    ar rcs lib/libbruter.a *.o
     rm -rf lib/*.c lib/*.o
     $CC ./src/main.c lib/*.a -o bruter -O3 -lm $ARGS $DEBUGARGS
 fi
@@ -130,6 +132,7 @@ rm -rf lib/*.o
 rm -rf src
 
 cp ../src/bpm ./bpm
+$CC ../src/bpm-edit.c -o ./bpm-edit -O3 -lm -I../include -L./lib -lbruter $DEBUGARGS
 
 if [ -n "$DEBUG" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter $FILE

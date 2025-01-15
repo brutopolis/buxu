@@ -126,7 +126,7 @@ bruter is a metaprogramable lightweight virtual machine/interpreted programming 
 
   note: for now bpm does not solve any dependencies at all, but it is stored in the package.br so you can do it manually;
 
-  bpm have just a few commands: new, build, install and remove(and help);
+  bpm have just a few commands, it is meant to be simple just like bruter;
 
   ## new
 
@@ -151,6 +151,10 @@ bruter is a metaprogramable lightweight virtual machine/interpreted programming 
     bpm remove package_name
 
   removes the package from the current directory(from .modules folder);
+
+  ## update
+
+    bpm update
 
   ## help
 
