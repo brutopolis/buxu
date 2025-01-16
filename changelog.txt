@@ -2,11 +2,10 @@
 
 - bruter interpreter can receive args now, they are store under file.args;
 - bruter.a is now libbruter.a(for obvious reasons);
-- new executable bpm-edit, you can use it direcly but it is meant to be used by bpm(bpm edit repository/package ...)
-- bpm rewritten to use a centralized repository, bpm now has it own local folder for packages and such, called .bpm;
+- build.sh rewritten;
+- new command: "system";
 
-TODO: a bpm function that install all depedencies required by the package.
-TODO: a bpm function to compile a executables with bruter, using a script as entrypoint;
+TODO: rewrite bpm in bruter;
 
 (14/01/2025) - version 0.7.3a
 

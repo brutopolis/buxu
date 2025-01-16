@@ -487,6 +487,12 @@ function(brl_os_file_size)
     return result;
 }
 
+function(brl_os_system)
+{
+    system(arg(0).string);
+    return -1;
+}
+
 #ifndef __EMSCRIPTEN__
 function(brl_os_time_now)
 {
@@ -1692,6 +1698,7 @@ void init_os(VirtualMachine *vm)
     register_builtin(vm, "file.rename", brl_os_file_rename);
     register_builtin(vm, "file.copy", brl_os_file_copy);
     register_builtin(vm, "file.size", brl_os_file_size);
+    register_builtin(vm, "system", brl_os_system);
 
 #ifndef __wasm__
     register_builtin(vm, "os.time", brl_os_time_now);
