@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Inicializa as variáveis com valores padrão
+# Variáveis padrão
 EXPERIMENTAL=""
 OUTPUT=""
 OPERATION=""
@@ -8,237 +8,95 @@ REPO="https://github.com/jardimdanificado/bpm_packages"
 BRANCH=""
 ARGS=""
 
+# Função de ajuda
+usage() {
+    echo "usage: bpm [install|remove|build|new|update] [options]"
+    echo "options:"
+    echo "  --experimental: use the experimental branch of bruter"
+    echo "  --output, -o: specify the output directory"
+    echo "  --origin: specify the origin of the project"
+    echo "  --branch, -b: specify the branch of the project"
+    echo "  --git: specify the git repository"
+    echo "  --args: specify the arguments to be passed to the build script"
+    echo "  --help, -h: show this help message"
+    exit 0
+}
+
+# Processando os argumentos
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        --experimental)
-            EXPERIMENTAL="-b experimental"
-            ;;
-        --output | -o)
-            OUTPUT="$2"
-            shift
-            ;;
-        --origin)
-            rm -rf ./bruter
-            cp -rf $2 .
-            shift
-            ;;
-        --branch | -b)
-            BRANCH="-b $2"
-            shift
-            ;;
-        --from)
-            REPO="$2"
-            shift
-            ;;
-        --args)
-            ARGS="$2"
-            shift
-            ;;
-        --help | -h | help)
-            echo "usage: bpm [install|remove|build|new|update] [options]"
-            echo "options:"
-            echo "  --experimental: use the experimental branch of bruter"
-            echo "  --output, -o: specify the output directory"
-            echo "  --origin: specify the origin of the project"
-            echo "  --branch, -b: specify the branch of the project"
-            echo "  --git: specify the git repository"
-            echo "  --args: specify the arguments to be passed to the build script"
-
-
-            echo "  --help, -h: show this help message"
-            exit 0
-            ;;
-        install)
-            OPERATION="install"
-            NAME="$2"
-            shift
-            ;;
-        remove)
-            OPERATION="remove"
-            NAME="$2"
-            shift
-            ;;
-        build)
-            OPERATION="build"
-            ;;
-        update)
-            OPERATION="update"
-            ;;
-        new)
-            OPERATION="new"
-            OUTPUT="$2"
-            shift
-            ;;
-        edit)
-            shift
-            if [ "$1" = "repository" ]; then
-                shift
-                bpm-edit repository . $@
-            elif [ "$1" = "package" ]; then
-                shift
-                bpm-edit package . $@
-            else
-                echo "unknown option: $1"
-                echo "usage: bpm edit [repository|package] [options]"
-                exit 1
-            fi
-            exit 0
-            ;;
-        *)
-            echo "unknown option: $1"
-            echo "usage: bpm [build|package|update|edit|new] [options]"
-            exit 1
-            ;;
+        --experimental) EXPERIMENTAL="-b experimental" ;;
+        --output|-o) OUTPUT="$2"; shift ;;
+        --origin) cp -rf $2 .; shift ;;
+        --branch|-b) BRANCH="-b $2"; shift ;;
+        --from) REPO="$2"; shift ;;
+        --args) ARGS="$2"; shift ;;
+        --help|-h) usage ;;
+        install|remove|build|update|new|edit) OPERATION="$1"; shift ;;
+        *) echo "unknown option: $1"; usage ;;
     esac
     shift
 done
 
-if [ "$OPERATION" = "build" ]; then
-
-    rm -rf "$OUTPUT" build
-
-    if [ -d "$OUTPUT" ]; then
-        rm -rf "$OUTPUT" 
-    fi
-
-    if [ -f ".bpm/repository.br" ]; then
-        echo "using pre-existing .bpm folder"
-    fi
-
-    cd .bpm
-
-    if [ -d "bruter" ]; then
-        echo "using pre-existing bruter folder"
-    else
-        git clone https://github.com/jardimdanificado/bruter --depth 1 $EXPERIMENTAL
-    fi
-
-    cd ..
-
-    # if folder modules exists copy the contents of lib, src and include of each folder that is inside modules to bruter folder
-    if [ -f ".bpm/repository.br" ]; then
-        for _pkg in ./.bpm/packages/*; do
-            cp -r $_pkg/lib/* bruter/lib/
-            cp -r $_pkg/src/* bruter/src/
-            cp -r $_pkg/include/* bruter/include/
-        done
-    fi
-
-    cp -r lib/* .bpm/bruter/lib/
-    cp -r src/* .bpm/bruter/src/
-    cp -r include/* .bpm/bruter/include/
-
-    cd .bpm/bruter
-    source ./build.sh
-    mv build ../../
-    cd ../..
-
-    if [ -n "$OUTPUT" ]; then
-        mv build "$OUTPUT"
-    fi
-
-    if [ "$OUTPUT" == "" ]; then 
-        echo "project built at ./build"
-    else
-        echo "project built at $OUTPUT"
-    fi
-
-elif [ "$OPERATION" = "new" ]; then
-    if [ -z "$OUTPUT" ]; then
-        echo "please provide a name for the new project"
-        exit 1
-    fi
-
-    if [ -d "$OUTPUT" ]; then
-        echo "directory already exists. please remove it or choose another name."
-        exit 1
-    fi
-
-    mkdir "$OUTPUT"
-    cd "$OUTPUT"
-    mkdir src include lib
-    #example lib file
-    echo "#include \"bruter.h\"
-
-function(example_function)
-{
-    // code goes here...
-    return -1;
+# Função para clonar repositórios
+clone_repo() {
+    git clone $1 $2 --depth 1 $EXPERIMENTAL
 }
 
-init(example)
-{
-    register_builtin(vm,\"example.function\",example_function);
+# Função para construir o projeto
+build_project() {
+    rm -rf "$OUTPUT" build
+    mkdir -p "$OUTPUT"
+    [ -d ".bpm" ] || mkdir -p .bpm/packages
 
-}" > lib/example.c
+    cd .bpm
+    [ -d "bruter" ] || clone_repo "https://github.com/jardimdanificado/bruter" "bruter"
 
-    echo "package.name: \"$OUTPUT\";
-package.version: \"0.0.0\";
-package.description: \"whatever\";
-" > package.br;
-    
-    cd ..
+    cp -r ../{lib,src,include}/* bruter/
+
+    cd bruter
+    source build.sh
+    mv build ../../
+
+    [ -n "$OUTPUT" ] && mv build "$OUTPUT" || echo "project built at ./build"
+}
+
+# Função para criar novo projeto
+create_new_project() {
+    [ -z "$OUTPUT" ] && { echo "please provide a name for the new project"; exit 1; }
+    [ -d "$OUTPUT" ] && { echo "directory already exists"; exit 1; }
+
+    mkdir -p "$OUTPUT/src" "$OUTPUT/include" "$OUTPUT/lib"
+    echo "#include \"bruter.h\"\n\nfunction(example_function)\n{\n    return -1;\n}\n\ninit(example)\n{\n    register_builtin(vm, \"example.function\", example_function);" > "$OUTPUT/lib/example.c"
+    echo "package.name: \"$OUTPUT\"\npackage.version: \"0.0.0\"\npackage.description: \"whatever\"" > "$OUTPUT/package.br"
     echo "project created at $OUTPUT"
-elif [ "$OPERATION" = "install" ]; then
+}
 
-    if [ -z "$NAME" ]; then
-        echo "please provide a package name to install"
-        exit 1
-    fi
+# Função para gerenciar pacotes
+manage_package() {
+    [ -z "$NAME" ] && { echo "please provide a package name"; exit 1; }
+    case "$OPERATION" in
+        install)
+            [ ! -d ".bpm" ] && mkdir -p .bpm/packages && git clone $REPO .bpm/bpm_repo
+            git clone $(bpm-edit repository . url $NAME) .bpm/packages/$NAME
+            ;;
+        remove)
+            rm -rf .bpm/packages/$NAME
+            sed -i "/package.dependency: \"$NAME\"/d" package.br
+            ;;
+        update)
+            rm -rf .bpm/bpm_repo
+            git clone $(bpm-edit repository . get url) .bpm/bpm_repo
+            mv .bpm/bpm_repo/repository.br ./.bpm
+            rm -rf .bpm/bpm_repo
+            ;;
+    esac
+}
 
-    if [ -f ".bpm/repository.br" ]; then
-        cd .bpm/packages
-        git clone $(bpm edit repository . url $NAME) $NAME
-        cd ../..
-    else
-        rm -rf .bpm
-        mkdir .bpm
-        mkdir .bpm/packages
-        cd .bpm/
-        git clone $REPO bpm_repo
-        mv bpm_repo/repository.br ./
-        rm -rf bpm_repo
-        cd ..
-        cd .bpm/packages
-        git clone $(bpm edit repository . url $NAME) $NAME
-        cd ../..
-    fi
-
-    # concat the author and package name to the package.br file
-    # check if the package is already in the file
-    if [ -z "$(grep "package.dependency: \"$NAME\"" package.br)" ]; then
-        echo "package.dependency: \"$NAME\" " >> package.br
-    fi
-elif [ "$OPERATION" = "remove" ]; then
-    if [ -z "$NAME" ]; then
-        echo "please provide a repository to remove"
-        exit 1
-    fi
-
-    rm -rf .bpm/packages/$NAME
-    
-    # remove package name from the package.br file
-    sed -i "s|package.dependency: \"$NAME\"||g" package.br
-elif [ "$OPERATION" = "update" ]; then
-    if [ -f ".bpm/repository.br" ]; then
-        rm -rf .bpm/bpm_repo
-        git clone $(bpm-edit repository . get url) .bpm/bpm_repo
-        rm -rf .bpm/repository.br
-        mv .bpm/bpm_repo/repository.br ./.bpm
-        rm -rf .bpm/bpm_repo
-        cd ..
-    else
-        rm -rf .bpm
-        mkdir .bpm
-        mkdir .bpm/packages
-        cd .bpm/
-        git clone $REPO bpm_repo
-        mv bpm_repo/repository.br ./
-        rm -rf bpm_repo
-        cd ..
-    fi
-else
-    echo "unknown operation"
-    echo "usage: bpm [install|remove|build|new|update|edit] [options]"
-    exit 1
-fi
+# Executando operações
+case "$OPERATION" in
+    build) build_project ;;
+    new) create_new_project ;;
+    install|remove|update) manage_package ;;
+    *) echo "unknown operation"; usage ;;
+esac

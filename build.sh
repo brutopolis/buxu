@@ -5,7 +5,7 @@
 
 # usage function
 usage() {
-    echo "usage: $0 [--outpath=build] [--debug] [--cc=gcc] [--ino] [--emcc=emcc] [--wasicc=wasicc] [--exclude=libfile] [--exec=main.br]"
+    echo "usage: $0 [--outpath build] [--debug] [--cc gcc] [--ino] [--emcc emcc] [--wasicc wasicc] [--exclude libfile] [--exec main.br]"
     exit 1
 }
 
@@ -21,17 +21,17 @@ MAIN="src/main.c"
 EXEC=""
 
 # parse arguments
-for arg in "$@"; do
-    case $arg in
-        --exec=*) EXEC="${arg#*=}" ;;
-        --outpath=*) OUTPATH="${arg#*=}" ;;
-        --debug) DEBUG=1 ;;
-        --cc=*) CC="${arg#*=}" ;;
-        --ino) INO=1 ;;
-        --emcc=*) EMCC="${arg#*=}" ;;
-        --wasicc=*) WASICC="${arg#*=}" ;;
-        --exclude=*) EXCLUDE="${arg#*=}" ;;
-        *) echo "unknown option: $arg"; usage ;;
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --exec) EXEC="$2"; shift 2 ;;
+        --outpath) OUTPATH="$2"; shift 2 ;;
+        --debug) DEBUG=1; shift ;;
+        --cc) CC="$2"; shift 2 ;;
+        --ino) INO=1; shift ;;
+        --emcc) EMCC="$2"; shift 2 ;;
+        --wasicc) WASICC="$2"; shift 2 ;;
+        --exclude) EXCLUDE="$2"; shift 2 ;;
+        *) echo "unknown option: $1"; usage ;;
     esac
 done
 
