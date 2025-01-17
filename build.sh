@@ -20,6 +20,10 @@ EXCLUDE=""
 MAIN="src/main.c"
 EXEC=""
 
+mkdir build_tmp
+cp -r * build_tmp/
+cd build_tmp
+
 # parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -134,5 +138,11 @@ if [[ -n "$(ls -A lib)" ]]; then
     $CC $MAIN lib/*.a -o bruter -O3 -lm $DEBUGARGS
 fi
 
+
 rm -rf *.o lib/*.o src
+
+cd ..
+mv build_tmp/build ./build
+rm -rf build_tmp
+
 echo "done building."
