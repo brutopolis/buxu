@@ -3,9 +3,95 @@
 # this is for linux, should work on macos and mingw also, though I haven't tested it
 # in future i might add build scripts for other platforms
 
+#HTML FILE
+HTML_FILE="<!doctype html>
+<html lang=\"EN-us\">
+  <head>
+    <meta charset=\"utf-8\">
+    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">
+
+    <title>bruter web example</title>
+
+    </head>
+    <body>
+        <script src=\"./bruter.js\"></script>
+        <script>
+            async function bruter_start()
+            {
+                window.Bruter = await Bruter;
+                window.vm = Bruter.new();
+                console.log(\"bruter is ready\");
+                console.log(\"pretty simple right?\");
+                //alert(vm.eval(\"return 'if you see this message, then it works, this message was returned by the bruter vm we just created'\"));
+            }
+            bruter_start();
+        </script>
+    </body>
+</html>"
+
+
+# js file
+JS_FILE="
+// bruter.js
+
+let bruter_loader = async function() 
+{
+    const BruterAPI = {};
+    
+    let _module = await _Bruter();
+    
+    BruterAPI.destroy = (vm_index) => {
+        _module._wasm_destroy_vm(vm_index);
+    };
+    
+    BruterAPI.eval = (vm_index, code) => {
+        const lengthBytes = _module.lengthBytesUTF8(code) + 1;
+        const ptr = _module._malloc(lengthBytes);
+        _module.stringToUTF8(code, ptr, lengthBytes);
+        let result = _module._wasm_eval(vm_index, ptr);
+        _module._free(ptr);
+
+        result = _module.UTF8ToString(result);
+        
+        if (result === 'null')
+        {
+            console.log('result is null');
+            return null;
+        }
+        else if(result[0] == '\x01') // number
+        {
+            result = parseFloat(result.substring(1));
+        }
+        else if(result[0] == '\x02') // string
+        {
+            result = result.substring(1);
+        }
+        else // integer/pointer/any 
+        {
+            result = parseInt(result.substring(1));
+        }
+
+        return result;
+    };
+    
+    BruterAPI.new = (index) => {
+        let _vm = { index: index || _module._wasm_new_vm() };
+        _vm.eval = (code) => BruterAPI.eval(_vm.index, code);
+        _vm.destroy = () => BruterAPI.destroy(_vm.index);
+        return _vm;
+    };
+
+    BruterAPI.module = _module;
+
+    return BruterAPI;
+}
+
+window.Bruter = bruter_loader();"
+
+
 # usage function
 usage() {
-    echo "usage: $0 [--outpath build] [--debug] [--cc gcc] [--ino] [--emcc emcc] [--wasicc wasicc] [--exclude libfile] [--exec main.br]"
+    echo "usage: $0 [--outpath build] [--debug] [--cc gcc] [--ino] [--web] [--emcc emcc] [--wasicc wasicc] [--exclude libfile] [--exec main.br]"
     exit 1
 }
 
@@ -25,7 +111,8 @@ EXEC=""
 
 rm -rf build_tmp build
 mkdir build_tmp
-cp -r * build_tmp/
+rsync -avq --exclude="build_tmp" "./" "build_tmp/"
+# or cp -r * build_tmp/
 cd build_tmp
 
 # parse arguments
@@ -37,6 +124,7 @@ while [[ $# -gt 0 ]]; do
         --cc) CC="$2"; shift 2 ;;
         --ino) INO=1; shift ;;
         --emcc) EMCC="$2"; shift 2 ;;
+        --web) EMCC="emcc"; shift ;;
         --wasicc) WASICC="$2"; shift 2 ;;
         --exclude) EXCLUDE="$2"; shift 2 ;;
         *) echo "unknown option: $1"; usage ;;
@@ -52,18 +140,16 @@ cp -r ./example/* "$OUTPATH/example/"
 
 # verify if a folder called packages exists, if so, copy the contents of each folder inside packages like: packages/name/lib/* to build/lib/, packages/name/include/* to build/include/, packages/name/src/* to build/src/
 copy_packages() {
-    for folder in ./packages/*; do
+    for folder in ./lib/*; do
         if [[ -d "$folder" ]]; then
-            cp -r "$folder/lib"/* "$OUTPATH/lib/"
-            cp -r "$folder/include"/* "$OUTPATH/include/"
-            cp -r "$folder/src"/* "$OUTPATH/src/"
+            cp -r $folder/lib/* $OUTPATH/lib/
+            cp -r $folder/include/* $OUTPATH/include/
+            cp -r $folder/src/* $OUTPATH/src/
         fi
     done
 }
 
-if [[ -d ./packages ]]; then
-    copy_packages
-fi
+copy_packages
 
 cd $ORIGIN/build_tmp || exit 1
 
@@ -107,7 +193,7 @@ if [[ -n $EXCLUDE ]]; then
 fi
 
 if [[ -n $EXEC ]]; then
-    MAIN="./src/main_exec.c"
+    MAIN="./src/main.c -DBRUTER_EXECUTABLE=1"
     cp "../$EXEC" ./src/main.br
     xxd -i src/main.br > include/entrypoint.h
 fi
@@ -130,7 +216,13 @@ if [[ -n $EMCC ]]; then
     echo "compiling to webassembly using $EMCC..."
     mkdir -p web
     cd web || exit 1
-    cp ../src/index.html ./index.html
+
+
+    # create index.html
+    echo "$HTML_FILE" > index.html
+    
+    
+    # compile to webassembly
     $EMCC ../src/bruter.c \
         ../lib/*.c \
         -o bruter.js \
@@ -144,6 +236,9 @@ if [[ -n $EMCC ]]; then
         -sALLOW_MEMORY_GROWTH=1 \
         -L../lib \
         -I../include $DEBUGARGS
+
+    echo "$JS_FILE" >> bruter.js
+    
     cd ..
 fi
 
@@ -158,6 +253,11 @@ if [[ -n "$(ls -A lib)" ]]; then
     $CC ./lib/*.c -c -O3 -lm -I./include $DEBUGARGS
     ar rcs lib/libbruter.a *.o
     $CC $MAIN lib/*.a -o bruter -O3 -lm $DEBUGARGS
+    if [[ -n $EXEC ]]; then
+        mv bruter bruter_out
+        MAIN="./src/main.c"
+        $CC $MAIN lib/*.a -o bruter -O3 -lm $DEBUGARGS
+    fi
 fi
 
 

@@ -13,7 +13,7 @@
 #include <emscripten.h>
 #endif
 
-#define VERSION "0.7.3b"
+#define VERSION "0.7.3c"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
