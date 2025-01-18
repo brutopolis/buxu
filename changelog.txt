@@ -2,6 +2,11 @@
 
 - each fixed;
 
+TODO: array/string element/char fast access;
+TODO: array/string element/char fast operations;
+TODO: change the math functions to use the return index as the value instead of creating a new variable;
+TODO: change other functions to use the return index as the value instead of creating a new variable, where make sense;
+
 (18/01/2025) - version 0.7.3c
 
 - some README updates;
