@@ -1382,7 +1382,7 @@ function(brl_std_group)//group interpreter
     stack_reverse(*args);
     Int _str = stack_pop(*args);
     StringList *splited = special_split(data(_str).string, ' ');
-
+    stack_reverse(*splited);
     Int lst = new_list(vm);
     IntList *list = (IntList*)data(lst).pointer;
 

@@ -5,6 +5,7 @@
 - build.sh rewritten;
 - new command: "system";
 - bpm removed, maybe it was a bad idea, at least in this repo;
+- group function fixed;
 
 (14/01/2025) - version 0.7.3a
 
