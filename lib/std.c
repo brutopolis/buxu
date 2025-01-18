@@ -1012,6 +1012,17 @@ function(brl_std_list_last)
     return -1;
 }
 
+function(brl_std_list_reverse)
+{
+    Int list = arg_i(0);
+    if (arg_t(0) == TYPE_LIST)
+    {
+        IntList *lst = (IntList*)data(list).pointer;
+        stack_reverse(*lst);
+    }
+    return -1;
+}
+
 // std string
 
 function(brl_std_string_concat)
@@ -1836,6 +1847,7 @@ void init_list(VirtualMachine *vm)
     register_builtin(vm, "list.unshift", brl_std_list_unshift);
     register_builtin(vm, "list.last", brl_std_list_last);
     register_builtin(vm, "list.set", brl_std_list_set);
+    register_builtin(vm, "list.reverse", brl_std_list_reverse);
 }
 
 void init_sector(VirtualMachine *vm)

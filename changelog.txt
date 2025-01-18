@@ -4,8 +4,7 @@
 - bruter.a is now libbruter.a(for obvious reasons);
 - build.sh rewritten;
 - new command: "system";
-
-TODO: rewrite bpm in bruter;
+- bpm removed, maybe it was a bad idea, at least in this repo;
 
 (14/01/2025) - version 0.7.3a
 

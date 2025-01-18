@@ -9,6 +9,9 @@ usage() {
     exit 1
 }
 
+# origin
+ORIGIN=$(pwd)
+
 # default values
 OUTPATH="build"
 DEBUG=0
@@ -20,6 +23,7 @@ EXCLUDE=""
 MAIN="src/main.c"
 EXEC=""
 
+rm -rf build_tmp build
 mkdir build_tmp
 cp -r * build_tmp/
 cd build_tmp
@@ -39,12 +43,30 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-rm -rf "$OUTPATH"
+rm -rf "$OUTPATH" build
 mkdir -p "$OUTPATH/lib" "$OUTPATH/include" "$OUTPATH/example"
 cp -r ./src "$OUTPATH/src"
 cp -r ./lib/* "$OUTPATH/lib/"
 cp -r ./include/* "$OUTPATH/include/"
 cp -r ./example/* "$OUTPATH/example/"
+
+# verify if a folder called packages exists, if so, copy the contents of each folder inside packages like: packages/name/lib/* to build/lib/, packages/name/include/* to build/include/, packages/name/src/* to build/src/
+copy_packages() {
+    for folder in ./packages/*; do
+        if [[ -d "$folder" ]]; then
+            cp -r "$folder/lib"/* "$OUTPATH/lib/"
+            cp -r "$folder/include"/* "$OUTPATH/include/"
+            cp -r "$folder/src"/* "$OUTPATH/src/"
+        fi
+    done
+}
+
+if [[ -d ./packages ]]; then
+    copy_packages
+fi
+
+cd $ORIGIN/build_tmp || exit 1
+
 cd "$OUTPATH" || exit 1
 
 rm -rf libbruter.a
@@ -141,7 +163,7 @@ fi
 
 rm -rf *.o lib/*.o src
 
-cd ..
+cd ../..
 mv build_tmp/build ./build
 rm -rf build_tmp
 
