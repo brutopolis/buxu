@@ -1502,9 +1502,21 @@ function(brl_std_loop_repeat)
 function(brl_std_loop_each)
 {
     IntList *list = (IntList*)arg(0).pointer;
+    register_var(vm, arg(1).string);
+    Int hash_index = -1;
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        if (strcmp(hash(i).key, arg(1).string) == 0)
+        {
+            hash_index = i;
+            break;
+        }
+    }
+
     for (Int i = 0; i < list->size; i++)
     {
-        hash_set(vm, arg(1).string, list->data[i]);
+        hash(hash_index).index = list->data[i];
+
         eval(vm, arg(2).string, context);
     }
     return -1;

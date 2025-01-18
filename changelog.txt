@@ -1,3 +1,7 @@
+(18/01/2025) - version 0.7.3d
+
+- each fixed;
+
 (18/01/2025) - version 0.7.3c
 
 - some README updates;
