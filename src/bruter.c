@@ -680,103 +680,114 @@ void free_vm(VirtualMachine *vm)
     free(vm);
 }
 
-// Parser functions
-IntList* parse(void *_vm, char *cmd, HashList *context) 
+// Função que processa um único elemento
+Int parse_element(VirtualMachine* vm, char* str, HashList* context, IntList* result) 
 {
-    VirtualMachine* vm = (VirtualMachine*)_vm;
-    IntList *result = make_int_list();
-    
-    StringList *splited = special_space_split(cmd);
-    stack_reverse(*splited);
-    //Int current = 0;
-    while (splited->size > 0)
+    if (str[0] == '(')
     {
-        char* str = stack_pop(*splited);
-        if (str[0] == '(')
+        if(str[1] == '@' && str[2] == '@') // string
         {
-            if(str[1] == '@' && str[2] == '@')//string
-            {
-                char* temp = str + 3;
-                temp[strlen(temp) - 1] = '\0';
-                Int var = new_string(vm, temp);
-                stack_push(*result, var);            
-            }
-            else
-            {
-                char* temp = str + 1;
-                temp[strlen(temp) - 1] = '\0';
-                Int index = eval(vm, temp, context);
-                stack_push(*result, index);
-            }
+            char* temp = str + 3;
+            temp[strlen(temp) - 1] = '\0';
+            Int var = new_string(vm, temp);
+            stack_push(*result, var);            
         }
-        else if (str[0] == '@') 
-        {
-            stack_push(*result, atoi(str + 1));
-        }
-        else if (str[0] == '"' || str[0] == '\'') // string
+        else
         {
             char* temp = str + 1;
             temp[strlen(temp) - 1] = '\0';
-            Int var = new_string(vm, temp);
-            stack_push(*result, var);
+            Int index = eval(vm, temp, context);
+            stack_push(*result, index);
         }
-        else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
-        {
-            Int var = new_number(vm, atof(str));
-            stack_push(*result, var);
-        }
-        else if(str[0] == '.' && str[1] == '.' && str[2] == '.')
-        {
-            char* _str = str+3;
-            Int lst = hash_find(vm, _str);
-            if (lst == -1)
-            {
-                printf("cannot spread non-existent list: %s\n", _str);
-                stack_push(*result, -1);
-                free(str);
-                continue;
-            }
-            IntList *list = data(lst).pointer;
-            for (Int i = 0; i < list->size; i++)
-            {
-                stack_push(*result, list->data[i]);
-            }
-        }
-        else if (str[0] == '/' && str[1] == '/') // comment
-        {
-            break;
-        }
-        else //variable 
-        {
-            Int index;
-            if (context != NULL)
-            {
-                HashList* _global_context = vm->hashes;
-                vm->hashes = context;
-                index = hash_find(vm, str);
-                vm->hashes = _global_context;
-                if (index == -1)
-                {
-                    index = hash_find(vm, str);
-                }
-            }
-            else
-            {
-                index = hash_find(vm, str);
-            }
-
-            if (index == -1) 
-            {
-                printf("Variable %s not found\n", str);
-                stack_push(*result, -1);
-            }
-            else 
-            {
-                stack_push(*result, index);
-            }
-        }
-        free(str);
     }
+    else if (str[0] == '@') 
+    {
+        stack_push(*result, atoi(str + 1));
+    }
+    else if (str[0] == '"' || str[0] == '\'') // string
+    {
+        char* temp = str + 1;
+        temp[strlen(temp) - 1] = '\0';
+        Int var = new_string(vm, temp);
+        stack_push(*result, var);
+    }
+    else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
+    {
+        Int var = new_number(vm, atof(str));
+        stack_push(*result, var);
+    }
+    else if (str[0] == '.' && str[1] == '.' && str[2] == '.') 
+    {
+        char* _str = str + 3;
+        Int lst = hash_find(vm, _str);
+        if (lst == -1)
+        {
+            printf("cannot spread non-existent list: %s\n", _str);
+            stack_push(*result, -1);
+            return -1;
+        }
+        IntList* list = data(lst).pointer;
+        for (Int i = 0; i < list->size; i++)
+        {
+            stack_push(*result, list->data[i]);
+        }
+    }
+    else if (str[0] == '/' && str[1] == '/') // comentário
+    {
+        return -1; // Indica que deve parar o parsing
+    }
+    else // variável
+    {
+        Int index;
+        if (context != NULL)
+        {
+            HashList* _global_context = vm->hashes;
+            vm->hashes = context;
+            index = hash_find(vm, str);
+            vm->hashes = _global_context;
+            if (index == -1)
+            {
+                index = hash_find(vm, str);
+            }
+        }
+        else
+        {
+            index = hash_find(vm, str);
+        }
+
+        if (index == -1) 
+        {
+            printf("Variable %s not found\n", str);
+            stack_push(*result, -1);
+        }
+        else 
+        {
+            stack_push(*result, index);
+        }
+    }
+    return 0; // Indica sucesso
+}
+
+// Função que processa toda a string de entrada
+IntList* parse_string(void* _vm, char* cmd, HashList* context) 
+{
+    VirtualMachine* vm = (VirtualMachine*)_vm;
+    IntList* result = make_int_list();
+    
+    StringList* splited = special_space_split(cmd);
+    stack_reverse(*splited);
+
+    while (splited->size > 0) 
+    {
+        char* str = stack_pop(*splited);
+        int status = parse_element(vm, str, context, result);
+        free(str);
+        if (status == -1) 
+        {
+            break; // Para o loop se encontrar um comentário "//"
+        }
+    }
+    
     stack_free(*splited);
     return result;
 }
@@ -784,7 +795,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
 Int default_interpreter(void *_vm, char* cmd, HashList *context)
 {
     VirtualMachine* vm = (VirtualMachine*) _vm;
-    IntList *args = parse(vm, cmd, context);
+    IntList *args = parse_string(vm, cmd, context);
     if (args->size == 0)
     {
         stack_free(*args);

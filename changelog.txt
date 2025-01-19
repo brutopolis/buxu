@@ -1,6 +1,7 @@
-(18/01/2025) - version 0.7.3d
+(19/01/2025) - version 0.7.3d
 
 - each fixed;
+- new function tindex;
 
 TODO: array/string element/char fast access;
 TODO: array/string element/char fast operations;

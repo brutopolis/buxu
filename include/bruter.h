@@ -228,8 +228,8 @@ extern Int eval(VirtualMachine *vm, char *cmd, HashList *context);
 
 extern void print_element(VirtualMachine *vm, Int index);
 
-// macros
 
+// macros
 #define data(index) (vm->stack->data[index])
 #define data_t(index) (vm->typestack->data[index])
 #define data_unused(index) (vm->unused->data[index])
@@ -243,6 +243,11 @@ extern void print_element(VirtualMachine *vm, Int index);
 
 #define function(name) Int name(VirtualMachine *vm, IntList *args, HashList *context)
 #define init(name) void init_##name(VirtualMachine *vm)
+
+
+// functions
+Int parse_element(VirtualMachine* vm, char* str, HashList* context, IntList* result);
+IntList* parse_string(void* _vm, char* cmd, HashList* context);
 
 Float solve_number(VirtualMachine *vm, char* token, HashList *context);
 Float math(VirtualMachine *vm, char* str, HashList *context);

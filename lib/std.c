@@ -712,6 +712,11 @@ function(brl_std_gindex)
     return new_number(vm, arg_i(0));
 }
 
+function(brl_std_tindex)
+{
+    return arg(0).number;
+}
+
 function(brl_std_type_get)
 {
     Int result = new_number(vm, arg_t(0));
@@ -1740,6 +1745,7 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "do", brl_std_do);
     register_builtin(vm, "return", brl_std_return);
     register_builtin(vm, "gindex", brl_std_gindex);
+    register_builtin(vm, "tindex", brl_std_tindex);
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.type", brl_std_io_ls_types);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
