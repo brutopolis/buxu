@@ -2,6 +2,7 @@
 
 - each fixed;
 - new function tindex;
+- parse has now been splited into 2 functions, parse_element and parse_string;
 
 TODO: array/string element/char fast access;
 TODO: array/string element/char fast operations;

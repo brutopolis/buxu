@@ -246,7 +246,7 @@ extern void print_element(VirtualMachine *vm, Int index);
 
 
 // functions
-Int parse_element(VirtualMachine* vm, char* str, HashList* context, IntList* result);
+Int parse_element(VirtualMachine* vm, char* str, HashList* context);
 IntList* parse_string(void* _vm, char* cmd, HashList* context);
 
 Float solve_number(VirtualMachine *vm, char* token, HashList *context);

@@ -168,56 +168,6 @@ char is(VirtualMachine *vm, char* str, HashList *context)
     return -1;
 }
 
-Int solve_index(VirtualMachine *vm, char* token, HashList *context)
-{
-    Int result = 0;
-    if (token[0] == '@')
-    {
-        result = data(atoi(token+1)).number;
-    }
-    else if ((token[0] >= '0' && token[0] <= '9') || token[0] == '-')
-    {
-        result = atoi(token);
-    }
-    else if (token[0] == '(')
-    {
-        if (token[1] == ':')
-        {
-            char* _str = str_nduplicate(token+2, strlen(token) - 3);
-            result = eval(vm, _str, context);
-            free(_str);
-        }
-        else
-        {
-            char* _str = str_sub(token, 1, strlen(token) - 1);
-            result = imath(vm, _str, context);
-            free(_str);
-        }
-    }
-    else
-    {
-        Int _index;
-        if (context != NULL)
-        {
-            void *backup = vm->hashes;
-            vm->hashes = context;
-            _index = hash_find(vm, token);
-            vm->hashes = backup;
-            if (_index == -1)
-            {
-                _index = hash_find(vm, token);
-            }
-            result = _index;
-        }
-        else 
-        {
-            _index = hash_find(vm, token);
-            result = _index;
-        }
-    }
-    return result;
-}
-
 Int imath(VirtualMachine *vm, char* str, HashList *context)
 {
     Int a = 0;
@@ -227,7 +177,7 @@ Int imath(VirtualMachine *vm, char* str, HashList *context)
     char* token = stack_pop(*splited);
     char operator = 0;
 
-    a = solve_index(vm, token, context);
+    a = parse_element(vm, token, context);
     free(token);
     
     while (splited->size > 0)
@@ -236,7 +186,7 @@ Int imath(VirtualMachine *vm, char* str, HashList *context)
         operator = token[0];
         free(token);
         token = stack_pop(*splited);
-        b = solve_index(vm, token, context);
+        b = parse_element(vm, token, context);
         free(token);
         switch (operator)
         {
@@ -284,47 +234,6 @@ Int imath(VirtualMachine *vm, char* str, HashList *context)
     return a;
 }
 
-Float solve_number(VirtualMachine *vm, char* token, HashList *context)
-{
-    Float result = 0;
-    if (token[0] == '@')
-    {
-        result = data(atoi(token+1)).number;
-    }
-    else if ((token[0] >= '0' && token[0] <= '9') || token[0] == '-')
-    {
-        result = atof(token);
-    }
-    else if (token[0] == '(')
-    {
-        char* _str = str_sub(token, 1, strlen(token) - 1);
-        result = math(vm, _str, context);
-        free(_str);
-    }
-    else
-    {
-        Int _index;
-        if (context != NULL)
-        {
-            void *backup = vm->hashes;
-            vm->hashes = context;
-            _index = hash_find(vm, token);
-            vm->hashes = backup;
-            if (_index == -1)
-            {
-                _index = hash_find(vm, token);
-            }
-            result = data(_index).number;
-        }
-        else 
-        {
-            _index = hash_find(vm, token);
-            result = data(_index).number;
-        }
-    }
-    return result;
-}
-
 Float math(VirtualMachine *vm, char* str, HashList *context)
 {
     Float a = 0;
@@ -334,7 +243,7 @@ Float math(VirtualMachine *vm, char* str, HashList *context)
     char* token = stack_pop(*splited);
     char operator = 0;
     
-    a = solve_number(vm, token, context);
+    a = data(parse_element(vm, token, context)).number;
     free(token);
     
     while (splited->size > 0)
@@ -343,7 +252,7 @@ Float math(VirtualMachine *vm, char* str, HashList *context)
         operator = token[0];
         free(token);
         token = stack_pop(*splited);
-        b = solve_number(vm, token, context);
+        b = data(parse_element(vm, token, context)).number;
         free(token);
         switch (operator)
         {

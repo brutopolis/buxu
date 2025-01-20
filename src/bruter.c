@@ -679,9 +679,8 @@ void free_vm(VirtualMachine *vm)
 
     free(vm);
 }
-
-// Função que processa um único elemento
-Int parse_element(VirtualMachine* vm, char* str, HashList* context, IntList* result) 
+// Função que processa um único elemento e retorna um valor
+Int parse_element(VirtualMachine* vm, char* str, HashList* context) 
 {
     if (str[0] == '(')
     {
@@ -689,32 +688,28 @@ Int parse_element(VirtualMachine* vm, char* str, HashList* context, IntList* res
         {
             char* temp = str + 3;
             temp[strlen(temp) - 1] = '\0';
-            Int var = new_string(vm, temp);
-            stack_push(*result, var);            
+            return new_string(vm, temp);
         }
         else
         {
             char* temp = str + 1;
             temp[strlen(temp) - 1] = '\0';
-            Int index = eval(vm, temp, context);
-            stack_push(*result, index);
+            return eval(vm, temp, context);
         }
     }
     else if (str[0] == '@') 
     {
-        stack_push(*result, atoi(str + 1));
+        return atoi(str + 1);
     }
     else if (str[0] == '"' || str[0] == '\'') // string
     {
         char* temp = str + 1;
         temp[strlen(temp) - 1] = '\0';
-        Int var = new_string(vm, temp);
-        stack_push(*result, var);
+        return new_string(vm, temp);
     }
     else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
     {
-        Int var = new_number(vm, atof(str));
-        stack_push(*result, var);
+        return new_number(vm, atof(str));
     }
     else if (str[0] == '.' && str[1] == '.' && str[2] == '.') 
     {
@@ -723,18 +718,13 @@ Int parse_element(VirtualMachine* vm, char* str, HashList* context, IntList* res
         if (lst == -1)
         {
             printf("cannot spread non-existent list: %s\n", _str);
-            stack_push(*result, -1);
             return -1;
         }
-        IntList* list = data(lst).pointer;
-        for (Int i = 0; i < list->size; i++)
-        {
-            stack_push(*result, list->data[i]);
-        }
+        return lst; // Retorna a lista encontrada
     }
     else if (str[0] == '/' && str[1] == '/') // comentário
     {
-        return -1; // Indica que deve parar o parsing
+        return -2; // Código especial para indicar parada
     }
     else // variável
     {
@@ -758,14 +748,10 @@ Int parse_element(VirtualMachine* vm, char* str, HashList* context, IntList* res
         if (index == -1) 
         {
             printf("Variable %s not found\n", str);
-            stack_push(*result, -1);
+            return -1;
         }
-        else 
-        {
-            stack_push(*result, index);
-        }
+        return index;
     }
-    return 0; // Indica sucesso
 }
 
 // Função que processa toda a string de entrada
@@ -780,17 +766,35 @@ IntList* parse_string(void* _vm, char* cmd, HashList* context)
     while (splited->size > 0) 
     {
         char* str = stack_pop(*splited);
-        int status = parse_element(vm, str, context, result);
+        Int value = parse_element(vm, str, context);
         free(str);
-        if (status == -1) 
+
+        if (value == -2) 
         {
             break; // Para o loop se encontrar um comentário "//"
+        }
+        else if (value != -1) 
+        {
+            // Se for um spread (...), adiciona os elementos da lista
+            if (str[0] == '.' && str[1] == '.' && str[2] == '.') 
+            {
+                IntList* list = data(value).pointer;
+                for (Int i = 0; i < list->size; i++) 
+                {
+                    stack_push(*result, list->data[i]);
+                }
+            }
+            else 
+            {
+                stack_push(*result, value);
+            }
         }
     }
     
     stack_free(*splited);
     return result;
 }
+
 
 Int default_interpreter(void *_vm, char* cmd, HashList *context)
 {
