@@ -168,138 +168,6 @@ char is(VirtualMachine *vm, char* str, HashList *context)
     return -1;
 }
 
-Int imath(VirtualMachine *vm, char* str, HashList *context)
-{
-    Int a = 0;
-    Int b = 0;
-    StringList *splited = special_split(str, ' ');
-    stack_reverse(*splited);
-    char* token = stack_pop(*splited);
-    char operator = 0;
-
-    a = parse_element(vm, token, context);
-    free(token);
-    
-    while (splited->size > 0)
-    {
-        token = stack_pop(*splited);
-        operator = token[0];
-        free(token);
-        token = stack_pop(*splited);
-        b = parse_element(vm, token, context);
-        free(token);
-        switch (operator)
-        {
-            case '+':
-                a += b;
-                break;
-            case '-':
-                a -= b;
-                break;
-            case '*':
-                a *= b;
-                break;
-            case '/':
-                a /= b;
-                break;
-            case '%':
-                a %= b;
-                break;
-            case '&': // bitwise and
-                a = (Int)a & (Int)b;
-                break;
-            case '|':
-                a = (Int)a | (Int)b;
-                break;
-            case '>':
-                a = (Int)a >> (Int)b;
-                break;
-            case '<':
-                a = (Int)a << (Int)b;
-                break;
-            case '^':
-                a = (Int)a ^ (Int)b;
-                break;
-            case '~':
-                a = ~(Int)a;
-                break;
-            default:
-                // error
-                printf("error: cant handle this operator (%c)\n", operator);
-                exit(1);
-                break;
-        }
-    }
-    stack_free(*splited);
-    return a;
-}
-
-Float math(VirtualMachine *vm, char* str, HashList *context)
-{
-    Float a = 0;
-    Float b = 0;
-    StringList *splited = special_split(str, ' ');
-    stack_reverse(*splited);
-    char* token = stack_pop(*splited);
-    char operator = 0;
-    
-    a = data(parse_element(vm, token, context)).number;
-    free(token);
-    
-    while (splited->size > 0)
-    {
-        token = stack_pop(*splited);
-        operator = token[0];
-        free(token);
-        token = stack_pop(*splited);
-        b = data(parse_element(vm, token, context)).number;
-        free(token);
-        switch (operator)
-        {
-            case '+':
-                a += b;
-                break;
-            case '-':
-                a -= b;
-                break;
-            case '*':
-                a *= b;
-                break;
-            case '/':
-                a /= b;
-                break;
-            case '%':
-                a = fmod(a, b);
-                break;
-            case '&': // bitwise and
-                a = (Int)a & (Int)b;
-                break;
-            case '|':
-                a = (Int)a | (Int)b;
-                break;
-            case '>':
-                a = (Int)a >> (Int)b;
-                break;
-            case '<':
-                a = (Int)a << (Int)b;
-                break;
-            case '^':
-                a = (Int)a ^ (Int)b;
-                break;
-            case '~':
-                a = ~(Int)a;
-                break;
-            default:
-                // error
-                printf("error: cant handle this operator (%c)\n", operator);
-                exit(1);
-                break;
-        }
-    }
-    stack_free(*splited);
-    return a;
-}
-
 // functions defitions for bruter
 // functions defitions for bruter
 // functions defitions for bruter
@@ -616,16 +484,6 @@ function(brl_std_return)
     return arg_i(0);
 }
 
-function(brl_std_gindex)
-{
-    return new_number(vm, arg_i(0));
-}
-
-function(brl_std_tindex)
-{
-    return arg(0).number;
-}
-
 function(brl_std_type_get)
 {
     Int result = new_number(vm, arg_t(0));
@@ -744,34 +602,17 @@ function(brl_std_math_decrement)
     return -1;
 }
 
-// tree-walker math
-function(brl_std_math)
+function(brl_std_pointer_get)
 {
-    char* str = arg(0).string;
-    char* _str = str_nduplicate(str, strlen(str));
-    Int result = new_number(vm, math(vm, _str, context));
-    free(_str);
-    return result;
+    return new_number(vm, (Float)arg(0).integer);
 }
 
-function(brl_std_imath)
+function(brl_std_pointer_set)
 {
-    char* str = arg(0).string;
-    char* _str = str_nduplicate(str, strlen(str));
-    Int result = imath(vm, _str, context);
-    free(_str);
-    return result;
-}
-
-function(brl_std_inplace)
-{
-    char* str = arg(1).string;
-    char* _str = str_nduplicate(str, strlen(str));
-    arg(0).number = math(vm, _str, context);
-    free(_str);
+    arg_t(0) = TYPE_STRING;
+    arg(0).integer = (Int)arg(1).number;
     return -1;
 }
-
 
 // list functions
 // list functions
@@ -1162,31 +1003,6 @@ function(brl_std_condition_or)
     return result;
 }
 
-function(brl_std_condition_if_is)
-{
-    Int result = -1;
-    if (is(vm, arg(0).string, context))
-    {
-        result = eval(vm, arg(1).string, context);
-
-    }
-    return result;
-}
-
-function(brl_std_condition_ifelse_is)
-{
-    Int result = -1;
-    if (is(vm, arg(0).string, context))
-    {
-        result = eval(vm, arg(1).string, context);
-    }
-    else
-    {
-        result = eval(vm, arg(2).string, context);
-    }
-    return result;
-}
-
 function(brl_std_condition_if)
 {
     Int result = -1;
@@ -1389,21 +1205,6 @@ function(brl_std_loop_while)
     return result;
 }
 
-function(brl_std_loop_while_is)
-{
-    Int result = -1;
-    while (is(vm, arg(0).string, context))
-    {
-        result = eval(vm, arg(1).string, context);
-
-        if (result >= 0)
-        {
-            break;
-        }
-    }
-    return result;
-}
-
 function(brl_std_loop_repeat)
 {
     for (Int i = 0; i < arg(0).number; i++)
@@ -1473,12 +1274,7 @@ function(brl_mem_copy)
 
 function(brl_mem_get)
 {
-    if (arg(0).number >= 0 && arg(0).number < vm->stack->size)
-    {
-        return arg_i(0);
-    }
-    
-    return -1;
+    return((Int)arg(0).number);
 }
 
 function(brl_mem_delete)
@@ -1653,8 +1449,6 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "copy", brl_mem_copy);
     register_builtin(vm, "do", brl_std_do);
     register_builtin(vm, "return", brl_std_return);
-    register_builtin(vm, "gindex", brl_std_gindex);
-    register_builtin(vm, "tindex", brl_std_tindex);
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.type", brl_std_io_ls_types);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
@@ -1687,8 +1481,6 @@ void init_loop(VirtualMachine *vm)
     register_builtin(vm, "while", brl_std_loop_while);
     register_builtin(vm, "repeat", brl_std_loop_repeat);
     register_builtin(vm, "each", brl_std_loop_each);
-
-    register_builtin(vm, "while.is", brl_std_loop_while_is);
 }
 
 void init_hash(VirtualMachine *vm)
@@ -1715,9 +1507,9 @@ void init_math(VirtualMachine *vm)
     register_builtin(vm, "random", brl_std_math_random);
     register_builtin(vm, "incr", brl_std_math_increment);
     register_builtin(vm, "decr", brl_std_math_decrement);
-    register_builtin(vm, "math", brl_std_math);
-    register_builtin(vm, "index", brl_std_imath);
-    register_builtin(vm, "inplace", brl_std_inplace);
+
+    register_builtin(vm, "pointer.get", brl_std_pointer_get);
+    register_builtin(vm, "pointer.set", brl_std_pointer_set);
 }
 
 void init_string(VirtualMachine *vm)
@@ -1756,8 +1548,6 @@ void init_condition(VirtualMachine *vm)
 
     // slow
     register_builtin(vm, "is", brl_std_is);
-    register_builtin(vm, "if.is", brl_std_condition_if_is);
-    register_builtin(vm, "ifelse.is", brl_std_condition_ifelse_is);
 
 }
 

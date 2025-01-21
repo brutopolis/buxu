@@ -13,7 +13,7 @@
 #include <emscripten.h>
 #endif
 
-#define VERSION "0.7.3c"
+#define VERSION "0.7.4"
 
 #define TYPE_NIL 0
 #define TYPE_NUMBER 1
@@ -246,14 +246,7 @@ extern void print_element(VirtualMachine *vm, Int index);
 
 
 // functions
-Int parse_element(VirtualMachine* vm, char* str, HashList* context);
-IntList* parse_string(void* _vm, char* cmd, HashList* context);
-
-Float solve_number(VirtualMachine *vm, char* token, HashList *context);
-Float math(VirtualMachine *vm, char* str, HashList *context);
-
-Int solve_index(VirtualMachine *vm, char* token, HashList *context);
-Int imath(VirtualMachine *vm, char* str, HashList *context);
+IntList* parse(void* _vm, char* cmd, HashList* context);
 
 // <libraries header>
 

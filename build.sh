@@ -121,6 +121,7 @@ while [[ $# -gt 0 ]]; do
         --exec) EXEC="$2"; shift 2 ;;
         --outpath) OUTPATH="$2"; shift 2 ;;
         --debug) DEBUG=1; shift ;;
+        --debug-file) DEBUG=1; DEBUG_FILE="$2"; shift 2 ;;
         --cc) CC="$2"; shift 2 ;;
         --ino) INO=1; shift ;;
         --emcc) EMCC="$2"; shift 2 ;;
@@ -260,6 +261,18 @@ if [[ -n "$(ls -A lib)" ]]; then
     fi
 fi
 
+if [ -n "$DEBUG_FILE" ]; then
+    valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter $DEBUG_FILE
+    ms_print massif.out.* > massif-out.txt
+    rm -rf massif.out.*
+
+    valgrind \
+        --leak-check=full \
+        --show-leak-kinds=all \
+        --track-origins=yes \
+        --log-file=valgrind-out.txt \
+        --verbose ./bruter $DEBUG_FILE
+fi
 
 rm -rf *.o lib/*.o src
 
