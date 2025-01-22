@@ -69,9 +69,7 @@ bruter is a metaprogramable lightweight virtual machine/interpreted programming 
     function 'string';
     function (@@ string);
     if "condition" "code";
-    if.is "condition" "code";
     ifelse "condition" "code" "code";
-    ifelse.is "condition" "code" "code";
     function (group "from x to y");
 
 ## Building instructions

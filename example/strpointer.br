@@ -1,9 +1,8 @@
 hash.set "str" "Hello, world!";
 print str;
-hash.set "ptr" (pointer.get str);
+hash.set "ptr" (to.float str);
 mem.set ptr (add ptr 3); 
-hash.set "str2" 0;
+hash.set "str2" (to.int ptr);
 type.set str2 type.string;
-pointer.set str2 ptr;
 print str2;
-type.set str2 type.other;// if we dont do this the compiler will try to unallocate the (duplicated) pointer and crash
+type.set str2 type.other;// if we dont do this the compiler will try to unallocate the (duplicated) pointer and crash;

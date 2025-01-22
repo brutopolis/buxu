@@ -1,18 +1,17 @@
-(21/01/2025) - version 0.7.4
+(22/01/2025) - version 0.7.4
 
 - each fixed;
+- type.set fixed;
 - new operator: @name, it returns the index of the hash as number value, replacement for gindex function;
 - gindex removed;
 - tree-walking math interpreters removed;
 - new function to.int;
 - new function to.float;
-- new function to.index;
 - removed if.is, ifelse.is and while.is, use if, ifelse and while instead, you can combine with the "is" function to get the same result;
+- comments are leaking no more;
 
 TODO: array/string element/char fast access;
 TODO: array/string element/char fast operations;
-TODO: fix example strpointer.br leak;
-TODO: fix strcall.br and fib.br which still use math interpreter;
 
 (18/01/2025) - version 0.7.3c
 

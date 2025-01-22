@@ -751,6 +751,11 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         }
         else if (str[0] == '/' && str[1] == '/') // comment
         {
+            free(str);
+            while (splited->size > 0)
+            {
+                free(stack_pop(*splited));
+            }
             break;
         }
         else //variable 

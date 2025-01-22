@@ -262,7 +262,8 @@ if [[ -n "$(ls -A lib)" ]]; then
 fi
 
 if [ -n "$DEBUG_FILE" ]; then
-    valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./bruter $DEBUG_FILE
+    cd ../../
+    valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./build_tmp/$OUTPATH/bruter $DEBUG_FILE
     ms_print massif.out.* > massif-out.txt
     rm -rf massif.out.*
 
@@ -271,7 +272,9 @@ if [ -n "$DEBUG_FILE" ]; then
         --show-leak-kinds=all \
         --track-origins=yes \
         --log-file=valgrind-out.txt \
-        --verbose ./bruter $DEBUG_FILE
+        --verbose ./build_tmp/$OUTPATH/bruter $DEBUG_FILE
+
+    cd build_tmp/$OUTPATH
 fi
 
 rm -rf *.o lib/*.o src

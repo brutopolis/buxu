@@ -492,10 +492,9 @@ function(brl_std_type_get)
 
 function(brl_std_type_set)
 {
-    arg_t(0) = (Int)arg(0).number;
+    arg_t(0) = (Int)arg(1).number;
     return -1;
 }
-
 
 // math functions
 // math functions
@@ -602,16 +601,17 @@ function(brl_std_math_decrement)
     return -1;
 }
 
-function(brl_std_pointer_get)
+function(brl_std_to_float)
 {
     return new_number(vm, (Float)arg(0).integer);
 }
 
-function(brl_std_pointer_set)
+function(brl_std_to_int)
 {
-    arg_t(0) = TYPE_STRING;
-    arg(0).integer = (Int)arg(1).number;
-    return -1;
+    Int result = new_var(vm);
+    data_t(result) = TYPE_INTEGER;
+    data(result).integer = (Int)arg(1).number;
+    return result;
 }
 
 // list functions
@@ -1508,8 +1508,8 @@ void init_math(VirtualMachine *vm)
     register_builtin(vm, "incr", brl_std_math_increment);
     register_builtin(vm, "decr", brl_std_math_decrement);
 
-    register_builtin(vm, "pointer.get", brl_std_pointer_get);
-    register_builtin(vm, "pointer.set", brl_std_pointer_set);
+    register_builtin(vm, "to.float", brl_std_to_float);
+    register_builtin(vm, "to.int", brl_std_to_int);
 }
 
 void init_string(VirtualMachine *vm)
