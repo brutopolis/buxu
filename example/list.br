@@ -1,15 +1,15 @@
-hash.set 'l' (list.new);
-list.push l 1;
-list.push l 2;
-list.push l 3;
-list.push l 4;
-list.push l 5;
-list.unshift l 6;
-list.unshift l 7;
-hash.set '_min' (list.pop l);
-hash.set '_max' (list.shift l);
-print @2>40;
-print (list.get l 0);
+#set 'l' (list);
+:push l 1;
+:push l 2;
+:push l 3;
+:push l 4;
+:push l 5;
+:unshift l 6;
+:unshift l 7;
+#set '_min' (:pop l);
+#set '_max' (:shift l);
+print (group "from 2 to 40");
+print (:get l 0);
 print l;
-print (list.get l 0);
+print (:get l 0);
 return 0

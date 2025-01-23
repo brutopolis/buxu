@@ -1,8 +1,8 @@
-hash.set "variavel" 1;
-hash.set "vglobal" 1;
+#set "variavel" 1;
+#set "vglobal" 1;
 print "aqui fora variavel é" variavel;
 print "aqui fora vglobal é" vglobal;
-hash.set "func" (fn "variavel"
+#set "func" (fn "variavel"
     (@@
         print "aqui dentro é" variavel;
         print "aqui dentro vglobal é" vglobal;

@@ -1,173 +1,5 @@
 #include "bruter.h"
 
-// functions defitions for internal use
-// functions defitions for internal use
-// functions defitions for internal use
-// functions defitions for internal use
-// functions defitions for internal use
-
-
-char is(VirtualMachine *vm, char* str, HashList *context)
-{
-    char condition_result = 0;
-    Float cond[4] = {0, 0, 0, 0};
-    StringList *splited = special_split(str, ' ');
-    Int index = -1;
-    Int step = -1;
-    char _new_condition_result = 0;
-    
-    while (index < splited->size)
-    {
-        index++;
-        step++;
-        switch(step)
-        {
-            case 1:
-                if (index >= splited->size)
-                {
-                    _new_condition_result = (cond[0] != 0);
-                    goto condition_processing;
-                }
-
-                switch (splited->data[index][0])
-                {
-                    case '=':
-                        cond[1] = 1;
-                        break;
-                    case '!':
-                        cond[1] = 2;
-                        break;
-                    case '>':
-                        cond[1] = 3;
-                        break;
-                    case '<': 
-                        cond[1] = 4;
-                        break;
-                    default:
-                        // error
-                        printf("error: cant handle this condition (%s)\n", splited->data[index]);
-                        exit(1);
-                        break;
-                }
-                break;
-            case 3:
-                _new_condition_result = 0;
-
-                switch ((Int)cond[1])
-                {
-                    case 1: // ==
-                        _new_condition_result = (cond[0] == cond[2]);
-                        break;
-                    case 2: // !=
-                        _new_condition_result = (cond[0] != cond[2]);
-                        break;
-                    case 3: // >
-                        _new_condition_result = (cond[0] >  cond[2]);
-                        break;
-                    case 4: // <
-                        _new_condition_result = (cond[0] <  cond[2]);
-                        break;
-                    case 5: // >=
-                        _new_condition_result = (cond[0] >= cond[2]);
-                        break;
-                    case 6: // <=
-                        _new_condition_result = (cond[0] <= cond[2]);
-                        break;
-                }
-                condition_processing:
-
-                switch ((Int)cond[3])
-                {    
-                    case 1:
-                        _new_condition_result = condition_result && _new_condition_result;
-                        break;
-                    case 2:
-                        _new_condition_result = condition_result || _new_condition_result;
-                        break;
-                }
-
-                
-                condition_result = _new_condition_result;
-
-
-                if (index < splited->size-1)
-                {
-                    if (strcmp(splited->data[index], "&&") == 0)
-                    {
-                        cond[3] = 1;
-                    }
-                    else if (strcmp(splited->data[index], "||") == 0)
-                    {
-                        cond[3] = 2;
-                    }
-                    else
-                    {
-                        // error
-                        printf("error: cant handle this symbol (%s)\n", splited->data[index]);
-                        exit(1);
-                    }
-                }
-                else 
-                {
-                    for (Int i = 0; i < splited->size; i++)
-                    {
-                        free(splited->data[i]);
-                    }
-                    stack_free(*splited);
-                    return condition_result;
-                }
-
-                step = -1;
-                break;
-            default:// 0 or 2
-                if (splited->data[index][0] == '@')
-                {
-                    cond[step] = data(atoi(splited->data[index]+1)).number;
-                }
-                else if ((splited->data[index][0] >= '0' && splited->data[index][0] <= '9') || splited->data[index][0] == '-')
-                {
-                    cond[step] = atof(splited->data[index]);
-                }
-                else if (splited->data[index][0] == '(')
-                {
-                    char* _str = str_sub(splited->data[index], 1, strlen(splited->data[index]) - 1);
-                    cond[step] = is(vm, _str, context);
-                    free(_str);
-                }
-                else
-                {
-                    Int _index;
-                    if (context != NULL)
-                    {
-                        void *backup = vm->hashes;
-                        vm->hashes = context;
-                        _index = hash_find(vm, splited->data[index]);
-                        vm->hashes = backup;
-                        if (_index == -1)
-                        {
-                            _index = hash_find(vm, splited->data[index]);
-                        }
-                        cond[step] = data(_index).number;
-                    }
-                    else 
-                    {
-                        _index = hash_find(vm, splited->data[index]);
-                        cond[step] = data(_index).number;
-                    }
-                }
-                break;
-        }
-        
-    }
-    for (Int i = 0; i < splited->size; i++)
-    {
-        free(splited->data[i]);
-    }
-    stack_free(*splited);
-    printf("error: misformed condition: %s\n", str);
-    return -1;
-}
-
 // functions defitions for bruter
 // functions defitions for bruter
 // functions defitions for bruter
@@ -614,6 +446,11 @@ function(brl_std_to_int)
     return result;
 }
 
+function(brl_std_to_index)
+{
+    return ((Int)arg(0).number);
+}
+
 // list functions
 // list functions
 // list functions
@@ -623,6 +460,10 @@ function(brl_std_list_new)
 {
     Int index = new_list(vm);
     IntList *list = (IntList*)data(index).pointer;
+    for (Int i = 0; i < args->size; i++)
+    {
+        stack_push(*list, arg_i(i));
+    }
     return index;
 }
 
@@ -635,6 +476,12 @@ function(brl_std_list_push)
         {
             stack_push(*list, arg_i(i));
         }
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        arg(0).string = (char*)realloc(arg(0).string, strlen(arg(0).string) + 1);
+        arg(0).string[strlen(arg(0).string) + 1] = '\0';
+        arg(0).string[strlen(arg(0).string)] = arg_i(1);
     }
     return -1;
 }
@@ -649,15 +496,33 @@ function(brl_std_list_unshift)
             stack_unshift(*list, arg_i(i));
         }
     }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        arg(0).string = (char*)realloc(arg(0).string, strlen(arg(0).string) + 1);
+        arg(0).string[strlen(arg(0).string) + 1] = '\0';
+        for (Int i = strlen(arg(0).string); i > 0; i--)
+        {
+            arg(0).string[i] = arg(0).string[i - 1];
+        }
+        arg(0).string[0] = arg_i(1);
+    }
     return -1;   
 }
 
+// :pop
 function(brl_std_list_pop)// returns the removed element
 {
     if (arg_t(0) == TYPE_LIST)
     {
         IntList *list = (IntList*)arg(0).pointer;
         return stack_pop(*list);
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        Int result = str[strlen(str) - 2];
+        str[strlen(str) - 1] = '\0';
+        return result;
     }
     return -1;
 }
@@ -669,73 +534,183 @@ function(brl_std_list_shift)// returns the removed element
         IntList *list = (IntList*)arg(0).pointer;
         return stack_shift(*list);
     }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        char c = str[0];
+        for (Int i = 0; i < strlen(str); i++)
+        {
+            str[i] = str[i+1];
+        }
+        return c;
+    }
+    return -1;
+}
+
+function(brl_std_list_insert)
+{
+    if (arg_t(0) == TYPE_LIST)
+    {
+        IntList *list = (IntList*)arg(0).pointer;
+        stack_insert(*list, (Int)arg(1).number, arg_i(2));
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        char c = arg_i(2);
+        Int index = arg(1).number;
+        str = (char*)realloc(str, strlen(str) + 1);
+        str[strlen(str) + 1] = '\0';
+        for (Int i = strlen(str); i > index; i--)
+        {
+            str[i] = str[i - 1];
+        }
+        str[index] = c;
+    }
+    return -1;
+}
+
+function(brl_std_list_remove)
+{
+    if (arg_t(0) == TYPE_LIST)
+    {
+        IntList *list = (IntList*)arg(0).pointer;
+        stack_remove(*list, (Int)arg(1).number);
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        Int index = arg(1).number;
+        for (Int i = index; i < strlen(str); i++)
+        {
+            str[i] = str[i + 1];
+        }
+    }
     return -1;
 }
 
 function(brl_std_list_concat)
 {
-    Int _newlist = new_list(vm);
-    IntList *newlist = (IntList*)data(_newlist).pointer;
-    for (Int i = 0; i < args->size; i++)
+    if (arg_t(0) == TYPE_LIST)
     {
-        if (arg_t(i) == TYPE_LIST)
+        Int _newlist = new_list(vm);
+        IntList *newlist = (IntList*)data(_newlist).pointer;
+        for (Int i = 0; i < args->size; i++)
         {
-            IntList *list = (IntList*)arg(i).pointer;
-            for (Int j = 0; j < list->size; j++)
+            if (arg_t(i) == TYPE_LIST)
             {
-                stack_push(*newlist, list->data[j]);
+                IntList *list = (IntList*)arg(i).pointer;
+                for (Int j = 0; j < list->size; j++)
+                {
+                    stack_push(*newlist, list->data[j]);
+                }
             }
         }
+        return _newlist;
     }
-    return _newlist;
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        Int _newstr = new_string(vm, "");
+        char* newstr = data(_newstr).string;
+        for (Int i = 0; i < args->size; i++)
+        {
+            if (arg_t(i) == TYPE_STRING)
+            {
+                strcat(newstr, arg(i).string);
+            }
+        }
+        return _newstr;
+    }
+    return -1;
 }
 
 function(brl_std_list_find)
 {
-    Int list = arg_i(0);
-    Int value = arg_i(1);
     if (arg_t(0) == TYPE_LIST)
     {
-        IntList *lst = (IntList*)data(list).pointer;
-        for (Int i = 0; i < lst->size; i++)
+        Int list = arg_i(0);
+        Int value = arg_i(1);
+        if (arg_t(0) == TYPE_LIST)
         {
-            if (lst->data[i] == list)
+            IntList *lst = (IntList*)data(list).pointer;
+            for (Int i = 0; i < lst->size; i++)
             {
-                return i;
+                if (lst->data[i] == list)
+                {
+                    return i;
+                }
             }
         }
     }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        char *substr = arg(1).string;
+        return(new_number(vm, str_find(str, substr)));
+    }
+
     return -1;
 }
 
 function(brl_std_list_get)
 {
-    Int list = arg_i(0);
-    Int index = arg(1).number;
     if (arg_t(0) == TYPE_LIST)
     {
-        IntList *lst = (IntList*)data(list).pointer;
-        if (index >= 0 && index < lst->size)
+        Int list = arg_i(0);
+        Int index = arg(1).number;
+        if (arg_t(0) == TYPE_LIST)
         {
-            return lst->data[index];
+            IntList *lst = (IntList*)data(list).pointer;
+            if (index >= 0 && index < lst->size)
+            {
+                return lst->data[index];
+            }
+            else 
+            {
+                printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
+                print_element(vm, list);
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        Int index = arg(1).number;
+        if (index >= 0 && index < strlen(str))
+        {
+            return str[index];
         }
         else 
         {
-            printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
-            print_element(vm, list);
-            return -1;
+            printf("error: index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
+            print_element(vm, arg_i(0));
         }
     }
     return -1;
 }
 
-function(brl_std_list_set)
+function(brl_std_list_length)
 {
-    Int list = arg_i(0);
-    Int index = arg(1).number;
-    Int value = arg_i(2);
     if (arg_t(0) == TYPE_LIST)
     {
+        return new_number(vm, ((IntList*)arg(0).pointer)->size);
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        return new_number(vm, strlen(arg(0).string));
+    }
+    return -1;
+}
+
+
+function(brl_std_list_set)
+{
+    
+    if (arg_t(0) == TYPE_LIST)
+    {
+        Int list = arg_i(0);
+        Int index = arg(1).number;
+        Int value = arg_i(2);
         IntList *lst = (IntList*)data(list).pointer;
         if (index >= 0 && index < lst->size)
         {
@@ -746,23 +721,23 @@ function(brl_std_list_set)
             printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
             print_element(vm, list);
         }
+        return -1;
     }
-    return -1;
-}
-
-function(brl_std_list_length)
-{
-    Int list = arg_i(0);
-    return -1;
-}
-
-function(brl_std_list_last)
-{
-    Int list = arg_i(0);
-    if (arg_t(0) == TYPE_LIST)
+    else if (arg_t(0) == TYPE_STRING)
     {
-        IntList *lst = (IntList*)data(list).pointer;
-        return lst->data[lst->size - 1];
+        char *str = arg(0).string;
+        Int index = arg(1).number;
+        char c = arg_i(2);
+        if (index >= 0 && index < strlen(str))
+        {
+            str[index] = c;
+        }
+        else 
+        {
+            printf("error: index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
+            print_element(vm, arg_i(0));
+        }
+        return -1;
     }
     return -1;
 }
@@ -775,36 +750,169 @@ function(brl_std_list_reverse)
         IntList *lst = (IntList*)data(list).pointer;
         stack_reverse(*lst);
     }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        for (Int i = 0; i < strlen(str) / 2; i++)
+        {
+            char temp = str[i];
+            str[i] = str[strlen(str) - i - 1];
+            str[strlen(str) - i - 1] = temp;
+        }
+    }
     return -1;
 }
 
-// std string
-
-function(brl_std_string_concat)
+function(brl_std_list_sub)
 {
-    Int _newstr = new_string(vm, "");
-    char* newstr = data(_newstr).string;
-    for (Int i = 0; i < args->size; i++)
+    if (arg_t(0) == TYPE_STRING)
     {
-        if (vm->typestack->data[args->data[i]] == TYPE_STRING)
-        {
-            strcat(newstr, vm->stack->data[args->data[i]].string);
-        }
+        char* _str = str_nduplicate(arg(0).string, arg(1).number);
+        Int result = new_string(vm, _str);
+        return result;
     }
-    return _newstr;
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        IntList *list = (IntList*)arg(0).pointer;
+        IntList *newlist = make_int_list();
+        for (Int i = 0; i < arg(1).number; i++)
+        {
+            stack_push(*newlist, list->data[i]);
+        }
+        Int result = new_var(vm);
+        data(result).pointer = newlist;
+        data_t(result) = TYPE_LIST;
+        return result;
+    }
+    return -1;
 }
 
-function(brl_std_string_find)
+function(brl_std_list_split)
 {
-    return new_number(vm, str_find(arg(0).string, arg(1).string));
+    if (arg_t(0) == TYPE_STRING)
+    {
+        Int _splited = new_list(vm);
+        IntList *__splited = (IntList*)data(_splited).pointer;
+        char* str = arg(0).string;
+        Int separator = arg_i(1);
+        StringList *splited = str_split_char(str, separator);
+        for (Int i = 0; i < splited->size; i++)
+        {
+            Int _str = new_string(vm, splited->data[i]);
+            stack_push(*__splited, _str);
+        }
+        for (Int i = 0; i < splited->size; i++)
+        {
+            free(splited->data[i]);
+        }
+        stack_free(*splited);
+        return _splited;
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        Int _splited = new_list(vm);
+        IntList *__splited = (IntList*)data(_splited).pointer;
+        IntList *list = (IntList*)arg(0).pointer;
+        Int separator = arg_i(1);
+        Int temp = new_list(vm);
+        IntList *_temp = (IntList*)data(temp).pointer;
+        for (Int i = 0; i < list->size; i++)
+        {
+            if (list->data[i] == separator)
+            {
+                stack_push(*__splited, temp);
+                temp = new_list(vm);
+                _temp = (IntList*)data(temp).pointer;
+            }
+            else 
+            {
+                stack_push(*_temp, list->data[i]);
+            }
+        }
+        stack_push(*__splited, temp);
+        return _splited;
+    }
 }
 
-function(brl_std_string_ndup)
+function(brl_std_list_replace)
 {
-    char* _str = str_nduplicate(arg(0).string, arg(1).number);
-    Int result = new_string(vm, _str);
-    return result;
+    if (arg_t(0) == TYPE_STRING)
+    {
+        Int str = arg_i(0);
+        Int substr = arg_i(1);
+        Int replacement = arg_i(2);
+        char* _str = data(str).string;
+        char* _substr = data(substr).string;
+        char* _replacement = data(replacement).string;
+        char* _newstr = str_replace(_str, _substr, _replacement);
+        Int result = new_string(vm, _newstr);
+        free(_newstr);
+        return result;
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        Int _newlist = new_list(vm);
+        IntList *newlist = (IntList*)data(_newlist).pointer;
+        IntList *list = (IntList*)arg(0).pointer;
+        Int substr = arg_i(1);
+        Int replacement = arg_i(2);
+        char done = 0;
+        for (Int i = 0; i < list->size; i++)
+        {
+            if (list->data[i] == substr && !done)
+            {
+                stack_push(*newlist, replacement);
+                done = 1; // replace only the first occurence
+            }
+            else 
+            {
+                stack_push(*newlist, list->data[i]);
+            }
+        }
+        return _newlist;
+    }
+    return -1;
 }
+
+function(brl_std_list_replace_all)
+{
+    if (arg_t(0) == TYPE_STRING)
+    {
+        Int str = arg_i(0);
+        Int substr = arg_i(1);
+        Int replacement = arg_i(2);
+        char* _str = data(str).string;
+        char* _substr = data(substr).string;
+        char* _replacement = data(replacement).string;
+        char* _newstr = str_replace_all(_str, _substr, _replacement);
+        Int result = new_string(vm, _newstr);
+        free(_newstr);
+        return result;
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        Int _newlist = new_list(vm);
+        IntList *newlist = (IntList*)data(_newlist).pointer;
+        IntList *list = (IntList*)arg(0).pointer;
+        Int substr = arg_i(1);
+        Int replacement = arg_i(2);
+        for (Int i = 0; i < list->size; i++)
+        {
+            if (list->data[i] == substr)
+            {
+                stack_push(*newlist, replacement);
+            }
+            else 
+            {
+                stack_push(*newlist, list->data[i]);
+            }
+        }
+        return _newlist;
+    }
+    return -1;
+}
+
+// string functions
 
 function(brl_std_string_split)
 {
@@ -826,44 +934,10 @@ function(brl_std_string_split)
     return _splited;
 }
 
-function(brl_std_string_replace)
-{
-    Int str = arg_i(0);
-    Int substr = arg_i(1);
-    Int replacement = arg_i(2);
-    char* _str = data(str).string;
-    char* _substr = data(substr).string;
-    char* _replacement = data(replacement).string;
-    char* _newstr = str_replace(_str, _substr, _replacement);
-    Int result = new_string(vm, _newstr);
-    free(_newstr);
-    return result;
-}
-
-function(brl_std_string_replace_all)
-{
-    Int str = arg_i(0);
-    Int substr = arg_i(1);
-    Int replacement = arg_i(2);
-    char* _str = data(str).string;
-    char* _substr = data(substr).string;
-    char* _replacement = data(replacement).string;
-    char* _newstr = str_replace_all(_str, _substr, _replacement);
-    Int result = new_string(vm, _newstr);
-    free(_newstr);
-    return result;
-}
-
 function(brl_std_string_to_number)
 {
     Int str = arg_i(0);
     return new_number(vm, atof(data(str).string));
-}
-
-function(brl_std_string_length)
-{
-    Int str = arg_i(0);
-    return new_number(vm, strlen(data(str).string));
 }
 
 function(brl_std_string_format)
@@ -1085,68 +1159,43 @@ function(brl_std_condition_raw_or)
     return 0;
 }
 
-function(brl_std_condition_xor)
-{
-    if (arg(0).integer && !arg(1).integer)
-    {
-        return 1;
-    }
-    if (!arg(0).integer && arg(1).integer)
-    {
-        return 1;
-    }
-    return 0;
-}
-
-function(brl_std_is)
-{
-    char* str = arg(0).string;
-    char* _str = str_nduplicate(str, strlen(str));
-    Int result = is(vm, _str, context);
-    free(_str);
-    return result;
-}
-
 function(brl_std_group)//group interpreter
 {
     stack_reverse(*args);
-    Int _str = stack_pop(*args);
-    StringList *splited = special_split(data(_str).string, ' ');
-    stack_reverse(*splited);
     Int lst = new_list(vm);
     IntList *list = (IntList*)data(lst).pointer;
+
+    Int _add_index = hash_find(vm, "+");
+    Int _sub_index = hash_find(vm, "-");
+    Int _from_index = hash_find(vm, "from");
+    Int _to_index = hash_find(vm, "to");
 
     Int from,to;
     from = 0;
     to = vm->stack->size-1;
-    while (splited->size > 0)
+    while (args->size > 0)
     {
-        char* str = stack_pop(*splited);
-        if (strcmp(str, "from") == 0)
+        Int opt = stack_pop(*args);
+        if (opt == _from_index)
         {
-            free(str);
-            str = stack_pop(*splited);
-            from = atoi(str);
+            from = stack_pop(*args);
         }
-        else if (strcmp(str, "to") == 0)
+        else if (opt == _to_index)
         {
-            free(str);
-            str = stack_pop(*splited);
-            to = atoi(str);
+            to = stack_pop(*args);
         }
-        else if (strcmp(str, "+") == 0)
+        else if (opt == _add_index)
         {
-            free(str);
-            str = stack_pop(*splited);
-            to = from + atoi(str);
+            to = from + stack_pop(*args);
         }
-        else if (strcmp(str, "-") == 0)
+        else if (opt == _sub_index)
         {
-            free(str);
-            str = stack_pop(*splited);
-            to = from - atoi(str);
+            to = from - stack_pop(*args);
         }
-        free(str);
+        else 
+        {
+            from = opt;
+        }
     }
 
     if (from < 0)
@@ -1182,7 +1231,6 @@ function(brl_std_group)//group interpreter
         }
     }
 
-    stack_free(*splited);
     return lst;
 }
 
@@ -1272,6 +1320,11 @@ function(brl_mem_copy)
     return newvar;
 }
 
+function(brl_mem_length)
+{
+    return new_number(vm, vm->stack->size);
+}
+
 function(brl_mem_get)
 {
     return((Int)arg(0).number);
@@ -1294,65 +1347,6 @@ function(brl_mem_next)
     }
     return -1;
 }
-
-function(brl_mem_length)
-{
-    return new_number(vm, vm->stack->size);
-}
-
-function(brl_mem_sector_new)
-{
-    Int index = new_var(vm);
-    while ((arg(0).number - 1) > 0)
-    {
-        new_var(vm);
-        arg(0).number--;
-    }
-    return index;
-}
-
-function(brl_mem_sector_copy)
-{
-    while (arg(2).number > 0)
-    {
-        if (arg_i(0) >= 0 && arg_i(0) < vm->stack->size)
-        {
-            if (arg_i(1) >= 0 && arg_i(1) < vm->stack->size)
-            {
-                arg(1) = value_duplicate(arg(0), arg_t(0));
-                arg_t(1) = arg_t(0);
-            }
-        }
-        arg_i(0)++;
-        arg_i(1)++;
-        arg(2).number--;
-    }
-    return -1;
-}
-
-function(brl_mem_sector_swap)
-{
-    while (arg(2).number > 0)
-    {
-        if (arg_i(0) >= 0 && arg_i(0) < vm->stack->size)
-        {
-            if (arg_i(1) >= 0 && arg_i(1) < vm->stack->size)
-            {
-                Value temp = arg(0);
-                char type = arg_t(0);
-                arg(0) = arg(1);
-                arg_t(0) = arg_t(1);
-                arg(1) = temp;
-                arg_t(1) = type;
-            }
-        }
-        arg_i(0)++;
-        arg_i(1)++;
-        arg(2).number--;
-    }
-    return -1;
-}
-
 
 function(brl_std_mem_push)
 {
@@ -1485,26 +1479,26 @@ void init_loop(VirtualMachine *vm)
 
 void init_hash(VirtualMachine *vm)
 {
-    register_builtin(vm, "hash.set", brl_std_hash_set);
-    register_builtin(vm, "hash.get", brl_std_hash_get);
-    register_builtin(vm, "hash.delete", brl_std_hash_delete);
-    register_builtin(vm, "hash.rename", brl_std_hash_rename);
+    register_builtin(vm, "#set", brl_std_hash_set);
+    register_builtin(vm, "#get", brl_std_hash_get);
+    register_builtin(vm, "#delete", brl_std_hash_delete);
+    register_builtin(vm, "#rename", brl_std_hash_rename);
 }
 
 void init_math(VirtualMachine *vm)
 {
-    register_builtin(vm, "add", brl_std_math_add);
-    register_builtin(vm, "sub", brl_std_math_sub);
-    register_builtin(vm, "mul", brl_std_math_mul);
-    register_builtin(vm, "div", brl_std_math_div);
-    register_builtin(vm, "mod", brl_std_math_mod);
+    register_builtin(vm, "+", brl_std_math_add);
+    register_builtin(vm, "-", brl_std_math_sub);
+    register_builtin(vm, "*", brl_std_math_mul);
+    register_builtin(vm, "/", brl_std_math_div);
+    register_builtin(vm, "\%", brl_std_math_mod);
     register_builtin(vm, "pow", brl_std_math_pow);
     register_builtin(vm, "abs", brl_std_math_abs);
     register_builtin(vm, "ceil", brl_std_math_ceil);
-    register_builtin(vm, "seed", brl_std_math_seed);
     register_builtin(vm, "floor", brl_std_math_floor);
     register_builtin(vm, "round", brl_std_math_round);
     register_builtin(vm, "random", brl_std_math_random);
+    register_builtin(vm, "seed", brl_std_math_seed);
     register_builtin(vm, "incr", brl_std_math_increment);
     register_builtin(vm, "decr", brl_std_math_decrement);
 
@@ -1515,15 +1509,9 @@ void init_math(VirtualMachine *vm)
 void init_string(VirtualMachine *vm)
 {
     register_builtin(vm, "string.set", brl_std_string_set);
-    register_builtin(vm, "string.sub", brl_std_string_ndup);
-    register_builtin(vm, "string.find", brl_std_string_find);
-    register_builtin(vm, "string.len", brl_std_string_length);
-    register_builtin(vm, "string.split", brl_std_string_split);
-    register_builtin(vm, "string.concat", brl_std_string_concat);
     register_builtin(vm, "string.format", brl_std_string_format);
-    register_builtin(vm, "string.replace", brl_std_string_replace);
     register_builtin(vm, "string.to.number", brl_std_string_to_number);
-    register_builtin(vm, "string.replace.all", brl_std_string_replace_all);
+    register_builtin(vm, "string.split", brl_std_string_split);
 }
 
 void init_condition(VirtualMachine *vm)
@@ -1542,36 +1530,29 @@ void init_condition(VirtualMachine *vm)
     register_builtin(vm, "not", brl_std_condition_not);
     register_builtin(vm, "&&", brl_std_condition_and);
     register_builtin(vm, "||", brl_std_condition_raw_or);
-
-    register_builtin(vm, "xor", brl_std_condition_xor);
-
-
-    // slow
-    register_builtin(vm, "is", brl_std_is);
-
 }
 
 void init_list(VirtualMachine *vm)
 {
-    register_builtin(vm, "list.new", brl_std_list_new);
-    register_builtin(vm, "list.pop", brl_std_list_pop);
-    register_builtin(vm, "list.get", brl_std_list_get);
-    register_builtin(vm, "list.len", brl_std_list_length);
-    register_builtin(vm, "list.push", brl_std_list_push);
-    register_builtin(vm, "list.find", brl_std_list_find);
-    register_builtin(vm, "list.shift", brl_std_list_shift);
-    register_builtin(vm, "list.concat", brl_std_list_concat);
-    register_builtin(vm, "list.unshift", brl_std_list_unshift);
-    register_builtin(vm, "list.last", brl_std_list_last);
-    register_builtin(vm, "list.set", brl_std_list_set);
-    register_builtin(vm, "list.reverse", brl_std_list_reverse);
-}
+    register_builtin(vm, "list", brl_std_list_new);
 
-void init_sector(VirtualMachine *vm)
-{
-    register_builtin(vm, "sector.new", brl_mem_sector_new);
-    register_builtin(vm, "sector.copy", brl_mem_sector_copy);
-    register_builtin(vm, "sector.swap", brl_mem_sector_swap);
+    register_builtin(vm, ":pop", brl_std_list_pop);
+    register_builtin(vm, ":get", brl_std_list_get);
+    register_builtin(vm, ":set", brl_std_list_set);
+    register_builtin(vm, ":len", brl_std_list_length);
+    register_builtin(vm, ":push", brl_std_list_push);
+    register_builtin(vm, ":find", brl_std_list_find);
+    register_builtin(vm, ":shift", brl_std_list_shift);
+    register_builtin(vm, ":concat", brl_std_list_concat);
+    register_builtin(vm, ":unshift", brl_std_list_unshift);
+    register_builtin(vm, ":reverse", brl_std_list_reverse);
+    register_builtin(vm, ":insert", brl_std_list_insert);
+    register_builtin(vm, ":remove", brl_std_list_remove);
+    register_builtin(vm, ":split", brl_std_list_split);
+
+    register_builtin(vm, ":sub", brl_std_list_sub);
+    register_builtin(vm, ":replace", brl_std_list_replace);
+    register_builtin(vm, ":replace.all", brl_std_list_replace_all);
 }
 
 void init_mem(VirtualMachine *vm)
@@ -1589,8 +1570,6 @@ void init_mem(VirtualMachine *vm)
     register_builtin(vm, "mem.pop", brl_std_mem_pop);
     register_builtin(vm, "mem.shift", brl_std_mem_shift);
     register_builtin(vm, "mem.find", brl_std_mem_find);
-
-    init_sector(vm);
 }
 
 // std init presets
@@ -1609,4 +1588,6 @@ void init_std(VirtualMachine *vm)
     init_condition(vm);
     init_mem(vm);
     register_string(vm, "VERSION", VERSION);// version
+    hash_set(vm, "from", -2);
+    hash_set(vm, "to", -3);
 }

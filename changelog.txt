@@ -1,4 +1,4 @@
-(22/01/2025) - version 0.7.4
+(23/01/2025) - version 0.7.4
 
 - each fixed;
 - type.set fixed;
@@ -7,11 +7,20 @@
 - tree-walking math interpreters removed;
 - new function to.int;
 - new function to.float;
-- removed if.is, ifelse.is and while.is, use if, ifelse and while instead, you can combine with the "is" function to get the same result;
+- new function to.index;
+- removed if.is, ifelse.is and while.is, use if, ifelse and while instead;
 - comments are leaking no more;
+- sector functions removed;
+- function is removed;
+- removed mem.len, list.last, list.len, string.len;
+- all hash functions renamed to #name instead of hash.name;
+- all list functions renamed to :name instead of list.name;
+- list functions now deal also with strings also;
+- add, sub, mul, div and mod renamed to +, -, *, / and %;
+- group function usage changed from (group "from 2 to 40") to (group from 2 to 40);
 
-TODO: array/string element/char fast access;
-TODO: array/string element/char fast operations;
+TODO: fix the maybe broken examples;
+TODO: byte access for types other than string and list(or just for type other idk);
 
 (18/01/2025) - version 0.7.3c
 

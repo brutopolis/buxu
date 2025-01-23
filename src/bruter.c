@@ -727,7 +727,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             Int var = new_string(vm, temp);
             stack_push(*result, var);
         }
-        else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') 
+        else if ((str[0] >= '0' && str[0] <= '9') || (str[0] == '-' && str[1] > '\0')) // number
         {
             Int var = new_number(vm, atof(str));
             stack_push(*result, var);
