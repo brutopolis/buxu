@@ -686,22 +686,17 @@ function(brl_std_list_get)
             print_element(vm, arg_i(0));
         }
     }
-    return -1;
-}
-
-function(brl_std_list_length)
-{
-    if (arg_t(0) == TYPE_LIST)
+    else // accest bytes of a value
     {
-        return new_number(vm, ((IntList*)arg(0).pointer)->size);
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        return new_number(vm, strlen(arg(0).string));
+        Int index = (Int)arg(1).number;
+        Int value = arg_i(0);
+        if (index >= 0 && index < sizeof(Float))
+        {
+            return ((char)arg(0).byte[index]);
+        }
     }
     return -1;
 }
-
 
 function(brl_std_list_set)
 {
@@ -739,8 +734,31 @@ function(brl_std_list_set)
         }
         return -1;
     }
+    else 
+    {
+        Int index = (Int)arg(1).number;
+        Int value = arg_i(0);
+        if (index >= 0 && index < sizeof(Float))
+        {
+            arg(0).byte[index] = (char)value;
+        }
+    }
     return -1;
 }
+
+function(brl_std_list_length)
+{
+    if (arg_t(0) == TYPE_LIST)
+    {
+        return new_number(vm, ((IntList*)arg(0).pointer)->size);
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        return new_number(vm, strlen(arg(0).string));
+    }
+    return -1;
+}
+
 
 function(brl_std_list_reverse)
 {

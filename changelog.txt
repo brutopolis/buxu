@@ -20,7 +20,9 @@
 - group function usage changed from (group "from 2 to 40") to (group from 2 to 40);
 
 TODO: fix the maybe broken examples;
-TODO: byte access for types other than string and list(or just for type other idk);
+TODO: bit access in :set and :get when they are called with (4 or 3) arguments, like (:set a 2 3 1) or (:get a 2 1);
+
+(21/01/2025) - version 0.7.3e
 
 (18/01/2025) - version 0.7.3c
 
