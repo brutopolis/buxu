@@ -213,6 +213,17 @@ function(brl_std_io_print)
     return -1;
 }
 
+function(brl_std_io_scan) // always get string
+{
+    char *str = (char*)malloc(1024);
+    fgets(str, 1024, stdin);
+    str[strlen(str) - 1] = '\0';
+    Int index = new_var(vm);
+    data(index).string = str;
+    data_t(index) = TYPE_STRING;
+    return index;
+}
+
 function(brl_std_io_ls)
 {
     Int _var = -1;
@@ -446,11 +457,6 @@ function(brl_std_to_int)
     return result;
 }
 
-function(brl_std_to_index)
-{
-    return ((Int)arg(0).number);
-}
-
 // list functions
 // list functions
 // list functions
@@ -469,7 +475,12 @@ function(brl_std_list_new)
 
 function(brl_std_list_push)
 {
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 1) // push to global vm->stack
+    {
+        stack_push(*vm->stack, value_duplicate(arg(0), arg_t(0)));
+        stack_push(*vm->typestack, arg_t(0));
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         IntList *list = (IntList*)arg(0).pointer;
         for (Int i = 1; i < args->size; i++)
@@ -488,7 +499,29 @@ function(brl_std_list_push)
 
 function(brl_std_list_unshift)
 {
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 1) // unshift to global vm->stack
+    {
+        stack_unshift(*vm->stack, value_duplicate(arg(0), arg_t(0)));
+        stack_unshift(*vm->typestack, arg_t(0));
+        // update hashes and lists indexes
+        for (Int i = 0; i < vm->hashes->size; i++)
+        {
+            vm->hashes->data[i].index++;
+        }
+
+        for (Int i = 0; i < vm->stack->size; i++)
+        {
+            if (data_t(i) == TYPE_LIST)
+            {
+                IntList *list = (IntList*)data(i).pointer;
+                for (Int j = 0; j < list->size; j++)
+                {
+                    list->data[j]++;
+                }
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         IntList *list = (IntList*)arg(0).pointer;
         for (Int i = 1; i < args->size; i++)
@@ -512,7 +545,12 @@ function(brl_std_list_unshift)
 // :pop
 function(brl_std_list_pop)// returns the removed element
 {
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 0) // pop from global vm->stack
+    {
+        stack_pop(*vm->stack);
+        stack_pop(*vm->typestack);
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         IntList *list = (IntList*)arg(0).pointer;
         return stack_pop(*list);
@@ -529,7 +567,29 @@ function(brl_std_list_pop)// returns the removed element
 
 function(brl_std_list_shift)// returns the removed element
 {
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 0) // shift from global vm->stack
+    {
+        stack_shift(*vm->stack);
+        stack_shift(*vm->typestack);
+        // update hashes and lists indexes
+        for (Int i = 0; i < vm->hashes->size; i++)
+        {
+            vm->hashes->data[i].index--;
+        }
+
+        for (Int i = 0; i < vm->stack->size; i++)
+        {
+            if (data_t(i) == TYPE_LIST)
+            {
+                IntList *list = (IntList*)data(i).pointer;
+                for (Int j = 0; j < list->size; j++)
+                {
+                    list->data[j]--;
+                }
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         IntList *list = (IntList*)arg(0).pointer;
         return stack_shift(*list);
@@ -549,7 +609,29 @@ function(brl_std_list_shift)// returns the removed element
 
 function(brl_std_list_insert)
 {
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 1) // insert to global vm->stack
+    {
+        // lets do it  with push
+        Value v = value_duplicate(arg(0), arg_t(0));
+        stack_push(*vm->stack, v);
+        stack_push(*vm->typestack, arg_t(0));
+        // relocate the element to the desired index
+        for (Int i = vm->stack->size - 1; i > arg_i(1); i--)
+        {
+            vm->stack->data[i] = vm->stack->data[i - 1];
+        }
+        vm->stack->data[arg_i(1)] = v;
+
+        // update hashes and lists indexes
+        for (Int i = 0; i < vm->hashes->size; i++)
+        {
+            if (hash(i).index >= arg_i(1))
+            {
+                hash(i).index++;
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         IntList *list = (IntList*)arg(0).pointer;
         stack_insert(*list, (Int)arg(1).number, arg_i(2));
@@ -572,7 +654,20 @@ function(brl_std_list_insert)
 
 function(brl_std_list_remove)
 {
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 1) // remove from global vm->stack
+    {
+        stack_remove(*vm->stack, arg_i(0));
+        stack_remove(*vm->typestack, arg_i(0));
+        // update hashes and lists indexes
+        for (Int i = 0; i < vm->hashes->size; i++)
+        {
+            if (hash(i).index >= arg_i(0))
+            {
+                hash(i).index--;
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         IntList *list = (IntList*)arg(0).pointer;
         stack_remove(*list, (Int)arg(1).number);
@@ -591,7 +686,16 @@ function(brl_std_list_remove)
 
 function(brl_std_list_concat)
 {
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 1) // duplicate and concat each element from the list
+    {
+        IntList* list = (IntList*)data(arg_i(0)).pointer;
+        for (Int i = 0; i < list->size; i++)
+        {
+            stack_push(*vm->stack, value_duplicate(data(list->data[i]), data_t(list->data[i])));
+            stack_push(*vm->typestack, data_t(list->data[i]));
+        }
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         Int _newlist = new_list(vm);
         IntList *newlist = (IntList*)data(_newlist).pointer;
@@ -626,7 +730,18 @@ function(brl_std_list_concat)
 
 function(brl_std_list_find)
 {
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 1)
+    {
+        Int value = arg_i(0);
+        for (Int i = 0; i < vm->stack->size; i++)
+        {
+            if (data(i).integer == value)
+            {
+                return i;
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         Int list = arg_i(0);
         Int value = arg_i(1);
@@ -654,7 +769,11 @@ function(brl_std_list_find)
 
 function(brl_std_list_get)
 {
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 1)
+    {
+        return((Int)arg(0).number);
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         Int list = arg_i(0);
         Int index = arg(1).number;
@@ -700,8 +819,22 @@ function(brl_std_list_get)
 
 function(brl_std_list_set)
 {
-    
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 2)
+    {
+        if (arg_i(0) >= 0 && arg_i(0) < vm->stack->size)
+        {
+            // if the value is a list or a string, we need to free it before
+            if (data_t(arg_i(0)) == TYPE_LIST || data_t(arg_i(0)) == TYPE_STRING)
+            {
+                unuse_var(vm, arg_i(0));
+            }
+
+            arg(0) = arg(1);
+            arg_t(0) = arg_t(1);
+        }
+        
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         Int list = arg_i(0);
         Int index = arg(1).number;
@@ -748,7 +881,11 @@ function(brl_std_list_set)
 
 function(brl_std_list_length)
 {
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 0)
+    {
+        return new_number(vm, vm->stack->size);
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         return new_number(vm, ((IntList*)arg(0).pointer)->size);
     }
@@ -763,7 +900,28 @@ function(brl_std_list_length)
 function(brl_std_list_reverse)
 {
     Int list = arg_i(0);
-    if (arg_t(0) == TYPE_LIST)
+    if (args->size == 0)
+    {
+        stack_reverse(*vm->stack);
+        stack_reverse(*vm->typestack);
+        // update hashes and lists indexes
+        for (Int i = 0; i < vm->hashes->size; i++)
+        {
+            hash(i).index = vm->stack->size - hash(i).index - 1;
+        }
+
+        for (Int i = 0; i < vm->stack->size; i++)
+        {
+            if (data_t(i) == TYPE_LIST)
+            {
+                for (Int j = 0; j < ((IntList*)data(i).pointer)->size; j++)
+                {
+                    ((IntList*)data(i).pointer)->data[j] = vm->stack->size - ((IntList*)data(i).pointer)->data[j] - 1;
+                }
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_LIST)
     {
         IntList *lst = (IntList*)data(list).pointer;
         stack_reverse(*lst);
@@ -783,7 +941,21 @@ function(brl_std_list_reverse)
 
 function(brl_std_list_sub)
 {
-    if (arg_t(0) == TYPE_STRING)
+    if (args->size == 2)// create a list with the indexes of the elements in the range
+    {
+        IntList *list = make_int_list();
+        Int start = arg(0).number;
+        Int end = arg(1).number;
+        for (Int i = start; i < end; i++)
+        {
+            stack_push(*list, i);
+        }
+        Int result = new_var(vm);
+        data(result).pointer = list;
+        data_t(result) = TYPE_LIST;
+        return result;
+    }
+    else if (arg_t(0) == TYPE_STRING)
     {
         char* _str = str_nduplicate(arg(0).string, arg(1).number);
         Int result = new_string(vm, _str);
@@ -807,7 +979,38 @@ function(brl_std_list_sub)
 
 function(brl_std_list_split)
 {
-    if (arg_t(0) == TYPE_STRING)
+    if (args->size == 2)// split the global stack, create lists with the indexes of each slice
+    {
+        IntList *list = make_int_list();
+        Int separator = arg(1).number;
+        Int start = 0;
+        for (Int i = 0; i < vm->stack->size; i++)
+        {
+            if (vm->stack->data[i].integer == separator)
+            {
+                Int sublist = new_list(vm);
+                IntList *sub = (IntList*)data(sublist).pointer;
+                for (Int j = start; j < i; j++)
+                {
+                    stack_push(*sub, j);
+                }
+                stack_push(*list, sublist);
+                start = i + 1;
+            }
+        }
+        Int sublist = new_list(vm);
+        IntList *sub = (IntList*)data(sublist).pointer;
+        for (Int j = start; j < vm->stack->size; j++)
+        {
+            stack_push(*sub, j);
+        }
+        stack_push(*list, sublist);
+        Int result = new_var(vm);
+        data(result).pointer = list;
+        data_t(result) = TYPE_LIST;
+        return result;
+    }
+    else if (arg_t(0) == TYPE_STRING)
     {
         Int _splited = new_list(vm);
         IntList *__splited = (IntList*)data(_splited).pointer;
@@ -854,7 +1057,25 @@ function(brl_std_list_split)
 
 function(brl_std_list_replace)
 {
-    if (arg_t(0) == TYPE_STRING)
+    if (args->size == 2)// replace elements from the global stack
+    {
+        Int target = arg_i(0);
+        Int replacement = arg_i(1);
+        for (Int i = 0; i < vm->stack->size; i++)
+        {
+            if (vm->stack->data[i].integer == vm->stack->data[target].integer)
+            {
+                // if list or string we need to free it before
+                if (data_t(i) == TYPE_LIST || data_t(i) == TYPE_STRING)
+                {
+                    unuse_var(vm, i);
+                }
+                vm->stack->data[i] = vm->stack->data[replacement];
+                break;
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_STRING)
     {
         Int str = arg_i(0);
         Int substr = arg_i(1);
@@ -894,7 +1115,24 @@ function(brl_std_list_replace)
 
 function(brl_std_list_replace_all)
 {
-    if (arg_t(0) == TYPE_STRING)
+    if (args->size == 2)// replace elements from the global stack
+    {
+        Int target = arg_i(0);
+        Int replacement = arg_i(1);
+        for (Int i = 0; i < vm->stack->size; i++)
+        {
+            if (vm->stack->data[i].integer == vm->stack->data[target].integer)
+            {
+                // if list or string we need to free it before
+                if (data_t(i) == TYPE_LIST || data_t(i) == TYPE_STRING)
+                {
+                    unuse_var(vm, i);
+                }
+                vm->stack->data[i] = vm->stack->data[replacement];
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_STRING)
     {
         Int str = arg_i(0);
         Int substr = arg_i(1);
@@ -926,6 +1164,54 @@ function(brl_std_list_replace_all)
             }
         }
         return _newlist;
+    }
+    return -1;
+}
+
+function(brl_std_list_swap)
+{
+    if (args->size == 2)// swap elements from the global stack
+    {
+        Int index1 = arg_i(0);
+        Int index2 = arg_i(1);
+        Value temp = vm->stack->data[index1];
+        vm->stack->data[index1] = vm->stack->data[index2];
+        vm->stack->data[index2] = temp;
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        Int list = arg_i(0);
+        Int index1 = arg(1).number;
+        Int index2 = arg(2).number;
+        IntList *lst = (IntList*)data(list).pointer;
+        if (index1 >= 0 && index1 < lst->size && index2 >= 0 && index2 < lst->size)
+        {
+            Int temp = lst->data[index1];
+            lst->data[index1] = lst->data[index2];
+            lst->data[index2] = temp;
+        }
+        else 
+        {
+            printf("error: index %d or %d out of range in list %d of size %d\n", index1, index2, list, lst->size);
+            print_element(vm, list);
+        }
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        Int index1 = arg(1).number;
+        Int index2 = arg(2).number;
+        if (index1 >= 0 && index1 < strlen(str) && index2 >= 0 && index2 < strlen(str))
+        {
+            char temp = str[index1];
+            str[index1] = str[index2];
+            str[index2] = temp;
+        }
+        else 
+        {
+            printf("error: index %d or %d out of range in string %d of size %d\n", index1, index2, arg(0).string, strlen(str));
+            print_element(vm, arg_i(0));
+        }
     }
     return -1;
 }
@@ -1177,81 +1463,6 @@ function(brl_std_condition_raw_or)
     return 0;
 }
 
-function(brl_std_group)//group interpreter
-{
-    stack_reverse(*args);
-    Int lst = new_list(vm);
-    IntList *list = (IntList*)data(lst).pointer;
-
-    Int _add_index = hash_find(vm, "+");
-    Int _sub_index = hash_find(vm, "-");
-    Int _from_index = hash_find(vm, "from");
-    Int _to_index = hash_find(vm, "to");
-
-    Int from,to;
-    from = 0;
-    to = vm->stack->size-1;
-    while (args->size > 0)
-    {
-        Int opt = stack_pop(*args);
-        if (opt == _from_index)
-        {
-            from = stack_pop(*args);
-        }
-        else if (opt == _to_index)
-        {
-            to = stack_pop(*args);
-        }
-        else if (opt == _add_index)
-        {
-            to = from + stack_pop(*args);
-        }
-        else if (opt == _sub_index)
-        {
-            to = from - stack_pop(*args);
-        }
-        else 
-        {
-            from = opt;
-        }
-    }
-
-    if (from < 0)
-    {
-        from = 0;
-    }
-    else if (from >= vm->stack->size)
-    {
-        from = vm->stack->size - 1;
-    }
-    
-    if (to < 0)
-    {
-        to = 0;
-    }
-    else if (to >= vm->stack->size)
-    {
-        to = vm->stack->size - 1;
-    }
-
-    if (from > to)
-    {
-        for (Int i = from; i >= to; i--)
-        {
-            stack_push(*list, i);
-        }
-    }
-    else 
-    {
-        for (Int i = from; i <= to; i++)
-        {
-            stack_push(*list, i);
-        }
-    }
-
-    return lst;
-}
-
 // std loop
 // std loop
 // std loop
@@ -1280,54 +1491,75 @@ function(brl_std_loop_repeat)
     return -1;
 }
 
+// std loop each
 function(brl_std_loop_each)
 {
-    IntList *list = (IntList*)arg(0).pointer;
-    register_var(vm, arg(1).string);
+    HashList *global_context = vm->hashes;
     Int hash_index = -1;
+
+    HashList* _context = (HashList*)malloc(sizeof(HashList));
+    stack_init(*_context);
+
+    vm->hashes = _context;
+    if (args->size == 2) // name is $0
+    {
+        register_var(vm, arg(0).string);
+    }
+    else // name is $1
+    {
+        register_var(vm, arg(1).string);
+    }
+
     for (Int i = 0; i < vm->hashes->size; i++)
     {
-        if (strcmp(hash(i).key, arg(1).string) == 0)
+        if (strcmp(hash(i).key, arg(0).string) == 0)
         {
             hash_index = i;
             break;
         }
     }
 
-    for (Int i = 0; i < list->size; i++)
-    {
-        hash(hash_index).index = list->data[i];
+    vm->hashes = global_context;
+    
 
-        eval(vm, arg(2).string, context);
-    }
-    return -1;
-}
-
-function(brl_mem_swap)
-{
-    if (args->size == 2)
+    if (args->size == 2) // each in global stack
     {
-        if (arg_i(0) >= 0 && arg_i(0) < vm->stack->size && arg_i(1) >= 0 && arg_i(1) < vm->stack->size)
+        for (Int i = 0; i < vm->stack->size; i++)
         {
-            Value temp = arg(0);
-            char type = arg_t(0);
-            arg(0) = arg(1);
-            arg_t(0) = arg_t(1);
-            arg(1) = temp;
-            arg_t(1) = type;
+            _context->data[hash_index].index = i;
+            eval(vm, arg(1).string, _context);
         }
     }
-    return -1;
-}
-
-function(brl_mem_set)
-{
-    if (arg_i(0) >= 0 && arg_i(0) < vm->stack->size)
+    else if (arg_t(0) == TYPE_LIST)
     {
-        arg(0) = arg(1);
-        arg_t(0) = arg_t(1);
+        IntList *list = (IntList*)arg(0).pointer;
+
+        for (Int i = 0; i < list->size; i++)
+        {
+            _context->data[hash_index].index = list->data[i];
+            eval(vm, arg(2).string, _context);
+        }
     }
-    
+    else if (arg_t(0) == TYPE_STRING) // same as list, but the elements are the chars, after each the char is set to the number of the char variable in the context, that way we can modify each char
+    {
+        // it for each iteration is defined also a index variable
+        char* str = arg(0).string;
+
+        for (Int i = 0; i < strlen(str); i++)
+        {
+            _context->data[hash_index].index = str[i];
+            eval(vm, arg(2).string, _context);
+            str[i] = hash(hash_index).index;
+        }
+    }
+
+    while (_context->size > 0)
+    {
+        Hash hash = stack_pop(*_context);
+        free(hash.key);
+    }
+    stack_free(*_context);
+
     return -1;
 }
 
@@ -1336,16 +1568,6 @@ function(brl_mem_copy)
     Int newvar = new_var(vm);
     data(newvar) = value_duplicate(data(arg_i(0)), data_t(arg_i(0)));
     return newvar;
-}
-
-function(brl_mem_length)
-{
-    return new_number(vm, vm->stack->size);
-}
-
-function(brl_mem_get)
-{
-    return((Int)arg(0).number);
 }
 
 function(brl_mem_delete)
@@ -1362,72 +1584,6 @@ function(brl_mem_next)
     for (Int i = 0; i < args->size; i++)
     {
         stack_push(*vm->unused, arg_i(i));
-    }
-    return -1;
-}
-
-function(brl_std_mem_push)
-{
-    while (args->size > 0)
-    {
-        stack_push(*vm->stack, arg(0));
-        stack_push(*vm->typestack, arg_t(0));
-    }
-    return -1;
-}
-
-function(brl_std_mem_unshift)
-{
-    for (Int i = args->size - 1; i >= 0; i--)
-    {
-        stack_unshift(*vm->stack, arg(i));
-        stack_unshift(*vm->typestack, arg_t(i));
-    }
-
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {
-        hash(i).index += args->size;
-    }
-    
-    return -1;
-}
-
-function(brl_std_mem_pop)
-{
-    for (Int i = 0; i < arg(0).number; i++)
-    {
-        unuse_var(vm, vm->stack->size-1);
-        stack_pop(*vm->stack);
-        stack_pop(*vm->typestack);
-    }
-    return -1;
-}
-
-function(brl_std_mem_shift)
-{
-    for (Int i = 0; i < arg(0).number; i++)
-    {
-        unuse_var(vm, 0);
-        stack_shift(*vm->stack);
-        stack_shift(*vm->typestack);
-    }
-    
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {
-        hash(i).index -= arg(0).number;
-    }
-
-    return -1;
-}
-
-function(brl_std_mem_find)
-{
-    for (Int i = 0; i < vm->stack->size; i++)
-    {
-        if (data(i).integer == arg(0).integer)
-        {
-            return i;
-        }
     }
     return -1;
 }
@@ -1452,21 +1608,19 @@ void init_os(VirtualMachine *vm)
 
     register_builtin(vm, "dofile", brl_os_dofile);
     register_builtin(vm, "repl", brl_os_repl);
+    register_builtin(vm, "scan", brl_std_io_scan);// io, but it's a system function
 }
 #endif
 
 void init_basics(VirtualMachine *vm)
 {
     register_builtin(vm, "#", brl_std_ignore);
-    register_builtin(vm, "copy", brl_mem_copy);
     register_builtin(vm, "do", brl_std_do);
     register_builtin(vm, "return", brl_std_return);
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.type", brl_std_io_ls_types);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
     register_builtin(vm, "print", brl_std_io_print);
-    register_builtin(vm, "group", brl_std_group);
-
     register_builtin(vm, "fn", brl_std_function);
 }
 
@@ -1492,7 +1646,6 @@ void init_loop(VirtualMachine *vm)
 {
     register_builtin(vm, "while", brl_std_loop_while);
     register_builtin(vm, "repeat", brl_std_loop_repeat);
-    register_builtin(vm, "each", brl_std_loop_each);
 }
 
 void init_hash(VirtualMachine *vm)
@@ -1510,15 +1663,17 @@ void init_math(VirtualMachine *vm)
     register_builtin(vm, "*", brl_std_math_mul);
     register_builtin(vm, "/", brl_std_math_div);
     register_builtin(vm, "\%", brl_std_math_mod);
+    register_builtin(vm, "++", brl_std_math_increment);
+    register_builtin(vm, "--", brl_std_math_decrement);
+
     register_builtin(vm, "pow", brl_std_math_pow);
     register_builtin(vm, "abs", brl_std_math_abs);
     register_builtin(vm, "ceil", brl_std_math_ceil);
     register_builtin(vm, "floor", brl_std_math_floor);
     register_builtin(vm, "round", brl_std_math_round);
+
     register_builtin(vm, "random", brl_std_math_random);
     register_builtin(vm, "seed", brl_std_math_seed);
-    register_builtin(vm, "incr", brl_std_math_increment);
-    register_builtin(vm, "decr", brl_std_math_decrement);
 
     register_builtin(vm, "to.float", brl_std_to_float);
     register_builtin(vm, "to.int", brl_std_to_int);
@@ -1567,27 +1722,19 @@ void init_list(VirtualMachine *vm)
     register_builtin(vm, ":insert", brl_std_list_insert);
     register_builtin(vm, ":remove", brl_std_list_remove);
     register_builtin(vm, ":split", brl_std_list_split);
-
+    register_builtin(vm, ":swap", brl_std_list_swap);
     register_builtin(vm, ":sub", brl_std_list_sub);
     register_builtin(vm, ":replace", brl_std_list_replace);
     register_builtin(vm, ":replace.all", brl_std_list_replace_all);
+    register_builtin(vm, ":each", brl_std_loop_each);
 }
 
 void init_mem(VirtualMachine *vm)
 {
     register_number(vm, "mem.size", sizeof(Float));
-    register_builtin(vm, "mem.get", brl_mem_get);
-    register_builtin(vm, "mem.set", brl_mem_set);
     register_builtin(vm, "mem.copy", brl_mem_copy);
-    register_builtin(vm, "mem.len", brl_mem_length);
     register_builtin(vm, "mem.delete", brl_mem_delete);
     register_builtin(vm, "mem.next", brl_mem_next);
-    register_builtin(vm, "mem.swap", brl_mem_swap);
-    register_builtin(vm, "mem.push", brl_std_mem_push);
-    register_builtin(vm, "mem.unshift", brl_std_mem_unshift);
-    register_builtin(vm, "mem.pop", brl_std_mem_pop);
-    register_builtin(vm, "mem.shift", brl_std_mem_shift);
-    register_builtin(vm, "mem.find", brl_std_mem_find);
 }
 
 // std init presets
@@ -1606,6 +1753,4 @@ void init_std(VirtualMachine *vm)
     init_condition(vm);
     init_mem(vm);
     register_string(vm, "VERSION", VERSION);// version
-    hash_set(vm, "from", -2);
-    hash_set(vm, "to", -3);
 }

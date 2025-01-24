@@ -1,4 +1,4 @@
-(23/01/2025) - version 0.7.4
+(24/01/2025) - version 0.7.4
 
 - each fixed;
 - type.set fixed;
@@ -7,22 +7,22 @@
 - tree-walking math interpreters removed;
 - new function to.int;
 - new function to.float;
-- new function to.index;
 - removed if.is, ifelse.is and while.is, use if, ifelse and while instead;
 - comments are leaking no more;
 - sector functions removed;
-- function is removed;
+- removed 'is' function;
 - removed mem.len, list.last, list.len, string.len;
 - all hash functions renamed to #name instead of hash.name;
 - all list functions renamed to :name instead of list.name;
-- list functions now deal also with strings also;
-- add, sub, mul, div and mod renamed to +, -, *, / and %;
-- group function usage changed from (group "from 2 to 40") to (group from 2 to 40);
+- list functions now deal also with strings and global scope also;
+- add, sub, mul, div, mod, incr, decr renamed to +, -, *, /, %, ++, --;
+- no more group function use :sub instead;
+- new function scan;
+- each is now :each, and can be used with strings and global context like any other list function, also it now does have a context for itself;
+- removed mem.swap, mem.push, mem.unshift, mem.shift, mem.pop, mem.insert, mem.remove, mem.set and mem.get, use :push, :unshift, :shift, :pop, :insert, :remove, :set and :get instead;
 
-TODO: fix the maybe broken examples;
-TODO: bit access in :set and :get when they are called with (4 or 3) arguments, like (:set a 2 3 1) or (:get a 2 1);
-
-(21/01/2025) - version 0.7.3e
+TODO: fix the broken examples(!!!);
+IDEA: context for while, repeat, if, and ifelse, i think it will hurt badly the performance and break other contexts, but lets test;
 
 (18/01/2025) - version 0.7.3c
 
