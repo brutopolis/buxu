@@ -8,7 +8,7 @@
 :unshift l 7;
 #set '_min' (:pop l);
 #set '_max' (:shift l);
-print (group "from 2 to 40");
+print (:sub @2 @40);
 print (:get l 0);
 print l;
 print (:get l 0);

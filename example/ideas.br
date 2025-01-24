@@ -1,0 +1,38 @@
+// just ideas, dont expect this to work;
+
+// IDEA: maybe push: instead :push and such;
+
+#rename ":pop" "pop:";
+#rename ":get" "get:";
+#rename ":set" "set:";
+#rename ":len" "len:";
+#rename ":push" "push:";
+#rename ":find" "find:";
+#rename ":shift" "shift:";
+#rename ":concat" "concat:";
+#rename ":unshift" "unshift:";
+#rename ":reverse" "reverse:";
+#rename ":insert" "insert:";
+#rename ":remove" "remove:";
+#rename ":split" "split:";
+#rename ":swap" "swap:";
+#rename ":sub" "sub:";
+#rename ":replace" "replace:";
+#rename ":replace.all" "replace:all";
+
+// IDEA each implementation;
+
+#set "each" (function "callback"
+    (@@
+        #set "i" 0;
+        #set "size" (len:);
+        while "< i size"
+        (@@
+            callback (get: i);
+            "++ i";
+        )
+    )
+);
+
+return 0;
+

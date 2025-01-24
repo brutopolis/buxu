@@ -1,6 +1,5 @@
 (24/01/2025) - version 0.7.4
 
-- each fixed;
 - type.set fixed;
 - new operator: @name, it returns the index of the hash as number value, replacement for gindex function;
 - gindex removed;
@@ -17,12 +16,10 @@
 - list functions now deal also with strings and global scope also;
 - add, sub, mul, div, mod, incr, decr renamed to +, -, *, /, %, ++, --;
 - no more group function use :sub instead;
-- new function scan;
-- each is now :each, and can be used with strings and global context like any other list function, also it now does have a context for itself;
+- new function scan, it always return a string, only avaliable in os;
 - removed mem.swap, mem.push, mem.unshift, mem.shift, mem.pop, mem.insert, mem.remove, mem.set and mem.get, use :push, :unshift, :shift, :pop, :insert, :remove, :set and :get instead;
-
-TODO: fix the broken examples(!!!);
-IDEA: context for while, repeat, if, and ifelse, i think it will hurt badly the performance and break other contexts, but lets test;
+- "fn" is now "function";
+- removed "each";
 
 (18/01/2025) - version 0.7.3c
 

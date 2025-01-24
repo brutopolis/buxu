@@ -944,8 +944,8 @@ function(brl_std_list_sub)
     if (args->size == 2)// create a list with the indexes of the elements in the range
     {
         IntList *list = make_int_list();
-        Int start = arg(0).number;
-        Int end = arg(1).number;
+        Int start = arg_i(0);
+        Int end = arg_i(1);
         for (Int i = start; i < end; i++)
         {
             stack_push(*list, i);
@@ -1491,78 +1491,6 @@ function(brl_std_loop_repeat)
     return -1;
 }
 
-// std loop each
-function(brl_std_loop_each)
-{
-    HashList *global_context = vm->hashes;
-    Int hash_index = -1;
-
-    HashList* _context = (HashList*)malloc(sizeof(HashList));
-    stack_init(*_context);
-
-    vm->hashes = _context;
-    if (args->size == 2) // name is $0
-    {
-        register_var(vm, arg(0).string);
-    }
-    else // name is $1
-    {
-        register_var(vm, arg(1).string);
-    }
-
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {
-        if (strcmp(hash(i).key, arg(0).string) == 0)
-        {
-            hash_index = i;
-            break;
-        }
-    }
-
-    vm->hashes = global_context;
-    
-
-    if (args->size == 2) // each in global stack
-    {
-        for (Int i = 0; i < vm->stack->size; i++)
-        {
-            _context->data[hash_index].index = i;
-            eval(vm, arg(1).string, _context);
-        }
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        IntList *list = (IntList*)arg(0).pointer;
-
-        for (Int i = 0; i < list->size; i++)
-        {
-            _context->data[hash_index].index = list->data[i];
-            eval(vm, arg(2).string, _context);
-        }
-    }
-    else if (arg_t(0) == TYPE_STRING) // same as list, but the elements are the chars, after each the char is set to the number of the char variable in the context, that way we can modify each char
-    {
-        // it for each iteration is defined also a index variable
-        char* str = arg(0).string;
-
-        for (Int i = 0; i < strlen(str); i++)
-        {
-            _context->data[hash_index].index = str[i];
-            eval(vm, arg(2).string, _context);
-            str[i] = hash(hash_index).index;
-        }
-    }
-
-    while (_context->size > 0)
-    {
-        Hash hash = stack_pop(*_context);
-        free(hash.key);
-    }
-    stack_free(*_context);
-
-    return -1;
-}
-
 function(brl_mem_copy)
 {
     Int newvar = new_var(vm);
@@ -1621,7 +1549,7 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "ls.type", brl_std_io_ls_types);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
     register_builtin(vm, "print", brl_std_io_print);
-    register_builtin(vm, "fn", brl_std_function);
+    register_builtin(vm, "function", brl_std_function);
 }
 
 void init_type(VirtualMachine *vm)
@@ -1726,7 +1654,6 @@ void init_list(VirtualMachine *vm)
     register_builtin(vm, ":sub", brl_std_list_sub);
     register_builtin(vm, ":replace", brl_std_list_replace);
     register_builtin(vm, ":replace.all", brl_std_list_replace_all);
-    register_builtin(vm, ":each", brl_std_loop_each);
 }
 
 void init_mem(VirtualMachine *vm)

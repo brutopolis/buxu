@@ -2,13 +2,13 @@
 #set "vglobal" 1;
 print "aqui fora variavel é" variavel;
 print "aqui fora vglobal é" vglobal;
-#set "func" (fn "variavel"
+#set "func" (function "variavel"
     (@@
         print "aqui dentro é" variavel;
         print "aqui dentro vglobal é" vglobal;
         print;
-        mem.set variavel 2;
-        mem.set vglobal 897;
+        :set variavel 2;
+        :set vglobal 897;
         print "aqui dentro agora é" variavel;
         print "aqui dentro agora vglobal é" vglobal;
         print;

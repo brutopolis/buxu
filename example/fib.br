@@ -4,14 +4,11 @@
 #set "ret1" (@@return _1);
 #set "cond1" "== n _1";
 #set "cond2" "== n _2";
-#set "mem_buffer" (sector.new 8);
-#set "sub1" "n - 1";
-#set "sub2" "n - 2";
-#set "fib" (fn "n" 
+#set "fib" (function "n" 
     (@@
         if cond1 ret1;
         if cond2 ret1;
-        return (add (fib (sub n _1)) (fib (sub n _2)));
+        return (+ (fib (- n _1)) (fib (- n _2)));
     )
 );
 print (fib 20);
