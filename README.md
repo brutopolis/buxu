@@ -4,7 +4,7 @@
 ## Description
 
 
-bruter is a metaprogramable lightweight virtual machine/interpreted programming language;
+bruter is a metaprogramable lightweight programming language;
 
 *`UNDER HEAVY DEVELOPMENT`*
 
@@ -58,6 +58,7 @@ bruter is a metaprogramable lightweight virtual machine/interpreted programming 
     function variable_1 variable_2 ...;
     #set "name" value; 
     #set "name" (function ...);
+    #set "name" (list: value value ...);
     function name;
     do "code";
     repeat amount "code";
@@ -69,7 +70,7 @@ bruter is a metaprogramable lightweight virtual machine/interpreted programming 
     function (@@ string);
     if "condition" "code";
     ifelse "condition" "code" "code";
-    function (:sub x y);
+    function (sub: x y);
 
 ## Building instructions
 
