@@ -1,15 +1,15 @@
-#set 'l' (list);
-:push l 1;
-:push l 2;
-:push l 3;
-:push l 4;
-:push l 5;
-:unshift l 6;
-:unshift l 7;
-#set '_min' (:pop l);
-#set '_max' (:shift l);
-print (:sub @2 @40);
-print (:get l 0);
+#set 'l' (list:);
+push: l 1;
+push: l 2;
+push: l 3;
+push: l 4;
+push: l 5;
+unshift: l 6;
+unshift: l 7;
+#set '_min' (pop: l);
+#set '_max' (shift: l);
+print (sub: @2 @40);
+print (get: l 0);
 print l;
-print (:get l 0);
+print (get: l 0);
 return 0

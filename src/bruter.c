@@ -806,54 +806,63 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
     Int func = stack_shift(*args);
     Int result = -1;
 
-    if (func > -1 && vm->typestack->data[func] == TYPE_BUILTIN)
+    if (func > -1)
     {
-        Function _function = vm->stack->data[func].pointer;
-        result = _function(vm, args, context);
-    }
-    else if (func > -1 && vm->typestack->data[func] == TYPE_FUNCTION)
-    {
-        InternalFunction *_func = (InternalFunction*)data(func).pointer;
-        HashList *_context = (HashList*)malloc(sizeof(HashList));
-        stack_init(*_context);
-
-        stack_reverse(*args);
-
-        HashList *global_context = vm->hashes;
-
-        vm->hashes = _context;
-
-
-        for (Int i = 0; i < _func->varnames->size; i++)
+        if (vm->typestack->data[func] == TYPE_BUILTIN)
         {
-            hash_set(vm, _func->varnames->data[i], stack_pop(*args));
+            Function _function = vm->stack->data[func].pointer;
+            result = _function(vm, args, context);
         }
-        
-        if (args->size > 0)
+        else if (vm->typestack->data[func] == TYPE_FUNCTION)
         {
-            Int etc = register_list(vm, "etc");
-            while (args->size > 0)
+            InternalFunction *_func = (InternalFunction*)data(func).pointer;
+            HashList *_context = (HashList*)malloc(sizeof(HashList));
+            stack_init(*_context);
+
+            stack_reverse(*args);
+
+            HashList *global_context = vm->hashes;
+
+            vm->hashes = _context;
+
+
+            for (Int i = 0; i < _func->varnames->size; i++)
             {
-                stack_push(*((IntList*)data(etc).pointer), stack_pop(*args));
+                hash_set(vm, _func->varnames->data[i], stack_pop(*args));
             }
+            
+            if (args->size > 0)
+            {
+                Int etc = register_list(vm, "etc");
+                while (args->size > 0)
+                {
+                    stack_push(*((IntList*)data(etc).pointer), stack_pop(*args));
+                }
+            }
+
+            vm->hashes = global_context;
+
+            result = eval(vm, _func->code, _context);
+            
+            while (_context->size > 0)
+            {
+                Hash hash = stack_pop(*_context);
+                free(hash.key);
+            }
+
+            stack_free(*_context);
         }
-
-        vm->hashes = global_context;
-
-        result = eval(vm, _func->code, _context);
-        
-        while (_context->size > 0)
+        else if (vm->typestack->data[func] == TYPE_STRING) // script
         {
-            Hash hash = stack_pop(*_context);
-            free(hash.key);
+            result = eval(vm, data(func).string, context);
         }
-
-        stack_free(*_context);
     }
     else 
     {
-        printf("Error: %d is not a function\n", func);
+        printf("Error: %d is not a function or script\n", func);
     }
+
+    
     stack_free(*args);
     return result;
 }

@@ -1,3 +1,11 @@
+(26/01/2025) - version 0.7.4a
+
+- if a string is the first argument of the args stack, it will run as a script;
+- all ":function" are now "function:";
+- "list" is now "list:";
+
+TODO: fix broken examples(!!!!);
+
 (24/01/2025) - version 0.7.4
 
 - type.set fixed;
