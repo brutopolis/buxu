@@ -1,7 +1,7 @@
 #set "str" "Hello, world!";
 print str;
 #set "ptr" (to.float str);
-:set ptr (+ ptr 3); 
+set: ptr (+ ptr 3); 
 #set "str2" (to.int ptr);
 type.set str2 type.string;
 print str2;

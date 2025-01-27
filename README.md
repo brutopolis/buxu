@@ -114,4 +114,11 @@ bruter is a metaprogramable lightweight programming language;
 
     ./build.sh --exec path/to/bruter_file.br
 
+    # cc option:
+    # you can also define the path to a compiler;
+
+    ./build.sh --cc path/to/compiler
+    
+
+
   note that, the clean build is always compiled, even with WASI, INO, EXEC, or WEB flags;

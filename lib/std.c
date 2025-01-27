@@ -1053,6 +1053,7 @@ function(brl_std_list_split)
         stack_push(*__splited, temp);
         return _splited;
     }
+    return -1;
 }
 
 function(brl_std_list_replace)
