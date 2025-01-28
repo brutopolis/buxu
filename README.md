@@ -86,6 +86,10 @@ bruter is a metaprogramable lightweight programming language;
     
     ./build.sh --debug
 
+    # you can also debug a specific file;
+
+    ./build.sh --debug-file path/to/bruter_file.br
+
     # wasi build;
     # regular bruter interpreter but using WASI;
     # it also create build/run_bruter.sh which is just a wasmtime command;

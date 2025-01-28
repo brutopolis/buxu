@@ -13,16 +13,14 @@
 #include <emscripten.h>
 #endif
 
-#define VERSION "0.7.4a"
+#define VERSION "0.7.5"
 
-#define TYPE_NIL 0
+#define TYPE_ANY 0
 #define TYPE_NUMBER 1
 #define TYPE_STRING 2
 #define TYPE_LIST 3
 #define TYPE_BUILTIN 4
-#define TYPE_INTEGER 6
 #define TYPE_FUNCTION 7
-#define TYPE_OTHER 8
 
 
 #if __SIZEOF_POINTER__ == 8
@@ -188,8 +186,7 @@ extern StringList* str_split_char(char *str, char delim);
 extern StringList* special_space_split(char *str);
 extern StringList* special_split(char *str, char delim);
 
-// if integer == 0 or type == TYPE_NIL return 0, else return 1
-#define is_true(value, __type) (__type == TYPE_NIL ? 0 : (value.integer == 0 ? 0 : 1))
+#define is_true(value, __type) (__type == value.integer == 0 ? 0 : 1)
 
 #define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
 

@@ -1,10 +1,26 @@
-(26/01/2025) - version 0.7.4a
+(28/01/2025) - version 0.7.5
 
 - if a string is the first argument of the args stack, it will run as a script;
 - all ":function" are now "function:";
 - "list" is now "list:";
+- removed TYPE_INTEGER, TYPE_OTHER and TYPE_NIL;
+- new type TYPE_ANY, it is essentially the TYPE_INTEGER, but if the value is 0 it will be treated as nil, you can use it to store any type(like TYPE_OTHER);
+- removed "or" function, you can replicate it with bruter code;
+- removed "#set" and "#rename";
+- new function "#new", just like #set but it will always create a new hash, deleting the existing one before, keep that in mind;
+- the internal function "hash_set" also does not re-set the hash anymore, it have the same behavior as "#new";
+- some math functions removed: abs, pow, ceil, floor, round;
+- those math functions can be found in bruter example/math.br, but written in bruter;
+- new function cast to convert types;
+- removed to.int, to.float and string.to.number functions, use cast instead;
+- type.set renamed to pun;
+- type.get renamed to type;
+- strings can now be spread;
+- string.split removed, use split: instead;
+- string.set removed, use set: instead;
+- string.format renamed to format;
 
-TODO: fix broken examples(!!!!);
+TODO: update the examples(probably all are broken now!!!!!) and the README.md
 
 (24/01/2025) - version 0.7.4
 

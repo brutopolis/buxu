@@ -91,7 +91,7 @@ window.Bruter = bruter_loader();"
 
 # usage function
 usage() {
-    echo "usage: $0 [--outpath build] [--debug] [--cc gcc] [--ino] [--web] [--emcc emcc] [--wasicc wasicc] [--exclude libfile] [--exec main.br]"
+    echo "usage: $0 [--outpath build] [--debug] [--debug-file] [--cc gcc] [--ino] [--web] [--emcc emcc] [--wasicc wasicc] [--exclude libfile] [--exec main.br]"
     exit 1
 }
 
@@ -262,19 +262,19 @@ if [[ -n "$(ls -A lib)" ]]; then
 fi
 
 if [ -n "$DEBUG_FILE" ]; then
-    cd ../../
-    valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./build_tmp/$OUTPATH/bruter $DEBUG_FILE
-    ms_print massif.out.* > massif-out.txt
+    cd ../../build_tmp
+    valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  $OUTPATH/bruter ../$DEBUG_FILE
+    ms_print massif.out.* > $OUTPATH/massif-out.txt
     rm -rf massif.out.*
 
     valgrind \
         --leak-check=full \
         --show-leak-kinds=all \
         --track-origins=yes \
-        --log-file=valgrind-out.txt \
-        --verbose ./build_tmp/$OUTPATH/bruter $DEBUG_FILE
-
-    cd build_tmp/$OUTPATH
+        --log-file=$OUTPATH/valgrind-out.txt \
+        --verbose $OUTPATH/bruter ../$DEBUG_FILE
+    ls
+    cd $OUTPATH
 fi
 
 rm -rf *.o lib/*.o src

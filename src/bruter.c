@@ -316,7 +316,7 @@ void print_element(VirtualMachine *vm, Int index)
 {
     if (index < 0 || index >= vm->stack->size)
     {
-        printf("{invalid}");
+        printf("(return (:get -1))");
         return;
     }
 
@@ -324,30 +324,36 @@ void print_element(VirtualMachine *vm, Int index)
 
     switch (data_t(index))
     {
-        case TYPE_NIL:
-            printf("{nil}");
-            break;
-        case TYPE_INTEGER:
+        char* _str;
+        char* strbak;
+        case TYPE_ANY:
             printf("%ld", data(index).integer);
             break;
         case TYPE_BUILTIN:
             printf("%ld", data(index).pointer);
             break;
         case TYPE_LIST:
-            printf("[");
             IntList *list = (IntList*)data(index).pointer;
+            _str =  str_concat("", "(list: ");
             for (Int i = 0; i < list->size; i++)
             {
-                printf("%ld", list->data[i]);
+                char* _value = str_format("@%ld", list->data[i]);
+                strbak = _str;
+                _str = str_concat(_str, _value);
+                free(strbak);
                 if (i < list->size - 1)
                 {
-                    printf(", ");
+                    strbak = _str;
+                    _str = str_concat(_str, " ");
+                    free(strbak);
                 }
+                free(_value);
             }
-            printf("]");
-            break;
-        case TYPE_OTHER:
-            printf("%ld", data(index).pointer);
+            strbak = _str;
+            _str = str_concat(_str, ")");
+            free(strbak);
+            printf("%s", _str);
+            free(_str);
             break;
         case TYPE_NUMBER:
             if (((Int)data(index).number) == data(index).number)
@@ -362,7 +368,37 @@ void print_element(VirtualMachine *vm, Int index)
         case TYPE_STRING:
             printf("%s", data(index).string);
             break;
-
+        case TYPE_FUNCTION:
+            _str =  str_concat("", "(function ");
+            InternalFunction *func = (InternalFunction*)data(index).pointer;
+            StringList *names = func->varnames;
+            char *code = func->code;
+            
+            for (Int i = 0; i < names->size; i++)
+            {
+                char* name = names->data[i];
+                strbak = _str;
+                _str = str_concat(_str, "(@@");
+                free(strbak);
+                strbak = _str;
+                _str = str_concat(_str, name);
+                free(strbak);
+                strbak = _str;
+                _str = str_concat(_str, ") ");
+                free(strbak);
+            }
+            strbak = _str;
+            _str = str_concat(_str, "(@@");
+            free(strbak);
+            strbak = _str;
+            _str = str_concat(_str, code);
+            free(strbak);
+            strbak = _str;
+            _str = str_concat(_str, ")");
+            free(strbak);
+            printf("%s", _str);
+            free(_str);
+            break;
         default:
             printf("%d", data(index).pointer);
             break;
@@ -479,18 +515,14 @@ Int hash_find(VirtualMachine *vm, char *varname)
 
 void hash_set(VirtualMachine *vm, char* varname, Int index)
 {
-    Int _index = hash_find(vm, varname);
-    if (_index != -1)
+    if (hash_find(vm, varname) != -1)
     {
-        hash(_index).index = index;
+        hash_unset(vm, varname);
     }
-    else 
-    {
-        Hash hash;
-        hash.key = str_duplicate(varname);
-        hash.index = index;
-        stack_push(*vm->hashes, hash);
-    }
+    Hash hash;
+    hash.key = str_duplicate(varname);
+    hash.index = index;
+    stack_push(*vm->hashes, hash);
 }
 
 void hash_unset(VirtualMachine *vm, char* varname)
@@ -560,7 +592,7 @@ Int new_var(VirtualMachine *vm)
         Value value;
         value.pointer = NULL;
         stack_push(*vm->stack, value);
-        stack_push(*vm->typestack, TYPE_OTHER);
+        stack_push(*vm->typestack, TYPE_ANY);
         return vm->stack->size-1;
     }
 }
@@ -738,15 +770,31 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             Int lst = hash_find(vm, _str);
             if (lst == -1)
             {
-                printf("cannot spread non-existent list: %s\n", _str);
+                printf("cannot spread non-existent variable: %s\n", _str);
                 stack_push(*result, -1);
                 free(str);
                 continue;
             }
-            IntList *list = data(lst).pointer;
-            for (Int i = 0; i < list->size; i++)
+            if (data_t(lst) == TYPE_LIST)
             {
-                stack_push(*result, list->data[i]);
+                IntList *list = data(lst).pointer;
+                for (Int i = 0; i < list->size; i++)
+                {
+                    stack_push(*result, list->data[i]);
+                }
+            }
+            else if (data_t(lst) == TYPE_STRING)
+            {
+                char *string = data(lst).string;
+                for (Int i = 0; i < strlen(string); i++)
+                {
+                    stack_push(*result, new_number(vm, string[i]));
+                }
+            }
+            else
+            {
+                printf("cannot spread non-list variable: %s\n", _str);
+                stack_push(*result, -1);
             }
         }
         else if (str[0] == '/' && str[1] == '/') // comment
@@ -950,7 +998,7 @@ void unuse_var(VirtualMachine *vm, Int index)
         }
     }
     
-    data_t(index) = TYPE_NIL;
+    data_t(index) = TYPE_ANY;
     
     for (Int i = 0; i < vm->hashes->size; i++)
     {
