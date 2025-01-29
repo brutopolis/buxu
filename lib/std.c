@@ -1397,33 +1397,16 @@ function(brl_std_type_cast)
             }
             break;
         case TYPE_LIST:
-            if ((Int)arg(1).number == TYPE_STRING)
+            switch ((Int)arg(1).number)
             {
-                IntList *list = (IntList*)arg(0).pointer;
-                char* strbak;
-                _str =  str_concat("", "(list: ");
-                for (Int i = 0; i < list->size; i++)
-                {
-                    char* _value = str_format("@%ld", list->data[i]);
-                    strbak = _str;
-                    _str = str_concat(_str, _value);
-                    free(strbak);
-                    if (i < list->size - 1)
-                    {
-                        strbak = _str;
-                        _str = str_concat(_str, " ");
-                        free(strbak);
-                    }
-                    free(_value);
-                }
-                strbak = _str;
-                _str = str_concat(_str, ")");
-                free(strbak);
-                Int result = new_string(vm, _str);
-                free(_str);
-                return result;
+                case TYPE_STRING:
+                    return new_string(vm, list_stringify(vm, (IntList*)arg(0).pointer));
+                    break;
+                case TYPE_ANY:
+                    return new_number(vm, (Int)arg(0).pointer);
+                    break;
             }
-        break;
+            break;
         case TYPE_ANY:
             switch ((Int)arg(1).number)
             {
@@ -1438,37 +1421,10 @@ function(brl_std_type_cast)
         case TYPE_FUNCTION:
             if ((Int)arg(1).number == TYPE_STRING)
             {
-                _str =  str_concat("","(function: ");
-                InternalFunction *func = (InternalFunction*)arg(0).pointer;
-                StringList *names = func->varnames;
-                char *code = func->code;
-                char *strbak;
-                for (Int i = 0; i < names->size; i++)
-                {
-                    char* name = names->data[i];
-                    strbak = _str;
-                    _str = str_concat(_str, "(@@");
-                    free(strbak);
-                    strbak = _str;
-                    _str = str_concat(_str, name);
-                    free(strbak);
-                    strbak = _str;
-                    _str = str_concat(_str, ") ");
-                    free(strbak);
-                }
-                strbak = _str;
-                _str = str_concat(_str, "(@@");
-                free(strbak);
-                strbak = _str;
-                _str = str_concat(_str, code);
-                free(strbak);
-                strbak = _str;
-                _str = str_concat(_str, ")");
-                free(strbak);
-                Int result = new_string(vm, _str);
-                free(_str);
-                return result;
+                return new_string(vm, function_stringify(vm, (InternalFunction*)arg(0).pointer));
             }
+            break;
+        case TYPE_BUILTIN:
             break;
     }
 }

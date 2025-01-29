@@ -245,6 +245,10 @@ extern void print_element(VirtualMachine *vm, Int index);
 // functions
 IntList* parse(void* _vm, char* cmd, HashList* context);
 
+// stringify funcstion
+char* list_stringify(VirtualMachine* vm, IntList *list);
+char* function_stringify(VirtualMachine* vm, InternalFunction *func);
+
 // <libraries header>
 
 #ifndef ARDUINO

@@ -333,27 +333,7 @@ void print_element(VirtualMachine *vm, Int index)
             printf("%ld", data(index).pointer);
             break;
         case TYPE_LIST:
-            IntList *list = (IntList*)data(index).pointer;
-            _str =  str_concat("", "(list: ");
-            for (Int i = 0; i < list->size; i++)
-            {
-                char* _value = str_format("@%ld", list->data[i]);
-                strbak = _str;
-                _str = str_concat(_str, _value);
-                free(strbak);
-                if (i < list->size - 1)
-                {
-                    strbak = _str;
-                    _str = str_concat(_str, " ");
-                    free(strbak);
-                }
-                free(_value);
-            }
-            strbak = _str;
-            _str = str_concat(_str, ")");
-            free(strbak);
-            printf("%s", _str);
-            free(_str);
+            printf("%s", list_stringify(vm, (IntList*)data(index).pointer));
             break;
         case TYPE_NUMBER:
             if (((Int)data(index).number) == data(index).number)
@@ -369,35 +349,7 @@ void print_element(VirtualMachine *vm, Int index)
             printf("%s", data(index).string);
             break;
         case TYPE_FUNCTION:
-            _str =  str_concat("", "(function ");
-            InternalFunction *func = (InternalFunction*)data(index).pointer;
-            StringList *names = func->varnames;
-            char *code = func->code;
-            
-            for (Int i = 0; i < names->size; i++)
-            {
-                char* name = names->data[i];
-                strbak = _str;
-                _str = str_concat(_str, "(@@");
-                free(strbak);
-                strbak = _str;
-                _str = str_concat(_str, name);
-                free(strbak);
-                strbak = _str;
-                _str = str_concat(_str, ") ");
-                free(strbak);
-            }
-            strbak = _str;
-            _str = str_concat(_str, "(@@");
-            free(strbak);
-            strbak = _str;
-            _str = str_concat(_str, code);
-            free(strbak);
-            strbak = _str;
-            _str = str_concat(_str, ")");
-            free(strbak);
-            printf("%s", _str);
-            free(_str);
+            printf("%s", function_stringify(vm, (InternalFunction*)data(index).pointer));
             break;
         default:
             printf("%d", data(index).pointer);
@@ -1009,6 +961,98 @@ void unuse_var(VirtualMachine *vm, Int index)
         }
     }
     stack_push(*vm->unused, index);
+}
+
+char* function_stringify(VirtualMachine* vm, InternalFunction *func)
+{
+    char* _str =  str_concat("","(function ");
+    StringList *names = func->varnames;
+    char *code = func->code;
+    char *strbak;
+    for (Int i = 0; i < names->size; i++)
+    {
+        char* name = names->data[i];
+        strbak = _str;
+        _str = str_concat(_str, "(@@");
+        free(strbak);
+        strbak = _str;
+        _str = str_concat(_str, name);
+        free(strbak);
+        strbak = _str;
+        _str = str_concat(_str, ") ");
+        free(strbak);
+    }
+    strbak = _str;
+    _str = str_concat(_str, "(@@");
+    free(strbak);
+    strbak = _str;
+    _str = str_concat(_str, code);
+    free(strbak);
+    strbak = _str;
+    _str = str_concat(_str, ")");
+    free(strbak);
+    return _str;
+}
+
+char* list_stringify(VirtualMachine* vm, IntList *list)
+{
+    char* _str = str_concat("", "(list: ");
+    char* strbak;
+    for (Int i = 0; i < list->size; i++)
+    {
+        switch (data_t(list->data[i]))
+        {
+        case TYPE_STRING:
+            strbak = _str;
+            _str = str_concat(_str, "(@@");
+            free(strbak);
+            strbak = _str;
+            _str = str_concat(_str, data(list->data[i]).string);
+            free(strbak);
+            strbak = _str;
+            _str = str_concat(_str, ")");
+            free(strbak);
+            break;
+        case TYPE_NUMBER:
+            strbak = _str;
+            
+            if (data(list->data[i]).number == (Int)data(list->data[i]).number)
+            {
+                _str = str_concat(_str, str_format("%ld", (Int)data(list->data[i]).number));
+            }
+            else 
+            {
+                _str = str_concat(_str, str_format("%lf", data(list->data[i]).number));
+            }
+
+            free(strbak);
+            break;
+        case TYPE_LIST:
+            strbak = _str;
+            _str = str_concat(_str, list_stringify(vm, (IntList*)data(list->data[i]).pointer));
+            free(strbak);
+            break;
+        case TYPE_FUNCTION:
+            strbak = _str;
+            _str = str_concat(_str, function_stringify(vm, (InternalFunction*)data(list->data[i]).pointer));
+            free(strbak);
+            break;
+        default:
+            strbak = _str;
+            _str = str_format("%ld", data(list->data[i]).integer);
+            free(strbak);
+            break;
+        }
+        if (i < list->size - 1)
+        {
+            strbak = _str;
+            _str = str_concat(_str, " ");
+            free(strbak);
+        }
+    }
+    strbak = _str;
+    _str = str_concat(_str, ")");
+    return _str;
 }
 
 // if web
