@@ -56,9 +56,9 @@ bruter is a metaprogramable lightweight programming language;
     function ...;
     function (function (function ...));
     function variable_1 variable_2 ...;
-    #set "name" value; 
-    #set "name" (function ...);
-    #set "name" (list: value value ...);
+    #new "name" value; 
+    #new "name" (function ...);
+    #new "name" (list: value value ...);
     function name;
     do "code";
     repeat amount "code";
@@ -70,7 +70,7 @@ bruter is a metaprogramable lightweight programming language;
     function (@@ string);
     if "condition" "code";
     ifelse "condition" "code" "code";
-    function (sub: x y);
+    function (sub: @x @y);
 
 ## Building instructions
 

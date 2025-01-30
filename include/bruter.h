@@ -8,6 +8,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -188,7 +189,7 @@ extern StringList* special_split(char *str, char delim);
 
 #define is_true(value, __type) (__type == value.integer == 0 ? 0 : 1)
 
-#define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
+// #define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
 
 // variable
 

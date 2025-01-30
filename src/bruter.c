@@ -183,14 +183,14 @@ StringList* special_space_split(char *str)
             stack_push(*splited, tmp);
             i = j + 1;  // Avança para após o fechamento de aspas simples
         }
-        else if (is_space(str[i]))
+        else if (isspace(str[i]))
         {
             i++;
         }
         else
         {
             int j = i;
-            while (!is_space(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')' && str[j] != '"' && str[j] != '\'')
+            while (!isspace(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')' && str[j] != '"' && str[j] != '\'')
             {
                 j++;
             }
@@ -695,7 +695,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         }
         else if (str[0] == '@') 
         {
-            if (str[1] >= '0' && str[1] <= '9')
+            if (isdigit(str[1]))
             {
                 stack_push(*result, atoi(str + 1));
             }
@@ -711,7 +711,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             Int var = new_string(vm, temp);
             stack_push(*result, var);
         }
-        else if ((str[0] >= '0' && str[0] <= '9') || (str[0] == '-' && str[1] > '\0')) // number
+        else if (isdigit(str[0]) || (str[0] == '-' && str[1] > '\0')) // number
         {
             Int var = new_number(vm, atof(str));
             stack_push(*result, var);
@@ -876,7 +876,7 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
 
     StringList *splited = special_split(cmd, ';');
 
-    // remove empty or whitespace only strings using is_space
+    // remove empty or whitespace only strings using isspace
     Int last = splited->size - 1;
     while (last >= 0)
     {
@@ -888,7 +888,7 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
         else
         {
             Int i = 0;
-            while (splited->data[last][i] != '\0' && is_space(splited->data[last][i]))
+            while (splited->data[last][i] != '\0' && isspace(splited->data[last][i]))
             {
                 i++;
             }
@@ -1039,7 +1039,7 @@ char* list_stringify(VirtualMachine* vm, IntList *list)
             break;
         default:
             strbak = _str;
-            _str = str_format("%ld", data(list->data[i]).integer);
+            _str = str_format("%s%ld", _str, data(list->data[i]).integer);
             free(strbak);
             break;
         }

@@ -1,9 +1,8 @@
-#set "variavel" 1;
-#set "vglobal" 1;
+#new "variavel" 1;
+#new "vglobal" 1;
 print "aqui fora variavel é" variavel;
 print "aqui fora vglobal é" vglobal;
-#set "func" (function "variavel"
-    (@@
+#new    (@@
         print "aqui dentro é" variavel;
         print "aqui dentro vglobal é" vglobal;
         print;

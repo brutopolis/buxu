@@ -243,7 +243,7 @@ Bruter *session = new Bruter();
 void setup()
 {
     Serial.begin(115200);
-    session->run((char*)"#set 'str' (@@looping);");
+    session->run((char*)"#new 'str' (@@looping);");
     session->run((char*)"Serial.println @str;");
     session->run((char*)"Serial.println @str;");
 }

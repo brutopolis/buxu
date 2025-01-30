@@ -533,7 +533,7 @@ function(brl_std_list_shift)// returns the removed element
 
 function(brl_std_list_insert)
 {
-    if (args->size == 1) // insert to global vm->stack
+    if (args->size == 2) // insert to global vm->stack
     {
         // lets do it  with push
         Value v = value_duplicate(arg(0), arg_t(0));
@@ -909,10 +909,10 @@ function(brl_std_list_sub)
 
 function(brl_std_list_split)
 {
-    if (args->size == 2)// split the global stack, create lists with the indexes of each slice
+    if (args->size == 1)// split the global stack, create lists with the indexes of each slice
     {
         IntList *list = make_int_list();
-        Int separator = arg(1).number;
+        Int separator = arg(0).number;
         Int start = 0;
         for (Int i = 0; i < vm->stack->size; i++)
         {
@@ -1212,7 +1212,7 @@ function(brl_std_string_format)
                 free(_str);
                 _str = _newstr;
             }
-            else if (_str[i+1] >= '0' && _str[i+1] <= '9')
+            else if (isdigit(_str[i+1]))
             {
                 char* _newstr = str_format("%s%c", _str + i + 1, (char)atoi(_str + i + 1));
                 free(_str);
@@ -1380,7 +1380,9 @@ function(brl_std_type_cast)
                     return result;
                     break;
                 case TYPE_ANY:
-                    return new_number(vm, (Int)arg(0).number);
+                    Int index = new_var(vm);
+                    data(index).integer = arg(0).number;
+                    return index;
                     break;
             }
             break;

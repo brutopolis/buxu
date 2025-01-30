@@ -1,5 +1,5 @@
 
-#set "_size" 100000;
-#set "___index" 0;
+#new "_size" 100000;
+#new "___index" 0;
 repeat _size "++ ___index;print ___index";
 return 0;

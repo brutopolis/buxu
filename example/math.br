@@ -5,5 +5,11 @@
 print "(abs -321) = " (abs -321);
 
 // Function: pow;
-#new "pow" (function "a" "b" 'ifelse "== b 0" "return 1" "* a (pow a (- b 1))');
+#new "pow" (function "a" "b" '
+ifelse "== b 0" 
+"return 1" 
+"return (* a (pow a (- b 1)))"');
 print "(pow 2 10) = " (pow 2 10);
+
+#new "trunc" (function "a" 'return (cast (cast a type.any) type.number)');
+print "(trunc 3.14) = " (trunc 3.14);

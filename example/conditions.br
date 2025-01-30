@@ -1,5 +1,5 @@
-#set 'a' 88;
-#set 'b' 99;
+#new 'a' 88;
+#new 'b' 99;
 ifelse '== a b' (@@
     print 'a == b';
 )
