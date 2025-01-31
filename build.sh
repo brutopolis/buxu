@@ -127,7 +127,7 @@ while [[ $# -gt 0 ]]; do
         --emcc) EMCC="$2"; shift 2 ;;
         --web) EMCC="emcc"; shift ;;
         --wasicc) WASICC="$2"; shift 2 ;;
-        --exclude) EXCLUDE="$2"; shift 2 ;;
+        --exclude) EXCLUDE="$EXCLUDE $2"; shift 2 ;;
         *) echo "unknown option: $1"; usage ;;
     esac
 done
@@ -187,9 +187,8 @@ if [[ $INO -eq 1 ]]; then
 fi
 
 if [[ -n $EXCLUDE ]]; then
-    echo "deleting: $EXCLUDE"
     cd lib || exit 1
-    rm -f "$EXCLUDE"
+    rm -f $EXCLUDE
     cd ..
 fi
 

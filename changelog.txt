@@ -1,4 +1,4 @@
-(28/01/2025) - version 0.7.5
+(31/01/2025) - version 0.7.5
 
 - if a string is the first argument of the args stack, it will run as a script;
 - all ":function" are now "function:";
@@ -9,7 +9,7 @@
 - removed "#set" and "#rename";
 - new function "#new", just like #set but it will always create a new hash, deleting the existing one before, keep that in mind;
 - the internal function "hash_set" also does not re-set the hash anymore, it have the same behavior as "#new";
-- some math functions removed: abs, pow, ceil, floor, round;
+- some math functions removed: abs, pow (the easy ones);
 - those math functions can be found in bruter example/math.br, but written in bruter;
 - new function cast to convert types;
 - removed to.int, to.float and string.to.number functions, use cast instead;
@@ -19,6 +19,19 @@
 - string.split removed, use split: instead;
 - string.set removed, use set: instead;
 - string.format renamed to format;
+- function ls.types removed;
+- function ls.hash renamed to help;
+- new math functions: sin, cos, tan;
+- removed some file functions: file.rename, file.exists, file.size, file.delete and file.copy, use file.read + file.write (or system) instead;
+- removed dofile function, use (do (file.read "file.br")) instead;
+- new examples: each.br and math.br;
+- hashes must now be explicitly deleted, if a new variable is created in the same memory slot the hash will not be deleted anymore;
+- new lib std_inplace.c;
+- std.c splited;
+- new libs std_type.c, std_math.c, std_condition.c;
+- function replace.all: removed;
+- some optimizations;
+- some cleanup;
 
 (24/01/2025) - version 0.7.4
 

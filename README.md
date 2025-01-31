@@ -13,28 +13,33 @@ bruter is a metaprogramable lightweight programming language;
 
 
 - [bruter](#bruter)
-  - [bruter language](#bruter-language)
-    - [description](#description)
-    - [table of contents](#table-of-contents)
-    - [arg types](#arg-types)
-    - [reserved](#reserved)
-    - [usage](#usage)
-    - [building instructions](#building-instructions)
+  - [description](#description)
+  - [table of contents](#table-of-contents)
+  - [arg types](#arg-types)
+  - [reserved](#reserved)
+  - [usage](#usage)
+  - [building instructions](#building-instructions)
+  - [examples](#examples)
+  - [language concept](#language-concept)
+    - [foundation](#foundation)
+    - [concepts](#concepts)
+    - [types](#types)
+    - [variables](#variables)
+    - [functions](#functions)
+    - [libraries](#libraries)
+    - [control flow](#control-flow)
+    - [operators](#operators)
+    - [comments](#comments)
+  - [vm concept](#vm-concept)
+    - [foundation](#foundation-1)
+    - [concepts](#concepts-1)
+    - [types](#types-1)
+    - [variables](#variables-1)
+    - [functions](#functions-1)
+    - [libraries](#libraries-1)
 
 
-
-# bruter language
-
-## Types
-
-
-- `number` = starts with 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or -;
-
-- `string` = enclosed by double or single quotes, or by (@@ );
-
-- `nil` = nil;
-
-## Reserved
+# Reserved
 
 - `()` = expression
 
@@ -48,31 +53,31 @@ bruter is a metaprogramable lightweight programming language;
 
 - `;` = end of command separator
 
-- `//` = comment
+- `// ;` = comment
 
-## Usage
+# Usage
 
-    function;
-    function ...;
-    function (function (function ...));
-    function variable_1 variable_2 ...;
+    command;
+    command ...;
+    command (command (command ...));
+    command variable_1 variable_2 ...;
     #new "name" value; 
-    #new "name" (function ...);
+    #new "name" (command ...);
     #new "name" (list: value value ...);
-    function name;
+    command name;
     do "code";
     repeat amount "code";
     while "condition" "code";
     ...a_list; // spread operator;
     // comment;
-    function "string";
-    function 'string';
-    function (@@ string);
+    command "string";
+    command 'string';
+    command (@@ string);
     if "condition" "code";
     ifelse "condition" "code" "code";
-    function (sub: @x @y);
+    command (sub: @x @y);
 
-## Building instructions
+# Building instructions
 
   bruter include its own build script;
 
@@ -122,7 +127,42 @@ bruter is a metaprogramable lightweight programming language;
     # you can also define the path to a compiler;
 
     ./build.sh --cc path/to/compiler
+
+    # you can exclude libs as well;
+
+    ./build.sh --exclude path/to/lib.c
+    ./build.sh --exclude path/to/lib1 --exclude path/to/lib2 
+    ./build.sh --exclude "path/to/lib1.c path/to/lib2"
     
-
-
   note that, the clean build is always compiled, even with WASI, INO, EXEC, or WEB flags;
+
+# Examples
+
+    # print a string;
+    print "Hello, World!";
+
+    # print a number;
+    print 42;
+
+    # print a string and a number;
+    print "Hello, World!" 42;
+
+# Language Concept
+  ## Foundation
+  ## Concepts
+  ## Types
+  ## Variables
+  ## Functions
+  ## Libraries
+  ## Control Flow
+  ## Operators
+  ## Comments
+
+
+# VM Concept
+  ## Foundation
+  ## Concepts
+  ## Types
+  ## Variables
+  ## Functions
+  ## Libraries

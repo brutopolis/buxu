@@ -316,7 +316,7 @@ void print_element(VirtualMachine *vm, Int index)
 {
     if (index < 0 || index >= vm->stack->size)
     {
-        printf("(return (:get -1))");
+        printf("(return (get: -1))");
         return;
     }
 
@@ -929,37 +929,38 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
 
 void unuse_var(VirtualMachine *vm, Int index)
 {
-    //if type is string free the string, if type is list free the list
-    if (data_t(index) == TYPE_STRING)
+    switch (data_t(index))
     {
-        free(data(index).string);
-    }
-    else if (vm->typestack->data[index] == TYPE_LIST)
-    {
-        stack_free(*((IntList*)data(index).pointer));
-    }
-    else if (vm->typestack->data[index] == TYPE_FUNCTION)
-    {
-        for (Int i = 0; i < vm->hashes->size; i++)
-        {
-            if (vm->hashes->data[i].index == index)
+        case TYPE_STRING:
+            free(data(index).string);
+            break;
+        case TYPE_LIST:
+            stack_free(*((IntList*)data(index).pointer));
+            break;
+        case TYPE_FUNCTION:
+            for (Int i = 0; i < ((InternalFunction*)data(index).pointer)->varnames->size; i++)
             {
-                free(vm->hashes->data[i].key);
-                stack_remove(*vm->hashes, i);
+                free(((InternalFunction*)data(index).pointer)->varnames->data[i]);
             }
-        }
+            stack_free(*((InternalFunction*)data(index).pointer)->varnames);
+            free(((InternalFunction*)data(index).pointer)->code);
+            free(data(index).pointer);
+            /* old one
+            for (Int i = 0; i < vm->hashes->size; i++)
+            {
+                if (vm->hashes->data[i].index == index)
+                {
+                    free(vm->hashes->data[i].key);
+                    stack_remove(*vm->hashes, i);
+                }
+            }
+            */
+            break;
+        default:
+            break;
     }
     
     data_t(index) = TYPE_ANY;
-    
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {
-        if (vm->hashes->data[i].index == index)
-        {
-            free(vm->hashes->data[i].key);
-            stack_remove(*vm->hashes, i);
-        }
-    }
     stack_push(*vm->unused, index);
 }
 

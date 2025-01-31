@@ -25,75 +25,9 @@ function(brl_os_file_write)
     return -1;
 }
 
-function(brl_os_file_delete)
-{
-    remove(arg(0).string);
-    return -1;
-}
-
 function(brl_os_repl)
 {
     return repl(vm);
-}
-
-function(brl_os_dofile)
-{
-    char *code = readfile(arg(0).string);
-    Int result = -1;
-    if (code != NULL)
-    {
-        result = eval(vm, code, context);
-        free(code);
-    }
-    else 
-    {
-        printf("Error: file %s not found\n", arg(0).string);
-    }
-    return result;
-}
-
-function(brl_os_file_exists)
-{
-    FILE *file = fopen(arg(0).string, "r");
-    Int result = new_number(vm, file != NULL);
-    if (file != NULL)
-    {
-        fclose(file);
-    }
-    return result;
-}
-
-function(brl_os_file_rename)
-{
-    rename(arg(0).string, arg(1).string);
-    return -1;
-}
-
-function(brl_os_file_copy)
-{
-    FILE *file = fopen(arg(0).string, "r");
-    if (file == NULL)
-    {
-        return -1;
-    }
-    fclose(file);
-    char *code = readfile(arg(0).string);
-    writefile(arg(1).string, code);
-    free(code);
-    return -1;
-}
-
-function(brl_os_file_size)
-{
-    FILE *file = fopen(arg(0).string, "r");
-    if (file == NULL)
-    {
-        return -1;
-    }
-    fseek(file, 0, SEEK_END);
-    Int result = new_number(vm, ftell(file));
-    fclose(file);
-    return result;
 }
 
 function(brl_os_system)
@@ -217,15 +151,6 @@ function(brl_std_io_ls)
     return -1;
 }
 
-function(brl_std_io_ls_types)
-{
-    for (Int i = 0; i < vm->stack->size; i++)
-    {
-        printf("[%ld]: %d\n", i, data_t(i));
-    }
-    return -1;
-}
-
 function(brl_std_io_ls_hashes)
 {
     if (context != NULL)
@@ -289,97 +214,8 @@ function(brl_std_return)
     return arg_i(0);
 }
 
-function(brl_std_type_get)
-{
-    Int result = new_number(vm, arg_t(0));
-    return result;
-}
-
-function(brl_std_type_set)
-{
-    arg_t(0) = (Int)arg(1).number;
-    return -1;
-}
-
-// math functions
-// math functions
-// math functions
-// math functions
 
 
-function(brl_std_math_add)
-{
-    Int result = 0;
-    for (Int i = 0; i < args->size; i++)
-    {
-        result += arg(i).number;
-    }
-    return new_number(vm, result);
-}
-
-function(brl_std_math_sub)
-{
-    Int result = arg(0).number;
-    for (Int i = 1; i < args->size; i++)
-    {
-        result -= arg(i).number;
-    }
-    return new_number(vm, result);
-}
-
-function(brl_std_math_mul)
-{
-    Int result = 1;
-    for (Int i = 0; i < args->size; i++)
-    {
-        result *= arg(i).number;
-    }
-    return new_number(vm, result);
-}
-
-function(brl_std_math_div)
-{
-    Int result = arg(0).number;
-    for (Int i = 1; i < args->size; i++)
-    {
-        result /= arg(i).number;
-    }
-    return new_number(vm, result);
-}
-
-function(brl_std_math_mod)
-{
-    return new_number(vm, (Int)arg(0).number % (Int)arg(1).number);
-}
-
-function(brl_std_math_random)
-{
-    return new_number(vm, rand());
-}
-
-function(brl_std_math_seed)
-{
-    srand(arg(0).number);
-    return -1;
-}
-
-function(brl_std_math_increment)
-{
-    for (Int i = 0; i < args->size; i++)
-    {
-        arg(i).number++;
-    }
-    return -1;
-}
-
-function(brl_std_math_decrement)
-{
-    for (Int i = 0; i < args->size; i++)
-    {
-        arg(i).number--;
-    }
-    return -1;
-}
 
 // list functions
 // list functions
@@ -1044,61 +880,6 @@ function(brl_std_list_replace)
     return -1;
 }
 
-function(brl_std_list_replace_all)
-{
-    if (args->size == 2)// replace elements from the global stack
-    {
-        Int target = arg_i(0);
-        Int replacement = arg_i(1);
-        for (Int i = 0; i < vm->stack->size; i++)
-        {
-            if (vm->stack->data[i].integer == vm->stack->data[target].integer)
-            {
-                // if list or string we need to free it before
-                if (data_t(i) == TYPE_LIST || data_t(i) == TYPE_STRING)
-                {
-                    unuse_var(vm, i);
-                }
-                vm->stack->data[i] = vm->stack->data[replacement];
-            }
-        }
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        Int str = arg_i(0);
-        Int substr = arg_i(1);
-        Int replacement = arg_i(2);
-        char* _str = data(str).string;
-        char* _substr = data(substr).string;
-        char* _replacement = data(replacement).string;
-        char* _newstr = str_replace_all(_str, _substr, _replacement);
-        Int result = new_string(vm, _newstr);
-        free(_newstr);
-        return result;
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        Int _newlist = new_list(vm);
-        IntList *newlist = (IntList*)data(_newlist).pointer;
-        IntList *list = (IntList*)arg(0).pointer;
-        Int substr = arg_i(1);
-        Int replacement = arg_i(2);
-        for (Int i = 0; i < list->size; i++)
-        {
-            if (list->data[i] == substr)
-            {
-                stack_push(*newlist, replacement);
-            }
-            else 
-            {
-                stack_push(*newlist, list->data[i]);
-            }
-        }
-        return _newlist;
-    }
-    return -1;
-}
-
 function(brl_std_list_swap)
 {
     if (args->size == 2)// swap elements from the global stack
@@ -1226,91 +1007,6 @@ function(brl_std_string_format)
     return result;
 }
 
-// std conditions
-// std conditions
-// std conditions
-
-function(brl_std_condition_if)
-{
-    Int result = -1;
-    if (eval(vm, arg(0).string, context))
-    {
-        result = eval(vm, arg(1).string, context);
-
-    }
-    return result;
-}
-
-function(brl_std_condition_ifelse)
-{
-    Int result = -1;
-    if (eval(vm, arg(0).string, context))
-    {
-        result = eval(vm, arg(1).string, context);
-    }
-    else
-    {
-        result = eval(vm, arg(2).string, context);
-    }
-    return result;
-}
-
-function(brl_std_condition_equals)
-{
-    return(arg(0).integer == arg(1).integer);
-}
-
-function(brl_std_condition_not_equals)
-{
-    return(arg(0).integer != arg(1).integer);
-}
-
-function(brl_std_condition_greater)
-{
-    return(arg(0).integer > arg(1).integer);
-}
-
-function(brl_std_condition_greater_equals)
-{
-    return(arg(0).integer >= arg(1).integer);
-}
-
-function(brl_std_condition_less)
-{
-    return(arg(0).integer < arg(1).integer);
-}
-
-function(brl_std_condition_less_equals)
-{
-    return(arg(0).integer <= arg(1).integer);
-}
-
-function(brl_std_condition_not)
-{
-    if (arg(0).integer)
-    {
-        return 0;
-    }
-    return 1;
-}
-
-function(brl_std_condition_and)
-{
-    if (arg(0).integer && arg(1).integer)
-    {
-        return 1;
-    }
-    return 0;
-}
-
-function(brl_std_condition_raw_or)
-{
-    if (arg(0).integer || arg(1).integer)
-    {
-        return 1;
-    }
-    return 0;
-}
 
 // std loop
 // std loop
@@ -1365,71 +1061,6 @@ function(brl_mem_next)
     return -1;
 }
 
-function(brl_std_type_cast)
-{
-    switch (arg_t(0))
-    {
-        char* _str;
-        case TYPE_NUMBER:
-            switch ((Int)arg(1).number)
-            {
-                case TYPE_STRING:
-                    _str =  str_format("%ld", (Int)arg(0).number);
-                    Int result = new_string(vm, _str);
-                    free(_str);
-                    return result;
-                    break;
-                case TYPE_ANY:
-                    Int index = new_var(vm);
-                    data(index).integer = arg(0).number;
-                    return index;
-                    break;
-            }
-            break;
-        case TYPE_STRING:
-            switch ((Int)arg(1).number)
-            {
-                case TYPE_NUMBER:
-                    return new_number(vm, atof(arg(0).string));
-                    break;
-                case TYPE_ANY:
-                    Int index = new_var(vm);
-                    data(index).integer = atoi(arg(0).string);
-                    break;
-            }
-            break;
-        case TYPE_LIST:
-            switch ((Int)arg(1).number)
-            {
-                case TYPE_STRING:
-                    return new_string(vm, list_stringify(vm, (IntList*)arg(0).pointer));
-                    break;
-                case TYPE_ANY:
-                    return new_number(vm, (Int)arg(0).pointer);
-                    break;
-            }
-            break;
-        case TYPE_ANY:
-            switch ((Int)arg(1).number)
-            {
-                case TYPE_STRING:
-                    return new_string(vm, str_format("%ld", arg(0).integer));
-                    break;
-                case TYPE_NUMBER:
-                    return new_number(vm, (Float)arg(0).integer);
-                    break;
-            }
-            break;
-        case TYPE_FUNCTION:
-            if ((Int)arg(1).number == TYPE_STRING)
-            {
-                return new_string(vm, function_stringify(vm, (InternalFunction*)arg(0).pointer));
-            }
-            break;
-        case TYPE_BUILTIN:
-            break;
-    }
-}
 
 // inits
 #ifndef ARDUINO
@@ -1437,11 +1068,6 @@ void init_os(VirtualMachine *vm)
 {
     register_builtin(vm, "file.read", brl_os_file_read);
     register_builtin(vm, "file.write", brl_os_file_write);
-    register_builtin(vm, "file.delete", brl_os_file_delete);
-    register_builtin(vm, "file.exists", brl_os_file_exists);
-    register_builtin(vm, "file.rename", brl_os_file_rename);
-    register_builtin(vm, "file.copy", brl_os_file_copy);
-    register_builtin(vm, "file.size", brl_os_file_size);
     register_builtin(vm, "system", brl_os_system);
 
 #ifndef __wasm__
@@ -1449,9 +1075,7 @@ void init_os(VirtualMachine *vm)
     register_builtin(vm, "os.clock", brl_os_time_clock);
 #endif
 
-    register_builtin(vm, "dofile", brl_os_dofile);
     register_builtin(vm, "repl", brl_os_repl);
-    register_builtin(vm, "scan", brl_std_io_scan);// io, but it's a system function
 }
 #endif
 
@@ -1461,32 +1085,18 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "do", brl_std_do);
     register_builtin(vm, "return", brl_std_return);
     register_builtin(vm, "ls", brl_std_io_ls);
-    register_builtin(vm, "ls.type", brl_std_io_ls_types);
-    register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
-    register_builtin(vm, "print", brl_std_io_print);
+    register_builtin(vm, "help", brl_std_io_ls_hashes);
     register_builtin(vm, "function", brl_std_function);
+    
     
     // string format
     register_builtin(vm, "format", brl_std_string_format);
-}
 
-void init_type(VirtualMachine *vm)
-{
-    // type size(4 or 8 bytes)
-    register_number(vm, "type.size", sizeof(Value));
+    register_builtin(vm, "print", brl_std_io_print);
 
-    // types
-    register_number(vm, "type.any", TYPE_ANY);
-    register_number(vm, "type.number", TYPE_NUMBER);
-    register_number(vm, "type.string", TYPE_STRING);
-    register_number(vm, "type.builtin", TYPE_BUILTIN);
-    register_number(vm, "type.list", TYPE_LIST);
-    register_number(vm, "type.function", TYPE_FUNCTION);
-
-    // type functions
-    register_builtin(vm, "type", brl_std_type_get);
-    register_builtin(vm, "pun", brl_std_type_set);
-    register_builtin(vm, "cast", brl_std_type_cast);
+#ifndef ARDUINO
+    register_builtin(vm, "scan", brl_std_io_scan);// not avaliable on arduino, so its here
+#endif
 }
 
 void init_loop(VirtualMachine *vm)
@@ -1499,36 +1109,6 @@ void init_hash(VirtualMachine *vm)
 {
     register_builtin(vm, "#new", brl_std_hash_new);
     register_builtin(vm, "#delete", brl_std_hash_delete);
-}
-
-void init_math(VirtualMachine *vm)
-{
-    register_builtin(vm, "+", brl_std_math_add);
-    register_builtin(vm, "-", brl_std_math_sub);
-    register_builtin(vm, "*", brl_std_math_mul);
-    register_builtin(vm, "/", brl_std_math_div);
-    register_builtin(vm, "\%", brl_std_math_mod);
-    register_builtin(vm, "++", brl_std_math_increment);
-    register_builtin(vm, "--", brl_std_math_decrement);
-
-    register_builtin(vm, "random", brl_std_math_random);
-    register_builtin(vm, "seed", brl_std_math_seed);
-}
-
-void init_condition(VirtualMachine *vm)
-{   
-    register_builtin(vm, "if", brl_std_condition_if);
-    register_builtin(vm, "ifelse", brl_std_condition_ifelse);
-
-    register_builtin(vm, "==", brl_std_condition_equals);
-    register_builtin(vm, "!=", brl_std_condition_not_equals);
-    register_builtin(vm, ">", brl_std_condition_greater);
-    register_builtin(vm, ">=", brl_std_condition_greater_equals);
-    register_builtin(vm, "<", brl_std_condition_less);
-    register_builtin(vm, "<=", brl_std_condition_less_equals);
-    register_builtin(vm, "not", brl_std_condition_not);
-    register_builtin(vm, "&&", brl_std_condition_and);
-    register_builtin(vm, "||", brl_std_condition_raw_or);
 }
 
 void init_list(VirtualMachine *vm)
@@ -1551,7 +1131,6 @@ void init_list(VirtualMachine *vm)
     register_builtin(vm, "swap:", brl_std_list_swap);
     register_builtin(vm, "sub:", brl_std_list_sub);
     register_builtin(vm, "replace:", brl_std_list_replace);
-    register_builtin(vm, "replace.all:", brl_std_list_replace_all);
 }
 
 void init_mem(VirtualMachine *vm)
@@ -1568,12 +1147,9 @@ void init_std(VirtualMachine *vm)
     init_os(vm);
     #endif
     init_basics(vm);
-    init_type(vm);
     init_loop(vm);
     init_hash(vm);
     init_list(vm);
-    init_math(vm);
-    init_condition(vm);
     init_mem(vm);
     register_string(vm, "VERSION", VERSION);// version
 }
