@@ -1052,15 +1052,6 @@ function(brl_mem_delete)
     return -1;
 }
 
-function(brl_mem_next)
-{
-    for (Int i = 0; i < args->size; i++)
-    {
-        stack_push(*vm->unused, arg_i(i));
-    }
-    return -1;
-}
-
 
 // inits
 #ifndef ARDUINO
@@ -1137,7 +1128,6 @@ void init_mem(VirtualMachine *vm)
 {
     register_builtin(vm, "mem.copy", brl_mem_copy);
     register_builtin(vm, "mem.delete", brl_mem_delete);
-    register_builtin(vm, "mem.next", brl_mem_next);
 }
 
 // std init presets

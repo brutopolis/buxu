@@ -535,9 +535,7 @@ Int new_var(VirtualMachine *vm)
 { 
     if (vm->unused->size > 0)
     {
-        Int index = stack_pop(*vm->unused);
-        unuse_var(vm, index);
-        return index;
+        return stack_pop(*vm->unused);
     }
     else
     {
@@ -959,7 +957,9 @@ void unuse_var(VirtualMachine *vm, Int index)
         default:
             break;
     }
-    
+
+    // hashes associated to the index are not removed anymore
+
     data_t(index) = TYPE_ANY;
     stack_push(*vm->unused, index);
 }

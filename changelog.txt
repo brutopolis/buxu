@@ -1,3 +1,9 @@
+(01/02/2025) - version 0.7.5a
+
+- lots of documentation written on README.md;
+- mem.next removed, use mem.delete instead;
+- new_var doesnt clear the variable anymore;
+
 (31/01/2025) - version 0.7.5
 
 - if a string is the first argument of the args stack, it will run as a script;

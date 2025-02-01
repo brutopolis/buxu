@@ -14,7 +14,7 @@
 #include <emscripten.h>
 #endif
 
-#define VERSION "0.7.5"
+#define VERSION "0.7.5a"
 
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
@@ -22,7 +22,6 @@
 #define TYPE_LIST 3
 #define TYPE_BUILTIN 4
 #define TYPE_FUNCTION 7
-
 
 #if __SIZEOF_POINTER__ == 8
     #define Int long
