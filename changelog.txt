@@ -1,3 +1,9 @@
+(07/02/2025) - version 0.7.5b
+
+TODO: switch function, verify if all the values are numbers, if so, use a array with string pointers for the cases, if not, deal with hashes, might be slower;
+TODO: hash redordering functions;
+TODO: hash optimizator, a code to reorder the hashes based in a preparse or during the execution for using loops for example;
+
 (01/02/2025) - version 0.7.5a
 
 - lots of documentation written on README.md;
