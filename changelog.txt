@@ -1,8 +1,8 @@
-(07/02/2025) - version 0.7.5b
+(08/02/2025) - version 0.7.5b
 
-TODO: switch function, verify if all the values are numbers, if so, use a array with string pointers for the cases, if not, deal with hashes, might be slower;
-TODO: hash redordering functions;
-TODO: hash optimizator, a code to reorder the hashes based in a preparse or during the execution for using loops for example;
+- new function #priority, it reorder the hash in the hashes list, the first argument is the hash name, the second is the priority, 0 is the max priority, if it receive only 1 arg it sets the minimum priority, which is 10 by default, if no args are passed it will return the priority of the hash;
+
+TODO: switch function;
 
 (01/02/2025) - version 0.7.5a
 

@@ -4,6 +4,10 @@
 // functions defitions for bruter
 // functions defitions for bruter
 
+// MAX priority is always 0
+// MIN priority is BASE_PRIORITY
+Int BASE_PRIORITY = 10;
+
 #ifndef ARDUINO
 
 function(brl_os_file_read)
@@ -84,6 +88,42 @@ function(brl_std_hash_delete)
     {
         hash_unset(vm, arg(0).string);
     }
+    return -1;
+}
+
+function(brl_std_hash_priority)
+{
+    if (args->size == 1)
+    {
+        BASE_PRIORITY = (Int)arg(0).number;
+        return -1;
+    }
+    else if (args->size == 0)
+    {
+        return new_number(vm, BASE_PRIORITY);
+    }
+
+    char* hash_name = arg(0).string;
+    Int priority = arg(1).number;
+    Int hash_index = -1;
+    
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        if (strcmp(hash_name, hash(i).key) == 0)
+        {
+            hash_index = i;
+            break;
+        }
+    }
+
+    if (hash_index < 0)
+    {
+        printf("could not find hash \"%s\"\n", hash_name);
+    }
+
+    Hash obj = stack_remove(*vm->hashes, hash_index);
+    Int position = priority * (Int)(vm->hashes->size/BASE_PRIORITY);
+    stack_insert(*vm->hashes, position, obj);
     return -1;
 }
 
@@ -1100,6 +1140,7 @@ void init_hash(VirtualMachine *vm)
 {
     register_builtin(vm, "#new", brl_std_hash_new);
     register_builtin(vm, "#delete", brl_std_hash_delete);
+    register_builtin(vm, "#priority", brl_std_hash_priority);
 }
 
 void init_list(VirtualMachine *vm)
