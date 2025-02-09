@@ -3,6 +3,7 @@ print str;
 pun str type.any;// pun the string pointer into a int;
 print str;
 #new "ptr" (cast str type.number);// convert the int to a number;
+pun str type.string;// pun the int back to a string;
 print ptr;
 set: ptr (+ ptr 2);
 set: ptr (cast ptr type.any);

@@ -1,8 +1,14 @@
-(08/02/2025) - version 0.7.5b
+(09/02/2025) - version 0.7.5b
 
 - new function #priority, it reorder the hash in the hashes list, the first argument is the hash name, the second is the priority, 0 is the max priority, if it receive only 1 arg it sets the minimum priority, which is 10 by default, if no args are passed it will return the priority of the hash;
+- some memory leaking fixed;
+- some optimizations on loops, now while is as fast as repeat;
+- #new still working for re-setting a hash, but is not recommended unless you know exactly what you are doing, some optimizations now expect static hashes;
+- some internal systems were splited in minor parts and some changed behavior, just internal stuff;
 
 TODO: switch function;
+TODO: add a condition in loops where a strchr is run searching for a #, if it is found, the loop will run through eval instead of the default optimized way;
+NOTE: hash functions inside loops have a undefined behavior until the todo above is done;
 
 (01/02/2025) - version 0.7.5a
 

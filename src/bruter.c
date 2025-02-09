@@ -326,6 +326,7 @@ void print_element(VirtualMachine *vm, Int index)
     {
         char* _str;
         char* strbak;
+        char* stringified;
         case TYPE_ANY:
             printf("%ld", data(index).integer);
             break;
@@ -333,7 +334,9 @@ void print_element(VirtualMachine *vm, Int index)
             printf("%ld", data(index).pointer);
             break;
         case TYPE_LIST:
-            printf("%s", list_stringify(vm, (IntList*)data(index).pointer));
+            stringified = list_stringify(vm, (IntList*)data(index).pointer);
+            printf("%s", stringified);
+            free(stringified);
             break;
         case TYPE_NUMBER:
             if (((Int)data(index).number) == data(index).number)
@@ -349,7 +352,9 @@ void print_element(VirtualMachine *vm, Int index)
             printf("%s", data(index).string);
             break;
         case TYPE_FUNCTION:
-            printf("%s", function_stringify(vm, (InternalFunction*)data(index).pointer));
+            stringified = function_stringify(vm, (InternalFunction*)data(index).pointer);
+            printf("%s", stringified);
+            free(stringified);
             break;
         default:
             printf("%d", data(index).pointer);
@@ -791,16 +796,8 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
     return result;
 }
 
-
-Int default_interpreter(void *_vm, char* cmd, HashList *context)
+Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 {
-    VirtualMachine* vm = (VirtualMachine*) _vm;
-    IntList *args = parse(vm, cmd, context);
-    if (args->size == 0)
-    {
-        stack_free(*args);
-        return -1;
-    }
     Int func = stack_shift(*args);
     Int result = -1;
 
@@ -810,6 +807,7 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
         {
             Function _function = vm->stack->data[func].pointer;
             result = _function(vm, args, context);
+            stack_unshift(*args, func);
         }
         else if (vm->typestack->data[func] == TYPE_FUNCTION)
         {
@@ -822,7 +820,6 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
             HashList *global_context = vm->hashes;
 
             vm->hashes = _context;
-
 
             for (Int i = 0; i < _func->varnames->size; i++)
             {
@@ -849,19 +846,37 @@ Int default_interpreter(void *_vm, char* cmd, HashList *context)
             }
 
             stack_free(*_context);
+            stack_push(*args, func);
+            stack_reverse(*args);
         }
         else if (vm->typestack->data[func] == TYPE_STRING) // script
         {
             result = eval(vm, data(func).string, context);
+            stack_unshift(*args, func);
         }
     }
     else 
     {
         printf("Error: %d is not a function or script\n", func);
     }
+    return result;
+}
 
+Int default_interpreter(void *vm, char* cmd, HashList *context)
+{
+    IntList *args = parse((VirtualMachine*)vm, cmd, context);
+
+    if (args->size == 0)
+    {
+        stack_free(*args);
+        return -1;
+    }
+    
+    
+    Int result = interpret((VirtualMachine*)vm, args, context);
     
     stack_free(*args);
+    
     return result;
 }
 
@@ -997,7 +1012,7 @@ char* function_stringify(VirtualMachine* vm, InternalFunction *func)
 
 char* list_stringify(VirtualMachine* vm, IntList *list)
 {
-    char* _str = str_concat("", "(list: ");
+    char* _str = str_duplicate("(list: ");
     char* strbak;
     for (Int i = 0; i < list->size; i++)
     {
@@ -1030,7 +1045,8 @@ char* list_stringify(VirtualMachine* vm, IntList *list)
             break;
         case TYPE_LIST:
             strbak = _str;
-            _str = str_concat(_str, list_stringify(vm, (IntList*)data(list->data[i]).pointer));
+            char* stringified = list_stringify(vm, (IntList*)data(list->data[i]).pointer);
+            _str = str_concat(_str, stringified);
             free(strbak);
             break;
         case TYPE_FUNCTION:
@@ -1053,6 +1069,7 @@ char* list_stringify(VirtualMachine* vm, IntList *list)
     }
     strbak = _str;
     _str = str_concat(_str, ")");
+    free(strbak);
     return _str;
 }
 

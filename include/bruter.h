@@ -14,7 +14,7 @@
 #include <emscripten.h>
 #endif
 
-#define VERSION "0.7.5a"
+#define VERSION "0.7.5b"
 
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
@@ -241,6 +241,7 @@ extern void print_element(VirtualMachine *vm, Int index);
 #define function(name) Int name(VirtualMachine *vm, IntList *args, HashList *context)
 #define init(name) void init_##name(VirtualMachine *vm)
 
+Int interpret(VirtualMachine *vm, IntList *args, HashList *context);
 
 // functions
 IntList* parse(void* _vm, char* cmd, HashList* context);

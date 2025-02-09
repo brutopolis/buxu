@@ -8,6 +8,8 @@
 // MIN priority is BASE_PRIORITY
 Int BASE_PRIORITY = 10;
 
+typedef Stack(IntList) IntListList;
+
 #ifndef ARDUINO
 
 function(brl_os_file_read)
@@ -206,8 +208,8 @@ function(brl_std_io_ls_hashes)
     {
         for (Int i = 0; i < vm->hashes->size; i++)
         {
-            printf("[%s] {%d} @%ld: ", hash(i).key, vm->typestack->data[hash(i).index], hash(i).index);
-            print_element(vm, hash(i).index);
+            printf("[%s] {%d} @%ld: ", vm->hashes->data[i].key, vm->typestack->data[vm->hashes->data[i].index], vm->hashes->data[i].index);
+            print_element(vm, vm->hashes->data[i].index);
             printf("\n");
         }
     }
@@ -1055,24 +1057,79 @@ function(brl_std_string_format)
 function(brl_std_loop_while)
 {
     Int result = -1;
+    StringList *splited = str_split(arg(1).string, ";");
+    
+    IntListList *arglist = (IntListList*)malloc(sizeof(IntListList));
+    stack_init(*arglist);
+
+    for (Int i = 0; i < splited->size; i++)
+    {
+        IntList *_args = parse(vm, splited->data[i], context);
+        stack_push(*arglist, *_args);
+        free(splited->data[i]);
+
+        free(_args);
+    }
+
+    stack_free(*splited);
+
     while (eval(vm, arg(0).string, context))
     {
-        result = eval(vm, arg(1).string, context);
+        result = -1;
 
-        if (result >= 0)
+        for (Int i = 0; i < arglist->size; i++)
         {
-            break;
+            result = interpret(vm, &arglist->data[i], context);
+            if (result >= 0)
+            {
+                break;
+            }
         }
     }
+
+    for (Int i = 0; i < arglist->size; i++)
+    {
+        free(arglist->data[i].data);
+    }
+
+    stack_free(*arglist);
+
     return result;
 }
 
 function(brl_std_loop_repeat)
 {
+    StringList *splited = str_split(arg(1).string, ";");
+    
+    IntListList *arglist = (IntListList*)malloc(sizeof(IntListList));
+    stack_init(*arglist);
+
+    for (Int i = 0; i < splited->size; i++)
+    {
+        IntList *_args = parse(vm, splited->data[i], context);
+        stack_push(*arglist, *_args);
+        free(splited->data[i]);
+
+        free(_args);
+    }
+
+    stack_free(*splited);
+
     for (Int i = 0; i < arg(0).number; i++)
     {
-        eval(vm, arg(1).string, context);
+        for (Int i = 0; i < arglist->size; i++)
+        {
+            interpret(vm, &arglist->data[i], context);
+        }
     }
+
+    for (Int i = 0; i < arglist->size; i++)
+    {
+        free(arglist->data[i].data);
+    }
+
+    stack_free(*arglist);
+
     return -1;
 }
 
