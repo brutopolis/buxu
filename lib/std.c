@@ -123,7 +123,7 @@ function(brl_std_hash_priority)
         printf("could not find hash \"%s\"\n", hash_name);
     }
 
-    Hash obj = stack_remove(*vm->hashes, hash_index);
+    Hash obj = stack_fast_remove(*vm->hashes, hash_index);
     Int position = priority * (Int)(vm->hashes->size/BASE_PRIORITY);
     stack_insert(*vm->hashes, position, obj);
     return -1;
@@ -1057,29 +1057,50 @@ function(brl_std_string_format)
 function(brl_std_loop_while)
 {
     Int result = -1;
-    StringList *splited = str_split(arg(1).string, ";");
+    if (strchr(arg(1).string, '#') == NULL)
+    {
+        StringList *splited = str_split(arg(1).string, ";");
     
-    IntListList *arglist = (IntListList*)malloc(sizeof(IntListList));
-    stack_init(*arglist);
+        IntListList *arglist = (IntListList*)malloc(sizeof(IntListList));
+        stack_init(*arglist);
 
-    for (Int i = 0; i < splited->size; i++)
-    {
-        IntList *_args = parse(vm, splited->data[i], context);
-        stack_push(*arglist, *_args);
-        free(splited->data[i]);
+        for (Int i = 0; i < splited->size; i++)
+        {
+            IntList *_args = parse(vm, splited->data[i], context);
+            stack_push(*arglist, *_args);
+            free(splited->data[i]);
 
-        free(_args);
-    }
+            free(_args);
+        }
 
-    stack_free(*splited);
+        stack_free(*splited);
 
-    while (eval(vm, arg(0).string, context))
-    {
-        result = -1;
+        while (eval(vm, arg(0).string, context))
+        {
+            result = -1;
+
+            for (Int i = 0; i < arglist->size; i++)
+            {
+                result = interpret(vm, &arglist->data[i], context);
+                if (result >= 0)
+                {
+                    break;
+                }
+            }
+        }
 
         for (Int i = 0; i < arglist->size; i++)
         {
-            result = interpret(vm, &arglist->data[i], context);
+            free(arglist->data[i].data);
+        }
+
+        stack_free(*arglist);
+    }
+    else 
+    {
+        while (eval(vm, arg(0).string, context))
+        {
+            result = eval(vm, arg(1).string, context);
             if (result >= 0)
             {
                 break;
@@ -1087,50 +1108,62 @@ function(brl_std_loop_while)
         }
     }
 
-    for (Int i = 0; i < arglist->size; i++)
-    {
-        free(arglist->data[i].data);
-    }
-
-    stack_free(*arglist);
-
     return result;
 }
 
 function(brl_std_loop_repeat)
 {
-    StringList *splited = str_split(arg(1).string, ";");
-    
-    IntListList *arglist = (IntListList*)malloc(sizeof(IntListList));
-    stack_init(*arglist);
-
-    for (Int i = 0; i < splited->size; i++)
+    Int result = -1;
+    if (strchr(arg(1).string, '#') == NULL)
     {
-        IntList *_args = parse(vm, splited->data[i], context);
-        stack_push(*arglist, *_args);
-        free(splited->data[i]);
+        StringList *splited = str_split(arg(1).string, ";");
+        
+        IntListList *arglist = (IntListList*)malloc(sizeof(IntListList));
+        stack_init(*arglist);
 
-        free(_args);
-    }
+        for (Int i = 0; i < splited->size; i++)
+        {
+            IntList *_args = parse(vm, splited->data[i], context);
+            stack_push(*arglist, *_args);
+            free(splited->data[i]);
 
-    stack_free(*splited);
+            free(_args);
+        }
 
-    for (Int i = 0; i < arg(0).number; i++)
-    {
+        stack_free(*splited);
+
+        for (Int i = 0; i < arg(0).number; i++)
+        {
+            for (Int i = 0; i < arglist->size; i++)
+            {
+                result = interpret(vm, &arglist->data[i], context);
+            }
+
+            if (result > -1)
+            {
+                break;
+            }
+        }
+
         for (Int i = 0; i < arglist->size; i++)
         {
-            interpret(vm, &arglist->data[i], context);
+            free(arglist->data[i].data);
+        }
+
+        stack_free(*arglist);
+    }
+    else
+    {
+        for (int i = 0; i < (Int)arg(0).number; i++)
+        {
+            result = eval(vm,arg(1).string,context);
+            if (result > -1)
+            {
+                break;
+            }
         }
     }
-
-    for (Int i = 0; i < arglist->size; i++)
-    {
-        free(arglist->data[i].data);
-    }
-
-    stack_free(*arglist);
-
-    return -1;
+    return result;
 }
 
 function(brl_mem_copy)

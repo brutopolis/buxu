@@ -489,7 +489,7 @@ void hash_unset(VirtualMachine *vm, char* varname)
     {
         free(vm->hashes->data[index].key);
         vm->hashes->data[index].key = NULL;
-        stack_remove(*vm->hashes, index);
+        stack_fast_remove(*vm->hashes, index);
     }
 }
 
@@ -958,16 +958,6 @@ void unuse_var(VirtualMachine *vm, Int index)
             stack_free(*((InternalFunction*)data(index).pointer)->varnames);
             free(((InternalFunction*)data(index).pointer)->code);
             free(data(index).pointer);
-            /* old one
-            for (Int i = 0; i < vm->hashes->size; i++)
-            {
-                if (vm->hashes->data[i].index == index)
-                {
-                    free(vm->hashes->data[i].key);
-                    stack_remove(*vm->hashes, i);
-                }
-            }
-            */
             break;
         default:
             break;

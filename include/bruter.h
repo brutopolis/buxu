@@ -51,18 +51,31 @@
     (s).capacity = 0;\
 } while (0)
 
+// increase the capacity of the stack
+#define stack_double(s) do { \
+    (s).capacity = (s).capacity == 0 ? 1 : (s).capacity * 2; \
+    (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
+} while (0)
+
+// decrease the capacity of the stack
+#define stack_half(s) do { \
+    (s).capacity /= 2; \
+    (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
+    if ((s).size > (s).capacity) { \
+        (s).size = (s).capacity; \
+    } \
+} while (0)
+
 #define stack_push(s, v) do { \
     if ((s).size == (s).capacity) { \
-        (s).capacity = (s).capacity == 0 ? 1 : (s).capacity * 2; \
-        (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
+        stack_double(s); \
     } \
     (s).data[(s).size++] = (v); \
 } while (0)
 
 #define stack_unshift(s, v) do { \
     if ((s).size == (s).capacity) { \
-        (s).capacity = (s).capacity == 0 ? 1 : (s).capacity * 2; \
-        (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
+        stack_double(s); \
     } \
     for (Int i = (s).size; i > 0; i--) { \
         (s).data[i] = (s).data[i - 1]; \
@@ -94,8 +107,7 @@
 //insert element v at index i
 #define stack_insert(s, i, v) do { \
     if ((s).size == (s).capacity) { \
-        (s).capacity = (s).capacity == 0 ? 1 : (s).capacity * 2; \
-        (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
+        stack_double(s); \
     } \
     for (Int j = (s).size; j > i; j--) { \
         (s).data[j] = (s).data[j - 1]; \
@@ -111,6 +123,14 @@
         (s).data[j] = (s).data[j + 1]; \
     } \
     (s).size--; \
+    ret; \
+})
+
+//same as remove but does a swap and pop, faster but the order of the elements will change
+#define stack_fast_remove(s, i) ({ \
+    typeof((s).data[i]) ret = (s).data[i]; \
+    stack_swap(s, i, (s).size - 1); \
+    stack_pop(s); \
     ret; \
 })
 
