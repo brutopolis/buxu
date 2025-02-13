@@ -299,7 +299,7 @@ bruter is a metaprogramable lightweight programming language;
 
   which can be simplified with a macro:
   
-    typedef Stack(Hash) HashList;
+    typedef List(Hash) HashList;
 
   ## The VM
 

@@ -1,4 +1,4 @@
-(09/02/2025) - version 0.7.5b
+(13/02/2025) - version 0.7.5b
 
 - new function #priority, it reorder the hash in the hashes list, the first argument is the hash name, the second is the priority, 0 is the max priority, if it receive only 1 arg it sets the minimum priority, which is 10 by default, if no args are passed it will return the priority of the hash;
 - some memory leaking fixed;
@@ -12,7 +12,7 @@
 - new internal list macro: list_half, it reallocs the list to half its size;
 - repeat loop now can be interrupted with return just like while;
 
-TODO: switch function(maybe a type of function?);
+TODO: remove InternalFunction type and replace all its uses by regular a StringList;
 
 (01/02/2025) - version 0.7.5a
 
