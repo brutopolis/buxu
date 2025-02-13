@@ -23,6 +23,13 @@
     list_free(*list);
 */
 
+// you might want to define Int before including this file if you want smaller or bigger lists;
+#ifndef Int 
+#define Int int
+#endif
+
+#ifndef C_LIST_H
+
 #define List(T) struct \
 { \
     T *data; \
@@ -139,3 +146,5 @@
 #define list_set(s, i, v) ((s).data[i] = (v))
 
 #define list_get(s, i) ((s).data[i])
+
+#endif

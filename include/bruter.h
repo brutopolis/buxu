@@ -14,7 +14,6 @@
 #include <emscripten.h>
 #endif
 
-#include "c_list.h"
 
 #define VERSION "0.7.5b"
 
@@ -25,6 +24,8 @@
 #define TYPE_BUILTIN 4
 #define TYPE_FUNCTION 7
 
+// we use Int and Float instead of int and float because we need to use always the pointer size for any type that might share the fundamental union type;
+// bruter use a union as universal type, and bruter is able to manipulate and use pointers direcly so we need to use the pointer size;
 #if __SIZEOF_POINTER__ == 8
     #define Int long
     #define Float double
@@ -32,6 +33,9 @@
     #define Int int
     #define Float float
 #endif
+
+// c_list.h must be included after defining Int, because it also relies on it and will define it as a int(4byte) if it's not defined, instead of the pointer size(which might usually be 8 bytes);
+#include "c_list.h"
 
 #ifndef NULL
 #define NULL 0
