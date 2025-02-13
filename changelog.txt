@@ -5,9 +5,11 @@
 - some optimizations on loops, while is about ~50% faster now, and repeat is about ~20% faster;
 - #new still working for re-setting a hash, but is not recommended unless you know exactly what you are doing, some optimizations now expect static hashes;
 - some internal systems were splited in minor parts and some changed behavior, just internal stuff;
-- new internal list macro: stack_fast_remove, is a swap and pop, a faster stack_remove, that doesnt mantain the order;
-- new internal list macro: stack_double, it reallocs the list to double its size;
-- new internal list macro: stack_half, it reallocs the list to half its size;
+- new file c_list.h;
+- all stack_* functions were renamed to list_* instead, usage is now simpler and you dont need to allocate the list anymore, list_init does it now;
+- new internal list macro: list_fast_remove, is a swap and pop, a faster list_remove, that doesnt mantain the order;
+- new internal list macro: list_double, it reallocs the list to double its size;
+- new internal list macro: list_half, it reallocs the list to half its size;
 - repeat loop now can be interrupted with return just like while;
 
 TODO: switch function(maybe a type of function?);

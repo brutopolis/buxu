@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     IntList *fileargs = (IntList*)data(hash_find(vm, "file.args")).pointer;
     for (int i = 1; i < argc; i++)
     {
-        stack_push(*fileargs, new_string(vm, argv[i]));
+        list_push(*fileargs, new_string(vm, argv[i]));
     }
     
     // embed code tag is replaced by main_br and main_br_len during build
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            stack_push(*args, argv[i]);
+            list_push(*args, argv[i]);
         }
     }
     
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
         // path without file name
         vm->typestack->data[filepathindex] = TYPE_STRING;
         // remove file name
-        char *path = stack_shift(*args);
+        char *path = list_shift(*args);
         char *last = strrchr(path, '/');
         if (last == NULL)
         {
@@ -100,12 +100,12 @@ int main(int argc, char **argv)
         IntList *fileargs = (IntList*)data(hash_find(vm, "file.args")).pointer;
         while (args->size > 0)
         {
-            stack_push(*fileargs, new_string(vm, stack_shift(*args)));
+            list_push(*fileargs, new_string(vm, list_shift(*args)));
         }
         result = eval(vm, _code, NULL);
         free(_code);
     }
-    stack_free(*args);
+    list_free(*args);
     free_vm(vm);
     return result;
 }

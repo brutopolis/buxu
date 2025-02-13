@@ -132,9 +132,7 @@ Int str_find(const char *str, const char *substr)
 
 StringList* special_space_split(char *str)
 {
-    StringList *splited;
-    splited = (StringList*)malloc(sizeof(StringList));
-    stack_init(*splited);
+    StringList *splited = list_init(StringList);
     
     int i = 0;
     while (str[i] != '\0')
@@ -156,7 +154,7 @@ StringList* special_space_split(char *str)
                 }
             }
             char *tmp = str_nduplicate(str + i, j - i + 1);
-            stack_push(*splited, tmp);
+            list_push(*splited, tmp);
             i = j + 1;
         }
         else if (str[i] == '"')
@@ -168,7 +166,7 @@ StringList* special_space_split(char *str)
                 j++;
             }
             char *tmp = str_nduplicate(str + i, j - i + 1);
-            stack_push(*splited, tmp);
+            list_push(*splited, tmp);
             i = j + 1;  // Avança para após o fechamento de aspas duplas
         }
         else if (str[i] == '\'')
@@ -180,7 +178,7 @@ StringList* special_space_split(char *str)
                 j++;
             }
             char *tmp = str_nduplicate(str + i, j - i + 1);
-            stack_push(*splited, tmp);
+            list_push(*splited, tmp);
             i = j + 1;  // Avança para após o fechamento de aspas simples
         }
         else if (isspace(str[i]))
@@ -194,7 +192,7 @@ StringList* special_space_split(char *str)
             {
                 j++;
             }
-            stack_push(*splited, str_nduplicate(str + i, j - i));
+            list_push(*splited, str_nduplicate(str + i, j - i));
             i = j;
         }
     }
@@ -204,9 +202,7 @@ StringList* special_space_split(char *str)
 
 StringList* special_split(char *str, char delim)
 {
-    StringList *splited;
-    splited = (StringList*)malloc(sizeof(StringList));
-    stack_init(*splited);
+    StringList *splited = list_init(StringList);
     
     int recursion = 0;
     int inside_double_quotes = 0;
@@ -239,13 +235,13 @@ StringList* special_split(char *str, char delim)
         if (str[i] == delim && recursion == 0 && inside_double_quotes == 0 && inside_single_quotes == 0)
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i);
-            stack_push(*splited, tmp);
+            list_push(*splited, tmp);
             last_i = i + 1;
         }
         else if (str[i + 1] == '\0') // Checagem para o último token
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i + 1);
-            stack_push(*splited, tmp);
+            list_push(*splited, tmp);
         }
 
         i++;
@@ -255,9 +251,7 @@ StringList* special_split(char *str, char delim)
 
 StringList* str_split(char *str, char *delim)
 {
-    StringList *splited;
-    splited = (StringList*)malloc(sizeof(StringList));
-    stack_init(*splited);
+    StringList *splited = list_init(StringList);
     
     Int i = 0;
     while (str[i] != '\0')
@@ -273,7 +267,7 @@ StringList* str_split(char *str, char *delim)
             {
                 j++;
             }
-            stack_push(*splited, str_nduplicate(str + i, j - i));
+            list_push(*splited, str_nduplicate(str + i, j - i));
             i = j;
         }
     }
@@ -284,9 +278,7 @@ StringList* str_split(char *str, char *delim)
 
 StringList* str_split_char(char *str, char delim)
 {
-    StringList *splited;
-    splited = (StringList*)malloc(sizeof(StringList));
-    stack_init(*splited);
+    StringList *splited = list_init(StringList);
 
     Int i = 0;
     while (str[i] != '\0')
@@ -302,7 +294,7 @@ StringList* str_split_char(char *str, char delim)
             {
                 j++;
             }
-            stack_push(*splited, str_nduplicate(str + i, j - i));
+            list_push(*splited, str_nduplicate(str + i, j - i));
             i = j;
         }
     }
@@ -442,7 +434,7 @@ Value value_duplicate(Value value, char type)
             IntList *list = (IntList*)value.pointer;
             for (Int i = 0; i < list->size; i++)
             {
-                stack_push(*((IntList*)dup.pointer), list->data[i]);
+                list_push(*((IntList*)dup.pointer), list->data[i]);
             }
             break;
         case TYPE_BUILTIN:
@@ -479,7 +471,7 @@ void hash_set(VirtualMachine *vm, char* varname, Int index)
     Hash hash;
     hash.key = str_duplicate(varname);
     hash.index = index;
-    stack_push(*vm->hashes, hash);
+    list_push(*vm->hashes, hash);
 }
 
 void hash_unset(VirtualMachine *vm, char* varname)
@@ -489,7 +481,7 @@ void hash_unset(VirtualMachine *vm, char* varname)
     {
         free(vm->hashes->data[index].key);
         vm->hashes->data[index].key = NULL;
-        stack_fast_remove(*vm->hashes, index);
+        list_fast_remove(*vm->hashes, index);
     }
 }
 
@@ -497,29 +489,25 @@ void hash_unset(VirtualMachine *vm, char* varname)
 
 ValueList* make_value_list()
 {
-    ValueList *list = (ValueList*)malloc(sizeof(ValueList));
-    stack_init(*list);
+    ValueList *list = list_init(ValueList);
     return list;
 }
 
 IntList* make_int_list()
 {
-    IntList *list = (IntList*)malloc(sizeof(IntList));
-    stack_init(*list);
+    IntList *list = list_init(IntList);
     return list;
 }
 
 StringList* make_string_list()
 {
-    StringList *list = (StringList*)malloc(sizeof(StringList));
-    stack_init(*list);
+    StringList *list = list_init(StringList);
     return list;
 }
 
 CharList* make_char_list()
 {
-    CharList *list = (CharList*)malloc(sizeof(CharList));
-    stack_init(*list);
+    CharList *list = list_init(CharList);
     return list;
 }
 
@@ -528,8 +516,7 @@ VirtualMachine* make_vm()
     VirtualMachine *vm = (VirtualMachine*)malloc(sizeof(VirtualMachine));
     vm->stack = make_value_list();
     vm->typestack = make_char_list();
-    vm->hashes = (HashList*)malloc(sizeof(HashList));
-    stack_init(*vm->hashes);
+    vm->hashes = list_init(HashList);
     vm->interpret = default_interpreter;
     vm->unused = make_int_list();
     return vm;
@@ -540,14 +527,14 @@ Int new_var(VirtualMachine *vm)
 { 
     if (vm->unused->size > 0)
     {
-        return stack_pop(*vm->unused);
+        return list_pop(*vm->unused);
     }
     else
     {
         Value value;
         value.pointer = NULL;
-        stack_push(*vm->stack, value);
-        stack_push(*vm->typestack, TYPE_ANY);
+        list_push(*vm->stack, value);
+        list_push(*vm->typestack, TYPE_ANY);
         return vm->stack->size-1;
     }
 }
@@ -628,21 +615,21 @@ void free_vm(VirtualMachine *vm)
     Value value;
     while (vm->stack->size > 0)
     {
-        value = stack_pop(*vm->stack);
-        switch (stack_pop(*vm->typestack))
+        value = list_pop(*vm->stack);
+        switch (list_pop(*vm->typestack))
         {
             case TYPE_STRING:
                 free(value.string);
                 break;
             case TYPE_LIST:
-                stack_free(*((IntList*)value.pointer));
+                list_free(*((IntList*)value.pointer));
                 break;
             case TYPE_FUNCTION:
                 for (Int i = 0; i < ((InternalFunction*)value.pointer)->varnames->size; i++)
                 {
                     free(((InternalFunction*)value.pointer)->varnames->data[i]);
                 }
-                stack_free(*((InternalFunction*)value.pointer)->varnames);
+                list_free(*((InternalFunction*)value.pointer)->varnames);
                 free(((InternalFunction*)value.pointer)->code);
                 free(value.pointer);
                 break;
@@ -653,16 +640,16 @@ void free_vm(VirtualMachine *vm)
 
     while (vm->hashes->size > 0)
     {
-        Hash hash = stack_pop(*vm->hashes);
+        Hash hash = list_pop(*vm->hashes);
         free(hash.key);
     }
 
-    stack_free(*vm->unused);
+    list_free(*vm->unused);
 
-    stack_free(*vm->stack);
-    stack_free(*vm->typestack);
+    list_free(*vm->stack);
+    list_free(*vm->typestack);
 
-    stack_free(*vm->hashes);
+    list_free(*vm->hashes);
 
     free(vm);
 }
@@ -674,11 +661,11 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
     IntList *result = make_int_list();
     
     StringList *splited = special_space_split(cmd);
-    stack_reverse(*splited);
+    list_reverse(*splited);
     //Int current = 0;
     while (splited->size > 0)
     {
-        char* str = stack_pop(*splited);
+        char* str = list_pop(*splited);
         if (str[0] == '(')
         {
             if(str[1] == '@' && str[2] == '@') //string
@@ -686,25 +673,25 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 char* temp = str + 3;
                 temp[strlen(temp) - 1] = '\0';
                 Int var = new_string(vm, temp);
-                stack_push(*result, var);            
+                list_push(*result, var);            
             }
             else
             {
                 char* temp = str + 1;
                 temp[strlen(temp) - 1] = '\0';
                 Int index = eval(vm, temp, context);
-                stack_push(*result, index);
+                list_push(*result, index);
             }
         }
         else if (str[0] == '@') 
         {
             if (isdigit(str[1]))
             {
-                stack_push(*result, atoi(str + 1));
+                list_push(*result, atoi(str + 1));
             }
             else 
             {
-                stack_push(*result, new_number(vm, hash_find(vm, str + 1)));
+                list_push(*result, new_number(vm, hash_find(vm, str + 1)));
             }
         }
         else if (str[0] == '"' || str[0] == '\'') // string
@@ -712,12 +699,12 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             char* temp = str + 1;
             temp[strlen(temp) - 1] = '\0';
             Int var = new_string(vm, temp);
-            stack_push(*result, var);
+            list_push(*result, var);
         }
         else if (isdigit(str[0]) || (str[0] == '-' && str[1] > '\0')) // number
         {
             Int var = new_number(vm, atof(str));
-            stack_push(*result, var);
+            list_push(*result, var);
         }
         else if(str[0] == '.' && str[1] == '.' && str[2] == '.')
         {
@@ -726,7 +713,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             if (lst == -1)
             {
                 printf("cannot spread non-existent variable: %s\n", _str);
-                stack_push(*result, -1);
+                list_push(*result, -1);
                 free(str);
                 continue;
             }
@@ -735,7 +722,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 IntList *list = data(lst).pointer;
                 for (Int i = 0; i < list->size; i++)
                 {
-                    stack_push(*result, list->data[i]);
+                    list_push(*result, list->data[i]);
                 }
             }
             else if (data_t(lst) == TYPE_STRING)
@@ -743,13 +730,13 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 char *string = data(lst).string;
                 for (Int i = 0; i < strlen(string); i++)
                 {
-                    stack_push(*result, new_number(vm, string[i]));
+                    list_push(*result, new_number(vm, string[i]));
                 }
             }
             else
             {
                 printf("cannot spread non-list variable: %s\n", _str);
-                stack_push(*result, -1);
+                list_push(*result, -1);
             }
         }
         else if (str[0] == '/' && str[1] == '/') // comment
@@ -757,7 +744,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             free(str);
             while (splited->size > 0)
             {
-                free(stack_pop(*splited));
+                free(list_pop(*splited));
             }
             break;
         }
@@ -783,22 +770,22 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             if (index == -1) 
             {
                 printf("Variable %s not found\n", str);
-                stack_push(*result, -1);
+                list_push(*result, -1);
             }
             else 
             {
-                stack_push(*result, index);
+                list_push(*result, index);
             }
         }
         free(str);
     }
-    stack_free(*splited);
+    list_free(*splited);
     return result;
 }
 
 Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 {
-    Int func = stack_shift(*args);
+    Int func = list_shift(*args);
     Int result = -1;
 
     if (func > -1)
@@ -807,15 +794,14 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
         {
             Function _function = vm->stack->data[func].pointer;
             result = _function(vm, args, context);
-            stack_unshift(*args, func);
+            list_unshift(*args, func);
         }
         else if (vm->typestack->data[func] == TYPE_FUNCTION)
         {
             InternalFunction *_func = (InternalFunction*)data(func).pointer;
-            HashList *_context = (HashList*)malloc(sizeof(HashList));
-            stack_init(*_context);
+            HashList *_context = list_init(HashList);
 
-            stack_reverse(*args);
+            list_reverse(*args);
 
             HashList *global_context = vm->hashes;
 
@@ -823,7 +809,7 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 
             for (Int i = 0; i < _func->varnames->size; i++)
             {
-                hash_set(vm, _func->varnames->data[i], stack_pop(*args));
+                hash_set(vm, _func->varnames->data[i], list_pop(*args));
             }
             
             if (args->size > 0)
@@ -831,7 +817,7 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
                 Int etc = register_list(vm, "etc");
                 while (args->size > 0)
                 {
-                    stack_push(*((IntList*)data(etc).pointer), stack_pop(*args));
+                    list_push(*((IntList*)data(etc).pointer), list_pop(*args));
                 }
             }
 
@@ -841,18 +827,18 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
             
             while (_context->size > 0)
             {
-                Hash hash = stack_pop(*_context);
+                Hash hash = list_pop(*_context);
                 free(hash.key);
             }
 
-            stack_free(*_context);
-            stack_push(*args, func);
-            stack_reverse(*args);
+            list_free(*_context);
+            list_push(*args, func);
+            list_reverse(*args);
         }
         else if (vm->typestack->data[func] == TYPE_STRING) // script
         {
             result = eval(vm, data(func).string, context);
-            stack_unshift(*args, func);
+            list_unshift(*args, func);
         }
     }
     else 
@@ -868,14 +854,14 @@ Int default_interpreter(void *vm, char* cmd, HashList *context)
 
     if (args->size == 0)
     {
-        stack_free(*args);
+        list_free(*args);
         return -1;
     }
     
     
     Int result = interpret((VirtualMachine*)vm, args, context);
     
-    stack_free(*args);
+    list_free(*args);
     
     return result;
 }
@@ -896,7 +882,7 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
         if (strlen(splited->data[last]) == 0)
         {
             free(splited->data[last]);
-            stack_pop(*splited);
+            list_pop(*splited);
         }
         else
         {
@@ -908,18 +894,18 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
             if (splited->data[last][i] == '\0')
             {
                 free(splited->data[last]);
-                stack_pop(*splited);
+                list_pop(*splited);
             }
         }
         last--;
     }
 
-    stack_reverse(*splited);
+    list_reverse(*splited);
     Int result = -1;
     while (splited->size > 0)
     {
         
-        char *str = stack_pop(*splited);
+        char *str = list_pop(*splited);
         if (strlen(str) == 0)
         {
             free(str);
@@ -931,12 +917,12 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
         {
             while (splited->size > 0)
             {
-                free(stack_pop(*splited));
+                free(list_pop(*splited));
             }
             break;
         }
     }
-    stack_free(*splited);
+    list_free(*splited);
     return result;
 }
 
@@ -948,14 +934,14 @@ void unuse_var(VirtualMachine *vm, Int index)
             free(data(index).string);
             break;
         case TYPE_LIST:
-            stack_free(*((IntList*)data(index).pointer));
+            list_free(*((IntList*)data(index).pointer));
             break;
         case TYPE_FUNCTION:
             for (Int i = 0; i < ((InternalFunction*)data(index).pointer)->varnames->size; i++)
             {
                 free(((InternalFunction*)data(index).pointer)->varnames->data[i]);
             }
-            stack_free(*((InternalFunction*)data(index).pointer)->varnames);
+            list_free(*((InternalFunction*)data(index).pointer)->varnames);
             free(((InternalFunction*)data(index).pointer)->code);
             free(data(index).pointer);
             break;
@@ -966,7 +952,7 @@ void unuse_var(VirtualMachine *vm, Int index)
     // hashes associated to the index are not removed anymore
 
     data_t(index) = TYPE_ANY;
-    stack_push(*vm->unused, index);
+    list_push(*vm->unused, index);
 }
 
 char* function_stringify(VirtualMachine* vm, InternalFunction *func)
@@ -1067,7 +1053,7 @@ char* list_stringify(VirtualMachine* vm, IntList *list)
 
 #ifdef __EMSCRIPTEN__
 
-typedef Stack(VirtualMachine*) VMList;
+typedef List(VirtualMachine*) VMList;
 VMList *vms;
 IntList *unused_vms;
 
@@ -1090,12 +1076,12 @@ Int wasm_new_vm()
 init_std(vm);
     if (unused_vms->size > 0)
     {
-        index = stack_pop(*unused_vms);
+        index = list_pop(*unused_vms);
         vms->data[index] = vm;
     }
     else
     {
-        stack_push(*vms, vm);
+        list_push(*vms, vm);
         index = vms->size - 1;
     }
     return index;
@@ -1109,7 +1095,7 @@ void wasm_destroy_vm(Int index)
         return;
     }
     free_vm(vms->data[index]);
-    stack_push(*unused_vms, index);
+    list_push(*unused_vms, index);
 }
 
 EMSCRIPTEN_KEEPALIVE
