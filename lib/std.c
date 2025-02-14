@@ -226,23 +226,15 @@ function(brl_std_do)
 // functions
 function(brl_std_function)
 {
-    StringList *varnames = list_init(StringList);
-    list_reverse(*args);
-    while (args->size > 1)
+    Int func = new_list(vm);
+    IntList *func_list = (IntList*)data(func).pointer;
+    //list_reverse(*args);
+    for (Int i = 0; i < args->size; i++)
     {
-        list_push(*varnames, str_duplicate(data(list_pop(*args)).string));
+        list_push(*func_list, arg_i(i));
     }
-
-    char *code = str_duplicate(arg(args->size - 1).string);
-
-    InternalFunction *func = (InternalFunction*)malloc(sizeof(InternalFunction));
-    func->varnames = varnames;
-    func->code = code;
-
-    Int index = new_var(vm);
-    data(index).pointer = func;
-    data_t(index) = TYPE_FUNCTION;
-    return index;
+    data_t(func) = TYPE_FUNCTION;
+    return func;
 }
 
 function(brl_std_ignore)
@@ -1179,6 +1171,17 @@ function(brl_mem_delete)
     return -1;
 }
 
+function(brl_std_deplace)
+{
+    Int newindex = new_var(vm);
+    Int func = arg_i(0);
+    data(newindex) = value_duplicate(data(arg_i(1)), data_t(arg_i(1)));
+    data_t(newindex) = data_t(arg_i(1));
+    arg_i(1) = newindex;
+    interpret(vm, args, context);
+    return newindex;
+}
+
 
 // inits
 #ifndef ARDUINO
@@ -1189,8 +1192,8 @@ void init_os(VirtualMachine *vm)
     register_builtin(vm, "system", brl_os_system);
 
 #ifndef __wasm__
-    register_builtin(vm, "os.time", brl_os_time_now);
-    register_builtin(vm, "os.clock", brl_os_time_clock);
+    register_builtin(vm, "time", brl_os_time_now);
+    register_builtin(vm, "clock", brl_os_time_clock);
 #endif
 
     register_builtin(vm, "repl", brl_os_repl);
@@ -1211,6 +1214,7 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "format", brl_std_string_format);
 
     register_builtin(vm, "print", brl_std_io_print);
+    register_builtin(vm, "$", brl_std_deplace);
 
 #ifndef ARDUINO
     register_builtin(vm, "scan", brl_std_io_scan);// not avaliable on arduino, so its here

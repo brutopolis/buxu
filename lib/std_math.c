@@ -8,52 +8,54 @@
 
 function(brl_std_math_add)
 {
-    Float result = 0;
-    for (Int i = 0; i < args->size; i++)
+    for (Int i = 1; i < args->size; i++)
     {
-        result += arg(i).number;
+        arg(0).number += arg(i).number;
     }
-    return new_number(vm, result);
+    return -1;
 }
 
 function(brl_std_math_sub)
 {
-    Float result = arg(0).number;
     for (Int i = 1; i < args->size; i++)
     {
-        result -= arg(i).number;
+        arg(0).number -= arg(i).number;
     }
-    return new_number(vm, result);
+    return -1;
 }
 
 function(brl_std_math_mul)
 {
-    Float result = 1;
-    for (Int i = 0; i < args->size; i++)
+    for (Int i = 1; i < args->size; i++)
     {
-        result *= arg(i).number;
+        arg(0).number *= arg(i).number;
     }
-    return new_number(vm, result);
+    return -1;
 }
 
 function(brl_std_math_div)
 {
-    Float result = arg(0).number;
     for (Int i = 1; i < args->size; i++)
     {
-        result /= arg(i).number;
+        arg(0).number /= arg(i).number;
     }
-    return new_number(vm, result);
+    return -1;
 }
 
 function(brl_std_math_mod)
 {
-    return new_number(vm, (Int)arg(0).number % (Int)arg(1).number);
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = fmod(arg(0).number, arg(1).number);
+    #else
+        arg(0).number = fmodf(arg(0).number, arg(1).number);
+    #endif
+    return -1;
 }
 
 function(brl_std_math_random)
 {
-    return new_number(vm, rand());
+    arg(0).number = rand();
+    return -1;
 }
 
 function(brl_std_math_seed)
@@ -82,32 +84,92 @@ function(brl_std_math_decrement)
 
 function(brl_std_math_round)
 {
-    return new_number(vm, round(arg(0).number));
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = round(arg(0).number);
+    #else
+        arg(0).number = roundf(arg(0).number);
+    #endif
+    return -1;
 }
 
 function(brl_std_math_floor)
 {
-    return new_number(vm, floor(arg(0).number));
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = floor(arg(0).number);
+    #else
+        arg(0).number = floorf(arg(0).number);
+    #endif
+    return -1;
 }
 
 function(brl_std_math_ceil)
 {
-    return new_number(vm, ceil(arg(0).number));
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = ceil(arg(0).number);
+    #else
+        arg(0).number = ceilf(arg(0).number);
+    #endif
+    return -1;
 }
 
 function(brl_std_math_sin)
 {
-    return new_number(vm, sin(arg(0).number));
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = sin(arg(0).number);
+    #else
+        arg(0).number = sinf(arg(0).number);    
+    #endif
+    return -1;
 }
 
 function(brl_std_math_cos)
 {
-    return new_number(vm, cos(arg(0).number));
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = cos(arg(0).number);
+    #else
+        arg(0).number = cosf(arg(0).number);
+    #endif
+    return -1;  
 }
 
 function(brl_std_math_tan)
 {
-    return new_number(vm, tan(arg(0).number));
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = tan(arg(0).number);
+    #else
+        arg(0).number = tanf(arg(0).number);
+    #endif
+    return -1;
+}
+
+function(brl_std_min)
+{
+    Float min = arg(0).number;
+    for (Int i = 1; i < args->size; i++)
+    {
+        #if __SIZEOF_POINTER__ == 8
+            min = fmin(min, arg(i).number);
+        #else
+            min = fminf(min, arg(i).number);
+        #endif
+    }
+    arg(0).number = min;
+    return -1;
+}
+
+function(brl_std_max)
+{
+    Float max = arg(0).number;
+    for (Int i = 1; i < args->size; i++)
+    {
+        #if __SIZEOF_POINTER__ == 8
+            max = fmax(max, arg(i).number);
+        #else
+            max = fmaxf(max, arg(i).number);
+        #endif
+    }
+    arg(0).number = max;
+    return -1;
 }
 
 void init_std_math(VirtualMachine *vm)
@@ -130,4 +192,7 @@ void init_std_math(VirtualMachine *vm)
     register_builtin(vm, "sin", brl_std_math_sin);
     register_builtin(vm, "cos", brl_std_math_cos);
     register_builtin(vm, "tan", brl_std_math_tan);
+
+    register_builtin(vm, "min", brl_std_min);
+    register_builtin(vm, "max", brl_std_max);
 }

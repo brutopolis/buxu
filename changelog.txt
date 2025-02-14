@@ -1,4 +1,4 @@
-(13/02/2025) - version 0.7.5b
+(14/02/2025) - version 0.7.5b
 
 - new function #priority, it reorder the hash in the hashes list, the first argument is the hash name, the second is the priority, 0 is the max priority, if it receive only 1 arg it sets the minimum priority, which is 10 by default, if no args are passed it will return the priority of the hash;
 - some memory leaking fixed;
@@ -11,8 +11,20 @@
 - new internal list macro: list_double, it reallocs the list to double its size;
 - new internal list macro: list_half, it reallocs the list to half its size;
 - repeat loop now can be interrupted with return just like while;
+- InternalFunction structure removed, functions are now a bruter list with strings, the last is the code, the other are the argument names;
+- std_inplace.c removed;
+- all math functions are now inplace, they dont create a new variable anymore, they just set the first argument, use deplace if you want a non destructive operation;
+- new functions: min and max;
+- some optimizations in math functions;
+- new function "$" aka deplace, it make destructive operations non-destructive(e.g. #new "c" ($ + a b) will not change a);
+- endless args are now under "..." instead "etc";
+- os.time and os.clock now are now called time and clock;
+- some examples updated;
+- cast is now inplace;
 
-TODO: remove InternalFunction type and replace all its uses by regular a StringList;
+TODO: update examples that use math functions;
+TODO: update README.md;
+COMMENT: why condition functions are not inplace? because it use a smarter way of dealing with values, as bools checks the index direcly not the index's value allowing us to use the variable without putting it in the stack;
 
 (01/02/2025) - version 0.7.5a
 

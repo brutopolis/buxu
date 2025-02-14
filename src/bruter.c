@@ -325,6 +325,7 @@ void print_element(VirtualMachine *vm, Int index)
         case TYPE_BUILTIN:
             printf("%ld", data(index).pointer);
             break;
+        case TYPE_FUNCTION:
         case TYPE_LIST:
             stringified = list_stringify(vm, (IntList*)data(index).pointer);
             printf("%s", stringified);
@@ -342,11 +343,6 @@ void print_element(VirtualMachine *vm, Int index)
             break;
         case TYPE_STRING:
             printf("%s", data(index).string);
-            break;
-        case TYPE_FUNCTION:
-            stringified = function_stringify(vm, (InternalFunction*)data(index).pointer);
-            printf("%s", stringified);
-            free(stringified);
             break;
         default:
             printf("%d", data(index).pointer);
@@ -621,17 +617,9 @@ void free_vm(VirtualMachine *vm)
             case TYPE_STRING:
                 free(value.string);
                 break;
+            case TYPE_FUNCTION:
             case TYPE_LIST:
                 list_free(*((IntList*)value.pointer));
-                break;
-            case TYPE_FUNCTION:
-                for (Int i = 0; i < ((InternalFunction*)value.pointer)->varnames->size; i++)
-                {
-                    free(((InternalFunction*)value.pointer)->varnames->data[i]);
-                }
-                list_free(*((InternalFunction*)value.pointer)->varnames);
-                free(((InternalFunction*)value.pointer)->code);
-                free(value.pointer);
                 break;
             default:
                 break;
@@ -706,7 +694,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             Int var = new_number(vm, atof(str));
             list_push(*result, var);
         }
-        else if(str[0] == '.' && str[1] == '.' && str[2] == '.')
+        else if(str[0] == '.' && str[1] == '.' && str[2] == '.' && isalpha(str[3])) // spread
         {
             char* _str = str+3;
             Int lst = hash_find(vm, _str);
@@ -798,8 +786,10 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
         }
         else if (vm->typestack->data[func] == TYPE_FUNCTION)
         {
-            InternalFunction *_func = (InternalFunction*)data(func).pointer;
+            IntList *_func = (IntList*)data(func).pointer;
             HashList *_context = list_init(HashList);
+
+            char* code = list_get(*vm->stack, list_get(*_func, _func->size-1)).string;
 
             list_reverse(*args);
 
@@ -807,14 +797,14 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 
             vm->hashes = _context;
 
-            for (Int i = 0; i < _func->varnames->size; i++)
+            for (Int i = 0; i < _func->size-1; i++)
             {
-                hash_set(vm, _func->varnames->data[i], list_pop(*args));
+                hash_set(vm, list_get(*vm->stack, list_get(*_func, i)).string, list_shift(*args));
             }
             
             if (args->size > 0)
             {
-                Int etc = register_list(vm, "etc");
+                Int etc = register_list(vm, "...");
                 while (args->size > 0)
                 {
                     list_push(*((IntList*)data(etc).pointer), list_pop(*args));
@@ -823,7 +813,7 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 
             vm->hashes = global_context;
 
-            result = eval(vm, _func->code, _context);
+            result = eval(vm, code, _context);
             
             while (_context->size > 0)
             {
@@ -934,16 +924,8 @@ void unuse_var(VirtualMachine *vm, Int index)
             free(data(index).string);
             break;
         case TYPE_LIST:
-            list_free(*((IntList*)data(index).pointer));
-            break;
         case TYPE_FUNCTION:
-            for (Int i = 0; i < ((InternalFunction*)data(index).pointer)->varnames->size; i++)
-            {
-                free(((InternalFunction*)data(index).pointer)->varnames->data[i]);
-            }
-            list_free(*((InternalFunction*)data(index).pointer)->varnames);
-            free(((InternalFunction*)data(index).pointer)->code);
-            free(data(index).pointer);
+            list_free(*((IntList*)data(index).pointer));
             break;
         default:
             break;
@@ -953,37 +935,6 @@ void unuse_var(VirtualMachine *vm, Int index)
 
     data_t(index) = TYPE_ANY;
     list_push(*vm->unused, index);
-}
-
-char* function_stringify(VirtualMachine* vm, InternalFunction *func)
-{
-    char* _str =  str_concat("","(function ");
-    StringList *names = func->varnames;
-    char *code = func->code;
-    char *strbak;
-    for (Int i = 0; i < names->size; i++)
-    {
-        char* name = names->data[i];
-        strbak = _str;
-        _str = str_concat(_str, "(@@");
-        free(strbak);
-        strbak = _str;
-        _str = str_concat(_str, name);
-        free(strbak);
-        strbak = _str;
-        _str = str_concat(_str, ") ");
-        free(strbak);
-    }
-    strbak = _str;
-    _str = str_concat(_str, "(@@");
-    free(strbak);
-    strbak = _str;
-    _str = str_concat(_str, code);
-    free(strbak);
-    strbak = _str;
-    _str = str_concat(_str, ")");
-    free(strbak);
-    return _str;
 }
 
 char* list_stringify(VirtualMachine* vm, IntList *list)
@@ -1010,24 +961,24 @@ char* list_stringify(VirtualMachine* vm, IntList *list)
             
             if (data(list->data[i]).number == (Int)data(list->data[i]).number)
             {
-                _str = str_concat(_str, str_format("%ld", (Int)data(list->data[i]).number));
+                char* str = str_format("%ld", (Int)data(list->data[i]).number);
+                _str = str_concat(_str, str);
+                free(str);
             }
             else 
             {
-                _str = str_concat(_str, str_format("%lf", data(list->data[i]).number));
+                char* str = str_format("%lf", data(list->data[i]).number);
+                _str = str_concat(_str, str);
+                free(str);
             }
 
             free(strbak);
             break;
         case TYPE_LIST:
+        case TYPE_FUNCTION:
             strbak = _str;
             char* stringified = list_stringify(vm, (IntList*)data(list->data[i]).pointer);
             _str = str_concat(_str, stringified);
-            free(strbak);
-            break;
-        case TYPE_FUNCTION:
-            strbak = _str;
-            _str = str_concat(_str, function_stringify(vm, (InternalFunction*)data(list->data[i]).pointer));
             free(strbak);
             break;
         default:

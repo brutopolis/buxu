@@ -8,7 +8,7 @@
     (@@
         if cond1 ret1;
         if cond2 ret1;
-        return (+ (fib (- n _1)) (fib (- n _2)));
+        return ($ + (fib ($ - n _1)) (fib ($ - n _2)));
     )
 );
-print (fib 20);
+print (fib 30);
