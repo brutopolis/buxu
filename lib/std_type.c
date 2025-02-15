@@ -88,6 +88,7 @@ function(brl_std_type_cast)
     }
 }
 
+// destructive/inplace!!
 void init_std_type(VirtualMachine *vm)
 {
     // type size(4 or 8 bytes)
@@ -101,6 +102,8 @@ void init_std_type(VirtualMachine *vm)
     register_number(vm, "type.list", TYPE_LIST);
     register_number(vm, "type.function", TYPE_FUNCTION);
 
+    // type functions are inplace(destructive), you might want to use $ to do non-destructive operations
+    // e.g. $ type a; // returns the type of a instead turning a into a number of its type
     // type functions
     register_builtin(vm, "type", brl_std_type_get);
     register_builtin(vm, "pun", brl_std_type_set);

@@ -1,5 +1,5 @@
 
 #new "_size" 100000;
 #new "___index" 0;
-repeat _size "++ ___index;print ___index";
+repeat _size "+ ___index 1;print ___index";
 return 0;

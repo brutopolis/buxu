@@ -87,6 +87,7 @@ function(brl_std_condition_raw_or)
     return 0;
 }
 
+// index-based!!
 void init_std_condition(VirtualMachine *vm)
 {   
     register_builtin(vm, "if", brl_std_condition_if);

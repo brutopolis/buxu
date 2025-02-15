@@ -58,20 +58,25 @@ function(brl_os_time_clock)
 
 function(brl_std_hash_new)
 {
-    if (hash_find(vm, arg(0).string) != -1)
-    {
-        hash_unset(vm, arg(0).string);
-    }
-
     if (context != NULL)
     {
         HashList *global_context = vm->hashes;
         vm->hashes = context;
+        
+        if (hash_find(vm, arg(0).string) != -1)
+        {
+            hash_unset(vm, arg(0).string);
+        }
+        
         hash_set(vm, arg(0).string, arg_i(1));
         vm->hashes = global_context;
     }
     else 
     {
+        if (hash_find(vm, arg(0).string) != -1)
+        {
+            hash_unset(vm, arg(0).string);
+        }
         hash_set(vm, arg(0).string, arg_i(1));
     }
     return -1;
@@ -1050,12 +1055,38 @@ function(brl_std_loop_while)
     Int result = -1;
     if (strchr(arg(1).string, '#') == NULL)
     {
+        // scope for some safety checks
+        {
+            char* _parentesis = strchr(arg(1).string, '(');
+            if (_parentesis != NULL)
+            {
+                if (_parentesis[1] == '@' && _parentesis[2] == '@')
+                {
+                    // its a string 
+                    goto skip_safety_check;
+                }
+                else 
+                {
+                    // its a expression
+                    goto regret_optimization;
+                }
+            }
+        }
+
+        skip_safety_check:
+        
         StringList *splited = str_split(arg(1).string, ";");
     
         IntListList *arglist = list_init(IntListList);
 
         for (Int i = 0; i < splited->size; i++)
         {
+            //if splited->data[i] is empty or contains only spacy characters, skip it
+            if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) || splited->data[i][0] == 0)
+            {
+                free(splited->data[i]);
+                continue;
+            }
             IntList *_args = parse(vm, splited->data[i], context);
             list_push(*arglist, *_args);
             free(splited->data[i]);
@@ -1074,10 +1105,12 @@ function(brl_std_loop_while)
                 result = interpret(vm, &arglist->data[i], context);
                 if (result >= 0)
                 {
-                    break;
+                    goto skip_to_return;
                 }
             }
         }
+
+        skip_to_return:
 
         for (Int i = 0; i < arglist->size; i++)
         {
@@ -1088,6 +1121,7 @@ function(brl_std_loop_while)
     }
     else 
     {
+        regret_optimization:
         while (eval(vm, arg(0).string, context))
         {
             result = eval(vm, arg(1).string, context);
@@ -1106,12 +1140,37 @@ function(brl_std_loop_repeat)
     Int result = -1;
     if (strchr(arg(1).string, '#') == NULL)
     {
+        {
+            char* _parentesis = strchr(arg(1).string, '(');
+            if (_parentesis != NULL)
+            {
+                if (_parentesis[1] == '@' && _parentesis[2] == '@')
+                {
+                    // its a string 
+                    goto skip_safety_check;
+                }
+                else 
+                {
+                    // its a expression
+                    goto regret_optimization;
+                }
+            }
+        }
+
+        skip_safety_check:
+
         StringList *splited = str_split(arg(1).string, ";");
         
         IntListList *arglist = list_init(IntListList);
 
         for (Int i = 0; i < splited->size; i++)
         {
+            //if splited->data[i] is empty or contains only spacy characters, skip it
+            if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) || splited->data[i][0] == 0)
+            {
+                free(splited->data[i]);
+                continue;
+            }
             IntList *_args = parse(vm, splited->data[i], context);
             list_push(*arglist, *_args);
             free(splited->data[i]);
@@ -1126,13 +1185,14 @@ function(brl_std_loop_repeat)
             for (Int i = 0; i < arglist->size; i++)
             {
                 result = interpret(vm, &arglist->data[i], context);
-            }
-
-            if (result > -1)
-            {
-                break;
+                if (result > -1)
+                {
+                    goto skip_to_return;
+                }
             }
         }
+
+        skip_to_return:
 
         for (Int i = 0; i < arglist->size; i++)
         {
@@ -1143,6 +1203,7 @@ function(brl_std_loop_repeat)
     }
     else
     {
+        regret_optimization:
         for (int i = 0; i < (Int)arg(0).number; i++)
         {
             result = eval(vm,arg(1).string,context);

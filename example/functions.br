@@ -2,17 +2,20 @@
 #new "vglobal" 1;
 print "aqui fora variavel é" variavel;
 print "aqui fora vglobal é" vglobal;
-#new "func" (@@
+
+#new "func" (function (@@
         print "aqui dentro é" variavel;
         print "aqui dentro vglobal é" vglobal;
         print;
-        set: variavel 2;
-        set: vglobal 897;
+        #new "variavel" 2;
+        #new "vglobal" 897;
         print "aqui dentro agora é" variavel;
         print "aqui dentro agora vglobal é" vglobal;
         print;
-);
-func 40;
+        print "outros argumentos:" ...;
+));
+
+func 40 1 2 3 4 5 6 7 7 8 'aeiou';
 print "aqui fora variavel é" variavel;
 print "aqui fora vglobal é" vglobal;
 return 0;

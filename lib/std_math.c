@@ -64,24 +64,6 @@ function(brl_std_math_seed)
     return -1;
 }
 
-function(brl_std_math_increment)
-{
-    for (Int i = 0; i < args->size; i++)
-    {
-        arg(i).number++;
-    }
-    return -1;
-}
-
-function(brl_std_math_decrement)
-{
-    for (Int i = 0; i < args->size; i++)
-    {
-        arg(i).number--;
-    }
-    return -1;
-}
-
 function(brl_std_math_round)
 {
     #if __SIZEOF_POINTER__ == 8
@@ -172,15 +154,16 @@ function(brl_std_max)
     return -1;
 }
 
+// destructive/inplace!!
 void init_std_math(VirtualMachine *vm)
 {
+    // math functions are inplace(destructive), you might want to use $ to do non-destructive operations
+    // e.g. $ + a 2; // a is not changed
     register_builtin(vm, "+", brl_std_math_add);
     register_builtin(vm, "-", brl_std_math_sub);
     register_builtin(vm, "*", brl_std_math_mul);
     register_builtin(vm, "/", brl_std_math_div);
     register_builtin(vm, "\%", brl_std_math_mod);
-    register_builtin(vm, "++", brl_std_math_increment);
-    register_builtin(vm, "--", brl_std_math_decrement);
 
     register_builtin(vm, "random", brl_std_math_random);
     register_builtin(vm, "seed", brl_std_math_seed);

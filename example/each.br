@@ -9,14 +9,14 @@
         while "< i size"
         (@@
             callback (get: i);
-            "++ i";
+            + i _1;
         )
     )
 );
 
 #new "cbk" (function "item"
     (@@
-        "print item";
+        print ($ type item);
     )
 );
 

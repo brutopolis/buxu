@@ -11,4 +11,4 @@
         return ($ + (fib ($ - n _1)) (fib ($ - n _2)));
     )
 );
-print (fib 30);
+print (fib 20);

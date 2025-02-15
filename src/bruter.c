@@ -799,7 +799,7 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 
             for (Int i = 0; i < _func->size-1; i++)
             {
-                hash_set(vm, list_get(*vm->stack, list_get(*_func, i)).string, list_shift(*args));
+                hash_set(vm, list_get(*vm->stack, list_get(*_func, i)).string, list_pop(*args));
             }
             
             if (args->size > 0)
@@ -814,7 +814,7 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
             vm->hashes = global_context;
 
             result = eval(vm, code, _context);
-            
+
             while (_context->size > 0)
             {
                 Hash hash = list_pop(*_context);
@@ -827,7 +827,28 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
         }
         else if (vm->typestack->data[func] == TYPE_STRING) // script
         {
-            result = eval(vm, data(func).string, context);
+            HashList *_context = list_init(HashList);
+            HashList *global_context = vm->hashes;
+            vm->hashes = _context;
+            
+            Int etc = register_list(vm, "...");
+            while (args->size > 0)
+            {
+                list_push(*((IntList*)data(etc).pointer), list_pop(*args));
+            }
+
+            vm->hashes = global_context;
+
+            result = eval(vm, data(func).string, _context);
+
+            while (_context->size > 0)
+            {
+                Hash hash = list_pop(*_context);
+                free(hash.key);
+            }
+
+            list_free(*_context);
+
             list_unshift(*args, func);
         }
     }

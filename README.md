@@ -437,4 +437,4 @@ bruter is a metaprogramable lightweight programming language;
   
   - you can exclude all the stdlib or part of it if you dont need it, see the build instructions;
 
-  - prefer using hash functions just when you need to, some optimizations might be disabled if you use hash functions in specific contexts like loops;
+  - loops contexts are optimized if it does not contain any # or ()(except for string delimitation);

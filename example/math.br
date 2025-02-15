@@ -1,15 +1,20 @@
 // implementation of the functions that previously were part of the bruter std;
 
 // Function: abs;
-#new "abs" (function "a" 'ifelse "< a 0" "* a -1" "return a"');
+#new "abs" (function "a" 'ifelse "< a 0" "$ * a -1" "return a"');
 print "(abs -321) = " (abs -321);
 
 // Function: pow;
-#new "pow" (function "a" "b" '
-ifelse "== b 0" 
-"return 1" 
-"return (* a (pow a (- b 1)))"');
+#new "pow" (function "a" "b" 
+(@@
+    #new "result" 2;
+    repeat b (@@
+        * result a;
+    );
+    return result;
+));
+
 print "(pow 2 10) = " (pow 2 10);
 
-#new "trunc" (function "a" 'cast (cast a type.any) type.number');
+#new "trunc" (function "a" '$ cast ($ cast a type.any) type.number');
 print "(trunc 3.14) = " (trunc 3.14);

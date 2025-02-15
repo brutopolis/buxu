@@ -14,6 +14,7 @@
 - InternalFunction structure removed, functions are now a bruter list with strings, the last is the code, the other are the argument names;
 - std_inplace.c removed;
 - all math functions are now inplace, they dont create a new variable anymore, they just set the first argument, use deplace if you want a non destructive operation;
+- ++ and -- removed, use + and - instead, they're now just as fast as ++ and --;
 - new functions: min and max;
 - some optimizations in math functions;
 - new function "$" aka deplace, it make destructive operations non-destructive(e.g. #new "c" ($ + a b) will not change a);
@@ -22,7 +23,6 @@
 - some examples updated;
 - cast is now inplace;
 
-TODO: update examples that use math functions;
 TODO: update README.md;
 COMMENT: why condition functions are not inplace? because it use a smarter way of dealing with values, as bools checks the index direcly not the index's value allowing us to use the variable without putting it in the stack;
 
