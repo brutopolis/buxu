@@ -1,6 +1,6 @@
 #new 'a' 88;
 #new 'b' 99;
-ifelse '== a b' (@@
+if '== a b' (@@
     print 'a == b';
 )
 (@@

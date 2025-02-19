@@ -15,14 +15,12 @@
 #endif
 
 
-#define VERSION "0.7.5b"
+#define VERSION "0.7.5c"
 
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
 #define TYPE_STRING 2
 #define TYPE_LIST 3
-#define TYPE_BUILTIN 4
-#define TYPE_FUNCTION 7
 
 // we use Int and Float instead of int and float because we need to use always the pointer size for any type that might share the fundamental union type;
 // bruter use a union as universal type, and bruter is able to manipulate and use pointers direcly so we need to use the pointer size;

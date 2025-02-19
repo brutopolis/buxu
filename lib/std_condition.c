@@ -7,75 +7,116 @@
 
 function(brl_std_condition_if)
 {
-    Int result = -1;
-    if (eval(vm, arg(0).string, context))
+    Int result = arg_i(0);
+    
+    if (args->size == 2)
     {
-        result = eval(vm, arg(1).string, context);
-
+        if (arg(eval(vm, arg(0).string, context)).integer)
+        {
+            result = eval(vm, arg(1).string, context);
+        }
     }
-    return result;
-}
-
-function(brl_std_condition_ifelse)
-{
-    Int result = -1;
-    if (eval(vm, arg(0).string, context))
+    else if (args->size == 3) // ifelse
     {
-        result = eval(vm, arg(1).string, context);
+        if (arg(eval(vm, arg(0).string, context)).integer)
+        {
+            result = eval(vm, arg(1).string, context);
+        }
+        else
+        {
+            result = eval(vm, arg(2).string, context);
+        }
     }
-    else
-    {
-        result = eval(vm, arg(2).string, context);
-    }
-    return result;
+    unuse_var(vm, arg_i(0));
+    arg(0).integer = result;
+    arg_t(0) = TYPE_NUMBER;
+    return -1;
 }
 
 function(brl_std_condition_equals)
 {
-    return(arg(0).integer == arg(1).integer);
+    Int result = 0;
+    for (Int i = 1; i < args->size; i++)
+    {
+        result = arg(i - 1).integer == arg(i).integer;
+    }
+    unuse_var(vm, arg_i(0));
+    arg(0).integer = result;
+    arg_t(0) = TYPE_NUMBER;
+    return -1;
 }
 
 function(brl_std_condition_not_equals)
 {
-    return(arg(0).integer != arg(1).integer);
+    Int result = 0;
+    for (Int i = 1; i < args->size; i++)
+    {
+        result = arg(i - 1).integer != arg(i).integer;
+    }
+    unuse_var(vm, arg_i(0));
+    arg(0).integer = result;
+    arg_t(0) = TYPE_NUMBER;
+    return -1;
 }
 
 function(brl_std_condition_greater)
 {
-    return(arg(0).integer > arg(1).integer);
+    Int result = 0;
+    for (Int i = 1; i < args->size; i++)
+    {
+        result = arg(i - 1).integer > arg(i).integer;
+    }
+    unuse_var(vm, arg_i(0));
+    arg(0).integer = result;
+    arg_t(0) = TYPE_NUMBER;
+    return -1;
 }
 
 function(brl_std_condition_greater_equals)
 {
-    return(arg(0).integer >= arg(1).integer);
+    Int result = 0;
+    for (Int i = 1; i < args->size; i++)
+    {
+        result = arg(i - 1).integer >= arg(i).integer;
+    }
+    unuse_var(vm, arg_i(0));
+    arg(0).integer = result;
+    arg_t(0) = TYPE_NUMBER;
+    return -1;
 }
 
 function(brl_std_condition_less)
 {
-    return(arg(0).integer < arg(1).integer);
+    Int result = 0;
+    for (Int i = 1; i < args->size; i++)
+    {
+        result = arg(i - 1).integer < arg(i).integer;
+    }
+    return result;
 }
 
 function(brl_std_condition_less_equals)
 {
-    return(arg(0).integer <= arg(1).integer);
-}
-
-function(brl_std_condition_not)
-{
-    if (arg(0).integer)
+    Int result = 0;
+    for (Int i = 1; i < args->size; i++)
     {
-        return 0;
+        result = arg(i - 1).integer <= arg(i).integer;
     }
-    return 1;
+    return result;
 }
 
 function(brl_std_condition_and)
 {
-    if (arg(0).integer && arg(1).integer)
+    Int result = 1;
+    for (Int i = 0; i < args->size; i++)
     {
-        return 1;
+        if (!arg(i).integer)
+        {
+            result = 0;
+            break;
+        }
     }
-    return 0;
+    return result;
 }
 
 function(brl_std_condition_raw_or)
@@ -89,9 +130,8 @@ function(brl_std_condition_raw_or)
 
 // index-based!!
 void init_std_condition(VirtualMachine *vm)
-{   
+{
     register_builtin(vm, "if", brl_std_condition_if);
-    register_builtin(vm, "ifelse", brl_std_condition_ifelse);
 
     register_builtin(vm, "==", brl_std_condition_equals);
     register_builtin(vm, "!=", brl_std_condition_not_equals);
@@ -99,7 +139,7 @@ void init_std_condition(VirtualMachine *vm)
     register_builtin(vm, ">=", brl_std_condition_greater_equals);
     register_builtin(vm, "<", brl_std_condition_less);
     register_builtin(vm, "<=", brl_std_condition_less_equals);
-    register_builtin(vm, "not", brl_std_condition_not);
+    
     register_builtin(vm, "&&", brl_std_condition_and);
     register_builtin(vm, "||", brl_std_condition_raw_or);
 }

@@ -30,6 +30,11 @@ bruter is a metaprogramable lightweight programming language;
     - [syntax](#syntax)
     - [functions](#functions)
     - [libraries](#libraries)
+    - [standard library](#standard-library)
+      - [std.math (destructive)](#stdmath-destructive)
+      - [std.type (destructive)](#stdtype-destructive)
+      - [std.condition (index-based)](#stdcondition-index-based)
+      - [std (non-destructive)](#std-non-destructive)
   - [vm concept](#vm-concept)
     - [concepts](#concepts-1)
     - [the vm](#the-vm)
@@ -170,13 +175,11 @@ bruter is a metaprogramable lightweight programming language;
 
   ## Types
       
-  bruter essentially has 6 types of data:
+  bruter essentially has 4 types of data:
   - `any`, the default type, its a integer, but can store pointers as integers so it can be anything, any is not suitable for arithmetic operations;
   - `number`, a float, can be used for arithmetic operations;
   - `string`, a string;
-  - `list`, a list;
-  - `function`, a function;
-  - `builtin`, a builtin function, not really essential, very implementation dependent;
+  - `list`, a list or a user defined function;
 
   ## Scope
   bruter has 2 types of scope, global scope and function scope;
@@ -250,11 +253,68 @@ bruter is a metaprogramable lightweight programming language;
 
   functions work just like functions in other languages, nothing new here, beside it has its scope cant access the upper scope if not created from global, only two scopes can be used at time, the global scope and the *current* function scope, they can recurse but will not share the same scope;
 
-  built-in function doesnt have a own scope, but they are written in C, so you can easily create the context at the start of the function and delete it at the end;
+  C functions doesnt have a own scope, but  you can easily create the context at the start of the function and delete it at the end;
 
   ## Libraries
   
   in bruter language doesnt really exists the concept of libraries, you can call scripts with declaring the functions and call that a library, the bruter vm has a similar concept of libraries, which are also not modular;
+
+  ## Standard Library
+
+  bruter has a small standard library, some concepts are only part of the stdlib and not a language or vm concept itself.
+  all functions detailed:
+
+  ### std.math (destructive)
+
+  math functions are destructive.
+
+  | Function  | Description                     | Function Signature                          |
+  |-----------|---------------------------------|---------------------------------------------|
+  | `+`       | Add `...` to origin             | `void function(Float origin, Float[] ...);` |
+  | `-`       | Subtract `...` from origin      | `void function(Float origin, Float[] ...);` |
+  | `*`       | Multiply origin by `...`        | `void function(Float origin, Float[] ...);` |
+  | `/`       | Divide origin by `...`          | `void function(Float origin, Float[] ...);` |
+  | `%`       | Modulo origin by `...`          | `void function(Float origin, Float ...);`   |
+  | `random`  | Generate random number [0, 1)   | `void function(Float origin);`              |
+  | `seed`    | Set seed for random function    | `void function(Float seed);`                |
+  | `round`   | Round origin to nearest integer | `void function(Float origin);`              |
+  | `floor`   | Floor origin                    | `void function(Float origin);`              |
+  | `ceil`    | Ceil origin                     | `void function(Float origin);`              |
+  | `sin`     | Sine of origin                  | `void function(Float origin);`              |
+  | `cos`     | Cosine of origin                | `void function(Float origin);`              |
+  | `tan`     | Tangent of origin               | `void function(Float origin);`              |
+  | `min`     | Set origin to the minimum value | `void function(Float origin, Float[] ...);` |
+  | `max`     | Set origin to the maximum value | `void function(Float origin, Float[] ...);` |
+
+  ### std.type (destructive)
+  
+  | Function  | Description                     | Function Signature                          |
+  |-----------|---------------------------------|---------------------------------------------|
+  | `type`    | Get type of origin              | `void function(Float origin);`              |
+  | `cast`    | Cast origin to type             | `void function(Float origin, Float type);`  |
+  | `pun`     | Pun origin to type              | `void function(Float origin, Float type);`  |
+
+  | Variable       | Description   | Type  | Default |
+  |----------------|---------------|-------|---------|
+  | `type.any`     | Any type      | Float | 0.0     | 
+  | `type.number`  | Number type   | Float | 1.0     |
+  | `type.string`  | String type   | Float | 2.0     |
+  | `type.list`    | List type     | Float | 3.0     |
+
+  ### std.condition (index-based)
+
+  | Function  | Description                                                      | Function Signature                           |
+  |-----------|------------------------------------------------------------------|----------------------------------------------|
+  | `==`      | return @1 if a is equal to every element of ..., else return @0  | `Int function(any a, any ...);`              |
+  | `!=`      | return @1 if a is not equal to a element of ..., else return @0  | `Int function(any a, any ...);`              |
+  | `>`       | return @1 if ...[i] is greater than ...[i+1] and so on, else @0  | `Int function(any ...);`                     |
+  | `<`       | return @1 if ...[i] is less than ...[i+1] and so on else @0      | `Int function(any ...);`                     |
+  | `>=`      | return @1 if ...[i] is greater or equal to ...[i+1] and so on    | `Int function(any ...);`                     |
+  | `<=`      | return @1 if ...[i] is less or equal to ...[i+1] and so on       | `Int function(any ...);`                     |
+  | `and`     | return @1 if ...[i] is true and ...[i+1] is true and so on       | `Int function(Int ...);`                     |
+  | `or`      | return @1 if ...[i] is true or ...[i+1] is true or so on         | `Int function(Int ...);`                     |
+
+  ### std (non-destructive)
 
 # VM Concept
   ## Concepts
@@ -417,7 +477,7 @@ bruter is a metaprogramable lightweight programming language;
     
 
   ## Optimizations Advices
-  - when using a hash of something, there is a overhead associated to the time it takes to find the hash, it you have few hashes its unoticable, but might be a problem if you have a lot of hashes, in this case you can use the index directly or move the most used hashes to the start of the hashlist;
+  - when using a hash of something, there is a overhead associated to the time it takes to find the hash, it you have few hashes its unoticable, but might be a problem if you have a lot of hashes, in this case you can use the #priority function;
 
   - usually takes longer to delete/unuse a variable than to create one, especially if there are unused variables, but the delete overhead is just for strings, lists and functions, functions are the slower, but not that slow tho;
 

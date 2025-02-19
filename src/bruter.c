@@ -322,10 +322,6 @@ void print_element(VirtualMachine *vm, Int index)
         case TYPE_ANY:
             printf("%ld", data(index).integer);
             break;
-        case TYPE_BUILTIN:
-            printf("%ld", data(index).pointer);
-            break;
-        case TYPE_FUNCTION:
         case TYPE_LIST:
             stringified = list_stringify(vm, (IntList*)data(index).pointer);
             printf("%s", stringified);
@@ -432,9 +428,6 @@ Value value_duplicate(Value value, char type)
             {
                 list_push(*((IntList*)dup.pointer), list->data[i]);
             }
-            break;
-        case TYPE_BUILTIN:
-            dup.pointer = value.pointer;
             break;
         default:
             dup.integer = value.integer;
@@ -555,7 +548,7 @@ Int new_builtin(VirtualMachine *vm, Function function)
 {
     Int id = new_var(vm);
     vm->stack->data[id].pointer = function;
-    vm->typestack->data[id] = TYPE_BUILTIN;
+    vm->typestack->data[id] = TYPE_ANY;
     return id;
 }
 
@@ -617,7 +610,6 @@ void free_vm(VirtualMachine *vm)
             case TYPE_STRING:
                 free(value.string);
                 break;
-            case TYPE_FUNCTION:
             case TYPE_LIST:
                 list_free(*((IntList*)value.pointer));
                 break;
@@ -778,13 +770,13 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 
     if (func > -1)
     {
-        if (vm->typestack->data[func] == TYPE_BUILTIN)
+        if (vm->typestack->data[func] == TYPE_ANY)
         {
             Function _function = vm->stack->data[func].pointer;
             result = _function(vm, args, context);
             list_unshift(*args, func);
         }
-        else if (vm->typestack->data[func] == TYPE_FUNCTION)
+        else if (vm->typestack->data[func] == TYPE_LIST)// user defined function
         {
             IntList *_func = (IntList*)data(func).pointer;
             HashList *_context = list_init(HashList);
@@ -945,7 +937,6 @@ void unuse_var(VirtualMachine *vm, Int index)
             free(data(index).string);
             break;
         case TYPE_LIST:
-        case TYPE_FUNCTION:
             list_free(*((IntList*)data(index).pointer));
             break;
         default:
@@ -996,7 +987,6 @@ char* list_stringify(VirtualMachine* vm, IntList *list)
             free(strbak);
             break;
         case TYPE_LIST:
-        case TYPE_FUNCTION:
             strbak = _str;
             char* stringified = list_stringify(vm, (IntList*)data(list->data[i]).pointer);
             _str = str_concat(_str, stringified);

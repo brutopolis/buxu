@@ -238,7 +238,7 @@ function(brl_std_function)
     {
         list_push(*func_list, arg_i(i));
     }
-    data_t(func) = TYPE_FUNCTION;
+    data_t(func) = TYPE_LIST;
     return func;
 }
 
@@ -1122,7 +1122,7 @@ function(brl_std_loop_while)
     else 
     {
         regret_optimization:
-        while (eval(vm, arg(0).string, context))
+        while (arg(eval(vm, arg(0).string, context)).number == 1)
         {
             result = eval(vm, arg(1).string, context);
             if (result >= 0)

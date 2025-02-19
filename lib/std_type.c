@@ -53,7 +53,6 @@ function(brl_std_type_cast)
                     break;
             }
             break;
-        case TYPE_FUNCTION:
         case TYPE_LIST:
             switch ((Int)arg(1).number)
             {
@@ -83,8 +82,6 @@ function(brl_std_type_cast)
                     break;
             }
             break;
-        case TYPE_BUILTIN:
-            break;
     }
 }
 
@@ -98,9 +95,7 @@ void init_std_type(VirtualMachine *vm)
     register_number(vm, "type.any", TYPE_ANY);
     register_number(vm, "type.number", TYPE_NUMBER);
     register_number(vm, "type.string", TYPE_STRING);
-    register_number(vm, "type.builtin", TYPE_BUILTIN);
     register_number(vm, "type.list", TYPE_LIST);
-    register_number(vm, "type.function", TYPE_FUNCTION);
 
     // type functions are inplace(destructive), you might want to use $ to do non-destructive operations
     // e.g. $ type a; // returns the type of a instead turning a into a number of its type

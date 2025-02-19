@@ -1,3 +1,14 @@
+(18/02/2025) - version 0.7.5c
+
+- some function documentation added to README.md;
+- TYPE_FUNCTION removed, use TYPE_LIST instead;
+- TYPE_BUILTIN removed, use TYPE_LIST instead;
+- ifelse removed, use if instead;
+- condition "not" removed;
+
+TODO: update examples;
+TODO: update README.md std functions list;
+
 (14/02/2025) - version 0.7.5b
 
 - new function #priority, it reorder the hash in the hashes list, the first argument is the hash name, the second is the priority, 0 is the max priority, if it receive only 1 arg it sets the minimum priority, which is 10 by default, if no args are passed it will return the priority of the hash;
@@ -22,9 +33,6 @@
 - os.time and os.clock now are now called time and clock;
 - some examples updated;
 - cast is now inplace;
-
-TODO: update README.md;
-COMMENT: why condition functions are not inplace? because it use a smarter way of dealing with values, as bools checks the index direcly not the index's value allowing us to use the variable without putting it in the stack;
 
 (01/02/2025) - version 0.7.5a
 

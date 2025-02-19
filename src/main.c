@@ -138,13 +138,9 @@ Int _ino_print(VirtualMachine *vm, IntList *args)
     {
         printf("%s\n", temp.string);
     }
-    else if (_type == TYPE_BUILTIN)
-    {
-        printf("(function)%p\n", temp.pointer);
-    }
     else
     {
-        printf("(unknown)\n");
+        printf("(any)%ld\n", temp.integer);
     }
     
     return -1;
