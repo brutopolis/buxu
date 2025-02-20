@@ -221,13 +221,6 @@ function(brl_std_io_ls_hashes)
     return -1;
 }
 
-function(brl_std_do)
-{
-    return eval(vm, arg(0).string, context);
-}
-
-
-
 // functions
 function(brl_std_function)
 {
@@ -530,12 +523,12 @@ function(brl_std_list_find)
 {
     if (args->size == 1)
     {
-        Int value = arg_i(0);
+        Int value = arg(0).integer;
         for (Int i = 0; i < vm->stack->size; i++)
         {
             if (data(i).integer == value)
             {
-                return i;
+                return new_number(vm, i);
             }
         }
     }
@@ -550,7 +543,7 @@ function(brl_std_list_find)
             {
                 if (lst->data[i] == list)
                 {
-                    return i;
+                    return new_number(vm, i);
                 }
             }
         }
@@ -1055,7 +1048,6 @@ function(brl_std_loop_while)
     Int result = -1;
     if (strchr(arg(1).string, '#') == NULL)
     {
-        // scope for some safety checks
         {
             char* _parentesis = strchr(arg(1).string, '(');
             if (_parentesis != NULL)
@@ -1074,9 +1066,9 @@ function(brl_std_loop_while)
         }
 
         skip_safety_check:
-        
+
         StringList *splited = str_split(arg(1).string, ";");
-    
+        
         IntListList *arglist = list_init(IntListList);
 
         for (Int i = 0; i < splited->size; i++)
@@ -1095,15 +1087,16 @@ function(brl_std_loop_while)
         }
 
         list_free(*splited);
-
-        while (eval(vm, arg(0).string, context))
+        char cond = eval(vm,arg(0).string,context);
+        printf("cond: %d\n", cond);
+        while (cond)
         {
-            result = -1;
-
+            cond = eval(vm,arg(0).string,context);
+            printf("cond: %d\n", cond);
             for (Int i = 0; i < arglist->size; i++)
             {
                 result = interpret(vm, &arglist->data[i], context);
-                if (result >= 0)
+                if (result > -1)
                 {
                     goto skip_to_return;
                 }
@@ -1119,19 +1112,18 @@ function(brl_std_loop_while)
 
         list_free(*arglist);
     }
-    else 
+    else
     {
         regret_optimization:
-        while (arg(eval(vm, arg(0).string, context)).number == 1)
+        while (eval(vm,arg(0).string,context))
         {
-            result = eval(vm, arg(1).string, context);
-            if (result >= 0)
+            result = eval(vm,arg(1).string,context);
+            if (result > -1)
             {
                 break;
             }
         }
     }
-
     return result;
 }
 
@@ -1264,10 +1256,9 @@ void init_os(VirtualMachine *vm)
 void init_basics(VirtualMachine *vm)
 {
     register_builtin(vm, "#", brl_std_ignore);
-    register_builtin(vm, "do", brl_std_do);
     register_builtin(vm, "return", brl_std_return);
     register_builtin(vm, "ls", brl_std_io_ls);
-    register_builtin(vm, "help", brl_std_io_ls_hashes);
+    register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
     register_builtin(vm, "function", brl_std_function);
     
     

@@ -7,18 +7,17 @@
 
 function(brl_std_condition_if)
 {
-    Int result = arg_i(0);
-    
+    Int result = -1;
     if (args->size == 2)
     {
-        if (arg(eval(vm, arg(0).string, context)).integer)
+        if (eval(vm, arg(0).string, context))
         {
             result = eval(vm, arg(1).string, context);
         }
     }
     else if (args->size == 3) // ifelse
     {
-        if (arg(eval(vm, arg(0).string, context)).integer)
+        if (eval(vm, arg(0).string, context))
         {
             result = eval(vm, arg(1).string, context);
         }
@@ -27,103 +26,101 @@ function(brl_std_condition_if)
             result = eval(vm, arg(2).string, context);
         }
     }
-    unuse_var(vm, arg_i(0));
-    arg(0).integer = result;
-    arg_t(0) = TYPE_NUMBER;
-    return -1;
+    return result;
 }
 
 function(brl_std_condition_equals)
 {
-    Int result = 0;
     for (Int i = 1; i < args->size; i++)
     {
-        result = arg(i - 1).integer == arg(i).integer;
+        if (arg(i - 1).integer != arg(i).integer)
+        {
+            return 0;
+        }
     }
-    unuse_var(vm, arg_i(0));
-    arg(0).integer = result;
-    arg_t(0) = TYPE_NUMBER;
-    return -1;
+    return 1;
 }
 
 function(brl_std_condition_not_equals)
 {
-    Int result = 0;
     for (Int i = 1; i < args->size; i++)
     {
-        result = arg(i - 1).integer != arg(i).integer;
+        if (arg(i - 1).integer == arg(i).integer)
+        {
+            return 0;
+        }
     }
-    unuse_var(vm, arg_i(0));
-    arg(0).integer = result;
-    arg_t(0) = TYPE_NUMBER;
-    return -1;
+    return 1;
 }
 
 function(brl_std_condition_greater)
 {
-    Int result = 0;
     for (Int i = 1; i < args->size; i++)
     {
-        result = arg(i - 1).integer > arg(i).integer;
+        if (arg(i - 1).number <= arg(i).number)
+        {
+            return 0;
+        }
     }
-    unuse_var(vm, arg_i(0));
-    arg(0).integer = result;
-    arg_t(0) = TYPE_NUMBER;
-    return -1;
+    return 1;
 }
 
 function(brl_std_condition_greater_equals)
 {
-    Int result = 0;
     for (Int i = 1; i < args->size; i++)
     {
-        result = arg(i - 1).integer >= arg(i).integer;
+        if (arg(i - 1).number < arg(i).number)
+        {
+            return 0;
+        }
     }
-    unuse_var(vm, arg_i(0));
-    arg(0).integer = result;
-    arg_t(0) = TYPE_NUMBER;
-    return -1;
+    return 1;
 }
 
 function(brl_std_condition_less)
 {
-    Int result = 0;
     for (Int i = 1; i < args->size; i++)
     {
-        result = arg(i - 1).integer < arg(i).integer;
+        if (arg(i - 1).number >= arg(i).number)
+        {
+            return 0;
+        }
     }
-    return result;
+    return 1;
 }
 
 function(brl_std_condition_less_equals)
 {
-    Int result = 0;
     for (Int i = 1; i < args->size; i++)
     {
-        result = arg(i - 1).integer <= arg(i).integer;
+        if (arg(i - 1).number > arg(i).number)
+        {
+            return 0;
+        }
     }
-    return result;
+    return 1;
 }
 
 function(brl_std_condition_and)
 {
-    Int result = 1;
     for (Int i = 0; i < args->size; i++)
     {
-        if (!arg(i).integer)
+        if (arg_i(i) > 0)
         {
-            result = 0;
-            break;
+            return 0;
         }
     }
-    return result;
+    return 1;
 }
 
 function(brl_std_condition_raw_or)
 {
-    if (arg(0).integer || arg(1).integer)
+    for (Int i = 0; i < args->size; i++)
     {
-        return 1;
+        if (arg_i(i) > 0)
+        {
+            return arg_i(i);
+        }
     }
     return 0;
 }

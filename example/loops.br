@@ -1,6 +1,13 @@
 
-#new "_size" 100000;
-#new "___index" 0;
-while "< ___index _size"
-"+ ___index 1;print ___index";
+
+#new "aoba" (function (@@
+    #new "_size" 100000;
+    #new "___index" 0;
+    while "< ___index _size" 
+    (@@
+        + ___index 1;
+        print ___index;
+    );
+));
+aoba;
 return 0;

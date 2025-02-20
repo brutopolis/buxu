@@ -508,6 +508,10 @@ VirtualMachine* make_vm()
     vm->hashes = list_init(HashList);
     vm->interpret = default_interpreter;
     vm->unused = make_int_list();
+
+    // now we create the NULL
+    register_number(vm, "NULL", 0);
+
     return vm;
 }
 

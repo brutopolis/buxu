@@ -30,9 +30,9 @@
 #new "ad" 30;
 #new "ae" 31;
 #new "af" 32;
-help;
+ls.hash;
 #priority 100; // set the base priority, default is 10;
 #priority "a" 10; // reorder the hash of a to aproximately 10/100 of the hash table;
-help;
+ls.hash;
 print "base priority is" (#priority); // print the base priority;
 // the less priority the more important;

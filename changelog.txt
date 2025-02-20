@@ -1,13 +1,16 @@
-(18/02/2025) - version 0.7.5c
+(19/02/2025) - version 0.7.5c
 
-- some function documentation added to README.md;
+- all std functions are now documented under README.md;
 - TYPE_FUNCTION removed, use TYPE_LIST instead;
 - TYPE_BUILTIN removed, use TYPE_LIST instead;
 - ifelse removed, use if instead;
 - condition "not" removed;
-
-TODO: update examples;
-TODO: update README.md std functions list;
+- function "do" removed;
+- function "help" renamed to "ls.hash" again;
+- some examples updated;
+- some optimizations;
+- some cleanup;
+- some fixes;
 
 (14/02/2025) - version 0.7.5b
 

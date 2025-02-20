@@ -4,19 +4,26 @@
 
 #new "each" (function "callback"
     (@@
-        #new "i" 0;
-        #new "size" (len:);
-        while "< i size"
+        #new "__size" (len:);
+        
+        #new "___index" 0;
+
+        #new "test_func" (function "callback" "aaa" (@@callback (get: 1);));
+
+        print __size;
+
+        while "< ___index __size"
         (@@
-            callback (get: i);
-            + i _1;
-        )
+            print (cbk (get: ___index));
+            + ___index 1;
+        );
     )
 );
 
 #new "cbk" (function "item"
     (@@
-        print ($ type item);
+        print item;
+        return "uga buga";
     )
 );
 
