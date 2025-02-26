@@ -15,7 +15,7 @@
 #endif
 
 
-#define VERSION "0.7.5c"
+#define VERSION "0.7.6"
 
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
@@ -96,11 +96,6 @@ extern StringList* special_split(char *str, char delim);
 
 // variable
 
-extern ValueList* make_value_list();
-extern IntList* make_int_list();
-extern StringList* make_string_list();
-extern CharList* make_char_list();
-
 extern VirtualMachine* make_vm();
 extern void free_vm(VirtualMachine *vm);
 extern void unuse_var(VirtualMachine *vm, Int index);
@@ -133,8 +128,6 @@ extern void print_element(VirtualMachine *vm, Int index);
 // macros
 #define data(index) (vm->stack->data[index])
 #define data_t(index) (vm->typestack->data[index])
-#define data_unused(index) (vm->unused->data[index])
-#define data_temp(index) (vm->temp->data[index])
 
 #define hash(index) (vm->hashes->data[index])
 

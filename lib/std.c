@@ -221,20 +221,6 @@ function(brl_std_io_ls_hashes)
     return -1;
 }
 
-// functions
-function(brl_std_function)
-{
-    Int func = new_list(vm);
-    IntList *func_list = (IntList*)data(func).pointer;
-    //list_reverse(*args);
-    for (Int i = 0; i < args->size; i++)
-    {
-        list_push(*func_list, arg_i(i));
-    }
-    data_t(func) = TYPE_LIST;
-    return func;
-}
-
 function(brl_std_ignore)
 {
     return -1;
@@ -740,7 +726,7 @@ function(brl_std_list_sub)
 {
     if (args->size == 2)// create a list with the indexes of the elements in the range
     {
-        IntList *list = make_int_list();
+        IntList *list = list_init(IntList);
         Int start = arg_i(0);
         Int end = arg_i(1);
         for (Int i = start; i < end; i++)
@@ -761,7 +747,7 @@ function(brl_std_list_sub)
     else if (arg_t(0) == TYPE_LIST)
     {
         IntList *list = (IntList*)arg(0).pointer;
-        IntList *newlist = make_int_list();
+        IntList *newlist = list_init(IntList);
         for (Int i = 0; i < arg(1).number; i++)
         {
             list_push(*newlist, list->data[i]);
@@ -778,7 +764,7 @@ function(brl_std_list_split)
 {
     if (args->size == 1)// split the global stack, create lists with the indexes of each slice
     {
-        IntList *list = make_int_list();
+        IntList *list = list_init(IntList);
         Int separator = arg(0).number;
         Int start = 0;
         for (Int i = 0; i < vm->stack->size; i++)
@@ -1088,11 +1074,9 @@ function(brl_std_loop_while)
 
         list_free(*splited);
         char cond = eval(vm,arg(0).string,context);
-        printf("cond: %d\n", cond);
         while (cond)
         {
             cond = eval(vm,arg(0).string,context);
-            printf("cond: %d\n", cond);
             for (Int i = 0; i < arglist->size; i++)
             {
                 result = interpret(vm, &arglist->data[i], context);
@@ -1235,6 +1219,450 @@ function(brl_std_deplace)
     return newindex;
 }
 
+// std type
+// std type
+// std type
+
+function(brl_std_type_get)
+{
+    arg(0).integer = arg_t(0);
+    return -1;
+}
+
+function(brl_std_type_set)
+{
+    arg_t(0) = (Int)arg(1).number;
+    return -1;
+}
+
+
+function(brl_std_type_cast)
+{
+    switch (arg_t(0))
+    {
+        char* _str;
+        Int index;
+        case TYPE_NUMBER:
+            switch ((Int)arg(1).number)
+            {
+                case TYPE_STRING:
+                    _str =  str_format("%ld", (Int)arg(0).number);
+                    arg(0).string = _str;
+                    arg_t(0) = TYPE_STRING;
+                    return -1;
+                    break;
+                case TYPE_ANY:
+                    arg(0).integer = arg(0).number;
+                    arg_t(0) = TYPE_ANY;
+                    return -1;
+                    break;
+            }
+            break;
+        case TYPE_STRING:
+            _str = arg(0).string;
+            switch ((Int)arg(1).number)
+            {
+                case TYPE_NUMBER:
+                    arg(0).number = atof(arg(0).string);
+                    arg_t(0) = TYPE_NUMBER;
+                    free(_str);
+                    return -1;
+                    break;
+                case TYPE_ANY:
+                    arg(0).integer = atoi(arg(0).string);
+                    arg_t(0) = TYPE_ANY;
+                    free(_str);
+                    return -1;
+                    break;
+            }
+            break;
+        case TYPE_LIST:
+            switch ((Int)arg(1).number)
+            {
+                case TYPE_STRING:
+                    IntList* backup = (IntList*)arg(0).pointer;
+                    char* _str = list_stringify(vm, (IntList*)arg(0).pointer);
+                    arg(0).string = _str;
+                    arg_t(0) = TYPE_STRING;
+                    list_free(*backup);
+                    return -1;
+                    break;
+            }
+            break;
+        case TYPE_ANY:
+            switch ((Int)arg(1).number)
+            {
+                case TYPE_STRING:
+                    _str = str_format("%ld", arg(0).integer);
+                    arg(0).string = _str;
+                    arg_t(0) = TYPE_STRING;
+                    return -1;
+                    break;
+                case TYPE_NUMBER:
+                    arg(0).number = arg(0).integer;
+                    arg_t(0) = TYPE_NUMBER;
+                    return -1;
+                    break;
+            }
+            break;
+    }
+}
+
+// math functions
+// math functions
+// math functions
+// math functions
+
+
+function(brl_std_math_add)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).number += arg(i).number;
+    }
+    return -1;
+}
+
+function(brl_std_math_sub)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).number -= arg(i).number;
+    }
+    return -1;
+}
+
+function(brl_std_math_mul)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).number *= arg(i).number;
+    }
+    return -1;
+}
+
+function(brl_std_math_div)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).number /= arg(i).number;
+    }
+    return -1;
+}
+
+function(brl_std_math_mod)
+{
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = fmod(arg(0).number, arg(1).number);
+    #else
+        arg(0).number = fmodf(arg(0).number, arg(1).number);
+    #endif
+    return -1;
+}
+
+function(brl_std_math_random)
+{
+    arg(0).number = rand();
+    return -1;
+}
+
+function(brl_std_math_seed)
+{
+    srand(arg(0).number);
+    return -1;
+}
+
+function(brl_std_math_round)
+{
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = round(arg(0).number);
+    #else
+        arg(0).number = roundf(arg(0).number);
+    #endif
+    return -1;
+}
+
+function(brl_std_math_floor)
+{
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = floor(arg(0).number);
+    #else
+        arg(0).number = floorf(arg(0).number);
+    #endif
+    return -1;
+}
+
+function(brl_std_math_ceil)
+{
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = ceil(arg(0).number);
+    #else
+        arg(0).number = ceilf(arg(0).number);
+    #endif
+    return -1;
+}
+
+function(brl_std_math_sin)
+{
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = sin(arg(0).number);
+    #else
+        arg(0).number = sinf(arg(0).number);    
+    #endif
+    return -1;
+}
+
+function(brl_std_math_cos)
+{
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = cos(arg(0).number);
+    #else
+        arg(0).number = cosf(arg(0).number);
+    #endif
+    return -1;  
+}
+
+function(brl_std_math_tan)
+{
+    #if __SIZEOF_POINTER__ == 8
+        arg(0).number = tan(arg(0).number);
+    #else
+        arg(0).number = tanf(arg(0).number);
+    #endif
+    return -1;
+}
+
+function(brl_std_min)
+{
+    Float min = arg(0).number;
+    for (Int i = 1; i < args->size; i++)
+    {
+        #if __SIZEOF_POINTER__ == 8
+            min = fmin(min, arg(i).number);
+        #else
+            min = fminf(min, arg(i).number);
+        #endif
+    }
+    arg(0).number = min;
+    return -1;
+}
+
+function(brl_std_max)
+{
+    Float max = arg(0).number;
+    for (Int i = 1; i < args->size; i++)
+    {
+        #if __SIZEOF_POINTER__ == 8
+            max = fmax(max, arg(i).number);
+        #else
+            max = fmaxf(max, arg(i).number);
+        #endif
+    }
+    arg(0).number = max;
+    return -1;
+}
+
+
+// std conditions
+// std conditions
+// std conditions
+
+function(brl_std_condition_if)
+{
+    Int result = -1;
+    if (args->size == 2)
+    {
+        if (eval(vm, arg(0).string, context))
+        {
+            result = eval(vm, arg(1).string, context);
+        }
+    }
+    else if (args->size == 3) // ifelse
+    {
+        if (eval(vm, arg(0).string, context))
+        {
+            result = eval(vm, arg(1).string, context);
+        }
+        else
+        {
+            result = eval(vm, arg(2).string, context);
+        }
+    }
+    return result;
+}
+
+function(brl_std_condition_equals)// ==
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        if (arg_t(i - 1) != arg_t(i))
+        {
+            return 0;
+        }
+        else
+        {
+            switch (arg_t(i - 1))
+            {
+                case TYPE_STRING:
+                    if (strcmp(arg(i - 1).string, arg(i).string) != 0)
+                    {
+                        return 0;
+                    }
+                    break;
+                case TYPE_LIST:
+
+                    if (arg(i - 1).pointer == arg(i).pointer)
+                    {
+                        return 1;
+                    }
+                    else if (((IntList*)arg(i - 1).pointer)->size != ((IntList*)arg(i).pointer)->size)
+                    {
+                        return 0;
+                    }
+                    
+
+                    for (Int j = 0; j < ((IntList*)arg(i - 1).pointer)->size; j++)
+                    {
+                        if (((IntList*)arg(i - 1).pointer)->data[j] != ((IntList*)arg(i).pointer)->data[j])
+                        {
+                            return 0;
+                        }
+                    }
+                    break;
+                default:
+                    if (arg(i - 1).integer != arg(i).integer)
+                    {
+                        return 0;
+                    }
+                    break;
+            }
+        }
+    }
+    return 1;
+}
+
+function(brl_std_condition_not_equals)// !=
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        if (arg_t(i - 1) != arg_t(i))
+        {
+            return 1;
+        }
+        else
+        {
+            switch (arg_t(i - 1))
+            {
+                case TYPE_STRING:
+                    if (strcmp(arg(i - 1).string, arg(i).string) == 0)
+                    {
+                        return 0;
+                    }
+                    break;
+                case TYPE_LIST:
+
+                    if (arg(i - 1).pointer == arg(i).pointer)
+                    {
+                        return 0;
+                    }
+                    else if (((IntList*)arg(i - 1).pointer)->size != ((IntList*)arg(i).pointer)->size)
+                    {
+                        return 0;
+                    }
+
+                    for (Int j = 0; j < ((IntList*)arg(i - 1).pointer)->size; j++)
+                    {
+                        if (((IntList*)arg(i - 1).pointer)->data[j] == ((IntList*)arg(i).pointer)->data[j])
+                        {
+                            return 0;
+                        }
+                    }
+                    break;
+                default:
+                    if (arg(i - 1).integer == arg(i).integer)
+                    {
+                        return 0;
+                    }
+                    break;
+            }
+        }
+    }
+    return 1;
+}
+
+
+function(brl_std_condition_greater)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        if (arg(i - 1).number <= arg(i).number)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+function(brl_std_condition_greater_equals)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        if (arg(i - 1).number < arg(i).number)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+function(brl_std_condition_less)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        if (arg(i - 1).number >= arg(i).number)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+function(brl_std_condition_less_equals)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        if (arg(i - 1).number > arg(i).number)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+function(brl_std_condition_and)
+{
+    for (Int i = 0; i < args->size; i++)
+    {
+        if (arg_i(i) > 0)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+function(brl_std_condition_raw_or)
+{
+    for (Int i = 0; i < args->size; i++)
+    {
+        if (arg_i(i) > 0)
+        {
+            return arg_i(i);
+        }
+    }
+    return 0;
+}
+
 
 // inits
 #ifndef ARDUINO
@@ -1259,8 +1687,6 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "return", brl_std_return);
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
-    register_builtin(vm, "function", brl_std_function);
-    
     
     // string format
     register_builtin(vm, "format", brl_std_string_format);
@@ -1314,9 +1740,75 @@ void init_mem(VirtualMachine *vm)
     register_builtin(vm, "mem.delete", brl_mem_delete);
 }
 
+// destructive/inplace!!
+void init_type(VirtualMachine *vm)
+{
+    // type size(4 or 8 bytes)
+    register_number(vm, "type.size", sizeof(Value));
+
+    // types
+    register_number(vm, "type.any", TYPE_ANY);
+    register_number(vm, "type.number", TYPE_NUMBER);
+    register_number(vm, "type.string", TYPE_STRING);
+    register_number(vm, "type.list", TYPE_LIST);
+
+    // type functions are inplace(destructive), you might want to use $ to do non-destructive operations
+    // e.g. $ type a; // returns the type of a instead turning a into a number of its type
+    // type functions
+    register_builtin(vm, "type", brl_std_type_get);
+    register_builtin(vm, "pun", brl_std_type_set);
+    register_builtin(vm, "cast", brl_std_type_cast);
+}
+
+// destructive/inplace!!
+void init_std_math(VirtualMachine *vm)
+{
+    // math functions are inplace(destructive), you might want to use $ to do non-destructive operations
+    // e.g. $ + a 2; // a is not changed
+    register_builtin(vm, "+", brl_std_math_add);
+    register_builtin(vm, "-", brl_std_math_sub);
+    register_builtin(vm, "*", brl_std_math_mul);
+    register_builtin(vm, "/", brl_std_math_div);
+    register_builtin(vm, "\%", brl_std_math_mod);
+
+    register_builtin(vm, "random", brl_std_math_random);
+    register_builtin(vm, "seed", brl_std_math_seed);
+
+    register_builtin(vm, "round", brl_std_math_round);
+    register_builtin(vm, "floor", brl_std_math_floor);
+    register_builtin(vm, "ceil", brl_std_math_ceil);
+
+    register_builtin(vm, "sin", brl_std_math_sin);
+    register_builtin(vm, "cos", brl_std_math_cos);
+    register_builtin(vm, "tan", brl_std_math_tan);
+
+    register_builtin(vm, "min", brl_std_min);
+    register_builtin(vm, "max", brl_std_max);
+}
+
+// index-based!!
+void init_std_condition(VirtualMachine *vm)
+{
+    register_builtin(vm, "if", brl_std_condition_if);
+
+    register_builtin(vm, "==", brl_std_condition_equals);
+    register_builtin(vm, "!=", brl_std_condition_not_equals);
+
+    register_builtin(vm, ">", brl_std_condition_greater);
+    register_builtin(vm, ">=", brl_std_condition_greater_equals);
+    register_builtin(vm, "<", brl_std_condition_less);
+    register_builtin(vm, "<=", brl_std_condition_less_equals);
+    
+    register_builtin(vm, "&&", brl_std_condition_and);
+    register_builtin(vm, "||", brl_std_condition_raw_or);
+}
+
 // std init presets
 void init_std(VirtualMachine *vm)
 {
+    // @0 = NULL
+    register_number(vm, "NULL", 0);
+
     #ifndef ARDUINO
     init_os(vm);
     #endif
@@ -1325,5 +1817,11 @@ void init_std(VirtualMachine *vm)
     init_hash(vm);
     init_list(vm);
     init_mem(vm);
+
+    init_type(vm);
+    init_std_math(vm);
+    init_std_condition(vm);
+
+
     register_string(vm, "VERSION", VERSION);// version
 }

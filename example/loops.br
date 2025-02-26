@@ -1,6 +1,6 @@
 
 
-#new "aoba" (function (@@
+#new "aoba" (list: (list:) (@@
     #new "_size" 100000;
     #new "___index" 0;
     while "< ___index _size" 

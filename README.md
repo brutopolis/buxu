@@ -594,7 +594,7 @@ bruter is a metaprogramable lightweight programming language;
 
   - usually takes longer to delete/unuse a variable than to create one, especially if there are unused variables, but the delete overhead is just for strings, lists and functions, functions are the slower, but not that slow tho;
 
-  - you can replace the interpreter function by another one with the optimizations you need, e.g. less types or such;
+  - you can replace the interpreter function by another one with the optimizations you need;
 
   - you can easy write functions in C like explained before;
 
@@ -611,3 +611,5 @@ bruter is a metaprogramable lightweight programming language;
   - you can exclude all the stdlib or part of it if you dont need it, see the build instructions;
 
   - loops contexts are optimized if it does not contain any # or ()(except for string delimitation);
+
+  - while loops are usually faster if inside a function;

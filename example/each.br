@@ -1,14 +1,14 @@
-// just ideas, dont expect this to work;
+// just ideas, dont expect this to make sense;
 
 // IDEA each implementation;
 
-#new "each" (function "callback"
+#new "each" (list: (list: "callback")
     (@@
         #new "__size" (len:);
         
         #new "___index" 0;
 
-        #new "test_func" (function "callback" "aaa" (@@callback (get: 1);));
+        #new "test_func" (list: "callback" "aaa" (@@callback (get: 1);));
 
         print __size;
 
@@ -20,7 +20,7 @@
     )
 );
 
-#new "cbk" (function "item"
+#new "cbk" (list: (list: "item")
     (@@
         print item;
         return "uga buga";

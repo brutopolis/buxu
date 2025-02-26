@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 int main(int argc, char **argv)
 {
     Int result = 0;
-    StringList *args = make_string_list();
+    StringList *args = list_init(StringList);
     char* code = NULL;
     char* path = NULL;
     for (int i = 1; i < argc; i++)

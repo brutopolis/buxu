@@ -1,3 +1,17 @@
+(26/02/2025) - version 0.7.6
+
+- std files unified;
+- defining @0 as NULL is now done in the std;
+- make_int_list, make_string_list and make_char_list removed;
+- != and == now dont just compare the pointers/integers, but compare the values;
+- function function removed, use list: instead, it does exactly the same thing;
+- interpreter behavior changed, function now instead of (list: varnames... code) is (list: (list: varnames...) code);
+- new kind of function, the lookup: (list: (list: varnames...) (list: values...));
+
+TODO: update the README.md about the new function behavior.
+TODO: update the README.md about lookup functions.
+TODO: update the optimizations section of the README.md.
+
 (19/02/2025) - version 0.7.5c
 
 - all std functions are now documented under README.md;

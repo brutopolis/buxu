@@ -422,7 +422,7 @@ Value value_duplicate(Value value, char type)
             dup.string = str_duplicate(value.string);
             break;
         case TYPE_LIST:
-            dup.pointer = make_int_list();
+            dup.pointer = list_init(IntList);
             IntList *list = (IntList*)value.pointer;
             for (Int i = 0; i < list->size; i++)
             {
@@ -476,41 +476,14 @@ void hash_unset(VirtualMachine *vm, char* varname)
 
 //variable functions
 
-ValueList* make_value_list()
-{
-    ValueList *list = list_init(ValueList);
-    return list;
-}
-
-IntList* make_int_list()
-{
-    IntList *list = list_init(IntList);
-    return list;
-}
-
-StringList* make_string_list()
-{
-    StringList *list = list_init(StringList);
-    return list;
-}
-
-CharList* make_char_list()
-{
-    CharList *list = list_init(CharList);
-    return list;
-}
-
 VirtualMachine* make_vm()
 {
     VirtualMachine *vm = (VirtualMachine*)malloc(sizeof(VirtualMachine));
-    vm->stack = make_value_list();
-    vm->typestack = make_char_list();
+    vm->stack = list_init(ValueList);
+    vm->typestack = list_init(CharList);
     vm->hashes = list_init(HashList);
     vm->interpret = default_interpreter;
-    vm->unused = make_int_list();
-
-    // now we create the NULL
-    register_number(vm, "NULL", 0);
+    vm->unused = list_init(IntList);
 
     return vm;
 }
@@ -559,7 +532,7 @@ Int new_builtin(VirtualMachine *vm, Function function)
 Int new_list(VirtualMachine *vm)
 {
     Int id = new_var(vm);
-    vm->stack->data[id].pointer = make_int_list();
+    vm->stack->data[id].pointer = list_init(IntList);
     vm->typestack->data[id] = TYPE_LIST;
     return id;
 }
@@ -642,7 +615,7 @@ void free_vm(VirtualMachine *vm)
 IntList* parse(void *_vm, char *cmd, HashList *context) 
 {
     VirtualMachine* vm = (VirtualMachine*)_vm;
-    IntList *result = make_int_list();
+    IntList *result = list_init(IntList);
     
     StringList *splited = special_space_split(cmd);
     list_reverse(*splited);
@@ -774,78 +747,131 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 
     if (func > -1)
     {
-        if (vm->typestack->data[func] == TYPE_ANY)
+        HashList *global_context;
+        HashList *_context;
+        IntList  *_list;
+        Function _function;
+        Int etc;
+        Hash hash;
+        char* code;
+        Int firstelement;
+        Int firstelement2;
+        IntList *varnames;
+        IntList *values;
+
+        switch (vm->typestack->data[func])
         {
-            Function _function = vm->stack->data[func].pointer;
-            result = _function(vm, args, context);
-            list_unshift(*args, func);
-        }
-        else if (vm->typestack->data[func] == TYPE_LIST)// user defined function
-        {
-            IntList *_func = (IntList*)data(func).pointer;
-            HashList *_context = list_init(HashList);
+            case TYPE_ANY:
+                _function = vm->stack->data[func].pointer;
+                result = _function(vm, args, context);
+                list_unshift(*args, func);
+                break;
 
-            char* code = list_get(*vm->stack, list_get(*_func, _func->size-1)).string;
-
-            list_reverse(*args);
-
-            HashList *global_context = vm->hashes;
-
-            vm->hashes = _context;
-
-            for (Int i = 0; i < _func->size-1; i++)
-            {
-                hash_set(vm, list_get(*vm->stack, list_get(*_func, i)).string, list_pop(*args));
-            }
-            
-            if (args->size > 0)
-            {
-                Int etc = register_list(vm, "...");
+                
+            case TYPE_STRING:
+                _context = list_init(HashList);
+                global_context = vm->hashes;
+                vm->hashes = _context;
+                
+                etc = register_list(vm, "...");
                 while (args->size > 0)
                 {
                     list_push(*((IntList*)data(etc).pointer), list_pop(*args));
                 }
-            }
 
-            vm->hashes = global_context;
+                vm->hashes = global_context;
 
-            result = eval(vm, code, _context);
+                result = eval(vm, data(func).string, _context);
 
-            while (_context->size > 0)
-            {
-                Hash hash = list_pop(*_context);
-                free(hash.key);
-            }
+                while (_context->size > 0)
+                {
+                    hash = list_pop(*_context);
+                    free(hash.key);
+                }
 
-            list_free(*_context);
-            list_push(*args, func);
-            list_reverse(*args);
-        }
-        else if (vm->typestack->data[func] == TYPE_STRING) // script
-        {
-            HashList *_context = list_init(HashList);
-            HashList *global_context = vm->hashes;
-            vm->hashes = _context;
-            
-            Int etc = register_list(vm, "...");
-            while (args->size > 0)
-            {
-                list_push(*((IntList*)data(etc).pointer), list_pop(*args));
-            }
+                list_free(*_context);
 
-            vm->hashes = global_context;
+                list_unshift(*args, func);
+                break;
 
-            result = eval(vm, data(func).string, _context);
 
-            while (_context->size > 0)
-            {
-                Hash hash = list_pop(*_context);
-                free(hash.key);
-            }
+            case TYPE_LIST:
+                firstelement = list_get(*((IntList*)data(func).pointer), 0);
+                _list = (IntList*)data(func).pointer;
+                
+                if  (data_t(list_get(*_list, 0)) == TYPE_LIST)
+                {
+                    switch (data_t(list_get(*_list, 1)))
+                    {
+                        case TYPE_STRING:
+                            varnames = (IntList*)data(firstelement).pointer;
 
-            list_free(*_context);
+                            _context = list_init(HashList);
+                            
+                            code = list_get(*vm->stack, list_get(*_list, 1)).string;
 
-            list_unshift(*args, func);
+                            list_reverse(*args);
+
+                            global_context = vm->hashes;
+
+                            vm->hashes = _context;
+
+                            for (Int i = 0; i < varnames->size; i++)
+                            {
+                                hash_set(vm, data(varnames->data[i]).string, list_pop(*args));
+                            }
+                            
+                            if (args->size > 0)
+                            {
+                                Int etc = register_list(vm, "...");
+                                for (Int i = 0; i < args->size; i++)
+                                {
+                                    list_push(*((IntList*)data(etc).pointer), list_pop(*args));
+                                }
+                            }
+
+                            vm->hashes = global_context;
+
+                            result = eval(vm, code, _context);
+
+                            while (_context->size > 0)
+                            {
+                                free(list_pop(*_context).key);
+                            }
+
+                            list_free(*_context);
+                            list_push(*args, func);
+                            list_reverse(*args);
+                            break;
+                        case TYPE_LIST: // a switch
+                            varnames = (IntList*)data(firstelement).pointer;
+                            values = (IntList*)data(list_get(*_list, 1)).pointer;
+                            if (data_t(list_get(*varnames,0)) == TYPE_STRING)
+                            {
+                                for (Int i = 0; i < varnames->size; i++)
+                                {
+                                    if (strcmp(data(varnames->data[i]).string, data(args->data[0]).string) == 0)
+                                    {
+                                        result = list_get(*values, i);
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                            else
+                            {
+                                for (Int i = 0; i < varnames->size; i++)
+                                {
+                                    if (data(varnames->data[i]).integer == data(args->data[0]).integer)
+                                    {
+                                        result = list_get(*values, i);
+                                    }
+                                }
+                            }
+                            break;
+                    };
+                }
+                break;
         }
     }
     else 

@@ -3,7 +3,7 @@
 print "aqui fora variavel é" variavel;
 print "aqui fora vglobal é" vglobal;
 
-#new "func" (function (@@
+#new "func" (list: (list:) (@@
         print "aqui dentro é" variavel;
         print "aqui dentro vglobal é" vglobal;
         print;
