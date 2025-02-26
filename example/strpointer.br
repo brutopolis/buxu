@@ -11,3 +11,5 @@ print ptr;
 pun ptr type.string;// pun the int back to a string;
 print ptr;
 pun ptr type.any;
+
+print "aaaaa $ptr";

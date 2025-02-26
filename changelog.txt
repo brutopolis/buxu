@@ -14,6 +14,7 @@ TODO: update the README.md about lookup functions.
 TODO: update the optimizations section of the README.md.
 TODO: turn formatter into a switch inside parser;
 TODO: fix the string formatter related memory leaks;
+TODO: change the formatter to a non-destructive behavior, replacing str by newstr is causing problems, we need to just create a new one and concatenate it;
 
 (19/02/2025) - version 0.7.5c
 

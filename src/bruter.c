@@ -654,7 +654,6 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         else if (str[0] == '"' || str[0] == '\'') // string
         {
             char* token = strchr(str + 1, '$');
-            char* backup = str;
 
             while (token != NULL)
             {
@@ -682,36 +681,35 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                         if (index != -1)
                         {
                             char* replacement;
+                            char* newstr;
                             switch (data_t(index))
                             {
                                 case TYPE_STRING:
-                                    str = str_replace(str, varname, data(index).string);
-                                    free(backup);
+                                    newstr = str_replace(str, varname, data(index).string);
                                     break;
                                 case TYPE_NUMBER:
                                     if (data(index).number == (Int)data(index).number)
                                     {
                                         replacement = str_format("%ld", (Int)data(index).number);
-                                        str = str_replace(str, varname, replacement);
+                                        newstr = str_replace(str, varname, replacement);
                                     }
                                     else
                                     {
                                         replacement = str_format("%f", data(index).number);
-                                        str = str_replace(str, varname, replacement);
+                                        newstr = str_replace(str, varname, replacement);
                                     }
-                                    free(backup);
                                     break;
                                 case TYPE_LIST:
                                     replacement = list_stringify(vm, (IntList*)data(index).pointer);
-                                    str = str_replace(str, varname, replacement);
-                                    free(backup);
+                                    newstr = str_replace(str, varname, replacement);
                                     break;
                                 default:
                                     replacement = str_format("%ld", data(index).integer);
-                                    str = str_replace(str, varname, replacement);
-                                    free(backup);
+                                    newstr = str_replace(str, varname, replacement);
                                     break;
                             }
+                            free(str);
+                            str = newstr;
                             free(replacement);
                        }
                        free(varname);
@@ -721,28 +719,31 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                         Int index = atoi(token + 1);
                         if (index >= 0 && index < vm->stack->size)
                         {
+                            char* newstr;
                             switch (data_t(index))
                             {
                                 case TYPE_STRING:
-                                    str = str_replace(str, token, data(index).string);
+                                    newstr = str_replace(str, token, data(index).string);
                                     break;
                                 case TYPE_NUMBER:
                                     if (data(index).number == (Int)data(index).number)
                                     {
-                                        str = str_replace(str, token, str_format("%ld", (Int)data(index).number));
+                                        newstr = str_replace(str, token, str_format("%ld", (Int)data(index).number));
                                     }
                                     else
                                     {
-                                        str = str_replace(str, token, str_format("%f", data(index).number));
+                                        newstr = str_replace(str, token, str_format("%f", data(index).number));
                                     }
                                     break;
                                 case TYPE_LIST:
-                                    str = str_replace(str, token, list_stringify(vm, (IntList*)data(index).pointer));
+                                    newstr = str_replace(str, token, list_stringify(vm, (IntList*)data(index).pointer));
                                     break;
                                 default:
-                                    str = str_replace(str, token, str_format("%ld", data(index).integer));
+                                    newstr = str_replace(str, token, str_format("%ld", data(index).integer));
                                     break;
                             }
+                            free(str);
+                            str = newstr;
                         }
                     }
                 }
@@ -755,65 +756,61 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             {
                 if (token[1] != 0)
                 {
-                    
+                    char* newstr;
                     // octal
                     if (token[1] == '0' && (strlen(token+1)>=3) && isdigit(token[2]) && isdigit(token[3]))
                     {
                         char* octal = str_nduplicate(token + 1, 3);
-                        str = str_replace(str, token, str_format("%c", strtol(octal, NULL, 8)));
+                        newstr = str_replace(str, token, str_format("%c", strtol(octal, NULL, 8)));
                         free(octal);
-                        free(backup);
                     }
                     else if (isdigit(token[1]))
                     {
-                        str = str_replace(str, token, str_format("%c", atoi(token + 1)));
-                        free(backup);
+                        newstr = str_replace(str, token, str_format("%c", atoi(token + 1)));
                     }
                     // hex
                     else if (token[1] == 'x' && (strlen(token+1)>=3) && isxdigit(token[2]) && isxdigit(token[3]))
                     {
                         char* hex = str_nduplicate(token + 2, 2);
-                        str = str_replace(str, token, str_format("%c", strtol(hex, NULL, 16)));
+                        newstr = str_replace(str, token, str_format("%c", strtol(hex, NULL, 16)));
                         free(hex);
-                        free(backup);
                     }
                     else if (token[1] == 'n')
                     {
-                        str = str_replace(str, token, "\n");
-                        free(backup);
+                        newstr = str_replace(str, token, "\n");
                     }
                     else if (token[1] == 't')
                     {
-                        str = str_replace(str, token, "\t");
-                        free(backup);
+                        newstr = str_replace(str, token, "\t");
                     }
                     else if (token[1] == 'r')
                     {
-                        str = str_replace(str, token, "\r");
-                        free(backup);
+                        newstr = str_replace(str, token, "\r");
                     }
                     else if (token[1] == '0')
                     {
-                        str = str_replace(str, token, "\0");
-                        free(backup);
+                        newstr = str_replace(str, token, "\0");
                     }
                     else if (token[1] == '\\')
                     {
-                        str = str_replace(str, token, "\\");
-                        free(backup);
+                        newstr = str_replace(str, token, "\\");
                     }
                     else if (token[1] == '"')
                     {
-                        str = str_replace(str, token, "\"");
-                        free(backup);
+                        newstr = str_replace(str, token, "\"");
                     }
                     else if (token[1] == '\'')
                     {
-                        str = str_replace(str, token, "'");
-                        free(backup);
+                        newstr = str_replace(str, token, "'");
                     }
-
+                    else
+                    {
+                        goto skip_str_free;
+                    }
+                    free(str);
+                    str = newstr;
                 }
+                skip_str_free:
                 token = strchr(token + 1, '\\');
             }
 
