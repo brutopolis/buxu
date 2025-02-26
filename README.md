@@ -172,11 +172,11 @@ bruter is a metaprogramable lightweight programming language;
   - `procedural`, bruter is a very imperative language;
   - `semi-functional`, bruter has some functional features, but it is not a complete functional language;
   - `interpreted`, bruter is an interpreted language, but can be compiled to a executable file, which just embeds the code in the interpreter;
-  - `lightweight`, bruter is a very small language, and the stdlib is also tiny, e.g. in 0.7.5 bruter stdlib has 80functions at total and 9 variables, maybe seems a lot, but this also includes the basic math functions, conditions, loops and such things whose are usually implemented in the language itself;
+  - `lightweight`, bruter is a very small language, and the stdlib is also tiny, e.g. in 0.7.6 bruter stdlib has 65 functions at total and 6 variables, maybe seems a lot, but this also includes the basic math functions, conditions, loops and such things whose are usually implemented in the language itself;
   - `weakly typed`, bruter is a weakly typed language, but it has types, the types are not really enforced, but they are there, also the functions can check the types if needed, but that is not really common, at least in the stdlib;
   - `non-modular`, bruter is not a modular language, you can create a library, but it will not be modular, the library will be included in the interpreter, the interpreter is meant to be compiled with the libraries you need, you can exclude the libraries you dont need during compiling, but you cant include a library at runtime;
   - `no OOP`, bruter has no OOP;
-  - `no GC`, bruter memory is completely manual, you can delete the variables at anytime, but you need to do it manually;
+  - `no GC`, bruter memory is completely manual, you can delete the variables at anytime, manually;
   - `metaprogramable`, everything said above can be changed or implemented in another way, you can create a new interpreter function and replace the old one, you can even build bruter withou any value at all, with a clean stack;
 
   ## Types
@@ -259,7 +259,7 @@ bruter is a metaprogramable lightweight programming language;
 
   ## Functions
 
-  functions work just like functions in other languages, nothing new here, beside it has its scope cant access the upper scope if not created from global, only two scopes can be used at time, the global scope and the *current* function scope;
+  functions work just like functions in other languages, nothing new here, beside its scope cant access the upper scope if not created from global, only two scopes can be used at time, the global scope and the *current* function scope;
 
   C functions doesnt have a own scope, but  you can easily create the context at the start of the function and delete it at the end;
 
@@ -420,7 +420,6 @@ bruter is a metaprogramable lightweight programming language;
   | `print`     | Print the values based on the type                               | `void function(any ...);`                    |
   | `scan`      | get the input from the user and return it                        | `String function();`                         |
   | `return`    | return the value                                                 | `void function(any value);`                  |
-  | `function`  | create a new function                                            | `void function(String var_names..., String code);`   | 
   | `format`    | format the string with the values                                | `String function(String string, any ...);`   |
 
   | Variable       | Description    | Type  | Default |

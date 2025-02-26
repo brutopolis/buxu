@@ -7,10 +7,13 @@
 - function function removed, use list: instead, it does exactly the same thing;
 - interpreter behavior changed, function now instead of (list: varnames... code) is (list: (list: varnames...) code);
 - new kind of function, the lookup: (list: (list: varnames...) (list: values...));
+- format function removed, "" and '' strings now support escape codes and variables using $varname;
 
 TODO: update the README.md about the new function behavior.
 TODO: update the README.md about lookup functions.
 TODO: update the optimizations section of the README.md.
+TODO: turn formatter into a switch inside parser;
+TODO: fix the string formatter related memory leaks;
 
 (19/02/2025) - version 0.7.5c
 

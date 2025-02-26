@@ -945,86 +945,6 @@ function(brl_std_list_swap)
     return -1;
 }
 
-// string functions
-
-function(brl_std_string_format)
-{
-    list_reverse(*args);
-    Int str = list_pop(*args);
-    Int result = -1;
-    char* _str = str_duplicate(data(str).string);
-    for (Int i = 0; i < strlen(_str); i++)
-    {
-        if (_str[i] == '%')
-        {
-            if (_str[i+1] == 'd')
-            {
-                Int value = list_pop(*args);
-                char* _value = str_format("%ld", (Int)data(value).number);
-                char* _newstr = str_replace(_str, "\%d", _value);
-                free(_str);
-                _str = _newstr;
-            }
-            else if (_str[i+1] == 's')
-            {
-                Int value = list_pop(*args);
-                char* _value = data(value).string;
-                char* _newstr = str_replace(_str, "\%s", _value);
-                free(_str);
-                _str = _newstr;
-            }
-            else if (_str[i+1] == 'f')
-            {
-                Int value = list_pop(*args);
-                char* _value = str_format("%f", data(value).number);
-                char* _newstr = str_replace(_str, "\%f", _value);
-                free(_str);
-                _str = _newstr;
-            }
-            else if (_str[i+1] == 'p')
-            {
-                Int value = list_pop(*args);
-                char* _value = str_format("%p", data(value).pointer);
-                char* _newstr = str_replace(_str, "\%p", _value);
-                free(_str);
-                _str = _newstr;
-            }
-        }
-        else if (_str[i] == '\\')
-        {
-            if (_str[i+1] == 'n')
-            {
-                char* _newstr = str_replace(_str, "\\n", "\n");
-                free(_str);
-                _str = _newstr;
-            }
-            else if (_str[i+1] == 't')
-            {
-                char* _newstr = str_replace(_str, "\\t", "\t");
-                free(_str);
-                _str = _newstr;
-            }
-            else if (_str[i+1] == 'r')
-            {
-                char* _newstr = str_replace(_str, "\\r", "\r");
-                free(_str);
-                _str = _newstr;
-            }
-            else if (isdigit(_str[i+1]))
-            {
-                char* _newstr = str_format("%s%c", _str + i + 1, (char)atoi(_str + i + 1));
-                free(_str);
-                _str = _newstr;
-            }
-        }
-    }
-    result = new_var(vm);
-    data(result).string = _str;
-    data_t(result) = TYPE_STRING;
-    return result;
-}
-
-
 // std loop
 // std loop
 // std loop
@@ -1687,9 +1607,6 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "return", brl_std_return);
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
-    
-    // string format
-    register_builtin(vm, "format", brl_std_string_format);
 
     register_builtin(vm, "print", brl_std_io_print);
     register_builtin(vm, "$", brl_std_deplace);
