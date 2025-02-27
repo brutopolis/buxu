@@ -656,8 +656,111 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             /* Cria uma cópia não destrutiva da string de entrada */
             char* newstr = str_duplicate(str);
 
+            /* Processa as sequências de escape iniciadas por '\' */
+            char* token = strchr(newstr + 1, '\\');
+            while (token != NULL)
+            {
+                if (token[1] != '\0')
+                {
+                    char* tempstr = NULL;
+                    char* pattern = NULL;
+                    char replacement[128]; // buffer para a substituição
+
+                    switch (token[1])
+                    {
+                        case '0':
+                            /* Se houver 3 dígitos após '\' (ex: "\123"), usa escape octal */
+                            if (strlen(token + 1) >= 3 && isdigit(token[2]) && isdigit(token[3]))
+                            {
+                                pattern = str_nduplicate(token, 4); // "\ddd" (4 chars)
+                                int value = (int)strtol(token + 1, NULL, 8);
+                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
+                                tempstr = str_replace(newstr, pattern, replacement);
+                                free(pattern);
+                            }
+                            else
+                            {
+                                /* Caso contrário, trata como "\0" literal (substitui pelo caractere '0') */
+                                pattern = str_nduplicate(token, 2);
+                                snprintf(replacement, sizeof(replacement), "%c", '0');
+                                tempstr = str_replace(newstr, pattern, replacement);
+                                free(pattern);
+                            }
+                            break;
+                        case 'x':
+                            /* Se houver 2 dígitos hexadecimais após "\x" */
+                            if (strlen(token + 1) >= 3 && isxdigit(token[2]) && isxdigit(token[3]))
+                            {
+                                pattern = str_nduplicate(token, 4); // "\xhh" (4 chars)
+                                int value = (int)strtol(token + 2, NULL, 16);
+                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
+                                tempstr = str_replace(newstr, pattern, replacement);
+                                free(pattern);
+                            }
+                            break;
+                        case 'n':
+                            pattern = str_nduplicate(token, 2); // "\n"
+                            tempstr = str_replace(newstr, pattern, "\n");
+                            free(pattern);
+                            break;
+                        case 't':
+                            pattern = str_nduplicate(token, 2); // "\t"
+                            tempstr = str_replace(newstr, pattern, "\t");
+                            free(pattern);
+                            break;
+                        case 'r':
+                            pattern = str_nduplicate(token, 2); // "\r"
+                            tempstr = str_replace(newstr, pattern, "\r");
+                            free(pattern);
+                            break;
+                        case '\\':
+                            pattern = str_nduplicate(token, 2); // "\\"
+                            tempstr = str_replace(newstr, pattern, "\\");
+                            free(pattern);
+                            break;
+                        case '"':
+                            pattern = str_nduplicate(token, 2); // '\"'
+                            tempstr = str_replace(newstr, pattern, "\"");
+                            free(pattern);
+                            break;
+                        case '\'':
+                            pattern = str_nduplicate(token, 2); // "\'"
+                            tempstr = str_replace(newstr, pattern, "\'");
+                            free(pattern);
+                            break;
+                        case '$':
+                            pattern = str_nduplicate(token, 2); // "\$"
+                            tempstr = str_replace(newstr, pattern, "$");
+                            free(pattern);
+                            break;
+                        default:
+                            if (isdigit(token[1]))
+                            {
+                                /* Trata sequência numérica com quantidade variável de dígitos */
+                                int len = 1;
+                                while (isdigit(token[1 + len]))
+                                {
+                                    len++;
+                                }
+                                pattern = str_nduplicate(token, len + 1); // '\' + dígitos
+                                int value = atoi(token + 1);
+                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
+                                tempstr = str_replace(newstr, pattern, replacement);
+                                free(pattern);
+                            }
+                            break;
+                    }
+                    if (tempstr != NULL)
+                    {
+                        free(newstr);
+                        newstr = tempstr;
+                    }
+                }
+                token = strchr(newstr + 1, '\\');
+            }
+
             /* Processa as substituições de variáveis indicadas por '$' */
-            char* token = strchr(newstr + 1, '$');
+            token = strchr(newstr + 1, '$');
             while (token != NULL)
             {
                 if (token[1] != '\0')
@@ -761,104 +864,6 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                     }
                 }
                 token = strchr(newstr + 1, '$');
-            }
-
-            /* Processa as sequências de escape iniciadas por '\' */
-            token = strchr(newstr + 1, '\\');
-            while (token != NULL)
-            {
-                if (token[1] != '\0')
-                {
-                    char* tempstr = NULL;
-                    char* pattern = NULL;
-                    char replacement[128]; // buffer para a substituição
-
-                    switch (token[1])
-                    {
-                        case '0':
-                            /* Se houver 3 dígitos após '\' (ex: "\123"), usa escape octal */
-                            if (strlen(token + 1) >= 3 && isdigit(token[2]) && isdigit(token[3]))
-                            {
-                                pattern = str_nduplicate(token, 4); // "\ddd" (4 chars)
-                                int value = (int)strtol(token + 1, NULL, 8);
-                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
-                                tempstr = str_replace(newstr, pattern, replacement);
-                                free(pattern);
-                            }
-                            else
-                            {
-                                /* Caso contrário, trata como "\0" literal (substitui pelo caractere '0') */
-                                pattern = str_nduplicate(token, 2);
-                                snprintf(replacement, sizeof(replacement), "%c", '0');
-                                tempstr = str_replace(newstr, pattern, replacement);
-                                free(pattern);
-                            }
-                            break;
-                        case 'x':
-                            /* Se houver 2 dígitos hexadecimais após "\x" */
-                            if (strlen(token + 1) >= 3 && isxdigit(token[2]) && isxdigit(token[3]))
-                            {
-                                pattern = str_nduplicate(token, 4); // "\xhh" (4 chars)
-                                int value = (int)strtol(token + 2, NULL, 16);
-                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
-                                tempstr = str_replace(newstr, pattern, replacement);
-                                free(pattern);
-                            }
-                            break;
-                        case 'n':
-                            pattern = str_nduplicate(token, 2); // "\n"
-                            tempstr = str_replace(newstr, pattern, "\n");
-                            free(pattern);
-                            break;
-                        case 't':
-                            pattern = str_nduplicate(token, 2); // "\t"
-                            tempstr = str_replace(newstr, pattern, "\t");
-                            free(pattern);
-                            break;
-                        case 'r':
-                            pattern = str_nduplicate(token, 2); // "\r"
-                            tempstr = str_replace(newstr, pattern, "\r");
-                            free(pattern);
-                            break;
-                        case '\\':
-                            pattern = str_nduplicate(token, 2); // "\\"
-                            tempstr = str_replace(newstr, pattern, "\\");
-                            free(pattern);
-                            break;
-                        case '"':
-                            pattern = str_nduplicate(token, 2); // '\"'
-                            tempstr = str_replace(newstr, pattern, "\"");
-                            free(pattern);
-                            break;
-                        case '\'':
-                            pattern = str_nduplicate(token, 2); // "\'"
-                            tempstr = str_replace(newstr, pattern, "\'");
-                            free(pattern);
-                            break;
-                        default:
-                            if (isdigit(token[1]))
-                            {
-                                /* Trata sequência numérica com quantidade variável de dígitos */
-                                int len = 1;
-                                while (isdigit(token[1 + len]))
-                                {
-                                    len++;
-                                }
-                                pattern = str_nduplicate(token, len + 1); // '\' + dígitos
-                                int value = atoi(token + 1);
-                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
-                                tempstr = str_replace(newstr, pattern, replacement);
-                                free(pattern);
-                            }
-                            break;
-                    }
-                    if (tempstr != NULL)
-                    {
-                        free(newstr);
-                        newstr = tempstr;
-                    }
-                }
-                token = strchr(newstr + 1, '\\');
             }
 
             /* Remove as aspas inicial e final da string */

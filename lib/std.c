@@ -1038,30 +1038,6 @@ function(brl_std_max)
 // std conditions
 // std conditions
 
-function(brl_std_condition_if)
-{
-    Int result = -1;
-    if (args->size == 2)
-    {
-        if (eval(vm, arg(0).string, context))
-        {
-            result = eval(vm, arg(1).string, context);
-        }
-    }
-    else if (args->size == 3) // ifelse
-    {
-        if (eval(vm, arg(0).string, context))
-        {
-            result = eval(vm, arg(1).string, context);
-        }
-        else
-        {
-            result = eval(vm, arg(2).string, context);
-        }
-    }
-    return result;
-}
-
 function(brl_std_condition_equals)// ==
 {
     for (Int i = 1; i < args->size; i++)
@@ -1357,8 +1333,6 @@ void init_std_math(VirtualMachine *vm)
 // index-based!!
 void init_std_condition(VirtualMachine *vm)
 {
-    register_builtin(vm, "if", brl_std_condition_if);
-
     register_builtin(vm, "==", brl_std_condition_equals);
     register_builtin(vm, "!=", brl_std_condition_not_equals);
 
