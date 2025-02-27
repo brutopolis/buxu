@@ -1,4 +1,4 @@
-(26/02/2025) - version 0.7.6
+(27/02/2025) - version 0.7.6
 
 - std files unified;
 - defining @0 as NULL is now done in the std;
@@ -6,15 +6,12 @@
 - != and == now dont just compare the pointers/integers, but compare the values;
 - function function removed, use list: instead, it does exactly the same thing;
 - interpreter behavior changed, function now instead of (list: varnames... code) is (list: (list: varnames...) code);
-- new kind of function, the lookup: (list: (list: varnames...) (list: values...));
-- format function removed, "" and '' strings now support escape codes and variables using $varname;
+- new kind of function, the lookup (table): (list: (list: varnames...) (list: values...));
+- format function removed, "" and '' strings now support escape codes using \whatever and variables using $varname;
+- functions concat:, find:, reverse:, split:, replace:, swap: and sub: removed, those can be easily manually implemented;
 
-TODO: update the README.md about the new function behavior.
-TODO: update the README.md about lookup functions.
-TODO: update the optimizations section of the README.md.
-TODO: turn formatter into a switch inside parser;
-TODO: fix the string formatter related memory leaks;
-TODO: change the formatter to a non-destructive behavior, replacing str by newstr is causing problems, we need to just create a new one and concatenate it;
+TODO: update the README.md about the lookup tables and such.
+TODO: updated examples that uses concat:, find:, reverse:, split:, replace:, swap: or sub:, and implement them manually where needed;
 
 (19/02/2025) - version 0.7.5c
 

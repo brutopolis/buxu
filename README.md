@@ -357,15 +357,8 @@ bruter is a metaprogramable lightweight programming language;
   | `push:`     | Push args[2] to the end of args[1]                                         | `void function(List list, any value);`                    |
   | `shift:`    | Shift the first element of args[1] and return it                      | `any function(List list);`                                |
   | `unshift:`  | Unshift args[2] to the start of args[1]                                    | `void function(List list, any value);`                    |
-  | `find:`     | Find args[2] in args[1] and return its index                               | `Float function(List list, any value);`                   |
-  | `concat:`   | Concatenate args[1] and args[2] and return it                              | `List function(List list1, List list2);`                  |
-  | `split:`    | Split args[1] at args[2] and return a list with the lists                  | `List function(List list, any value);`                    |
-  | `reverse:`  | Reverse args[1] and                                                   | `void function(List list);`                               |
   | `insert:`   | Insert args[3] in args[1] at args[2]                                            | `void function(List list, Float index, any value);`       |
   | `remove:`   | Remove args[2] from args[1] and return it                                  | `List function(List list, any value);`                    |
-  | `swap:`     | Swap args[2] and args[3] in args[1]                                             | `void function(List list, Float index1, Float index2);`   |
-  | `replace:`  | Replace args[2] with args[3] in args[1]                                         | `void function(List list, any value1, any value2);`       |
-  | `sub:`      | Get a sub list of args[1] from args[2] to args[3]                               | `List function(List list, Float start, Float end);`       |
 
   ### std.string
 
@@ -378,15 +371,8 @@ bruter is a metaprogramable lightweight programming language;
   | `push:`     | push arg[2] to the end of string                                 | `void function(String string, any value);`                    |
   | `shift:`    | shift the first character from string and return it              | `Index function(String string);`                              |
   | `unshift:`  | unshift arg[2] to the start of string                            | `void function(String string, any value);`                    |
-  | `find:`     | find arg[2] in string and return its index                       | `Float function(String string, any value);`                   |
-  | `concat:`   | concatenate string and arg[2] and return it                      | `String function(String string1, String string2);`            |
-  | `split:`    | split string at arg[2] and return a list with the strings        | `List function(String string, String separator);`             |
-  | `reverse:`  | reverse string and return it                                     | `String function(String string);`                             |
   | `insert:`   | insert arg[3] in string at arg[2]                                | `void function(String string, Float index, Index char);`      |
   | `remove:`   | remove arg[2] from string and return it                          | `String function(String string, Index char);`                 |
-  | `swap:`     | swap arg[2] and arg[3] in string                                 | `void function(String string, Float index1, Float index2);`   |
-  | `replace:`  | replace arg[2] with arg[3] in string                             | `void function(String string, String value1, String value2);` |
-  | `sub:`      | get a sub string of string from arg[2] to arg[3]                 | `String function(String string, Float start, Float end);`     |
 
   ### std.global
 
@@ -399,15 +385,8 @@ bruter is a metaprogramable lightweight programming language;
   | `push:`     | push arg[2] to the end of the global scope                       | `void function(any value);`                  |
   | `shift:`    | shift the first value from the global scope                      | `void function();`                           |
   | `unshift:`  | unshift arg[2] to the start of the global scope                  | `void function(any value);`                  |
-  | `find:`     | find arg[2] in the global scope and return its index             | `Float function(any value);`                 |
-  | `concat:`   | concatenate the global scope and arg[2] and return it            | `List function(List list);`                  |
-  | `split:`    | split the global scope at arg[2] and return a list with the lists| `List function(any value);`                  |
-  | `reverse:`  | reverse the global scope and return it                           | `void function();`                           |
   | `insert:`   | insert arg[3] in the global scope at arg[2]                      | `void function(Float index, any value);`     |
   | `remove:`   | remove arg[2] from the global scope and return it                | `List function(any value);`                  |
-  | `swap:`     | swap arg[2] and arg[3] in the global scope                       | `void function(Float index1, Float index2);` |
-  | `replace:`  | replace arg[2] with arg[3] in the global scope                   | `void function(any value1, any value2);`     |
-  | `sub:`      | get a sub list of the global scope from arg[2] to arg[3]         | `List function(Float start, Float end);`     |
 
   ### std
 
@@ -420,7 +399,6 @@ bruter is a metaprogramable lightweight programming language;
   | `print`     | Print the values based on the type                               | `void function(any ...);`                    |
   | `scan`      | get the input from the user and return it                        | `String function();`                         |
   | `return`    | return the value                                                 | `void function(any value);`                  |
-  | `format`    | format the string with the values                                | `String function(String string, any ...);`   |
 
   | Variable       | Description    | Type  | Default |
   |----------------|----------------|-------|---------|
