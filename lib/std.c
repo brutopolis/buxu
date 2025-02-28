@@ -236,18 +236,6 @@ function(brl_std_return)
 // list functions
 // list functions
 // list functions
-
-function(brl_std_list_new)
-{
-    Int index = new_list(vm);
-    IntList *list = (IntList*)data(index).pointer;
-    for (Int i = 0; i < args->size; i++)
-    {
-        list_push(*list, arg_i(i));
-    }
-    return index;
-}
-
 function(brl_std_list_push)
 {
     if (args->size == 1) // push to global vm->stack
@@ -1139,24 +1127,14 @@ void init_hash(VirtualMachine *vm)
 
 void init_list(VirtualMachine *vm)
 {
-    register_builtin(vm, "list:", brl_std_list_new);
-
     register_builtin(vm, "pop:", brl_std_list_pop);
-    //register_builtin(vm, "get:", brl_std_list_get);
     register_builtin(vm, "set:", brl_std_list_set);
     register_builtin(vm, "len:", brl_std_list_length);
     register_builtin(vm, "push:", brl_std_list_push);
-    //register_builtin(vm, "find:", brl_std_list_find);
     register_builtin(vm, "shift:", brl_std_list_shift);
-    //register_builtin(vm, "concat:", brl_std_list_concat);
     register_builtin(vm, "unshift:", brl_std_list_unshift);
-    //register_builtin(vm, "reverse:", brl_std_list_reverse);
     register_builtin(vm, "insert:", brl_std_list_insert);
     register_builtin(vm, "remove:", brl_std_list_remove);
-    //register_builtin(vm, "split:", brl_std_list_split);
-    //register_builtin(vm, "swap:", brl_std_list_swap);
-    //register_builtin(vm, "sub:", brl_std_list_sub);
-    //register_builtin(vm, "replace:", brl_std_list_replace);
 }
 
 void init_mem(VirtualMachine *vm)

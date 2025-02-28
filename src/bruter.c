@@ -632,6 +632,16 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 Int var = new_string(vm, temp);
                 list_push(*result, var);            
             }
+            else if (str[1] == ':') // (: ...args); parse the contents enclosed then create a 
+            {
+                Int index = new_var(vm);
+                char* temp = str_nduplicate(str + 2, strlen(str) - 3);
+                IntList *_args = parse(vm, temp, context);
+                data_t(index) = TYPE_LIST;
+                data(index).pointer = _args;
+                list_push(*result, index);
+                free(temp);
+            }
             else
             {
                 char* temp = str + 1;
@@ -996,8 +1006,6 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 {
                     index = hash_find(vm, str);
                 }
-
-                
             }
             else // split str by @
             {
@@ -1141,28 +1149,8 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 
                 
             case TYPE_STRING:
-                _context = list_init(HashList);
-                global_context = vm->hashes;
-                vm->hashes = _context;
-                
-                etc = register_list(vm, "...");
-                while (args->size > 0)
-                {
-                    list_push(*((IntList*)data(etc).pointer), list_pop(*args));
-                }
 
-                vm->hashes = global_context;
-
-                result = eval(vm, data(func).string, _context);
-
-                while (_context->size > 0)
-                {
-                    hash = list_pop(*_context);
-                    free(hash.key);
-                }
-
-                list_free(*_context);
-
+                result = eval(vm, data(func).string, context);
                 list_unshift(*args, func);
                 break;
 
@@ -1248,100 +1236,115 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
                             break;
                     };
                 }
-                else if (data_t(list_get(*_list, 0)) == TYPE_STRING) // repeat loop;
-                { // (list: times code);
-                    Int result = -1;
-                    if (strchr(arg(1).string, '#') == NULL)
+                else if (data_t(list_get(*_list, 0)) == TYPE_NUMBER) // repeat loop; (list: times code);
+                {
+                    Int times = data(list_get(*_list, 0)).number;
+                    char* code_str = data(list_get(*_list, 1)).string;
+                    IntListList *arglist = NULL;  // Declarada fora para ser acessível no label de limpeza
+
+                    if (strchr(code_str, '#') == NULL)
                     {
+                        char* _parentesis = strchr(code_str, '(');
+                        if (_parentesis != NULL)
                         {
-                            char* _parentesis = strchr(arg(1).string, '(');
-                            if (_parentesis != NULL)
+                            if (_parentesis[1] == '@' && _parentesis[2] == '@')
                             {
-                                if (_parentesis[1] == '@' && _parentesis[2] == '@')
-                                {
-                                    // its a string 
-                                    goto skip_safety_check;
-                                }
-                                else 
-                                {
-                                    // its a expression
-                                    goto regret_optimization;
-                                }
+                                // É uma string literal; ignora verificações extras.
+                                goto skip_safety_check_repeat;
+                            }
+                            else 
+                            {
+                                // Trata como expressão.
+                                goto regret_optimization_repeat;
                             }
                         }
 
-                        skip_safety_check:
-
-                        StringList *splited = str_split(arg(1).string, ";");
-                        
-                        IntListList *arglist = list_init(IntListList);
-
-                        for (Int i = 0; i < splited->size; i++)
+                skip_safety_check_repeat:
                         {
-                            //if splited->data[i] is empty or contains only spacy characters, skip it
-                            if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) || splited->data[i][0] == 0)
+                            StringList *splited = str_split(code_str, ";");
+                            arglist = list_init(IntListList);  // Inicializa a variável declarada anteriormente
+                            
+                            for (Int i = 0; i < splited->size; i++)
                             {
+                                // Se o trecho estiver vazio ou conter somente espaços, ignora-o
+                                if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) ||
+                                    splited->data[i][0] == '\0')
+                                {
+                                    free(splited->data[i]);
+                                    continue;
+                                }
+                                IntList *_args = parse(vm, splited->data[i], context);
+                                list_push(*arglist, *_args);
                                 free(splited->data[i]);
-                                continue;
+                                free(_args);
                             }
-                            IntList *_args = parse(vm, splited->data[i], context);
-                            list_push(*arglist, *_args);
-                            free(splited->data[i]);
-
-                            free(_args);
-                        }
-
-                        list_free(*splited);
-
-                        if (arg(0).number < 0)
-                        {
-                            while (1)
+                            list_free(*splited);
+                            
+                            if (times < 0)
                             {
-                                for (Int i = 0; i < arglist->size; i++)
+                                // Loop infinito até que alguma iteração retorne valor >= 0
+                                while (1)
                                 {
-                                    result = interpret(vm, &arglist->data[i], context);
-                                    if (result > -1)
+                                    for (Int j = 0; j < arglist->size; j++)
                                     {
-                                        goto skip_to_return;
+                                        result = interpret(vm, &arglist->data[j], context);
+                                        if (result > -1)
+                                        {
+                                            goto cleanup_repeat;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                for (Int i = 0; i < times; i++)
+                                {
+                                    for (Int j = 0; j < arglist->size; j++)
+                                    {
+                                        result = interpret(vm, &arglist->data[j], context);
+                                        if (result > -1)
+                                        {
+                                            goto cleanup_repeat;
+                                        }
                                     }
                                 }
                             }
                         }
-
-                        for (Int i = 0; i < arg(0).number; i++)
-                        {
-                            for (Int i = 0; i < arglist->size; i++)
-                            {
-                                result = interpret(vm, &arglist->data[i], context);
-                                if (result > -1)
-                                {
-                                    goto skip_to_return;
-                                }
-                            }
-                        }
-
-                        skip_to_return:
-
+                cleanup_repeat:
                         for (Int i = 0; i < arglist->size; i++)
                         {
                             free(arglist->data[i].data);
                         }
-
                         list_free(*arglist);
                     }
                     else
                     {
-                        regret_optimization:
-                        for (int i = 0; i < (Int)arg(0).number; i++)
+                regret_optimization_repeat:
+                        if (times < 0)
                         {
-                            result = eval(vm,arg(1).string,context);
-                            if (result > -1)
+                            while (1)
                             {
-                                break;
+                                result = eval(vm, code_str, context);
+                                if (result > -1)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (Int i = 0; i < times; i++)
+                            {
+                                result = eval(vm, code_str, context);
+                                if (result > -1)
+                                {
+                                    break;
+                                }
                             }
                         }
                     }
                 }
+
                 break;
         }
     }

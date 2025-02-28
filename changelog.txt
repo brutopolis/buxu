@@ -11,7 +11,7 @@
 - the third element of the lookup table is the default value, if the lookup fails it will return it;
 - format function removed, "" and '' strings now support escape codes using \whatever and variables using $varname;
 - the new formatter also suport $(whatever code etc);
-- functions get:, concat:, find:, reverse:, split:, replace:, swap: and sub: removed, those can be easily manually implemented;
+- functions list:, get:, concat:, find:, reverse:, split:, replace:, swap: and sub: removed, those can be easily manually implemented;
 - if function removed, use lookup tables instead;
 - while and repeat removed;
 - you can now use varname@index to get the element at the index;
@@ -20,11 +20,12 @@
 - loops are now defined (list: times "code");
 - now conditions instead of return @1 it will return the first argument, except in case the first argument is @0, in this case it will look the other args, if all are zero it will return @1 instead;
 - in case of false it still returns @0;
-- removed string_split.br example, it can be done manually 
+- removed string_split.br example, it can be done manually;
+- new operator (: ) to create lists, list was the only type that needed a function to be created, now it can be done directly;
+- script calls doesnt have a own scope anymore, thats now a exclusive behavior of functions;
 
-TODO: update the README.md about the lookup tables and such.
-TODO: updated examples that uses if, get:, while, repeat, concat:, find:, reverse:, split:, replace:, swap: or sub:, and implement them manually where needed;
-TODO: list creator must be (: ), hardcoded into the interpreter, instead of using the function list: ;
+TODO!!: update the README.md about the lookup tables, loops, list operator etc;
+TODO!!!: updated examples that uses if, list:, get:, while, repeat, concat:, find:, reverse:, split:, replace:, swap: or sub:, and implement them manually where needed;
 
 (19/02/2025) - version 0.7.5c
 
