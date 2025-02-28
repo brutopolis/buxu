@@ -8,8 +8,6 @@
 // MIN priority is BASE_PRIORITY
 Int BASE_PRIORITY = 10;
 
-typedef List(IntList) IntListList;
-
 #ifndef ARDUINO
 
 function(brl_os_file_read)
@@ -461,56 +459,6 @@ function(brl_std_list_remove)
     return -1;
 }
 
-function(brl_std_list_get)
-{
-    if (args->size == 1)
-    {
-        return((Int)arg(0).number);
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        Int list = arg_i(0);
-        Int index = arg(1).number;
-        if (arg_t(0) == TYPE_LIST)
-        {
-            IntList *lst = (IntList*)data(list).pointer;
-            if (index >= 0 && index < lst->size)
-            {
-                return lst->data[index];
-            }
-            else 
-            {
-                printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
-                print_element(vm, list);
-            }
-        }
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        char *str = arg(0).string;
-        Int index = arg(1).number;
-        if (index >= 0 && index < strlen(str))
-        {
-            return str[index];
-        }
-        else 
-        {
-            printf("error: index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
-            print_element(vm, arg_i(0));
-        }
-    }
-    else // accest bytes of a value
-    {
-        Int index = (Int)arg(1).number;
-        Int value = arg_i(0);
-        if (index >= 0 && index < sizeof(Float))
-        {
-            return ((char)arg(0).byte[index]);
-        }
-    }
-    return -1;
-}
-
 function(brl_std_list_set)
 {
     if (args->size == 2)
@@ -594,173 +542,6 @@ function(brl_std_list_length)
         return new_number(vm, strlen(arg(0).string));
     }
     return -1;
-}
-
-// std loop
-// std loop
-// std loop
-
-function(brl_std_loop_while)
-{
-    Int result = -1;
-    if (strchr(arg(1).string, '#') == NULL)
-    {
-        {
-            char* _parentesis = strchr(arg(1).string, '(');
-            if (_parentesis != NULL)
-            {
-                if (_parentesis[1] == '@' && _parentesis[2] == '@')
-                {
-                    // its a string 
-                    goto skip_safety_check;
-                }
-                else 
-                {
-                    // its a expression
-                    goto regret_optimization;
-                }
-            }
-        }
-
-        skip_safety_check:
-
-        StringList *splited = str_split(arg(1).string, ";");
-        
-        IntListList *arglist = list_init(IntListList);
-
-        for (Int i = 0; i < splited->size; i++)
-        {
-            //if splited->data[i] is empty or contains only spacy characters, skip it
-            if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) || splited->data[i][0] == 0)
-            {
-                free(splited->data[i]);
-                continue;
-            }
-            IntList *_args = parse(vm, splited->data[i], context);
-            list_push(*arglist, *_args);
-            free(splited->data[i]);
-
-            free(_args);
-        }
-
-        list_free(*splited);
-        char cond = eval(vm,arg(0).string,context);
-        while (cond)
-        {
-            cond = eval(vm,arg(0).string,context);
-            for (Int i = 0; i < arglist->size; i++)
-            {
-                result = interpret(vm, &arglist->data[i], context);
-                if (result > -1)
-                {
-                    goto skip_to_return;
-                }
-            }
-        }
-
-        skip_to_return:
-
-        for (Int i = 0; i < arglist->size; i++)
-        {
-            free(arglist->data[i].data);
-        }
-
-        list_free(*arglist);
-    }
-    else
-    {
-        regret_optimization:
-        while (eval(vm,arg(0).string,context))
-        {
-            result = eval(vm,arg(1).string,context);
-            if (result > -1)
-            {
-                break;
-            }
-        }
-    }
-    return result;
-}
-
-function(brl_std_loop_repeat)
-{
-    Int result = -1;
-    if (strchr(arg(1).string, '#') == NULL)
-    {
-        {
-            char* _parentesis = strchr(arg(1).string, '(');
-            if (_parentesis != NULL)
-            {
-                if (_parentesis[1] == '@' && _parentesis[2] == '@')
-                {
-                    // its a string 
-                    goto skip_safety_check;
-                }
-                else 
-                {
-                    // its a expression
-                    goto regret_optimization;
-                }
-            }
-        }
-
-        skip_safety_check:
-
-        StringList *splited = str_split(arg(1).string, ";");
-        
-        IntListList *arglist = list_init(IntListList);
-
-        for (Int i = 0; i < splited->size; i++)
-        {
-            //if splited->data[i] is empty or contains only spacy characters, skip it
-            if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) || splited->data[i][0] == 0)
-            {
-                free(splited->data[i]);
-                continue;
-            }
-            IntList *_args = parse(vm, splited->data[i], context);
-            list_push(*arglist, *_args);
-            free(splited->data[i]);
-
-            free(_args);
-        }
-
-        list_free(*splited);
-
-        for (Int i = 0; i < arg(0).number; i++)
-        {
-            for (Int i = 0; i < arglist->size; i++)
-            {
-                result = interpret(vm, &arglist->data[i], context);
-                if (result > -1)
-                {
-                    goto skip_to_return;
-                }
-            }
-        }
-
-        skip_to_return:
-
-        for (Int i = 0; i < arglist->size; i++)
-        {
-            free(arglist->data[i].data);
-        }
-
-        list_free(*arglist);
-    }
-    else
-    {
-        regret_optimization:
-        for (int i = 0; i < (Int)arg(0).number; i++)
-        {
-            result = eval(vm,arg(1).string,context);
-            if (result > -1)
-            {
-                break;
-            }
-        }
-    }
-    return result;
 }
 
 function(brl_mem_copy)
@@ -1040,6 +821,22 @@ function(brl_std_max)
 
 function(brl_std_condition_equals)// ==
 {
+    Int result = arg_i(0);
+    if (result == 0)
+    {
+        for (Int i = 1; i < args->size; i++)
+        {
+            if (arg_i(i) != 0)
+            {
+                result = i;
+                goto outside_the_loop;
+            }
+        }
+        result = 1;
+    }
+    outside_the_loop:
+    
+    
     for (Int i = 1; i < args->size; i++)
     {
         if (arg_t(i - 1) != arg_t(i))
@@ -1060,7 +857,7 @@ function(brl_std_condition_equals)// ==
 
                     if (arg(i - 1).pointer == arg(i).pointer)
                     {
-                        return 1;
+                        return result;
                     }
                     else if (((IntList*)arg(i - 1).pointer)->size != ((IntList*)arg(i).pointer)->size)
                     {
@@ -1085,16 +882,31 @@ function(brl_std_condition_equals)// ==
             }
         }
     }
-    return 1;
+    return result;
 }
 
 function(brl_std_condition_not_equals)// !=
 {
+    Int result = arg_i(0);
+    if (result == 0)
+    {
+        for (Int i = 1; i < args->size; i++)
+        {
+            if (arg_i(i) != 0)
+            {
+                result = i;
+                goto outside_the_loop;
+            }
+        }
+        result = 1;
+    }
+    outside_the_loop:
+
     for (Int i = 1; i < args->size; i++)
     {
         if (arg_t(i - 1) != arg_t(i))
         {
-            return 1;
+            return result;
         }
         else
         {
@@ -1134,12 +946,27 @@ function(brl_std_condition_not_equals)// !=
             }
         }
     }
-    return 1;
+    return result;
 }
 
 
 function(brl_std_condition_greater)
 {
+    Int result = arg_i(0);
+    if (result == 0)
+    {
+        for (Int i = 1; i < args->size; i++)
+        {
+            if (arg_i(i) != 0)
+            {
+                result = i;
+                goto outside_the_loop;
+            }
+        }
+        result = 1;
+    }
+    outside_the_loop:
+
     for (Int i = 1; i < args->size; i++)
     {
         if (arg(i - 1).number <= arg(i).number)
@@ -1147,11 +974,26 @@ function(brl_std_condition_greater)
             return 0;
         }
     }
-    return 1;
+    return result;
 }
 
 function(brl_std_condition_greater_equals)
 {
+    Int result = arg_i(0);
+    if (result == 0)
+    {
+        for (Int i = 1; i < args->size; i++)
+        {
+            if (arg_i(i) != 0)
+            {
+                result = i;
+                goto outside_the_loop;
+            }
+        }
+        result = 1;
+    }
+    outside_the_loop:
+
     for (Int i = 1; i < args->size; i++)
     {
         if (arg(i - 1).number < arg(i).number)
@@ -1159,11 +1001,26 @@ function(brl_std_condition_greater_equals)
             return 0;
         }
     }
-    return 1;
+    return result;
 }
 
 function(brl_std_condition_less)
 {
+    Int result = arg_i(0);
+    if (result == 0)
+    {
+        for (Int i = 1; i < args->size; i++)
+        {
+            if (arg_i(i) != 0)
+            {
+                result = i;
+                goto outside_the_loop;
+            }
+        }
+        result = 1;
+    }
+    outside_the_loop:
+
     for (Int i = 1; i < args->size; i++)
     {
         if (arg(i - 1).number >= arg(i).number)
@@ -1171,11 +1028,26 @@ function(brl_std_condition_less)
             return 0;
         }
     }
-    return 1;
+    return result;
 }
 
 function(brl_std_condition_less_equals)
 {
+    Int result = arg_i(0);
+    if (result == 0)
+    {
+        for (Int i = 1; i < args->size; i++)
+        {
+            if (arg_i(i) != 0)
+            {
+                result = i;
+                goto outside_the_loop;
+            }
+        }
+        result = 1;
+    }
+    outside_the_loop:
+
     for (Int i = 1; i < args->size; i++)
     {
         if (arg(i - 1).number > arg(i).number)
@@ -1183,11 +1055,26 @@ function(brl_std_condition_less_equals)
             return 0;
         }
     }
-    return 1;
+    return result;
 }
 
 function(brl_std_condition_and)
 {
+    Int result = arg_i(0);
+    if (result == 0)
+    {
+        for (Int i = 1; i < args->size; i++)
+        {
+            if (arg_i(i) != 0)
+            {
+                result = i;
+                goto outside_the_loop;
+            }
+        }
+        result = 1;
+    }
+    outside_the_loop:
+
     for (Int i = 0; i < args->size; i++)
     {
         if (arg_i(i) > 0)
@@ -1195,7 +1082,7 @@ function(brl_std_condition_and)
             return 0;
         }
     }
-    return 1;
+    return result;
 }
 
 function(brl_std_condition_raw_or)
@@ -1243,12 +1130,6 @@ void init_basics(VirtualMachine *vm)
 #endif
 }
 
-void init_loop(VirtualMachine *vm)
-{
-    register_builtin(vm, "while", brl_std_loop_while);
-    register_builtin(vm, "repeat", brl_std_loop_repeat);
-}
-
 void init_hash(VirtualMachine *vm)
 {
     register_builtin(vm, "#new", brl_std_hash_new);
@@ -1261,7 +1142,7 @@ void init_list(VirtualMachine *vm)
     register_builtin(vm, "list:", brl_std_list_new);
 
     register_builtin(vm, "pop:", brl_std_list_pop);
-    register_builtin(vm, "get:", brl_std_list_get);
+    //register_builtin(vm, "get:", brl_std_list_get);
     register_builtin(vm, "set:", brl_std_list_set);
     register_builtin(vm, "len:", brl_std_list_length);
     register_builtin(vm, "push:", brl_std_list_push);
@@ -1355,7 +1236,6 @@ void init_std(VirtualMachine *vm)
     init_os(vm);
     #endif
     init_basics(vm);
-    init_loop(vm);
     init_hash(vm);
     init_list(vm);
     init_mem(vm);

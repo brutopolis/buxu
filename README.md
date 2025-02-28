@@ -172,7 +172,7 @@ bruter is a metaprogramable lightweight programming language;
   - `procedural`, bruter is a very imperative language;
   - `semi-functional`, bruter has some functional features, but it is not a complete functional language;
   - `interpreted`, bruter is an interpreted language, but can be compiled to a executable file, which just embeds the code in the interpreter;
-  - `lightweight`, bruter is a very small language, and the stdlib is also tiny, e.g. in 0.7.6 bruter stdlib has 56 functions and 6 variables at total, maybe seems a lot, but this also includes the basic math functions, conditions, loops and such things whose are usually implemented in the language itself;
+  - `lightweight`, bruter is a very small language, and the stdlib is also tiny, e.g. in 0.7.6 bruter stdlib has 53 functions and 6 variables at total, maybe seems a lot, but this also includes the basic math functions, conditions, loops and such things whose are usually implemented in the language itself;
   - `weakly typed`, bruter is a weakly typed language, but it has types, the types are not really enforced, but they are there, also the functions can check the types if needed, but that is not really common, at least in the stdlib;
   - `non-modular`, bruter is not a modular language, you can create a library, but it will not be modular, the library will be included in the interpreter, the interpreter is meant to be compiled with the libraries you need, you can exclude the libraries you dont need during compiling, but you cant include a library at runtime;
   - `no OOP`, bruter has no OOP;

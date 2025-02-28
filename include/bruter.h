@@ -63,6 +63,9 @@ typedef List(char*) StringList;
 typedef List(Int) IntList;
 typedef List(char) CharList;
 
+typedef List(IntList) IntListList;
+
+
 typedef struct
 {
     ValueList *stack;

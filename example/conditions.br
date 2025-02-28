@@ -1,9 +1,8 @@
+// this is how you do conditions in bruter, its a lookuptable with the condition as the key and the code as the value;
+#new "if0" (list: (list: @1 @0) (list: "print 'a == b';" "print 'a != b';"));
+
 #new 'a' 88;
 #new 'b' 99;
 
-if '== a b' (@@
-    print 'a == b';
-)
-(@@
-    print 'a != b';
-);
+// if0 returns the code, so we close it with () to execute it, as the return vaule will be passed as first argument;
+(if0 (> 4 5));

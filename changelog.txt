@@ -1,18 +1,30 @@
-(27/02/2025) - version 0.7.6
+(28/02/2025) - version 0.7.6
 
+- this version gives more independence to the interpreter, it allow it to do functions, switches, loops and conditions without the need of the std;
 - std files unified;
 - defining @0 as NULL is now done in the std;
 - make_int_list, make_string_list and make_char_list removed;
 - != and == now dont just compare the pointers/integers, but compare the values;
 - function function removed, use list: instead, it does exactly the same thing;
 - interpreter behavior changed, function now instead of (list: varnames... code) is (list: (list: varnames...) code);
-- new kind of function, the lookup (table): (list: (list: varnames...) (list: values...));
+- new kind of function, the lookup (table): (list: (list: varnames...) (list: values...) default);
+- the third element of the lookup table is the default value, if the lookup fails it will return it;
 - format function removed, "" and '' strings now support escape codes using \whatever and variables using $varname;
-- functions concat:, find:, reverse:, split:, replace:, swap: and sub: removed, those can be easily manually implemented;
+- the new formatter also suport $(whatever code etc);
+- functions get:, concat:, find:, reverse:, split:, replace:, swap: and sub: removed, those can be easily manually implemented;
 - if function removed, use lookup tables instead;
+- while and repeat removed;
+- you can now use varname@index to get the element at the index;
+- you can now use varname@name to get the element named "name" from a lookup table;
+- you can also use varname@name@index... etc;
+- loops are now defined (list: times "code");
+- now conditions instead of return @1 it will return the first argument, except in case the first argument is @0, in this case it will look the other args, if all are zero it will return @1 instead;
+- in case of false it still returns @0;
+- removed string_split.br example, it can be done manually 
 
 TODO: update the README.md about the lookup tables and such.
-TODO: updated examples that uses if, concat:, find:, reverse:, split:, replace:, swap: or sub:, and implement them manually where needed;
+TODO: updated examples that uses if, get:, while, repeat, concat:, find:, reverse:, split:, replace:, swap: or sub:, and implement them manually where needed;
+TODO: list creator must be (: ), hardcoded into the interpreter, instead of using the function list: ;
 
 (19/02/2025) - version 0.7.5c
 

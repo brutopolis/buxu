@@ -1,5 +1,0 @@
-#new "str" "test str 1 2 3 ()ld ç p e o oooo";
-#new "splited" (split: str " ");
-// each: splited "a" "print a";
-print splited;
-return 0;
