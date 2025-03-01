@@ -656,59 +656,124 @@ function(brl_std_type_cast)
 
 function(brl_std_math_add)
 {
-    for (Int i = 1; i < args->size; i++)
+    switch (arg_t(0))
     {
-        arg(0).number += arg(i).number;
+        case TYPE_NUMBER:
+            for (Int i = 1; i < args->size; i++)
+            {
+                arg(0).number += arg(i).number;
+            }
+            break;
+        default:
+            for (Int i = 1; i < args->size; i++)
+            {
+                arg(0).integer += arg(i).integer;
+            }
+            break;
     }
     return -1;
 }
 
 function(brl_std_math_sub)
 {
-    for (Int i = 1; i < args->size; i++)
+    switch (arg_t(0))
     {
-        arg(0).number -= arg(i).number;
+        case TYPE_NUMBER:
+            for (Int i = 1; i < args->size; i++)
+            {
+                arg(0).number -= arg(i).number;
+            }
+            break;
+        default:
+            for (Int i = 1; i < args->size; i++)
+            {
+                arg(0).integer -= arg(i).integer;
+            }
+            break;
     }
     return -1;
 }
 
 function(brl_std_math_mul)
 {
-    for (Int i = 1; i < args->size; i++)
+    switch (arg_t(0))
     {
-        arg(0).number *= arg(i).number;
+        case TYPE_NUMBER:
+            for (Int i = 1; i < args->size; i++)
+            {
+                arg(0).number *= arg(i).number;
+            }
+            break;
+        default:
+            for (Int i = 1; i < args->size; i++)
+            {
+                arg(0).integer *= arg(i).integer;
+            }
+            break;
     }
     return -1;
 }
 
 function(brl_std_math_div)
 {
-    for (Int i = 1; i < args->size; i++)
+    switch (arg_t(0))
     {
-        arg(0).number /= arg(i).number;
+        case TYPE_NUMBER:
+            for (Int i = 1; i < args->size; i++)
+            {
+                arg(0).number /= arg(i).number;
+            }
+            break;
+        default:
+            for (Int i = 1; i < args->size; i++)
+            {
+                arg(0).integer /= arg(i).integer;
+            }
+            break;
     }
     return -1;
 }
 
 function(brl_std_math_mod)
 {
-    #if __SIZEOF_POINTER__ == 8
-        arg(0).number = fmod(arg(0).number, arg(1).number);
-    #else
-        arg(0).number = fmodf(arg(0).number, arg(1).number);
-    #endif
+    switch (arg_t(0))
+    {
+        case TYPE_NUMBER:
+            #if __SIZEOF_POINTER__ == 8
+                arg(0).number = fmod(arg(0).number, arg(1).number);
+            #else
+                arg(0).number = fmodf(arg(0).number, arg(1).number);
+            #endif
+            break;
+        default:
+            for (Int i = 1; i < args->size; i++)
+            {
+                arg(0).integer %= arg(i).integer;
+            }
+            break;
+    }
+    
     return -1;
 }
 
 function(brl_std_math_random)
 {
-    arg(0).number = rand();
+    switch (args->size)
+    {
+        case 2: // (min, max)
+            arg(0).number = rand() % (Int)arg(1).number + (Int)arg(0).number;
+            break;
+        
+        default:
+            arg(0).number = rand();
+            break;
+    }
     return -1;
 }
 
 function(brl_std_math_seed)
 {
-    srand(arg(0).number);
+    srand(arg(0).integer);
     return -1;
 }
 
@@ -744,61 +809,112 @@ function(brl_std_math_ceil)
 
 function(brl_std_math_sin)
 {
-    #if __SIZEOF_POINTER__ == 8
-        arg(0).number = sin(arg(0).number);
-    #else
-        arg(0).number = sinf(arg(0).number);    
-    #endif
+    switch (arg_t(0))
+    {
+        case TYPE_NUMBER:
+            #if __SIZEOF_POINTER__ == 8
+                arg(0).number = sin(arg(0).number);
+            #else
+                arg(0).number = sinf(arg(0).number);
+            #endif
+            break;
+        default:
+            arg(0).number = sin((Float)arg(0).integer);
+            arg_t(0) = TYPE_NUMBER;
+            break;
+    }
     return -1;
 }
 
 function(brl_std_math_cos)
 {
-    #if __SIZEOF_POINTER__ == 8
-        arg(0).number = cos(arg(0).number);
-    #else
-        arg(0).number = cosf(arg(0).number);
-    #endif
+    switch (arg_t(0))
+    {
+        case TYPE_NUMBER:
+            #if __SIZEOF_POINTER__ == 8
+                arg(0).number = cos(arg(0).number);
+            #else
+                arg(0).number = cosf(arg(0).number);
+            #endif
+            break;
+        default:
+            arg(0).number = cos((Float)arg(0).integer);
+            arg_t(0) = TYPE_NUMBER;
+            break;
+    }
     return -1;  
 }
 
 function(brl_std_math_tan)
 {
-    #if __SIZEOF_POINTER__ == 8
-        arg(0).number = tan(arg(0).number);
-    #else
-        arg(0).number = tanf(arg(0).number);
-    #endif
+    switch (arg_t(0))
+    {
+        case TYPE_NUMBER:
+            #if __SIZEOF_POINTER__ == 8
+                arg(0).number = tan(arg(0).number);
+            #else
+                arg(0).number = tanf(arg(0).number);
+            #endif
+            break;
+        default:
+            arg(0).number = tan((Float)arg(0).integer);
+            arg_t(0) = TYPE_NUMBER;
+            break;
+    }
     return -1;
 }
 
 function(brl_std_min)
 {
-    Float min = arg(0).number;
-    for (Int i = 1; i < args->size; i++)
+    switch (arg_t(0))
     {
-        #if __SIZEOF_POINTER__ == 8
-            min = fmin(min, arg(i).number);
-        #else
-            min = fminf(min, arg(i).number);
-        #endif
+        case TYPE_NUMBER:
+            Float min = arg(0).number;
+            for (Int i = 1; i < args->size; i++)
+            {
+                #if __SIZEOF_POINTER__ == 8
+                    min = fmin(min, arg(i).number);
+                #else
+                    min = fminf(min, arg(i).number);
+                #endif
+            }
+            arg(0).number = min;
+        default:
+            Int min = arg(0).integer;
+            for (Int i = 1; i < args->size; i++)
+            {
+                min = min < arg(i).integer ? min : arg(i).integer;
+            }
+            arg(0).integer = min;
+            break;
     }
-    arg(0).number = min;
     return -1;
 }
 
 function(brl_std_max)
 {
-    Float max = arg(0).number;
-    for (Int i = 1; i < args->size; i++)
+    switch (arg_t(0))
     {
-        #if __SIZEOF_POINTER__ == 8
-            max = fmax(max, arg(i).number);
-        #else
-            max = fmaxf(max, arg(i).number);
-        #endif
+        case TYPE_NUMBER:
+            Float max = arg(0).number;
+            for (Int i = 1; i < args->size; i++)
+            {
+                #if __SIZEOF_POINTER__ == 8
+                    max = fmax(max, arg(i).number);
+                #else
+                    max = fmaxf(max, arg(i).number);
+                #endif
+            }
+            arg(0).number = max;
+        default:
+            Int max = arg(0).integer;
+            for (Int i = 1; i < args->size; i++)
+            {
+                max = max > arg(i).integer ? max : arg(i).integer;
+            }
+            arg(0).integer = max;
+            break;
     }
-    arg(0).number = max;
     return -1;
 }
 

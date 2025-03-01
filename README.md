@@ -75,7 +75,7 @@ bruter is a metaprogramable lightweight programming language;
     command variable_1 variable_2 ...;
     #new "name" value; 
     #new "name" (command ...);
-    #new "name" (list: value value ...);
+    #new "name" (: value value ...);
     command name;
     "script whatever";
     repeat amount "code";
@@ -182,10 +182,10 @@ bruter is a metaprogramable lightweight programming language;
   ## Types
       
   bruter essentially has 4 types of data:
-  - `any`, the default type, its a integer, but can store pointers as integers so it can be anything, any is not suitable for arithmetic operations(in stdlib), any is also treated as a built-in C function if passed as first argument;
-  - `number`, a float, can be used for arithmetic operations;
-  - `string`, a string;
-  - `list`, a list or a user defined function;
+  - `any`, the default type, its a integer, but can store pointers as integers so it can be anything, any is also treated as a built-in C function if passed as first argument;
+  - `number`, a floating point number, float or double;
+  - `string`, a string pointer;
+  - `list`, the list the the most complex type
 
   ## Scope
   bruter has 2 types of scope, global scope and function scope;
@@ -206,6 +206,7 @@ bruter is a metaprogramable lightweight programming language;
   - `""` string delimiter;
   - `''` string delimiter;
   - `(@@ )` string delimiter;
+  - `(: )` list delimiter;
 
   ## Variables
   bruter consider everything a variable;
@@ -349,8 +350,6 @@ bruter is a metaprogramable lightweight programming language;
 
   | Function    | Description                                                      | Function Signature                                        |
   |-------------|------------------------------------------------------------------|-----------------------------------------------------------|
-  | `list:`     | Create a list with the values ...  and return it                 | `List function(any ...);`                                 |
-  | `get:`      | Get the value of args[2] from args[1] and return it                        | `any function(List list, Float index);`                   |
   | `set:`      | Set the value of args[2] from args[1] to args[3]                                | `void function(List list, Float index, any value);`       |
   | `len:`      | Get the length of args[1] and return it                               | `Float function(List list);`                              |
   | `pop:`      | Pop the last element of args[1] and return it                         | `any function(List list);`                                |
@@ -364,7 +363,6 @@ bruter is a metaprogramable lightweight programming language;
 
   | Function    | Description                                                      | Function Signature                                            |
   |-------------|------------------------------------------------------------------|---------------------------------------------------------------|
-  | `get:`      | get the character [2] from string and return it as index         | `Index function(String string, Float index);`                 |
   | `set:`      | set the character arg[2] from string to arg[3]                   | `void function(String string, Float index, any value);`       |
   | `len:`      | get the length of string and return it                           | `Float function(String string);`                              |
   | `pop:`      | pop the last character from string and return it                 | `Index function(String string);`                              |
@@ -378,7 +376,6 @@ bruter is a metaprogramable lightweight programming language;
 
   | Function    | Description                                                      | Function Signature                           |
   |-------------|------------------------------------------------------------------|----------------------------------------------|
-  | `get:`      | get the value of arg[2] from the global scope and return it      | `any function(Float index);`                 |
   | `set:`      | set the value of arg[2] from the global scope to arg[3]          | `void function(Float index, any value);`     |
   | `len:`      | get the length of the global scope and return it                 | `Float function();`                          |
   | `pop:`      | pop the last value from the global scope                         | `void function();`                           |

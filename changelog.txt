@@ -21,11 +21,12 @@
 - now conditions instead of return @1 it will return the first argument, except in case the first argument is @0, in this case it will look the other args, if all are zero it will return @1 instead;
 - in case of false it still returns @0;
 - removed string_split.br example, it can be done manually;
-- new operator (: ) to create lists, list was the only type that needed a function to be created, now it can be done directly;
+- new delimiter (: ) to create lists, list was the only type that needed a function to be created, now it can be done directly;
 - script calls doesnt have a own scope anymore, thats now a exclusive behavior of functions;
+- math functions now work with integers as well;
 
-TODO!!: update the README.md about the lookup tables, loops, list operator etc;
-TODO!!!: updated examples that uses if, list:, get:, while, repeat, concat:, find:, reverse:, split:, replace:, swap: or sub:, and implement them manually where needed;
+TODO!!!: update the README.md about the lookup tables, loops, list operator etc;
+TODO!!!!: updated examples that uses if, list:, get:, while, repeat, concat:, find:, reverse:, split:, replace:, swap: or sub:, and implement them manually where needed;
 
 (19/02/2025) - version 0.7.5c
 
