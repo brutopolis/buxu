@@ -2,15 +2,13 @@
 
 #new "aoba" (: (:) (@@
     #new "_size" 100000;
-    #new "___index" 0;
-    #new "_cond" (: (: @0) (: 1));
-    #new "condcall" "_cond (<= ___index _size)";
-    #new "loop" (: -1 (@@
-        + ___index 1;
-        print ___index;
-        condcall;
-    ));
-    loop;
+    #new "_index" 0;
+    (:
+        "<= _index _size"
+
+        "+ _index 1;
+        print _index;"
+    );
 ));
 aoba;
 return 0;

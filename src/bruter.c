@@ -1236,6 +1236,74 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
                             break;
                     };
                 }
+                else if (data_t(list_get(*_list, 0)) == TYPE_STRING)
+                {
+                    char* cond = data(list_get(*_list, 0)).string;
+                    char* code_str = data(list_get(*_list, 1)).string;
+                    IntListList *arglist = NULL;  // Declarada fora para ser acessível no label de limpeza
+
+                    if (strchr(code_str, '#') == NULL)
+                    {
+                        char* _parentesis = strchr(code_str, '(');
+                        if (_parentesis != NULL)
+                        {
+                            if (_parentesis[1] == '@' && _parentesis[2] == '@')
+                            {
+                            }
+                            else 
+                            {
+                                // Trata como expressão.
+                                goto regret_optimization_while;
+                            }
+                        }
+
+                        {
+                            StringList *splited = str_split(code_str, ";");
+                            arglist = list_init(IntListList);  
+                            
+                            for (Int i = 0; i < splited->size; i++)
+                            {
+                                if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) ||
+                                    splited->data[i][0] == '\0')
+                                {
+                                    free(splited->data[i]);
+                                    continue;
+                                }
+                                IntList *_args = parse(vm, splited->data[i], context);
+                                list_push(*arglist, *_args);
+                                free(splited->data[i]);
+                                free(_args);
+                            }
+                            list_free(*splited);
+
+                            while (eval(vm, cond, context))
+                            {
+                                for (Int j = 0; j < arglist->size; j++)
+                                {
+                                    result = interpret(vm, &arglist->data[j], context);
+                                    if (result > -1)
+                                    {
+                                        goto cleanup_while;
+                                    }
+                                }
+                            }
+                        }
+                cleanup_while:
+                        for (Int i = 0; i < arglist->size; i++)
+                        {
+                            free(arglist->data[i].data);
+                        }
+                        list_free(*arglist);
+                    }
+                    else
+                    {
+                regret_optimization_while:
+                        while (eval(vm, cond, context))
+                        {
+                            result = eval(vm, code_str, context);
+                        }
+                    }
+                }
                 else if (data_t(list_get(*_list, 0)) == TYPE_NUMBER) // repeat loop; (list: times code);
                 {
                     Int times = data(list_get(*_list, 0)).number;
@@ -1249,8 +1317,6 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
                         {
                             if (_parentesis[1] == '@' && _parentesis[2] == '@')
                             {
-                                // É uma string literal; ignora verificações extras.
-                                goto skip_safety_check_repeat;
                             }
                             else 
                             {
@@ -1259,7 +1325,6 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
                             }
                         }
 
-                skip_safety_check_repeat:
                         {
                             StringList *splited = str_split(code_str, ";");
                             arglist = list_init(IntListList);  // Inicializa a variável declarada anteriormente
@@ -1455,7 +1520,7 @@ void unuse_var(VirtualMachine *vm, Int index)
 
 char* list_stringify(VirtualMachine* vm, IntList *list)
 {
-    char* _str = str_duplicate("(list: ");
+    char* _str = str_duplicate("(: ");
     char* strbak;
     for (Int i = 0; i < list->size; i++)
     {

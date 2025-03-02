@@ -560,6 +560,364 @@ function(brl_std_deplace)
     return newindex;
 }
 
+
+function(brl_std_list_concat)
+{
+    if (args->size == 1) // duplicate and concat each element from the list
+    {
+        IntList* list = (IntList*)data(arg_i(0)).pointer;
+        for (Int i = 0; i < list->size; i++)
+        {
+            list_push(*vm->stack, value_duplicate(data(list->data[i]), data_t(list->data[i])));
+            list_push(*vm->typestack, data_t(list->data[i]));
+        }
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        Int _newlist = new_list(vm);
+        IntList *newlist = (IntList*)data(_newlist).pointer;
+        for (Int i = 0; i < args->size; i++)
+        {
+            if (arg_t(i) == TYPE_LIST)
+            {
+                IntList *list = (IntList*)arg(i).pointer;
+                for (Int j = 0; j < list->size; j++)
+                {
+                    list_push(*newlist, list->data[j]);
+                }
+            }
+        }
+        return _newlist;
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        Int _newstr = new_string(vm, "");
+        char* newstr = data(_newstr).string;
+        for (Int i = 0; i < args->size; i++)
+        {
+            if (arg_t(i) == TYPE_STRING)
+            {
+                strcat(newstr, arg(i).string);
+            }
+        }
+        return _newstr;
+    }
+    return -1;
+}
+
+function(brl_std_list_find)
+{
+    if (args->size == 1)
+    {
+        Int value = arg(0).integer;
+        for (Int i = 0; i < vm->stack->size; i++)
+        {
+            if (data(i).integer == value)
+            {
+                return new_number(vm, i);
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        Int list = arg_i(0);
+        Int value = arg_i(1);
+        if (arg_t(0) == TYPE_LIST)
+        {
+            IntList *lst = (IntList*)data(list).pointer;
+            for (Int i = 0; i < lst->size; i++)
+            {
+                if (lst->data[i] == list)
+                {
+                    return new_number(vm, i);
+                }
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        char *substr = arg(1).string;
+        return(new_number(vm, str_find(str, substr)));
+    }
+
+    return -1;
+}
+
+function(brl_std_list_get)
+{
+    if (args->size == 1)
+    {
+        return((Int)arg(0).number);
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        Int list = arg_i(0);
+        Int index = arg(1).number;
+        if (arg_t(0) == TYPE_LIST)
+        {
+            IntList *lst = (IntList*)data(list).pointer;
+            if (index >= 0 && index < lst->size)
+            {
+                return lst->data[index];
+            }
+            else 
+            {
+                printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
+                print_element(vm, list);
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        Int index = arg(1).number;
+        if (index >= 0 && index < strlen(str))
+        {
+            return str[index];
+        }
+        else 
+        {
+            printf("error: index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
+            print_element(vm, arg_i(0));
+        }
+    }
+    else // accest bytes of a value
+    {
+        Int index = (Int)arg(1).number;
+        Int value = arg_i(0);
+        if (index >= 0 && index < sizeof(Float))
+        {
+            return ((char)arg(0).byte[index]);
+        }
+    }
+    return -1;
+}
+
+
+function(brl_std_list_sub)
+{
+    if (args->size == 2)// create a list with the indexes of the elements in the range
+    {
+        IntList *list = list_init(IntList);
+        Int start = arg_i(0);
+        Int end = arg_i(1);
+        for (Int i = start; i < end; i++)
+        {
+            list_push(*list, i);
+        }
+        Int result = new_var(vm);
+        data(result).pointer = list;
+        data_t(result) = TYPE_LIST;
+        return result;
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char* _str = str_nduplicate(arg(0).string, arg(1).number);
+        Int result = new_string(vm, _str);
+        return result;
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        IntList *list = (IntList*)arg(0).pointer;
+        IntList *newlist = list_init(IntList);
+        for (Int i = 0; i < arg(1).number; i++)
+        {
+            list_push(*newlist, list->data[i]);
+        }
+        Int result = new_var(vm);
+        data(result).pointer = newlist;
+        data_t(result) = TYPE_LIST;
+        return result;
+    }
+    return -1;
+}
+
+function(brl_std_list_split)
+{
+    if (args->size == 1)// split the global stack, create lists with the indexes of each slice
+    {
+        IntList *list = list_init(IntList);
+        Int separator = arg(0).number;
+        Int start = 0;
+        for (Int i = 0; i < vm->stack->size; i++)
+        {
+            if (vm->stack->data[i].integer == separator)
+            {
+                Int sublist = new_list(vm);
+                IntList *sub = (IntList*)data(sublist).pointer;
+                for (Int j = start; j < i; j++)
+                {
+                    list_push(*sub, j);
+                }
+                list_push(*list, sublist);
+                start = i + 1;
+            }
+        }
+        Int sublist = new_list(vm);
+        IntList *sub = (IntList*)data(sublist).pointer;
+        for (Int j = start; j < vm->stack->size; j++)
+        {
+            list_push(*sub, j);
+        }
+        list_push(*list, sublist);
+        Int result = new_var(vm);
+        data(result).pointer = list;
+        data_t(result) = TYPE_LIST;
+        return result;
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        Int _splited = new_list(vm);
+        IntList *__splited = (IntList*)data(_splited).pointer;
+        char* str = arg(0).string;
+        char* separator = arg(1).string;
+        StringList *splited = str_split(str, separator);
+        for (Int i = 0; i < splited->size; i++)
+        {
+            Int _str = new_string(vm, splited->data[i]);
+            list_push(*__splited, _str);
+        }
+        for (Int i = 0; i < splited->size; i++)
+        {
+            free(splited->data[i]);
+        }
+        list_free(*splited);
+        return _splited;
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        Int _splited = new_list(vm);
+        IntList *__splited = (IntList*)data(_splited).pointer;
+        IntList *list = (IntList*)arg(0).pointer;
+        Int separator = arg_i(1);
+        Int temp = new_list(vm);
+        IntList *_temp = (IntList*)data(temp).pointer;
+        for (Int i = 0; i < list->size; i++)
+        {
+            if (list->data[i] == separator)
+            {
+                list_push(*__splited, temp);
+                temp = new_list(vm);
+                _temp = (IntList*)data(temp).pointer;
+            }
+            else 
+            {
+                list_push(*_temp, list->data[i]);
+            }
+        }
+        list_push(*__splited, temp);
+        return _splited;
+    }
+    return -1;
+}
+
+function(brl_std_list_replace)
+{
+    if (args->size == 2)// replace elements from the global stack
+    {
+        Int target = arg_i(0);
+        Int replacement = arg_i(1);
+        for (Int i = 0; i < vm->stack->size; i++)
+        {
+            if (vm->stack->data[i].integer == vm->stack->data[target].integer)
+            {
+                // if list or string we need to free it before
+                if (data_t(i) == TYPE_LIST || data_t(i) == TYPE_STRING)
+                {
+                    unuse_var(vm, i);
+                }
+                vm->stack->data[i] = vm->stack->data[replacement];
+                break;
+            }
+        }
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        Int str = arg_i(0);
+        Int substr = arg_i(1);
+        Int replacement = arg_i(2);
+        char* _str = data(str).string;
+        char* _substr = data(substr).string;
+        char* _replacement = data(replacement).string;
+        char* _newstr = str_replace(_str, _substr, _replacement);
+        Int result = new_string(vm, _newstr);
+        free(_newstr);
+        return result;
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        Int _newlist = new_list(vm);
+        IntList *newlist = (IntList*)data(_newlist).pointer;
+        IntList *list = (IntList*)arg(0).pointer;
+        Int substr = arg_i(1);
+        Int replacement = arg_i(2);
+        char done = 0;
+        for (Int i = 0; i < list->size; i++)
+        {
+            if (list->data[i] == substr && !done)
+            {
+                list_push(*newlist, replacement);
+                done = 1; // replace only the first occurence
+            }
+            else 
+            {
+                list_push(*newlist, list->data[i]);
+            }
+        }
+        return _newlist;
+    }
+    return -1;
+}
+
+function(brl_std_list_swap)
+{
+    if (args->size == 2)// swap elements from the global stack
+    {
+        Int index1 = arg_i(0);
+        Int index2 = arg_i(1);
+        Value temp = vm->stack->data[index1];
+        vm->stack->data[index1] = vm->stack->data[index2];
+        vm->stack->data[index2] = temp;
+    }
+    else if (arg_t(0) == TYPE_LIST)
+    {
+        Int list = arg_i(0);
+        Int index1 = arg(1).number;
+        Int index2 = arg(2).number;
+        IntList *lst = (IntList*)data(list).pointer;
+        if (index1 >= 0 && index1 < lst->size && index2 >= 0 && index2 < lst->size)
+        {
+            Int temp = lst->data[index1];
+            lst->data[index1] = lst->data[index2];
+            lst->data[index2] = temp;
+        }
+        else 
+        {
+            printf("error: index %d or %d out of range in list %d of size %d\n", index1, index2, list, lst->size);
+            print_element(vm, list);
+        }
+    }
+    else if (arg_t(0) == TYPE_STRING)
+    {
+        char *str = arg(0).string;
+        Int index1 = arg(1).number;
+        Int index2 = arg(2).number;
+        if (index1 >= 0 && index1 < strlen(str) && index2 >= 0 && index2 < strlen(str))
+        {
+            char temp = str[index1];
+            str[index1] = str[index2];
+            str[index2] = temp;
+        }
+        else 
+        {
+            printf("error: index %d or %d out of range in string %d of size %d\n", index1, index2, arg(0).string, strlen(str));
+            print_element(vm, arg_i(0));
+        }
+    }
+    return -1;
+}
+
 // std type
 // std type
 // std type
@@ -1260,6 +1618,13 @@ void init_list(VirtualMachine *vm)
     register_builtin(vm, "unshift:", brl_std_list_unshift);
     register_builtin(vm, "insert:", brl_std_list_insert);
     register_builtin(vm, "remove:", brl_std_list_remove);
+    register_builtin(vm, "concat:", brl_std_list_concat);
+    register_builtin(vm, "find:", brl_std_list_find);
+    register_builtin(vm, "get:", brl_std_list_get);
+    register_builtin(vm, "sub:", brl_std_list_sub);
+    register_builtin(vm, "split:", brl_std_list_split);
+    register_builtin(vm, "replace:", brl_std_list_replace);
+    register_builtin(vm, "swap:", brl_std_list_swap);
 }
 
 void init_mem(VirtualMachine *vm)
