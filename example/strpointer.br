@@ -1,13 +1,5 @@
 #new "str" "Hello, world!";
+#new "int5" ($ cast 5 type.any);
++ str int5;
 print str;
-pun str type.any;// pun the string pointer into a int;
-print str;
-#new "ptr" ($ cast str type.number);// convert the int to a number;
-pun str type.string;// pun the int back to a string;
-print ptr;
-set: ptr ($ + ptr 2);
-cast ptr type.any;
-print ptr;
-pun ptr type.string;// pun the int back to a string;
-print ptr;
-pun ptr type.any;
+- str int5; // move back to the original pointer to avoid memory leak and errors;

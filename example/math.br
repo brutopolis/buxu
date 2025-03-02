@@ -1,11 +1,11 @@
-// implementation of the list:s that previously were part of the bruter std;
+// implementation of the :s that previously were part of the bruter std;
 
 // Function: abs;
-#new "abs" (list: (list:"a") 'if "< a 0" "$ * a -1" "return a"');
+#new "abs" (: (:"a") 'if "< a 0" "$ * a -1" "return a"');
 print "(abs -321) = " (abs -321);
 
 // Function: pow;
-#new "pow" (list: (list: "a" "b") 
+#new "pow" (: (: "a" "b") 
 (@@
     #new "result" 2;
     repeat b (@@
@@ -16,5 +16,5 @@ print "(abs -321) = " (abs -321);
 
 print "(pow 2 10) = " (pow 2 10);
 
-#new "trunc" (list: (list: "a") '$ cast ($ cast a type.any) type.number');
+#new "trunc" (: (: "a") '$ cast ($ cast a type.any) type.number');
 print "(trunc 3.14) = " (trunc 3.14);

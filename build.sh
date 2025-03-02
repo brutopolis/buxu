@@ -91,7 +91,7 @@ window.Bruter = bruter_loader();"
 
 # usage function
 usage() {
-    echo "usage: $0 [--outpath build] [--debug] [--debug-file] [--cc gcc] [--ino] [--web] [--emcc emcc] [--wasicc wasicc] [--exclude libfile] [--exec main.br]"
+    echo "usage: $0 [--outpath build] [--debug] [--debug-file] [--cc gcc] [--ino] [--web] [--emcc emcc] [--wasicc wasicc] [--exec main.br] [--lib libfile.c] [--clean] [-h || --help]"
     exit 1
 }
 
@@ -105,15 +105,8 @@ CC="gcc -Wformat=0"
 INO=0
 EMCC=""
 WASICC=""
-EXCLUDE=""
 MAIN="src/main.c"
 EXEC=""
-
-rm -rf build_tmp build
-mkdir build_tmp
-rsync -avq --exclude="build_tmp" "./" "build_tmp/"
-# or cp -r * build_tmp/
-cd build_tmp
 
 # parse arguments
 while [[ $# -gt 0 ]]; do
@@ -127,10 +120,26 @@ while [[ $# -gt 0 ]]; do
         --emcc) EMCC="$2"; shift 2 ;;
         --web) EMCC="emcc"; shift ;;
         --wasicc) WASICC="$2"; shift 2 ;;
-        --exclude) EXCLUDE="$EXCLUDE $2"; shift 2 ;;
+        --lib) LIB="$2"; shift 2 ;;
+        --clean) CLEAN=1; shift;;
+        --help) usage ;;
+        -h) usage ;;
         *) echo "unknown option: $1"; usage ;;
     esac
 done
+
+if [[ -n $LIB ]]; then
+    # replace .c with .so
+    LIB2=$(echo $LIB | sed 's/\.c/\.so/g')
+    $CC src/bruter.c $LIB -Iinclude -shared -fPIC -o $LIB2 -O3 -lm
+    exit;
+fi
+
+rm -rf build_tmp build
+mkdir build_tmp
+rsync -avq --exclude="build_tmp" "./" "build_tmp/"
+# or cp -r * build_tmp/
+cd build_tmp
 
 rm -rf "$OUTPATH" build
 mkdir -p "$OUTPATH/lib" "$OUTPATH/include" "$OUTPATH/example"
@@ -180,16 +189,11 @@ if [[ $INO -eq 1 ]]; then
         filename="${file##*/}"  
         filename="${filename%.*}" 
 
+        # if not clean
         sed -i "s/<libraries header>/<libraries header>\\nvoid init_$filename(VirtualMachine* vm);/g" arduino/bruter/src/bruter.h
         sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" arduino/bruter/bruter.ino
         sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" arduino/bruter/src/*.c
     done
-fi
-
-if [[ -n $EXCLUDE ]]; then
-    cd lib || exit 1
-    rm -f $EXCLUDE
-    cd ..
 fi
 
 if [[ -n $EXEC ]]; then
@@ -201,16 +205,19 @@ fi
 if [[ -z "$(ls -A lib)" ]]; then
     echo "no libs to compile, building main..."
     $CC $MAIN ./src/bruter.c -o bruter -O3 -lm -I./include $DEBUGARGS
-else
+elif [[ -z "$CLEAN" ]]; then 
     for file in ./lib/*.c; do
         filename="${file##*/}"  
         filename="${filename%.*}" 
         echo "compiling $filename"
+        
         sed -i "s/<libraries header>/<libraries header>\\nvoid init_$filename(VirtualMachine* vm);/g" include/bruter.h
         sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" src/*.c 
         sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" lib/*.c
     done
 fi
+
+
 
 if [[ -n $EMCC ]]; then
     echo "compiling to webassembly using $EMCC..."

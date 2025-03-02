@@ -50,6 +50,7 @@ function(brl_os_time_clock)
 {
     return new_number(vm, clock());
 }
+
 #endif
 
 #endif
@@ -667,7 +668,7 @@ function(brl_std_math_add)
         default:
             for (Int i = 1; i < args->size; i++)
             {
-                arg(0).integer += arg(i).integer;
+                arg(0).integer += (Int)arg(i).integer;
             }
             break;
     }
@@ -869,6 +870,7 @@ function(brl_std_min)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        {
             Float min = arg(0).number;
             for (Int i = 1; i < args->size; i++)
             {
@@ -879,7 +881,9 @@ function(brl_std_min)
                 #endif
             }
             arg(0).number = min;
+        }
         default:
+        {
             Int min = arg(0).integer;
             for (Int i = 1; i < args->size; i++)
             {
@@ -887,6 +891,7 @@ function(brl_std_min)
             }
             arg(0).integer = min;
             break;
+        }
     }
     return -1;
 }
@@ -896,6 +901,7 @@ function(brl_std_max)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        {
             Float max = arg(0).number;
             for (Int i = 1; i < args->size; i++)
             {
@@ -906,7 +912,9 @@ function(brl_std_max)
                 #endif
             }
             arg(0).number = max;
+        }
         default:
+        {
             Int max = arg(0).integer;
             for (Int i = 1; i < args->size; i++)
             {
@@ -914,6 +922,7 @@ function(brl_std_max)
             }
             arg(0).integer = max;
             break;
+        }
     }
     return -1;
 }
@@ -1210,7 +1219,7 @@ void init_os(VirtualMachine *vm)
     register_builtin(vm, "file.write", brl_os_file_write);
     register_builtin(vm, "system", brl_os_system);
 
-#ifndef __wasm__
+#ifndef __EMSCRIPTEN__
     register_builtin(vm, "time", brl_os_time_now);
     register_builtin(vm, "clock", brl_os_time_clock);
 #endif

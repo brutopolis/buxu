@@ -14,6 +14,11 @@
 #include <emscripten.h>
 #endif
 
+#ifndef ARDUINO
+    #ifndef __EMSCRIPTEN__
+        #include "dlfcn.h"
+    #endif
+#endif
 
 #define VERSION "0.7.6"
 
@@ -77,6 +82,7 @@ typedef struct
 
 //Function
 typedef Int (*Function)(VirtualMachine*, IntList*, HashList*);
+typedef void (*InitFunction)(VirtualMachine*);
 
 //String
 extern char* str_duplicate(const char *str);
