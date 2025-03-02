@@ -29,7 +29,7 @@
 - new build.sh flag: --clean, it ignores all files in lib/ and compile a libless interpreter;
 - no more --exclude in build.sh, use --clean, or simply delete the files from lib/ before compiling;
 
-TODO!!!!: update the README.md about the lookup tables, loops, list operator, dynamic libs, clean bruter etc;
+TODO: update the README.md about the lookup tables and loops;
 TODO!: updated examples that uses if, list:, while, repeat;
 
 (19/02/2025) - version 0.7.5c

@@ -41,6 +41,7 @@ bruter is a metaprogramable lightweight programming language;
       - [std.string](#stdstring)
       - [std.global](#stdglobal)
       - [std](#std)
+    - [dynamic libraries](#dynamic-libraries)
   - [vm concept](#vm-concept)
     - [concepts](#concepts-1)
     - [the vm](#the-vm)
@@ -145,8 +146,12 @@ bruter is a metaprogramable lightweight programming language;
     ./build.sh --exclude path/to/lib.c
     ./build.sh --exclude path/to/lib1 --exclude path/to/lib2 
     ./build.sh --exclude "path/to/lib1.c path/to/lib2"
+
+    # you can compile the dynamic libraries from build.sh as well;
     
-  note that, the clean build is always compiled, even with WASI, INO, EXEC, or WEB flags;
+    ./build.sh --lib path/to/lib.so
+    
+  note that, dynamic libraries are only supported if not arduino or wasm;
 
 # Examples
 
@@ -172,9 +177,7 @@ bruter is a metaprogramable lightweight programming language;
   - `procedural`, bruter is a very imperative language;
   - `semi-functional`, bruter has some functional features, but it is not a complete functional language;
   - `interpreted`, bruter is an interpreted language, but can be compiled to a executable file, which just embeds the code in the interpreter;
-  - `lightweight`, bruter is a very small language, and the stdlib is also tiny, e.g. in 0.7.6 bruter stdlib has 53 functions and 6 variables at total, maybe seems a lot, but this also includes the basic math functions, conditions, loops and such things whose are usually implemented in the language itself;
-  - `weakly typed`, bruter is a weakly typed language, but it has types, the types are not really enforced, but they are there, also the functions can check the types if needed, but that is not really common, at least in the stdlib;
-  - `non-modular`, bruter is not a modular language, you can create a library, but it will not be modular, the library will be included in the interpreter, the interpreter is meant to be compiled with the libraries you need, you can exclude the libraries you dont need during compiling, but you cant include a library at runtime;
+  - `lightweight`, bruter is a very small language, and the stdlib is also tiny, e.g. in 0.7.6 bruter stdlib has 60 functions and 6 variables at total, maybe seems a lot, but this also includes the basic math functions, conditions, loops and such things whose are usually implemented in the language itself;
   - `no OOP`, bruter has no OOP;
   - `no GC`, bruter memory is completely manual, you can delete the variables at anytime, manually;
   - `metaprogramable`, everything said above can be changed or implemented in another way, you can create a new interpreter function and replace the old one, you can even build bruter withou any value at all, with a clean stack;
@@ -266,7 +269,7 @@ bruter is a metaprogramable lightweight programming language;
 
   ## Libraries
   
-  in *bruter language* doesnt really exists the concept of libraries, you can call scripts with declaring the functions and call that a library, the *bruter vm* has a similar concept of libraries, which are also not modular;
+  *bruter language* does support(if not arduino or wasm) dynamic libraries, which are bruter C libraries, you can load and unload them at anytime, and if you dont want to manually unload them, they will be automatically unloaded at exit;
 
   ## Standard Library
 
@@ -332,13 +335,6 @@ bruter is a metaprogramable lightweight programming language;
   | `#delete`   | Delete the hash with the name args[1]                                 | `void function(String name);`                |
   | `#priority` | Set the hash with the name args[1] to the priority args[2], if passed only one arg re-set the base priority | `void function(String name, Float priority);`|
 
-  ### std.loop
-
-  | Function  | Description                                                      | Function Signature                              |
-  |-----------|------------------------------------------------------------------|-------------------------------------------------|
-  | `while`   | Execute args[2] while args[1] is true                                      | `void function(String condition, String code);` |
-  | `loop`    | Execute args[2] args[1] times                                              | `void function(Float amount, String code);`     |
-
   ### std.mem
 
   | Function    | Description                                                      | Function Signature                           |
@@ -346,44 +342,69 @@ bruter is a metaprogramable lightweight programming language;
   | `mem.copy`  | Copy the value of args[1] and return it                               | `any function(any value);`                   |
   | `mem.delete`| Delete the value of args[1]                                           | `void function(any value);`                  |
 
+
   ### std.list
 
   | Function    | Description                                                      | Function Signature                                        |
   |-------------|------------------------------------------------------------------|-----------------------------------------------------------|
+  | `get:`      | Get the value of args[2] from args[1] and return it                        | `any function(List list, Float index);`                   |
   | `set:`      | Set the value of args[2] from args[1] to args[3]                                | `void function(List list, Float index, any value);`       |
   | `len:`      | Get the length of args[1] and return it                               | `Float function(List list);`                              |
   | `pop:`      | Pop the last element of args[1] and return it                         | `any function(List list);`                                |
   | `push:`     | Push args[2] to the end of args[1]                                         | `void function(List list, any value);`                    |
   | `shift:`    | Shift the first element of args[1] and return it                      | `any function(List list);`                                |
   | `unshift:`  | Unshift args[2] to the start of args[1]                                    | `void function(List list, any value);`                    |
+  | `find:`     | Find args[2] in args[1] and return its index                               | `Float function(List list, any value);`                   |
+  | `concat:`   | Concatenate args[1] and args[2] and return it                              | `List function(List list1, List list2);`                  |
+  | `split:`    | Split args[1] at args[2] and return a list with the lists                  | `List function(List list, any value);`                    |
+  | `reverse:`  | Reverse args[1] and                                                   | `void function(List list);`                               |
   | `insert:`   | Insert args[3] in args[1] at args[2]                                            | `void function(List list, Float index, any value);`       |
   | `remove:`   | Remove args[2] from args[1] and return it                                  | `List function(List list, any value);`                    |
+  | `swap:`     | Swap args[2] and args[3] in args[1]                                             | `void function(List list, Float index1, Float index2);`   |
+  | `replace:`  | Replace args[2] with args[3] in args[1]                                         | `void function(List list, any value1, any value2);`       |
+  | `sub:`      | Get a sub list of args[1] from args[2] to args[3]                               | `List function(List list, Float start, Float end);`       |
 
   ### std.string
 
   | Function    | Description                                                      | Function Signature                                            |
   |-------------|------------------------------------------------------------------|---------------------------------------------------------------|
+  | `get:`      | get the character [2] from string and return it as index         | `Index function(String string, Float index);`                 |
   | `set:`      | set the character arg[2] from string to arg[3]                   | `void function(String string, Float index, any value);`       |
   | `len:`      | get the length of string and return it                           | `Float function(String string);`                              |
   | `pop:`      | pop the last character from string and return it                 | `Index function(String string);`                              |
   | `push:`     | push arg[2] to the end of string                                 | `void function(String string, any value);`                    |
   | `shift:`    | shift the first character from string and return it              | `Index function(String string);`                              |
   | `unshift:`  | unshift arg[2] to the start of string                            | `void function(String string, any value);`                    |
+  | `find:`     | find arg[2] in string and return its index                       | `Float function(String string, any value);`                   |
+  | `concat:`   | concatenate string and arg[2] and return it                      | `String function(String string1, String string2);`            |
+  | `split:`    | split string at arg[2] and return a list with the strings        | `List function(String string, String separator);`             |
+  | `reverse:`  | reverse string and return it                                     | `String function(String string);`                             |
   | `insert:`   | insert arg[3] in string at arg[2]                                | `void function(String string, Float index, Index char);`      |
   | `remove:`   | remove arg[2] from string and return it                          | `String function(String string, Index char);`                 |
+  | `swap:`     | swap arg[2] and arg[3] in string                                 | `void function(String string, Float index1, Float index2);`   |
+  | `replace:`  | replace arg[2] with arg[3] in string                             | `void function(String string, String value1, String value2);` |
+  | `sub:`      | get a sub string of string from arg[2] to arg[3]                 | `String function(String string, Float start, Float end);`     |
 
   ### std.global
 
   | Function    | Description                                                      | Function Signature                           |
   |-------------|------------------------------------------------------------------|----------------------------------------------|
+  | `get:`      | get the value of arg[2] from the global scope and return it      | `any function(Float index);`                 |
   | `set:`      | set the value of arg[2] from the global scope to arg[3]          | `void function(Float index, any value);`     |
   | `len:`      | get the length of the global scope and return it                 | `Float function();`                          |
   | `pop:`      | pop the last value from the global scope                         | `void function();`                           |
   | `push:`     | push arg[2] to the end of the global scope                       | `void function(any value);`                  |
   | `shift:`    | shift the first value from the global scope                      | `void function();`                           |
   | `unshift:`  | unshift arg[2] to the start of the global scope                  | `void function(any value);`                  |
+  | `find:`     | find arg[2] in the global scope and return its index             | `Float function(any value);`                 |
+  | `concat:`   | concatenate the global scope and arg[2] and return it            | `List function(List list);`                  |
+  | `split:`    | split the global scope at arg[2] and return a list with the lists| `List function(any value);`                  |
+  | `reverse:`  | reverse the global scope and return it                           | `void function();`                           |
   | `insert:`   | insert arg[3] in the global scope at arg[2]                      | `void function(Float index, any value);`     |
   | `remove:`   | remove arg[2] from the global scope and return it                | `List function(any value);`                  |
+  | `swap:`     | swap arg[2] and arg[3] in the global scope                       | `void function(Float index1, Float index2);` |
+  | `replace:`  | replace arg[2] with arg[3] in the global scope                   | `void function(any value1, any value2);`     |
+  | `sub:`      | get a sub list of the global scope from arg[2] to arg[3]         | `List function(Float start, Float end);`     |
 
   ### std
 
@@ -400,6 +421,20 @@ bruter is a metaprogramable lightweight programming language;
   | Variable       | Description    | Type  | Default |
   |----------------|----------------|-------|---------|
   | `VERSION`      | Version number | Float | depends | 
+
+  ## Dynamic libraries
+
+  dynamic libraries functions are actually not part of stdlib itself, it comes from the idea of clean bruter, a bruter withou std that can load dynamic libs, like the std itself, while dl.close is a thing, all dynamic libs are auto-closed at exit(except if you delete the dl.list);
+
+  | Function    | Description                              | Function Signature                           |
+  |-------------|------------------------------------------|----------------------------------------------|
+  | `dl.open`   | load a library                           | `void function(string path);`                |
+  | `dl.close`  | close a library                          | `void function(any libpointer);`             |
+
+  | Variable       | Description              | Type  | Default |
+  |----------------|--------------------------|-------|---------|
+  | `dl.list`      | List of loaded libraries | List  |         |
+
 
 # VM Concept
   ## Concepts
@@ -501,7 +536,7 @@ bruter is a metaprogramable lightweight programming language;
 
   bruter have 2 types of libraries, which work mostly the same way.
   
-  `C file libraries` are the default library type, it must have a function called `init_$name` where $name is the name of the file, all C files inside lib folder will be added to header and the interpreter initializer, example for a file lib/lib_name.c:
+  `C file libraries` are the default library type, it can be loaded as dynamic lib, it must have a function called `init_$name` where $name is the name of the file, all C files inside lib folder will be added to header and the interpreter initializer, example for a file lib/lib_name.c:
 
     // including bruter.h is mandatory, it has everything you need to create a library;
     #include "bruter.h"
@@ -528,7 +563,7 @@ bruter is a metaprogramable lightweight programming language;
         register_string(vm, "hello", "Hello, World!");
     }
 
-  `folder libs` are a bit more complex type of library, it is expected that you understand all the build.sh file, the entire bruter.c and bruter.h and know every folder of the bruter source file structure(which are not really hard, bruter is really simple), knowing that, you can create a folder lib/lib_name with the following structure:
+  `folder libs` are a bit more complex type of library, those cant be loaded as dynamic lib by its nature, it is expected that you understand all the build.sh file, the entire bruter.c and bruter.h and know every folder of the bruter source file structure(which are not really hard, bruter is really simple), knowing that, you can create a folder lib/lib_name with the following structure:
 
     lib_name/
     ├── include
@@ -570,7 +605,7 @@ bruter is a metaprogramable lightweight programming language;
 
   - you can replace the interpreter function by another one with the optimizations you need;
 
-  - you can easy write functions in C like explained before;
+  - you can easy write functions in C like explained before, and even more easy to load them as dynamic libs(if not arduino or wasm);
 
   - you can delete the unused variables at anytime;
 
@@ -580,7 +615,7 @@ bruter is a metaprogramable lightweight programming language;
 
     peforms faster than:
 
-      `+ 1 (+ 2 (+ 3 (+ 4 (+ 5 (+ 6 (+ 7 (+ 8 (+ 9 (+ 10 (+ 11 (+ 12 (+ 13 (+ 14 (+ 15 16))))))))))))));`
+      `+ 1 ($ + 2 ($ + 3 ($ + 4 ($ + 5 ($ + 6 ($ + 7 ($ + 8 ($ + 9 ($ + 10 ($ + 11 ($ + 12 ($ + 13 ($ + 14 ($ + 15 16))))))))))))));`
   
   - you can exclude all the stdlib or part of it if you dont need it, see the build instructions;
 
