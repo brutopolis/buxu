@@ -31,8 +31,8 @@ bruter is a metaprogramable lightweight programming language;
     - [functions](#functions)
     - [libraries](#libraries)
     - [standard library](#standard-library)
-      - [std.math (destructive)](#stdmath-destructive)
-      - [std.type (destructive)](#stdtype-destructive)
+      - [std.math ](#stdmath-destructive)
+      - [std.type ](#stdtype-destructive)
       - [std.condition (index-based)](#stdcondition-index-based)
       - [std.hash](#stdhash)
       - [std.loop](#stdloop)
@@ -276,7 +276,7 @@ bruter is a metaprogramable lightweight programming language;
   bruter has a small standard library, some concepts are only part of the stdlib and not a language or vm concept itself.
   all functions detailed:
 
-  ### std.math (destructive)
+  ### std.math
 
   math functions are destructive.
 
@@ -298,7 +298,9 @@ bruter is a metaprogramable lightweight programming language;
   | `min`     | Set origin to the minimum value | `void function(Float origin, Float[] ...);` |
   | `max`     | Set origin to the maximum value | `void function(Float origin, Float[] ...);` |
 
-  ### std.type (destructive)
+  ### std.type
+
+  type functions are destructive.
   
   | Function  | Description                     | Function Signature                          |
   |-----------|---------------------------------|---------------------------------------------|
