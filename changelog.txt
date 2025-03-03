@@ -1,3 +1,7 @@
+(03/03/2025) - version 0.7.6a
+
+- string char acess fixed;
+
 (03/03/2025) - version 0.7.6
 
 - this version gives more independence to the interpreter, it allow it to do functions, switches, loops and conditions without the need of the std;
@@ -11,7 +15,6 @@
 - the third element of the lookup table is the default value, if the lookup fails it will return it;
 - format function removed, "" and '' strings now support escape codes using \whatever and variables using $varname;
 - the new formatter also suport $(whatever "code" etc);
-- if function removed, use lookup tables instead;
 - you can now use varname@index to get the element at the index;
 - you can now use varname@name to get the element named "name" from a lookup table;
 - you can also use varname@name@index... etc;

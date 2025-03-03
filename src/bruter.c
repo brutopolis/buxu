@@ -1078,12 +1078,12 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                                     {
                                         goto parse_error;
                                     }
-                                    _var = string[_index];
                                     // if have more entries in splited list, then it is an error
-                                    if (i < splited->size)
+                                    if (i < splited->size-1)
                                     {
                                         goto parse_error;
                                     }
+                                    _var = string[_index];
                                 }
                                 break;
                         }
@@ -1092,8 +1092,6 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                     {
                         goto parse_error;
                     }
-
-                    
                 }
                 index = _var;
                 for (Int i = 0; i < splited->size; i++)
