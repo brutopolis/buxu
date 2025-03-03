@@ -1290,6 +1290,30 @@ function(brl_std_max)
 // std conditions
 // std conditions
 
+function(brl_std_condition_if)
+{
+    Int result = -1;
+    if (args->size == 2)
+    {
+        if (eval(vm, arg(0).string, context))
+        {
+            result = eval(vm, arg(1).string, context);
+        }
+    }
+    else if (args->size == 3) // ifelse
+    {
+        if (eval(vm, arg(0).string, context))
+        {
+            result = eval(vm, arg(1).string, context);
+        }
+        else
+        {
+            result = eval(vm, arg(2).string, context);
+        }
+    }
+    return result;
+}
+
 function(brl_std_condition_equals)// ==
 {
     Int result = arg_i(0);
@@ -1568,6 +1592,168 @@ function(brl_std_condition_raw_or)
     return 0;
 }
 
+function(brl_std_loop_while)
+{
+    Int result = -1;
+    if (strchr(arg(1).string, '#') == NULL)
+    {
+        {
+            char* _parentesis = strchr(arg(1).string, '(');
+            if (_parentesis != NULL)
+            {
+                if (_parentesis[1] == '@' && _parentesis[2] == '@')
+                {
+                    // its a string 
+                    goto skip_safety_check;
+                }
+                else 
+                {
+                    // its a expression
+                    goto regret_optimization;
+                }
+            }
+        }
+
+        skip_safety_check:
+
+        StringList *splited = str_split(arg(1).string, ";");
+        
+        IntListList *arglist = list_init(IntListList);
+
+        for (Int i = 0; i < splited->size; i++)
+        {
+            //if splited->data[i] is empty or contains only spacy characters, skip it
+            if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) || splited->data[i][0] == 0)
+            {
+                free(splited->data[i]);
+                continue;
+            }
+            IntList *_args = parse(vm, splited->data[i], context);
+            list_push(*arglist, *_args);
+            free(splited->data[i]);
+
+            free(_args);
+        }
+
+        list_free(*splited);
+        char cond = eval(vm,arg(0).string,context);
+        while (cond)
+        {
+            cond = eval(vm,arg(0).string,context);
+            for (Int i = 0; i < arglist->size; i++)
+            {
+                result = interpret(vm, &arglist->data[i], context);
+                if (result > -1)
+                {
+                    goto skip_to_return;
+                }
+            }
+        }
+
+        skip_to_return:
+
+        for (Int i = 0; i < arglist->size; i++)
+        {
+            free(arglist->data[i].data);
+        }
+
+        list_free(*arglist);
+    }
+    else
+    {
+        regret_optimization:
+        while (eval(vm,arg(0).string,context))
+        {
+            result = eval(vm,arg(1).string,context);
+            if (result > -1)
+            {
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+function(brl_std_loop_repeat)
+{
+    Int result = -1;
+    if (strchr(arg(1).string, '#') == NULL)
+    {
+        {
+            char* _parentesis = strchr(arg(1).string, '(');
+            if (_parentesis != NULL)
+            {
+                if (_parentesis[1] == '@' && _parentesis[2] == '@')
+                {
+                    // its a string 
+                    goto skip_safety_check;
+                }
+                else 
+                {
+                    // its a expression
+                    goto regret_optimization;
+                }
+            }
+        }
+
+        skip_safety_check:
+
+        StringList *splited = str_split(arg(1).string, ";");
+        
+        IntListList *arglist = list_init(IntListList);
+
+        for (Int i = 0; i < splited->size; i++)
+        {
+            //if splited->data[i] is empty or contains only spacy characters, skip it
+            if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) || splited->data[i][0] == 0)
+            {
+                free(splited->data[i]);
+                continue;
+            }
+            IntList *_args = parse(vm, splited->data[i], context);
+            list_push(*arglist, *_args);
+            free(splited->data[i]);
+
+            free(_args);
+        }
+
+        list_free(*splited);
+
+        for (Int i = 0; i < arg(0).number; i++)
+        {
+            for (Int i = 0; i < arglist->size; i++)
+            {
+                result = interpret(vm, &arglist->data[i], context);
+                if (result > -1)
+                {
+                    goto skip_to_return;
+                }
+            }
+        }
+
+        skip_to_return:
+
+        for (Int i = 0; i < arglist->size; i++)
+        {
+            free(arglist->data[i].data);
+        }
+
+        list_free(*arglist);
+    }
+    else
+    {
+        regret_optimization:
+        for (int i = 0; i < (Int)arg(0).number; i++)
+        {
+            result = eval(vm,arg(1).string,context);
+            if (result > -1)
+            {
+                break;
+            }
+        }
+    }
+    return result;
+}
 
 // inits
 #ifndef ARDUINO
@@ -1595,6 +1781,9 @@ void init_basics(VirtualMachine *vm)
 
     register_builtin(vm, "print", brl_std_io_print);
     register_builtin(vm, "$", brl_std_deplace);
+
+    register_builtin(vm, "while", brl_std_loop_while);
+    register_builtin(vm, "repeat", brl_std_loop_repeat);
 
 #ifndef ARDUINO
     register_builtin(vm, "scan", brl_std_io_scan);// not avaliable on arduino, so its here

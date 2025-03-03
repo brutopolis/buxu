@@ -1,14 +1,6 @@
+#new "_size" 100000;
+#new "_index" 0;
 
+while (@@< _index _size) (@@+ _index 1;print _index;);
 
-#new "aoba" (: (:) (@@
-    #new "_size" 100000;
-    #new "_index" 0;
-    (:
-        "<= _index _size"
-
-        "+ _index 1;
-        print _index;"
-    );
-));
-aoba;
 return 0;

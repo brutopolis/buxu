@@ -71,11 +71,9 @@ function(brl_os_dl_open)
             dl_list = new_list(vm);
             hash_set(vm, "dl.list", dl_list);
         }
-        else 
-        {
-            IntList *list = (IntList*)data(dl_list).pointer;
-            list_push(*list, index);
-        }
+        
+        IntList *list = (IntList*)data(dl_list).pointer;
+        list_push(*list, index);
     }
     else 
     {

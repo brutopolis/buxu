@@ -4,7 +4,7 @@
 #new "ret1" (@@return _1);
 #new "cond1" "== n _1";
 #new "cond2" "== n _2";
-#new "fib" (list: (list: "n") 
+#new "fib" (: (: "n") 
     (@@
         if "== n 1" "return 1";
         if "== n 2" "return 1";

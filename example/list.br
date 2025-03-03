@@ -1,4 +1,4 @@
-#new 'l' (list:);
+#new 'l' (:);
 push: l 1;
 push: l 2;
 push: l 3;

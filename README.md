@@ -177,7 +177,7 @@ bruter is a metaprogramable lightweight programming language;
   - `procedural`, bruter is a very imperative language;
   - `semi-functional`, bruter has some functional features, but it is not a complete functional language;
   - `interpreted`, bruter is an interpreted language, but can be compiled to a executable file, which just embeds the code in the interpreter;
-  - `lightweight`, bruter is a very small language, and the stdlib is also tiny, e.g. in 0.7.6 bruter stdlib has 60 functions and 6 variables at total, maybe seems a lot, but this also includes the basic math functions, conditions, loops and such things whose are usually implemented in the language itself;
+  - `lightweight`, bruter is a very small language, and the stdlib is also tiny, e.g. in 0.7.6 bruter stdlib has 62 functions and 6 variables at total, maybe seems a lot, but this also includes the basic math functions, conditions, loops and such things whose are usually implemented in the language itself;
   - `no OOP`, bruter has no OOP;
   - `no GC`, bruter memory is completely manual, you can delete the variables at anytime, manually;
   - `metaprogramable`, everything said above can be changed or implemented in another way, you can create a new interpreter function and replace the old one, you can even build bruter withou any value at all, with a clean stack;
@@ -334,6 +334,14 @@ bruter is a metaprogramable lightweight programming language;
   | `#new`      | Create a new(or replace) hash with the name args[1] and the value args[2]  | `void function(String name, any value);`     |
   | `#delete`   | Delete the hash with the name args[1]                                 | `void function(String name);`                |
   | `#priority` | Set the hash with the name args[1] to the priority args[2], if passed only one arg re-set the base priority | `void function(String name, Float priority);`|
+
+  ### std.loop
+
+  | Function  | Description                                                      | Function Signature                              |
+  |-----------|------------------------------------------------------------------|-------------------------------------------------|
+  | `while`   | Execute args[2] while args[1] is true                                      | `void function(String condition, String code);` |
+  | `loop`    | Execute args[2] args[1] times                                              | `void function(Float amount, String code);`     |
+
 
   ### std.mem
 
