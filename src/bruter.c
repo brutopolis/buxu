@@ -169,18 +169,6 @@ StringList* special_space_split(char *str)
             list_push(*splited, tmp);
             i = j + 1;  // Avança para após o fechamento de aspas duplas
         }
-        else if (str[i] == '\'')
-        {
-            int j = i;
-            j++;  // Avança para depois da abertura de aspas simples
-            while (str[j] != '\'' && str[j] != '\0')
-            {
-                j++;
-            }
-            char *tmp = str_nduplicate(str + i, j - i + 1);
-            list_push(*splited, tmp);
-            i = j + 1;  // Avança para após o fechamento de aspas simples
-        }
         else if (isspace(str[i]))
         {
             i++;
