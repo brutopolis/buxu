@@ -1462,12 +1462,26 @@ function(brl_std_condition_greater)
     }
     outside_the_loop:
 
-    for (Int i = 1; i < args->size; i++)
+    switch (arg_t(1))
     {
-        if (arg(i - 1).number <= arg(i).number)
-        {
-            return 0;
-        }
+        case TYPE_NUMBER:
+            for (Int i = 1; i < args->size; i++)
+            {
+                if (arg(i - 1).number <= arg(i).number)
+                {
+                    return 0;
+                }
+            }
+            break;
+        default:
+            for (Int i = 1; i < args->size; i++)
+            {
+                if (arg(i - 1).integer <= arg(i).integer)
+                {
+                    return 0;
+                }
+            }
+            break;
     }
     return result;
 }
@@ -1489,12 +1503,26 @@ function(brl_std_condition_greater_equals)
     }
     outside_the_loop:
 
-    for (Int i = 1; i < args->size; i++)
+    switch (arg_t(1))
     {
-        if (arg(i - 1).number < arg(i).number)
-        {
-            return 0;
-        }
+        case TYPE_NUMBER:
+            for (Int i = 1; i < args->size; i++)
+            {
+                if (arg(i - 1).number < arg(i).number)
+                {
+                    return 0;
+                }
+            }
+            break;
+        default:
+            for (Int i = 1; i < args->size; i++)
+            {
+                if (arg(i - 1).integer < arg(i).integer)
+                {
+                    return 0;
+                }
+            }
+            break;
     }
     return result;
 }
@@ -1516,12 +1544,26 @@ function(brl_std_condition_less)
     }
     outside_the_loop:
 
-    for (Int i = 1; i < args->size; i++)
+    switch (arg_t(1))
     {
-        if (arg(i - 1).number >= arg(i).number)
-        {
-            return 0;
-        }
+        case TYPE_NUMBER:
+            for (Int i = 1; i < args->size; i++)
+            {
+                if (arg(i - 1).number >= arg(i).number)
+                {
+                    return 0;
+                }
+            }
+            break;
+        default:
+            for (Int i = 1; i < args->size; i++)
+            {
+                if (arg(i - 1).integer >= arg(i).integer)
+                {
+                    return 0;
+                }
+            }
+            break;
     }
     return result;
 }
@@ -1543,12 +1585,26 @@ function(brl_std_condition_less_equals)
     }
     outside_the_loop:
 
-    for (Int i = 1; i < args->size; i++)
+    switch (arg_t(1))
     {
-        if (arg(i - 1).number > arg(i).number)
-        {
-            return 0;
-        }
+        case TYPE_NUMBER:
+            for (Int i = 1; i < args->size; i++)
+            {
+                if (arg(i - 1).number > arg(i).number)
+                {
+                    return 0;
+                }
+            }
+            break;
+        default:
+            for (Int i = 1; i < args->size; i++)
+            {
+                if (arg(i - 1).integer > arg(i).integer)
+                {
+                    return 0;
+                }
+            }
+            break;
     }
     return result;
 }
@@ -1570,9 +1626,9 @@ function(brl_std_condition_and)
     }
     outside_the_loop:
 
-    for (Int i = 0; i < args->size; i++)
+    for (Int i = 1; i < args->size; i++)
     {
-        if (arg_i(i) > 0)
+        if (arg_i(i) == 0)
         {
             return 0;
         }
@@ -1694,6 +1750,11 @@ function(brl_std_loop_repeat)
                     goto regret_optimization;
                 }
             }
+            else if (strchr(arg(1).string, '=') != NULL)
+            {
+                // it contains hash operator
+                goto regret_optimization;
+            } 
         }
 
         skip_safety_check:
@@ -1774,8 +1835,12 @@ void init_os(VirtualMachine *vm)
 
 void init_basics(VirtualMachine *vm)
 {
-    register_builtin(vm, "#", brl_std_ignore);
-    register_builtin(vm, "return", brl_std_return);
+    if (hash_find(vm, "#") == -1) // this is avaliable on clean bruter
+        register_builtin(vm, "#", brl_std_ignore);
+    
+    if (hash_find(vm, "return") == -1) // this is avaliable on clean bruter
+        register_builtin(vm, "return", brl_std_return);
+
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
 

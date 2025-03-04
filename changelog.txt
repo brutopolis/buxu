@@ -1,10 +1,15 @@
-(03/03/2025) - version 0.7.6a
+(04/03/2025) - version 0.7.6a
 
-- string char acess fixed;
+- string char access fixed;
+- std conditions now does compare integers too;
+- new operator ( = ), usage: (name = value), it is just like #new "name" value, but as an operator;
+- you can delete a hash using (name = NULL);
+- return and # are now included in the clean bruter also;
+- some examples updated;
 
 (03/03/2025) - version 0.7.6
 
-- this version gives more independence to the interpreter, it allow it to do functions, switches, loops and conditions without the need of the std;
+- this version gives more independence to the interpreter, it allow it to do functions and switches without the need of the std;
 - std files unified;
 - defining @0 as NULL is now done in the std;
 - make_int_list, make_string_list and make_char_list removed;

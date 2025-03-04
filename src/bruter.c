@@ -607,6 +607,8 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
     
     StringList *splited = special_space_split(cmd);
     list_reverse(*splited);
+
+    char* tok = NULL;
     //Int current = 0;
     while (splited->size > 0)
     {
@@ -629,6 +631,47 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 data(index).pointer = _args;
                 list_push(*result, index);
                 free(temp);
+            }
+            else if ((tok = strchr(str, '=')) != NULL)
+            {
+                // first lets replace all space and such that are outside of quotes or parentheses
+                char* tmp = str_nduplicate(str+1, strlen(str)-2);
+                StringList *splited = special_space_split(tmp);
+                
+                if (splited->size != 3)
+                {
+                    printf("warning: misformed assignment;\n");
+                    printf("expected: (varname = value), received %d elements:", splited->size);
+                    for (Int i = 0; i < splited->size; i++)
+                    {
+                        printf(" %s\n", splited->data[i]);
+                    }
+                    printf("\n");
+                    printf("program will continue but this may cause unexpected behavior\n");
+                }
+                
+                list_reverse(*splited);
+                char* varname = list_pop(*splited);
+                free(list_pop(*splited));//remove the '='
+                char* value_str = list_pop(*splited);
+                
+                list_free(*splited);
+
+                if (strcmp(value_str, "NULL") == 0)
+                {
+                    hash_unset(vm, varname);
+                }
+                else
+                {
+                    char* eval_str = str_format("return %s", value_str);
+                    Int _index = eval(vm, eval_str, context);
+                    free(eval_str);
+                    
+                    hash_set(vm, varname, _index);
+                    free(varname);
+                    free(value_str);
+                    list_push(*result, _index);
+                }
             }
             else
             {
@@ -976,8 +1019,12 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         else //variable 
         {
             Int index;
-            char* token = strchr(str, '@');
-            if (token == NULL)
+            char* tok = strchr(str,'=');
+            if (tok != NULL)
+            {
+                
+            }
+            else if((tok = strchr(str, '@')) == NULL)
             {
                 if (context != NULL)
                 {

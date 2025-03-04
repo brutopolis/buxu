@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 #include "../include/bruter.h"
 
 
-function(brl_os_dl_open)
+function(brl_main_dl_open)
 {
     
     void *handle = dlopen(arg(0).string, RTLD_LAZY);
@@ -97,7 +97,7 @@ function(brl_os_dl_open)
     return -1;
 }
 
-function(brl_os_dl_close)
+function(brl_main_dl_close)
 {
     dlclose(data(arg_i(0)).pointer);
     // remove from dl.list
@@ -120,6 +120,17 @@ function(brl_os_dl_close)
     }
     return -1;
 }
+
+function(brl_main_ignore)
+{
+    return -1;
+}
+
+function(brl_main_return)
+{
+    return arg_i(0);
+}
+
 
 int main(int argc, char **argv)
 {
@@ -153,8 +164,17 @@ int main(int argc, char **argv)
     // libraries init is not a merely comment
     // <libraries init>
 
-    register_builtin(vm, "dl.open", brl_os_dl_open);
-    register_builtin(vm, "dl.close", brl_os_dl_close);
+    // dynamic library functions are declared here because it is available exclusively in the non-wasm && non-arduino version;
+    // if you want to include libs in the interpreter use the recommended, usual way using lib/ folder, documented in the README.md;
+    register_builtin(vm, "dl.open", brl_main_dl_open);
+    register_builtin(vm, "dl.close", brl_main_dl_close);
+
+
+    if (hash_find(vm, "#") == -1)
+        register_builtin(vm, "#", brl_main_ignore);
+    
+    if (hash_find(vm, "return") == -1)
+        register_builtin(vm, "return", brl_main_return);
 
     if (args->size == 0)
     {
