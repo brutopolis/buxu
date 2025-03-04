@@ -637,7 +637,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 // first lets replace all space and such that are outside of quotes or parentheses
                 char* tmp = str_nduplicate(str+1, strlen(str)-2);
                 StringList *splited = special_space_split(tmp);
-                
+                free(tmp);
                 if (splited->size != 3)
                 {
                     printf("warning: misformed assignment;\n");
@@ -649,7 +649,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                     printf("\n");
                     printf("program will continue but this may cause unexpected behavior\n");
                 }
-                
+
                 list_reverse(*splited);
                 char* varname = list_pop(*splited);
                 free(list_pop(*splited));//remove the '='
