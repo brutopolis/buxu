@@ -1117,7 +1117,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                     index = vm->interpret(vm, temp, context);
                     free(temp);
 
-                    if (index == -1 && strchr(str, '@') == NULL) 
+                    if (index == -1) 
                     {
                         temp = str_format("return %s", token + 1);
                         index = vm->interpret(vm, temp, context);
@@ -1147,7 +1147,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             }
 
             // Tratamento de erro final
-            if (index == -1) 
+            if (0) 
             {
                 parse_error:
                 printf("Variable %s not found\n", str);
