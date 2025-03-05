@@ -130,58 +130,81 @@ Int str_find(const char *str, const char *substr)
     return strstr(str, substr) - str;
 }
 
-StringList* special_space_split(char *str)
-{
+StringList* special_space_split(char *str) {
     StringList *splited = list_init(StringList);
     
     int i = 0;
-    while (str[i] != '\0')
+    while (str[i] != '\0') 
     {
-        if (str[i] == '(')
+        if (str[i] == '(') 
         {
             int j = i;
             int count = 1;
-            while (count != 0)
+            j++; // Move past the initial '('
+            while (str[j] != '\0' && count != 0) 
             {
+                if (str[j] == '(') count++;
+                else if (str[j] == ')') count--;
                 j++;
-                if (str[j] == '(')
-                {
-                    count++;
-                }
-                else if (str[j] == ')')
-                {
-                    count--;
-                }
             }
-            char *tmp = str_nduplicate(str + i, j - i + 1);
+            char *tmp = str_nduplicate(str + i, j - i);
             list_push(*splited, tmp);
-            i = j + 1;
-        }
-        else if (str[i] == '"')
+            i = j;
+        } 
+        else if (str[i] == '"') 
         {
-            int j = i;
-            j++;  // Avança para depois da abertura de aspas duplas
-            while (str[j] != '"' && str[j] != '\0')
+            int j = i + 1; // Start after the opening quote
+            while (str[j] != '\0' && str[j] != '"') 
             {
                 j++;
             }
-            char *tmp = str_nduplicate(str + i, j - i + 1);
+            char *tmp = str_nduplicate(str + i, j - i + 1); // Include the closing quote
             list_push(*splited, tmp);
-            i = j + 1;  // Avança para após o fechamento de aspas duplas
-        }
-        else if (isspace(str[i]))
+            i = j + 1; // Move past the closing quote
+        } 
+        else if (str[i] == '\'') 
+        {
+            int j = i + 1; // Start after the opening quote
+            while (str[j] != '\0' && str[j] != '\'') 
+            {
+                j++;
+            }
+            char *tmp = str_nduplicate(str + i, j - i + 1); // Include the closing quote
+            list_push(*splited, tmp);
+            i = j + 1; // Move past the closing quote
+        } 
+        else if (isspace(str[i])) 
         {
             i++;
-        }
-        else
+        } 
+        else 
         {
             int j = i;
-            while (!isspace(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')' && str[j] != '"' && str[j] != '\'')
+            while (!isspace(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')' && str[j] != '"' && str[j] != '\'') 
             {
                 j++;
             }
-            list_push(*splited, str_nduplicate(str + i, j - i));
-            i = j;
+            if (str[j] == '(') 
+            {
+                int k = j;
+                int count = 1;
+                k++; // Move past '('
+                while (str[k] != '\0' && count != 0) 
+                {
+                    if (str[k] == '(') count++;
+                    else if (str[k] == ')') count--;
+                    k++;
+                }
+                char *tmp = str_nduplicate(str + i, k - i);
+                list_push(*splited, tmp);
+                i = k;
+            } 
+            else 
+            {
+                char *tmp = str_nduplicate(str + i, j - i);
+                list_push(*splited, tmp);
+                i = j;
+            }
         }
     }
     return splited;
@@ -607,8 +630,6 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
     
     StringList *splited = special_space_split(cmd);
     list_reverse(*splited);
-
-    char* tok = NULL;
     //Int current = 0;
     while (splited->size > 0)
     {
@@ -631,47 +652,6 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 data(index).pointer = _args;
                 list_push(*result, index);
                 free(temp);
-            }
-            else if ((tok = strchr(str, '=')) != NULL)
-            {
-                // first lets replace all space and such that are outside of quotes or parentheses
-                char* tmp = str_nduplicate(str+1, strlen(str)-2);
-                StringList *splited = special_space_split(tmp);
-                free(tmp);
-                if (splited->size != 3)
-                {
-                    printf("warning: misformed assignment;\n");
-                    printf("expected: (varname = value), received %d elements:", splited->size);
-                    for (Int i = 0; i < splited->size; i++)
-                    {
-                        printf(" %s\n", splited->data[i]);
-                    }
-                    printf("\n");
-                    printf("program will continue but this may cause unexpected behavior\n");
-                }
-
-                list_reverse(*splited);
-                char* varname = list_pop(*splited);
-                free(list_pop(*splited));//remove the '='
-                char* value_str = list_pop(*splited);
-                
-                list_free(*splited);
-
-                if (strcmp(value_str, "NULL") == 0)
-                {
-                    hash_unset(vm, varname);
-                }
-                else
-                {
-                    char* eval_str = str_format("return %s", value_str);
-                    Int _index = eval(vm, eval_str, context);
-                    free(eval_str);
-                    
-                    hash_set(vm, varname, _index);
-                    free(varname);
-                    free(value_str);
-                    list_push(*result, _index);
-                }
             }
             else
             {
@@ -697,114 +677,15 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             /* Cria uma cópia não destrutiva da string de entrada */
             char* newstr = str_duplicate(str);
 
-            /* Processa as sequências de escape iniciadas por '\' */
-            char* token = strchr(newstr + 1, '\\');
+            char* token = strchr(newstr + 1, '$');
             while (token != NULL)
             {
-                if (token[1] != '\0')
+                if (token[-1] == '\\')
                 {
-                    char* tempstr = NULL;
-                    char* pattern = NULL;
-                    char replacement[128]; // buffer para a substituição
-
-                    switch (token[1])
-                    {
-                        case '0':
-                            /* Se houver 3 dígitos após '\' (ex: "\123"), usa escape octal */
-                            if (strlen(token + 1) >= 3 && isdigit(token[2]) && isdigit(token[3]))
-                            {
-                                pattern = str_nduplicate(token, 4); // "\ddd" (4 chars)
-                                int value = (int)strtol(token + 1, NULL, 8);
-                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
-                                tempstr = str_replace(newstr, pattern, replacement);
-                                free(pattern);
-                            }
-                            else
-                            {
-                                /* Caso contrário, trata como "\0" literal (substitui pelo caractere '0') */
-                                pattern = str_nduplicate(token, 2);
-                                snprintf(replacement, sizeof(replacement), "%c", '0');
-                                tempstr = str_replace(newstr, pattern, replacement);
-                                free(pattern);
-                            }
-                            break;
-                        case 'x':
-                            /* Se houver 2 dígitos hexadecimais após "\x" */
-                            if (strlen(token + 1) >= 3 && isxdigit(token[2]) && isxdigit(token[3]))
-                            {
-                                pattern = str_nduplicate(token, 4); // "\xhh" (4 chars)
-                                int value = (int)strtol(token + 2, NULL, 16);
-                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
-                                tempstr = str_replace(newstr, pattern, replacement);
-                                free(pattern);
-                            }
-                            break;
-                        case 'n':
-                            pattern = str_nduplicate(token, 2); // "\n"
-                            tempstr = str_replace(newstr, pattern, "\n");
-                            free(pattern);
-                            break;
-                        case 't':
-                            pattern = str_nduplicate(token, 2); // "\t"
-                            tempstr = str_replace(newstr, pattern, "\t");
-                            free(pattern);
-                            break;
-                        case 'r':
-                            pattern = str_nduplicate(token, 2); // "\r"
-                            tempstr = str_replace(newstr, pattern, "\r");
-                            free(pattern);
-                            break;
-                        case '\\':
-                            pattern = str_nduplicate(token, 2); // "\\"
-                            tempstr = str_replace(newstr, pattern, "\\");
-                            free(pattern);
-                            break;
-                        case '"':
-                            pattern = str_nduplicate(token, 2); // '\"'
-                            tempstr = str_replace(newstr, pattern, "\"");
-                            free(pattern);
-                            break;
-                        case '\'':
-                            pattern = str_nduplicate(token, 2); // "\'"
-                            tempstr = str_replace(newstr, pattern, "\'");
-                            free(pattern);
-                            break;
-                        case '$':
-                            pattern = str_nduplicate(token, 2); // "\$"
-                            tempstr = str_replace(newstr, pattern, "$");
-                            free(pattern);
-                            break;
-                        default:
-                            if (isdigit(token[1]))
-                            {
-                                /* Trata sequência numérica com quantidade variável de dígitos */
-                                int len = 1;
-                                while (isdigit(token[1 + len]))
-                                {
-                                    len++;
-                                }
-                                pattern = str_nduplicate(token, len + 1); // '\' + dígitos
-                                int value = atoi(token + 1);
-                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
-                                tempstr = str_replace(newstr, pattern, replacement);
-                                free(pattern);
-                            }
-                            break;
-                    }
-                    if (tempstr != NULL)
-                    {
-                        free(newstr);
-                        newstr = tempstr;
-                    }
+                    token = strchr(token + 1, '$');
+                    continue;
                 }
-                token = strchr(newstr + 1, '\\');
-            }
-
-            /* Processa as substituições de variáveis indicadas por '$' */
-            token = strchr(newstr + 1, '$');
-            while (token != NULL)
-            {
-                if (token[1] != '\0')
+                else if (token[1] != '\0' && !isspace(token[1]))
                 {
                     if (isalpha(token[1]))
                     {
@@ -956,9 +837,115 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                             }
                         }
                     }
-
+                }
+                else 
+                {
+                    printf("error: cannot format '%s'. there is a $ not preceeded by a \\ neither succeeded by a valid character\n", str);
                 }
                 token = strchr(newstr + 1, '$');
+            }
+
+            /* Processa as sequências de escape iniciadas por '\' */
+            token = strchr(newstr + 1, '\\');
+            while (token != NULL)
+            {
+                if (token[1] != '\0')
+                {
+                    char* tempstr = NULL;
+                    char* pattern = NULL;
+                    char replacement[128]; // buffer para a substituição
+
+                    switch (token[1])
+                    {
+                        case '0':
+                            /* Se houver 3 dígitos após '\' (ex: "\123"), usa escape octal */
+                            if (strlen(token + 1) >= 3 && isdigit(token[2]) && isdigit(token[3]))
+                            {
+                                pattern = str_nduplicate(token, 4); // "\ddd" (4 chars)
+                                int value = (int)strtol(token + 1, NULL, 8);
+                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
+                                tempstr = str_replace(newstr, pattern, replacement);
+                                free(pattern);
+                            }
+                            else
+                            {
+                                /* Caso contrário, trata como "\0" literal (substitui pelo caractere '0') */
+                                pattern = str_nduplicate(token, 2);
+                                snprintf(replacement, sizeof(replacement), "%c", '0');
+                                tempstr = str_replace(newstr, pattern, replacement);
+                                free(pattern);
+                            }
+                            break;
+                        case 'x':
+                            /* Se houver 2 dígitos hexadecimais após "\x" */
+                            if (strlen(token + 1) >= 3 && isxdigit(token[2]) && isxdigit(token[3]))
+                            {
+                                pattern = str_nduplicate(token, 4); // "\xhh" (4 chars)
+                                int value = (int)strtol(token + 2, NULL, 16);
+                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
+                                tempstr = str_replace(newstr, pattern, replacement);
+                                free(pattern);
+                            }
+                            break;
+                        case 'n':
+                            pattern = str_nduplicate(token, 2); // "\n"
+                            tempstr = str_replace(newstr, pattern, "\n");
+                            free(pattern);
+                            break;
+                        case 't':
+                            pattern = str_nduplicate(token, 2); // "\t"
+                            tempstr = str_replace(newstr, pattern, "\t");
+                            free(pattern);
+                            break;
+                        case 'r':
+                            pattern = str_nduplicate(token, 2); // "\r"
+                            tempstr = str_replace(newstr, pattern, "\r");
+                            free(pattern);
+                            break;
+                        case '\\':
+                            pattern = str_nduplicate(token, 2); // "\\"
+                            tempstr = str_replace(newstr, pattern, "\\");
+                            free(pattern);
+                            break;
+                        case '"':
+                            pattern = str_nduplicate(token, 2); // '\"'
+                            tempstr = str_replace(newstr, pattern, "\"");
+                            free(pattern);
+                            break;
+                        case '\'':
+                            pattern = str_nduplicate(token, 2); // "\'"
+                            tempstr = str_replace(newstr, pattern, "\'");
+                            free(pattern);
+                            break;
+                        case '$':
+                            pattern = str_nduplicate(token, 2); // "\$"
+                            tempstr = str_replace(newstr, pattern, "$");
+                            free(pattern);
+                            break;
+                        default:
+                            if (isdigit(token[1]))
+                            {
+                                /* Trata sequência numérica com quantidade variável de dígitos */
+                                int len = 1;
+                                while (isdigit(token[1 + len]))
+                                {
+                                    len++;
+                                }
+                                pattern = str_nduplicate(token, len + 1); // '\' + dígitos
+                                int value = atoi(token + 1);
+                                snprintf(replacement, sizeof(replacement), "%c", (char)value);
+                                tempstr = str_replace(newstr, pattern, replacement);
+                                free(pattern);
+                            }
+                            break;
+                    }
+                    if (tempstr != NULL)
+                    {
+                        free(newstr);
+                        newstr = tempstr;
+                    }
+                }
+                token = strchr(newstr + 1, '\\');
             }
 
             /* Remove as aspas inicial e final da string */
@@ -1018,28 +1005,47 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         }
         else //variable 
         {
-            Int index;
-            char* tok = strchr(str,'=');
-            if (tok != NULL)
+            Int index = -1;
+            char* token = strchr(str, '@');
+            if (token == NULL)
             {
-                
-            }
-            else if((tok = strchr(str, '@')) == NULL)
-            {
-                if (context != NULL)
+                token = strchr(str, '=');
+                if (token != NULL && token[1] != '=' && token[1] != '\0')
                 {
-                    HashList* _global_context = vm->hashes;
-                    vm->hashes = context;
-                    index = hash_find(vm, str);
-                    vm->hashes = _global_context;
-                    if (index == -1)
+                    char* varname = str_nduplicate(str, token - str);
+                    index = hash_find(vm, varname);
+                    if (index == -1) // behave as #new
                     {
-                        index = hash_find(vm, str);
+                        char* temp = str_format("return %s", token + 1);
+                        index = vm->interpret(vm, temp, context);
+                        hash_set(vm, varname, index);
+                        free(temp);
                     }
+                    else // behave as set:
+                    {
+                        char* temp = str_format("return %s", token + 1);
+                        vm->stack->data[index] = data(vm->interpret(vm, temp, context));
+                        free(temp);
+                    }
+                    free(varname);
                 }
                 else
                 {
-                    index = hash_find(vm, str);
+                    if (context != NULL)
+                    {
+                        HashList* _global_context = vm->hashes;
+                        vm->hashes = context;
+                        index = hash_find(vm, str);
+                        vm->hashes = _global_context;
+                        if (index == -1)
+                        {
+                            index = hash_find(vm, str);
+                        }
+                    }
+                    else
+                    {
+                        index = hash_find(vm, str);
+                    }
                 }
             }
             else // split str by @
@@ -1113,12 +1119,12 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                                     {
                                         goto parse_error;
                                     }
+                                    _var = string[_index];
                                     // if have more entries in splited list, then it is an error
-                                    if (i < splited->size-1)
+                                    if (i < splited->size)
                                     {
                                         goto parse_error;
                                     }
-                                    _var = string[_index];
                                 }
                                 break;
                         }
@@ -1127,6 +1133,8 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                     {
                         goto parse_error;
                     }
+
+                    
                 }
                 index = _var;
                 for (Int i = 0; i < splited->size; i++)
@@ -1203,7 +1211,7 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
                             
                             code = list_get(*vm->stack, list_get(*_list, 1)).string;
 
-                            list_reverse(*args);
+                            //list_reverse(*args);
 
                             global_context = vm->hashes;
 
@@ -1211,15 +1219,16 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 
                             for (Int i = 0; i < varnames->size; i++)
                             {
-                                hash_set(vm, data(varnames->data[i]).string, list_pop(*args));
+                                hash_set(vm, data(varnames->data[i]).string, args->data[i]);
                             }
                             
                             if (args->size > 0)
                             {
                                 Int etc = register_list(vm, "...");
-                                for (Int i = 0; i < args->size; i++)
+                                IntList *list = (IntList*)data(etc).pointer;
+                                for (Int i = varnames->size; i < args->size; i++)
                                 {
-                                    list_push(*((IntList*)data(etc).pointer), list_pop(*args));
+                                    list_push(*list, args->data[i]);
                                 }
                             }
 

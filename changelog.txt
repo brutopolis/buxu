@@ -1,11 +1,13 @@
-(04/03/2025) - version 0.7.6a
+(05/03/2025) - version 0.7.6a
 
 - string char access fixed;
-- std conditions now does compare integers too;
-- new operator ( = ), usage: (name = value), it is just like #new "name" value, but as an operator;
-- you can delete a hash using (name = NULL);
-- return and # are now included in the clean bruter also;
-- some examples updated;
+- std conditions now does compare integers too, when type is not a number;
+- @0 is now type.any instead of type.number;
+- fixed some function args related problems;
+- fixed if undeclared in std;
+- fixed string format '$' related problems and added some error messages;
+- new experimental hash operator =, it beahave as #new if no hash is found, and as set: if a hash is found;
+- usage: name=value or name=(fn ...), it should have no spaces between the name and the operator;
 
 (03/03/2025) - version 0.7.6
 

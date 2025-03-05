@@ -168,30 +168,11 @@ function(brl_std_io_scan) // always get string
 
 function(brl_std_io_ls)
 {
-    Int _var = -1;
-    if (args->size > 0)
+    for (Int i = 0; i < vm->stack->size; i++)
     {
-        _var = arg_i(0);
-    }
-
-    if (_var > -1 && data_t(_var) == TYPE_LIST)
-    {
-        IntList *list = (IntList*)vm->stack->data[(Int)data(_var).number].pointer;
-        for (Int i = 0; i < list->size; i++)
-        {
-            printf("%d[%d]: ", (Int)data(_var).number, i);
-            print_element(vm, list->data[i]);
-            printf("\n");
-        }
-    }
-    else 
-    {
-        for (Int i = 0; i < vm->stack->size; i++)
-        {
-            printf("[%ld]: ", i);
-            print_element(vm, i);
-            printf("\n");
-        }
+        printf("[%ld]: ", i);
+        print_element(vm, i);
+        printf("\n");
     }
 
     return -1;
@@ -1651,27 +1632,8 @@ function(brl_std_condition_raw_or)
 function(brl_std_loop_while)
 {
     Int result = -1;
-    if (strchr(arg(1).string, '#') == NULL)
+    if (strchr(arg(1).string, '#') == NULL && strchr(arg(1).string, '(') == NULL && strchr(arg(1).string, '=') == NULL)
     {
-        {
-            char* _parentesis = strchr(arg(1).string, '(');
-            if (_parentesis != NULL)
-            {
-                if (_parentesis[1] == '@' && _parentesis[2] == '@')
-                {
-                    // its a string 
-                    goto skip_safety_check;
-                }
-                else 
-                {
-                    // its a expression
-                    goto regret_optimization;
-                }
-            }
-        }
-
-        skip_safety_check:
-
         StringList *splited = str_split(arg(1).string, ";");
         
         IntListList *arglist = list_init(IntListList);
@@ -1733,32 +1695,8 @@ function(brl_std_loop_while)
 function(brl_std_loop_repeat)
 {
     Int result = -1;
-    if (strchr(arg(1).string, '#') == NULL)
+    if (strchr(arg(1).string, '#') == NULL && strchr(arg(1).string, '(') == NULL && strchr(arg(1).string, '=') == NULL)
     {
-        {
-            char* _parentesis = strchr(arg(1).string, '(');
-            if (_parentesis != NULL)
-            {
-                if (_parentesis[1] == '@' && _parentesis[2] == '@')
-                {
-                    // its a string 
-                    goto skip_safety_check;
-                }
-                else 
-                {
-                    // its a expression
-                    goto regret_optimization;
-                }
-            }
-            else if (strchr(arg(1).string, '=') != NULL)
-            {
-                // it contains hash operator
-                goto regret_optimization;
-            } 
-        }
-
-        skip_safety_check:
-
         StringList *splited = str_split(arg(1).string, ";");
         
         IntListList *arglist = list_init(IntListList);
@@ -1835,11 +1773,9 @@ void init_os(VirtualMachine *vm)
 
 void init_basics(VirtualMachine *vm)
 {
-    if (hash_find(vm, "#") == -1) // this is avaliable on clean bruter
-        register_builtin(vm, "#", brl_std_ignore);
+    register_builtin(vm, "#", brl_std_ignore);
     
-    if (hash_find(vm, "return") == -1) // this is avaliable on clean bruter
-        register_builtin(vm, "return", brl_std_return);
+    register_builtin(vm, "return", brl_std_return);
 
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
@@ -1851,7 +1787,7 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "repeat", brl_std_loop_repeat);
 
 #ifndef ARDUINO
-    register_builtin(vm, "scan", brl_std_io_scan);// not avaliable on arduino, so its here
+    register_builtin(vm, "scan", brl_std_io_scan);// not avaliable on arduino
 #endif
 }
 
@@ -1946,6 +1882,8 @@ void init_std_condition(VirtualMachine *vm)
     
     register_builtin(vm, "&&", brl_std_condition_and);
     register_builtin(vm, "||", brl_std_condition_raw_or);
+
+    register_builtin(vm, "if", brl_std_condition_if);
 }
 
 // std init presets

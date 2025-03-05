@@ -121,17 +121,6 @@ function(brl_main_dl_close)
     return -1;
 }
 
-function(brl_main_ignore)
-{
-    return -1;
-}
-
-function(brl_main_return)
-{
-    return arg_i(0);
-}
-
-
 int main(int argc, char **argv)
 {
     Int result = 0;
@@ -168,13 +157,6 @@ int main(int argc, char **argv)
     // if you want to include libs in the interpreter use the recommended, usual way using lib/ folder, documented in the README.md;
     register_builtin(vm, "dl.open", brl_main_dl_open);
     register_builtin(vm, "dl.close", brl_main_dl_close);
-
-
-    if (hash_find(vm, "#") == -1)
-        register_builtin(vm, "#", brl_main_ignore);
-    
-    if (hash_find(vm, "return") == -1)
-        register_builtin(vm, "return", brl_main_return);
 
     if (args->size == 0)
     {
