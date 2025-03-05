@@ -7,7 +7,7 @@
 - fixed if undeclared in std;
 - fixed string format '$' related problems and added some error messages;
 - new experimental hash operator =, it beahave as #new if no hash is found, and as set: if a hash is found;
-- usage: name=value or name=(fn ...), it should have no spaces between the name and the operator;
+- usage: name=value or name=(fn ...) or name@number@name=value, it should have no spaces between the name and the operator;
 
 (03/03/2025) - version 0.7.6
 

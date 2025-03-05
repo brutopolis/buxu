@@ -1006,155 +1006,159 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         else //variable 
         {
             Int index = -1;
-            char* token = strchr(str, '@');
-            if (token == NULL)
+            char* token = strchr(str, '='); // Verifica '=' primeiro
+            if (token == NULL) // Se não encontrou '='
             {
-                token = strchr(str, '=');
-                if (token != NULL && token[1] != '=' && token[1] != '\0')
+                token = strchr(str, '@'); // Verifica '@' depois
+                if (token != NULL) // Se encontrou '@'
                 {
-                    char* varname = str_nduplicate(str, token - str);
-                    index = hash_find(vm, varname);
-                    if (index == -1) // behave as #new
+                    // Lógica original para '@' (split por '@')
+                    StringList *splited = str_split_char(str, '@');
+                    Int _var = hash_find(vm, splited->data[0]);
+                    Int _index = -1;
+                    if (_var == -1) goto parse_error;
+
+                    for (Int i = 1; i < splited->size; i++) 
                     {
-                        char* temp = str_format("return %s", token + 1);
-                        index = vm->interpret(vm, temp, context);
-                        hash_set(vm, varname, index);
-                        free(temp);
+                        if (isalpha(splited->data[i][0])) 
+                        {
+                            if (data_t(_var) != TYPE_LIST) goto parse_error;
+                            
+                            IntList *list = (IntList*)data(_var).pointer;
+                            if (list->size < 2 || data_t(list->data[0]) != TYPE_LIST || data_t(list->data[1]) != TYPE_LIST) 
+                            {
+                                goto parse_error;
+                            }
+
+                            IntList *varnames = (IntList*)data(list->data[0]).pointer;
+                            IntList *values = (IntList*)data(list->data[1]).pointer;
+
+                            // Busca o nome na lista
+                            for (_index = 0; _index < varnames->size; _index++) 
+                            {
+                                if (strcmp(data(varnames->data[_index]).string, splited->data[i]) == 0) 
+                                {
+                                    break;
+                                }
+                            }
+
+                            // Atualiza _var com o valor correspondente
+                            IntList *list2 = (IntList*)data(list->data[1]).pointer;
+                            if (_index >= list2->size) 
+                                goto parse_error;
+                            _var = list2->data[_index];
+                        } 
+                        else if (isdigit(splited->data[i][0])) 
+                        {
+                            _index = atoi(splited->data[i]);
+                            switch (data_t(_var)) 
+                            {
+                                case TYPE_LIST: 
+                                {
+                                    IntList *list = (IntList*)data(_var).pointer;
+                                    
+                                    if (_index < 0 || _index >= list->size) 
+                                        goto parse_error;
+                                    
+                                    _var = list->data[_index];
+                                    break;
+                                }
+                                case TYPE_STRING: 
+                                {
+                                    char *str_val = data(_var).string;
+                                    
+                                    if (_index < 0 || _index >= strlen(str_val)) 
+                                        goto parse_error;
+                                    
+                                    _var = str_val[_index];
+                                    
+                                    if (i < splited->size - 1) 
+                                        goto parse_error; // Não permite mais splits
+                                    break;
+                                }
+                                default: 
+                                    goto parse_error;
+                            }
+                        } 
+                        else
+                        {
+                            goto parse_error;
+                        } 
                     }
-                    else // behave as set:
+                    index = _var;
+                    // Libera a lista splitada
+                    for (Int i = 0; i < splited->size; i++) 
                     {
-                        char* temp = str_format("return %s", token + 1);
-                        vm->stack->data[index] = data(vm->interpret(vm, temp, context));
-                        free(temp);
+                        free(splited->data[i]);
                     }
-                    free(varname);
+                    list_free(*splited);
                 }
-                else
+                else // Nem '=' nem '@' encontrados
                 {
-                    if (context != NULL)
+                    // Lógica original de busca direta
+                    if (context != NULL) 
                     {
                         HashList* _global_context = vm->hashes;
                         vm->hashes = context;
                         index = hash_find(vm, str);
                         vm->hashes = _global_context;
-                        if (index == -1)
-                        {
-                            index = hash_find(vm, str);
-                        }
-                    }
-                    else
-                    {
-                        index = hash_find(vm, str);
-                    }
+                        if (index == -1) index = hash_find(vm, str);
+                    } 
+                    else index = hash_find(vm, str);
                 }
             }
-            else // split str by @
+            else // Encontrou '=' primeiro
             {
-                StringList *splited = str_split_char(str, '@');
-                Int _var = hash_find(vm, splited->data[0]);
-                Int _index = -1;
-                if (_var == -1)
+                // Lógica original para '=' (atribuição)
+                if (token[1] != '=' && token[1] != '\0') 
                 {
-                    goto parse_error;
-                }
+                    char* varname = str_nduplicate(str, token - str);
+                    char* temp = str_format("return %s", varname);
+                    index = vm->interpret(vm, temp, context);
+                    free(temp);
 
-                for (Int i = 1; i < splited->size; i++)
-                {
-                    if (isalpha(splited->data[i][0]))
+                    if (index == -1 && strchr(str, '@') == NULL) 
                     {
-                        // verify if object is (list: (list:) (list:))
-                        if (data_t(_var) != TYPE_LIST)
-                        {
-                            goto parse_error;
-                        }
-                        
-                        IntList *list = (IntList*)data(_var).pointer;
-                        
-                        if (list->size == 0 || data_t(list->data[0]) != TYPE_LIST || data_t(list->data[1]) != TYPE_LIST)
-                        {
-                            goto parse_error;
-                        }
-
-                        IntList *varnames = (IntList*)data(list->data[0]).pointer;
-                        IntList *values = (IntList*)data(list->data[1]).pointer;
-
-                        for (Int j = 0; j < varnames->size; j++)
-                        {
-                            if (strcmp(data(varnames->data[j]).string, splited->data[i]) == 0)
-                            {
-                                _index = j;
-                                break;
-                            }
-                        }
-
-                        // _var = list[1][_index]
-                        IntList *list2 = (IntList*)data(list->data[1]).pointer;
-                        
-                        if (_index < 0 || _index >= list2->size)
-                        {
-                            goto parse_error;
-                        }
-                        
-                        _var = list2->data[_index];
-                    }
-                    else if (isdigit(splited->data[i][0]))
-                    {
-                        _index = atoi(splited->data[i]);
-                        switch (data_t(_var))
-                        {
-                            case TYPE_LIST:// _var will be list[_index]
-                                {
-                                    IntList *list = (IntList*)data(_var).pointer;
-                                    if (_index < 0 || _index >= list->size)
-                                    {
-                                        goto parse_error;
-                                    }
-                                    _var = list->data[_index];
-                                }
-                                break;
-                            case TYPE_STRING:
-                                {
-                                    char *string = data(_var).string;
-                                    if (_index < 0 || _index >= strlen(string))
-                                    {
-                                        goto parse_error;
-                                    }
-                                    _var = string[_index];
-                                    // if have more entries in splited list, then it is an error
-                                    if (i < splited->size)
-                                    {
-                                        goto parse_error;
-                                    }
-                                }
-                                break;
-                        }
-                    }
+                        temp = str_format("return %s", token + 1);
+                        index = vm->interpret(vm, temp, context);
+                        hash_set(vm, varname, index);
+                    } 
                     else 
                     {
-                        goto parse_error;
+                        temp = str_format("return %s", token + 1);
+                        vm->stack->data[index] = data(vm->interpret(vm, temp, context));
                     }
-
-                    
-                }
-                index = _var;
-                for (Int i = 0; i < splited->size; i++)
+                    free(temp);
+                    free(varname);
+                } 
+                else 
                 {
-                    free(splited->data[i]);
+                    // Tratamento de == ou = sem valor
+                    if (context != NULL) 
+                    {
+                        HashList* _global_context = vm->hashes;
+                        vm->hashes = context;
+                        index = hash_find(vm, str);
+                        vm->hashes = _global_context;
+                        if (index == -1) index = hash_find(vm, str);
+                    } 
+                    else index = hash_find(vm, str);
                 }
-                list_free(*splited);
             }
-                
+
+            // Tratamento de erro final
             if (index == -1) 
             {
-            parse_error:
+                parse_error:
                 printf("Variable %s not found\n", str);
                 list_push(*result, -1);
-            }
+            } 
             else 
             {
                 list_push(*result, index);
             }
         }
+
         free(str);
     }
     list_free(*splited);
