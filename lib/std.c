@@ -1952,7 +1952,7 @@ void init_std_condition(VirtualMachine *vm)
 void init_std(VirtualMachine *vm)
 {
     // @0 = NULL
-    register_number(vm, "NULL", 0);
+    register_var(vm, "NULL");
 
     #ifndef ARDUINO
     init_os(vm);
