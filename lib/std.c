@@ -128,6 +128,32 @@ function(brl_std_hash_priority)
     return -1;
 }
 
+function(brl_std_hash_rename)
+{
+    if (context != NULL)
+    {
+        HashList *global_context = vm->hashes;
+        vm->hashes = context;
+        Int index = hash_find(vm, arg(0).string);
+        if (index != -1)
+        {
+            free(hash(index).key);
+            hash(index).key = str_duplicate(arg(1).string);
+        }
+        vm->hashes = global_context;
+    }
+    else 
+    {
+        Int index = hash_find(vm, arg(0).string);
+        if (index != -1)
+        {
+            free(hash(index).key);
+            hash(index).key = str_duplicate(arg(1).string);
+        }
+    }
+    return -1;
+}
+
 function(brl_std_io_print)
 {
     for (Int i = 0; i < args->size; i++)
@@ -1836,6 +1862,7 @@ void init_hash(VirtualMachine *vm)
     register_builtin(vm, "#new", brl_std_hash_new);
     register_builtin(vm, "#delete", brl_std_hash_delete);
     register_builtin(vm, "#priority", brl_std_hash_priority);
+    register_builtin(vm, "#rename", brl_std_hash_rename);
 }
 
 void init_list(VirtualMachine *vm)
