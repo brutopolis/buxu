@@ -465,7 +465,6 @@ function(brl_std_list_set)
         else 
         {
             printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
-            print_element(vm, list);
         }
         return -1;
     }
@@ -488,7 +487,6 @@ function(brl_std_list_set)
         else 
         {
             printf("error: index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
-            print_element(vm, arg_i(0));
         }
         return -1;
     }
@@ -652,7 +650,6 @@ function(brl_std_list_get)
             else 
             {
                 printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
-                print_element(vm, list);
             }
         }
     }
@@ -667,7 +664,6 @@ function(brl_std_list_get)
         else 
         {
             printf("error: index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
-            print_element(vm, arg_i(0));
         }
     }
     else // accest bytes of a value
@@ -883,7 +879,6 @@ function(brl_std_list_swap)
         else 
         {
             printf("error: index %d or %d out of range in list %d of size %d\n", index1, index2, list, lst->size);
-            print_element(vm, list);
         }
     }
     else if (arg_t(0) == TYPE_STRING)
@@ -900,7 +895,6 @@ function(brl_std_list_swap)
         else 
         {
             printf("error: index %d or %d out of range in string %d of size %d\n", index1, index2, arg(0).string, strlen(str));
-            print_element(vm, arg_i(0));
         }
     }
     return -1;

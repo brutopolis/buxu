@@ -1,8 +1,0 @@
-#new "lista0" (: (: "a" "b" "c" "d" "e") (: "print 1" "print 3" "print 5" "print 7" "print 9"));
-print (lista0 "a");
-
-#new "lista1" (: (: 5 6 7 8 9) (: "print 1" "print 3" "print 5" "print 7" "print 9"));
-print (lista1 7);
-
-// you might want auto exec too;
-((lista1 8));

@@ -1,6 +1,6 @@
 #new 'a' "word";
 #new 'b' 123;
-#new 'c' (: 1 2 3);
+#new 'c' (list: 1 2 3);
 #new 'd' ($ pun 45);
 
 print "a = $a";

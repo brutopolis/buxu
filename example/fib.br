@@ -1,14 +1,11 @@
 #new "_0" 0;
 #new "_1" 1;
 #new "_2" 2;
-#new "ret1" (@@return _1);
-#new "cond1" "== n _1";
-#new "cond2" "== n _2";
-#new "fib" (: (: "n") 
-    (@@
-        if "== n 1" "return 1";
-        if "== n 2" "return 1";
-        return ($ + (fib ($ - n _1)) (fib ($ - n _2)));
-    )
+
+#new "fib" (@@
+    #new "n" (get: ... _0);
+    if "== n 1" "return 1";
+    if "== n 2" "return 1";
+    return ($ + (fib ($ - n _1)) (fib ($ - n _2)));
 );
 print (fib 20);

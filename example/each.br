@@ -2,32 +2,29 @@
 
 // IDEA each implementation;
 
-#new "each" (: (: "callback")
+#new "each" (@@
+    #new "callback" (get: ... 0);
+    #new "__size" (len:);
+    
+    #new "___index" 0;
+
+    #new "test_func" (: "callback" "aaa" (@@callback (get: 1);));
+
+    print __size;
+
+    while "< ___index __size"
     (@@
-        #new "__size" (len:);
-        
-        #new "___index" 0;
-
-        #new "test_func" (: "callback" "aaa" (@@callback (get: 1);));
-
-        print __size;
-
-        while "< ___index __size"
-        (@@
-            print (cbk (get: ___index));
-            + ___index 1;
-        );
-    )
+        print (cbk (get: ___index));
+        + ___index 1;
+    );
 );
 
-#new "cbk" (: (: "item")
-    (@@
-        print item;
-        return "uga buga";
-    )
+#new "cbk" (@@
+    print (get: ... 0);
+    return "uga buga";
 );
 
-#new "lst" (: 1 2 3 4 5 6 7 8 9 10);
+#new "lst" (list: 1 2 3 4 5 6 7 8 9 10);
 
 each cbk;
 return 0;

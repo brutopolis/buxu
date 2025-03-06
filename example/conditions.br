@@ -1,5 +1,0 @@
-// this is how you do conditions in bruter, its a lookuptable with the condition as the key and the code as the value;
-#new "if0" (: (: @0) (: "false;"));
-
-// if0 returns the code, so we close it with () to execute it, as the return vaule will be passed as first argument;
-print (if0 (>= 5 5));

@@ -1,8 +1,5 @@
 #include "bruter.h"
 
-// interpreter declaration
-Int default_interpreter(void *_vm, char *cmd, HashList *context);
-
 //string functions
 char* str_duplicate(const char *str)
 {
@@ -1010,7 +1007,7 @@ Int interpret_args(VirtualMachine *vm, IntList *args, HashList *context)
 {
     Int func = list_shift(*args);
     Int result = -1;
-
+    Int etc = -1;
     if (func > -1)
     {
         HashList *global_context;
@@ -1036,11 +1033,12 @@ Int interpret_args(VirtualMachine *vm, IntList *args, HashList *context)
                 
                 if (args->size > 0)
                 {
-                    Int etc = register_list(vm, "...");
-                    IntList *list = (IntList*)data(etc).pointer;
+                    etc = register_var(vm, "...");
+                    data_t(etc) = TYPE_LIST;
                     data(etc).pointer = args;
-                    args = list;
                 }
+
+                vm->hashes = global_context;
 
                 // eval
                 result = eval(vm, data(func).string, _context);
@@ -1053,14 +1051,15 @@ Int interpret_args(VirtualMachine *vm, IntList *args, HashList *context)
 
                 list_free(*_context);
 
-                vm->hashes = global_context;
+                args = (IntList*)data(etc).pointer;
+                data_t(etc) = TYPE_ANY;
 
                 break;
         }
     }
     else 
     {
-        printf("Error: %d is not a function or script\n", func);
+        printf("error: %d is not a function or script\n", func);
     }
     return result;
 }
