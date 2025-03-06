@@ -1,3 +1,21 @@
+(06/03/2025) - version 0.7.7
+
+- removed the @ operator fore recursion;
+- removed spread;
+- no more "function" (: (: ) (: ) );
+- no more "lookup" (: (: ) (: ) );
+- string now have it own scope and receive args as ...;
+- : is list: again;
+- (: ) operator removed;
+- interpreter not replaceble anymore;
+- lots of fixes;
+- some optimizations;
+- a lot of cleanup;
+- repl is no more part of bruterlib, neither is a function anymor, it is only avaliable in the main.c now;
+
+TODO: update all examples;
+TODO: update README.md;
+
 (06/03/2025) - version 0.7.6b
 
 - = operator removed, use the @ operator;

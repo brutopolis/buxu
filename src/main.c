@@ -37,6 +37,31 @@ int main(int argc, char **argv)
 // bruter header
 #include "../include/bruter.h"
 
+Int repl(VirtualMachine *vm)
+{
+    printf("bruter v%s\n", VERSION);
+    char *cmd;
+    Int result = -1;
+    int junk = 0;
+    while (result == -1)
+    {
+        cmd = (char*)malloc(1024);
+        printf("@> ");
+        junk = scanf("%[^\n]%*c", cmd);
+        if (junk == 0)
+        {
+            free(cmd);
+            break;
+        }
+        result = eval(vm, cmd, NULL);
+        free(cmd);
+    }
+
+    printf("repl returned: [@%ld]", result);
+    print_element(vm, result);
+    printf("\n");
+    return result;
+}
 
 function(brl_main_dl_open)
 {

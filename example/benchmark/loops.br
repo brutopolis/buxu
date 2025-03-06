@@ -1,3 +1,4 @@
-___index=0 _size=($ + 50000 50000);
+#new "___index" 0;
+#new "_size" 100000;
 repeat _size "+ ___index 1;print ___index";
 return 0;

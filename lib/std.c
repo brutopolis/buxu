@@ -29,11 +29,6 @@ function(brl_os_file_write)
     return -1;
 }
 
-function(brl_os_repl)
-{
-    return repl(vm);
-}
-
 function(brl_os_system)
 {
     system(arg(0).string);
@@ -218,6 +213,18 @@ function(brl_std_return)
 // list functions
 // list functions
 // list functions
+
+function(brl_std_list_new)
+{
+    Int index = new_list(vm);
+    IntList *list = (IntList*)data(index).pointer;
+    for (Int i = 0; i < args->size; i++)
+    {
+        list_push(*list, arg_i(i));
+    }
+    return index;
+}
+
 function(brl_std_list_push)
 {
     if (args->size == 1) // push to global vm->stack
@@ -537,7 +544,7 @@ function(brl_std_deplace)
     data(newindex) = value_duplicate(data(arg_i(1)), data_t(arg_i(1)));
     data_t(newindex) = data_t(arg_i(1));
     arg_i(1) = newindex;
-    interpret(vm, args, context);
+    interpret_args(vm, args, context);
     return newindex;
 }
 
@@ -1631,11 +1638,31 @@ function(brl_std_condition_raw_or)
     return 0;
 }
 
+
 function(brl_std_loop_while)
 {
     Int result = -1;
-    if (strchr(arg(1).string, '#') == NULL && strchr(arg(1).string, '(') == NULL && strchr(arg(1).string, '=') == NULL)
+    if (strchr(arg(1).string, '#') == NULL)
     {
+        {
+            char* _parentesis = strchr(arg(1).string, '(');
+            if (_parentesis != NULL)
+            {
+                if (_parentesis[1] == '@' && _parentesis[2] == '@')
+                {
+                    // its a string 
+                    goto skip_safety_check;
+                }
+                else 
+                {
+                    // its a expression
+                    goto regret_optimization;
+                }
+            }
+        }
+
+        skip_safety_check:
+
         StringList *splited = str_split(arg(1).string, ";");
         
         IntListList *arglist = list_init(IntListList);
@@ -1662,7 +1689,7 @@ function(brl_std_loop_while)
             cond = eval(vm,arg(0).string,context);
             for (Int i = 0; i < arglist->size; i++)
             {
-                result = interpret(vm, &arglist->data[i], context);
+                result = interpret_args(vm, &arglist->data[i], context);
                 if (result > -1)
                 {
                     goto skip_to_return;
@@ -1697,8 +1724,27 @@ function(brl_std_loop_while)
 function(brl_std_loop_repeat)
 {
     Int result = -1;
-    if (strchr(arg(1).string, '#') == NULL && strchr(arg(1).string, '(') == NULL && strchr(arg(1).string, '=') == NULL)
+    if (strchr(arg(1).string, '#') == NULL)
     {
+        {
+            char* _parentesis = strchr(arg(1).string, '(');
+            if (_parentesis != NULL)
+            {
+                if (_parentesis[1] == '@' && _parentesis[2] == '@')
+                {
+                    // its a string 
+                    goto skip_safety_check;
+                }
+                else 
+                {
+                    // its a expression
+                    goto regret_optimization;
+                }
+            }
+        }
+
+        skip_safety_check:
+
         StringList *splited = str_split(arg(1).string, ";");
         
         IntListList *arglist = list_init(IntListList);
@@ -1724,7 +1770,7 @@ function(brl_std_loop_repeat)
         {
             for (Int i = 0; i < arglist->size; i++)
             {
-                result = interpret(vm, &arglist->data[i], context);
+                result = interpret_args(vm, &arglist->data[i], context);
                 if (result > -1)
                 {
                     goto skip_to_return;
@@ -1768,8 +1814,6 @@ void init_os(VirtualMachine *vm)
     register_builtin(vm, "time", brl_os_time_now);
     register_builtin(vm, "clock", brl_os_time_clock);
 #endif
-
-    register_builtin(vm, "repl", brl_os_repl);
 }
 #endif
 
@@ -1802,6 +1846,7 @@ void init_hash(VirtualMachine *vm)
 
 void init_list(VirtualMachine *vm)
 {
+    register_builtin(vm, "list:", brl_std_list_new);
     register_builtin(vm, "pop:", brl_std_list_pop);
     register_builtin(vm, "set:", brl_std_list_set);
     register_builtin(vm, "len:", brl_std_list_length);

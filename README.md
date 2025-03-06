@@ -198,10 +198,9 @@ bruter is a metaprogramable lightweight programming language;
   - `function scope` is created inside a function, if another function is created inside a function, it will have its own scope, there is no nested scope;
 
   ## Operators and Delimiters
-  bruter has 3 operators:
+  bruter has 2 operators:
   - `//` comment operator, usually this is not a operator, but, here it works as a operator, it will not parse anything after it to the end of the command;
-  - `...` spread operator, it will spread a list;
-  - `@` memory operator, if @n are used, they will be the n-th element of the global stack, else if @name then it will return the index of the name as a number value, @ can be also used like name@subname or name@number or even @number@name;
+  - `@` memory operator, if @n are used, they will be the n-th element of the global stack, else if @name then it will return the index of the name as a number value;
 
   bruter has 5 delimiters:
   - `;` end of command delimiter;
@@ -209,7 +208,6 @@ bruter is a metaprogramable lightweight programming language;
   - `""` string delimiter;
   - `''` string delimiter;
   - `(@@ )` string delimiter;
-  - `(: )` list delimiter;
 
   ## Variables
   bruter consider everything a variable;
@@ -242,9 +240,9 @@ bruter is a metaprogramable lightweight programming language;
   now lets use a more complex example:
 
     #new "group" (sub: @2 @16);
-    print ...group;
+    print group;
 
-  this command will create a new hash with the name "group" and the result of the 'sub:' as value, then it will print the spread of the hash "group", this would be equivalent to:
+  this command will create a new hash with the name "group" and the result of the 'sub:' as value, then it will print "group", this would be equivalent to:
 
     print @2 @3 @4 @5 @6 @7 @8 @9 @10 @11 @12 @13 @14 @15 @16;
 
@@ -357,6 +355,7 @@ bruter is a metaprogramable lightweight programming language;
 
   | Function    | Description                                                      | Function Signature                                        |
   |-------------|------------------------------------------------------------------|-----------------------------------------------------------|
+  | `list:`     | Create a new list with the values of args[1] to args[n] and return it | `List function(any ...);`                                 |
   | `get:`      | Get the value of args[2] from args[1] and return it                        | `any function(List list, Float index);`                   |
   | `set:`      | Set the value of args[2] from args[1] to args[3]                                | `void function(List list, Float index, any value);`       |
   | `len:`      | Get the length of args[1] and return it                               | `Float function(List list);`                              |
@@ -448,8 +447,6 @@ bruter is a metaprogramable lightweight programming language;
 
 # VM Concept
   ## Concepts
-  bruter interpreting function can be replaced anytime during execution, but the new interpreting function must be built-in in some library;
-
   bruter has a default type size, 4bytes on 32bits systems and 8bytes on 64bits systems, plus 1byte for the type;
 
   bruter is essentially a special list of char[(4 or 8)] along with a list of char;

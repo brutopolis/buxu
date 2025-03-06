@@ -303,7 +303,7 @@ StringList* str_split_char(char *str, char delim)
 }
 
 
-void process_string_token(VirtualMachine *vm, char *str, HashList *context, IntList *result) 
+void process_string(VirtualMachine *vm, char *str, HashList *context, IntList *result) 
 {
      if (!(str[0] == '"' || str[0] == '\'')) 
      {
@@ -678,33 +678,6 @@ void print_element(VirtualMachine *vm, Int index)
 
 #ifndef ARDUINO
 
-// repl 
-Int repl(VirtualMachine *vm)
-{
-    printf("bruter v%s\n", VERSION);
-    char *cmd;
-    Int result = -1;
-    int junk = 0;
-    while (result == -1)
-    {
-        cmd = (char*)malloc(1024);
-        printf("@> ");
-        junk = scanf("%[^\n]%*c", cmd);
-        if (junk == 0)
-        {
-            free(cmd);
-            break;
-        }
-        result = eval(vm, cmd, NULL);
-        free(cmd);
-    }
-
-    printf("repl returned: [@%ld]", result);
-    print_element(vm, result);
-    printf("\n");
-    return result;
-}
-
 // file functions
 char* readfile(char *filename)
 {
@@ -812,7 +785,6 @@ VirtualMachine* make_vm()
     vm->stack = list_init(ValueList);
     vm->typestack = list_init(CharList);
     vm->hashes = list_init(HashList);
-    vm->interpret = default_interpreter;
     vm->unused = list_init(IntList);
 
     return vm;
@@ -950,8 +922,6 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
     StringList *splited = special_space_split(cmd);
     list_reverse(*splited);
 
-    char * token;
-    Int _transfer = -1;
     //Int current = 0;
     while (splited->size > 0)
     {
@@ -965,16 +935,6 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
                 Int var = new_string(vm, temp);
                 list_push(*result, var);            
             }
-            else if (str[1] == ':') // (: ...args); parse the contents enclosed then create a list
-            {
-                Int index = new_var(vm);
-                char* temp = str_nduplicate(str + 2, strlen(str) - 3);
-                IntList *_args = parse(vm, temp, context);
-                data_t(index) = TYPE_LIST;
-                data(index).pointer = _args;
-                list_push(*result, index);
-                free(temp);
-            }
             else
             {
                 char* temp = str + 1;
@@ -985,13 +945,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         }
         else if (str[0] == '@') 
         {
-            token = strchr(str+1, '@');
-            if (token != NULL) 
-            {
-                _transfer = atoi(str + 1);
-                goto came_from_mem_operator;
-            }
-            else if (isdigit(str[1]))
+            if (isdigit(str[1]))
             {
                 list_push(*result, atoi(str + 1));
             }
@@ -1002,45 +956,12 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         }
         else if (str[0] == '"' || str[0] == '\'') // string
         {
-            process_string_token(vm, str, context, result);
+            process_string(vm, str, context, result);
         }
-        else if (isdigit(str[0]) || (str[0] == '-' && str[1] > '\0')) // number
+        else if (isdigit(str[0]) || (str[0] == '-' && isdigit(str[1]))) // number
         {
             Int var = new_number(vm, atof(str));
             list_push(*result, var);
-        }
-        else if(str[0] == '.' && str[1] == '.' && str[2] == '.' && isalpha(str[3])) // spread
-        {
-            char* _str = str+3;
-            Int lst = hash_find(vm, _str);
-            if (lst == -1)
-            {
-                printf("cannot spread non-existent variable: %s\n", _str);
-                list_push(*result, -1);
-                free(str);
-                continue;
-            }
-            if (data_t(lst) == TYPE_LIST)
-            {
-                IntList *list = data(lst).pointer;
-                for (Int i = 0; i < list->size; i++)
-                {
-                    list_push(*result, list->data[i]);
-                }
-            }
-            else if (data_t(lst) == TYPE_STRING)
-            {
-                char *string = data(lst).string;
-                for (Int i = 0; i < strlen(string); i++)
-                {
-                    list_push(*result, new_number(vm, string[i]));
-                }
-            }
-            else
-            {
-                printf("cannot spread non-list variable: %s\n", _str);
-                list_push(*result, -1);
-            }
         }
         else if (str[0] == '/' && str[1] == '/') // comment
         {
@@ -1053,173 +974,26 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         }
         else //variable 
         {
-            Int index = -1;
-            token = strchr(str, '@');
-            if (token != NULL) 
-            {   
-                
-                StringList *splited = str_split_char(str, '@');
-                Int _var = hash_find(vm, splited->data[0]);
-                Int _index = -1;
-
-                if (_var == -1) // if variable not found we create it
-                {
-                    if (isdigit(splited->data[1][0]))
-                    {
-                        printf("new list:\n");
-                        _var = new_list(vm);
-                        printf("new list: %s\n", splited->data[0]);
-                        hash_set(vm, splited->data[0], _var);
-                    }
-                    else
-                    {
-                        Int list0 = new_list(vm);
-                        Int list1 = new_list(vm);
-                        Int list2 = new_list(vm);
-                        list_push(*((IntList*)data(list0).pointer), list1);
-                        list_push(*((IntList*)data(list0).pointer), list2);
-                        hash_set(vm, splited->data[0], list0);
-                        _var = list0;
-                    }
-                }
-
-                while(0)
-                {
-                    came_from_mem_operator:
-                    _index = -1;
-                    splited = str_split_char(str, '@');
-                    _var = _transfer; // _transfer was set in mem operator
-                    if (_var == -1)
-                    {
-                        printf("invalid: '%s'\n", str);
-                        goto parse_error;
-                    }
-                }
-
-
-                for (Int i = 1; i < splited->size; i++) // Itera sobre os índices
-                {
-                    if (isalpha(splited->data[i][0])) // Se for uma variável
-                    {
-                        if (data_t(_var) != TYPE_LIST) 
-                        {
-                            printf("'%s' is not a list\n", splited->data[i]);
-                            goto parse_error;
-                        }
-                        
-                        IntList *list = (IntList*)data(_var).pointer;
-                        if (list->size < 2 || data_t(list->data[0]) != TYPE_LIST || data_t(list->data[1]) != TYPE_LIST) 
-                        {
-                            printf("invalid table structure: %s\n", splited->data[i]);
-                            goto parse_error;
-                        }
-
-                        IntList *varnames = (IntList*)data(list->data[0]).pointer;
-                        IntList *values = (IntList*)data(list->data[1]).pointer;
-
-                        // set _index to the index of the variable in varnames
-                        for (_index = 0; _index < varnames->size; _index++) 
-                        {
-                            if (strcmp(data(varnames->data[_index]).string, splited->data[i]) == 0) 
-                            {
-                                break;
-                            }
-                        }
-
-                        if (_index >= values->size) 
-                        {
-                            // we create the variable if it doesn't exist
-                            list_push(*varnames, new_string(vm, splited->data[i]));
-                            list_push(*values, new_var(vm));
-                        }
-
-                        _var = values->data[_index];
-                    } 
-                    else if (isdigit(splited->data[i][0])) 
-                    {
-                        _index = atoi(splited->data[i]);
-                        switch (data_t(_var)) 
-                        {
-                            case TYPE_LIST: 
-                            {
-                                IntList *list = (IntList*)data(_var).pointer;
-                                
-                                if (_index < 0) 
-                                {
-                                    printf("error: you are trying to access a negative index in %s\n", str);
-                                    goto parse_error;
-                                }
-                                else if (_index >= list->size)
-                                {
-                                    // we create all the elements up to the index
-                                    for (Int j = list->size; j <= _index; j++) 
-                                    {
-                                        list_push(*list, new_var(vm));
-                                    }
-                                }
-                                
-                                _var = list->data[_index];
-                                break;
-                            }
-                            case TYPE_STRING: 
-                            {
-                                char *str_val = data(_var).string;
-                                
-                                if (_index < 0 || _index >= strlen(str_val)) 
-                                {
-                                    printf("error: you are trying to access a character out of bounds in %s\n", str);
-                                    goto parse_error;
-                                }
-                                
-                                _var = str_val[_index];
-                                
-                                if (i < splited->size - 1) 
-                                {
-                                    printf("error: you are trying to get a element from a character in %s\n", str);
-                                    goto parse_error; // Não permite mais splits
-                                }
-                                break;
-                            }
-                            default: 
-                                printf("error: '%s' from '%s' is not a list or string\n", splited->data[i], str);
-                                goto parse_error;
-                        }
-                    }
-                    else
-                    {
-                        printf("invalid: %s\n", splited->data[i]);
-                        goto parse_error;
-                    } 
-                }
-                index = _var;
-                
-                for (Int i = 0; i < splited->size; i++) 
-                {
-                    free(splited->data[i]);
-                }
-                list_free(*splited);
-            }
+            int index = -1;
+            
+            if (context != NULL) 
+            {
+                HashList* _global_context = vm->hashes;
+                vm->hashes = context;
+                index = hash_find(vm, str);
+                vm->hashes = _global_context;
+                if (index == -1) index = hash_find(vm, str);
+            } 
             else 
             {
-                if (context != NULL) 
-                {
-                    HashList* _global_context = vm->hashes;
-                    vm->hashes = context;
-                    index = hash_find(vm, str);
-                    vm->hashes = _global_context;
-                    if (index == -1) index = hash_find(vm, str);
-                } 
-                else 
-                    index = hash_find(vm, str);
+                index = hash_find(vm, str);
             }
 
-            // Tratamento de erro final
-            if (0) 
+
+            if (index == -1) 
             {
-                parse_error:
-                printf("something went wrong with: '%s'\n", str);
-                list_push(*result, -1);
-            } 
+                printf("Variable %s not found\n", str);
+            }
             else 
             {
                 list_push(*result, index);
@@ -1232,7 +1006,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
     return result;
 }
 
-Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
+Int interpret_args(VirtualMachine *vm, IntList *args, HashList *context)
 {
     Int func = list_shift(*args);
     Int result = -1;
@@ -1243,13 +1017,6 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
         HashList *_context;
         IntList  *_list;
         Function _function;
-        Int etc;
-        Hash hash;
-        char* code;
-        Int firstelement;
-        Int firstelement2;
-        IntList *varnames;
-        IntList *values;
 
         switch (vm->typestack->data[func])
         {
@@ -1261,63 +1028,33 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
 
                 
             case TYPE_STRING:
+                // create context
+                _context = list_init(HashList);
 
-                result = eval(vm, data(func).string, context);
-                list_unshift(*args, func);
-                break;
-
-
-            case TYPE_LIST:
-                firstelement = list_get(*((IntList*)data(func).pointer), 0);
-                _list = (IntList*)data(func).pointer;
+                global_context = vm->hashes;
+                vm->hashes = _context;
                 
-                if  (data_t(list_get(*_list, 0)) == TYPE_LIST)
+                if (args->size > 0)
                 {
-                    switch (data_t(list_get(*_list, 1)))
-                    {
-                        case TYPE_STRING:
-                            varnames = (IntList*)data(firstelement).pointer;
-
-                            _context = list_init(HashList);
-                            
-                            code = list_get(*vm->stack, list_get(*_list, 1)).string;
-
-                            //list_reverse(*args);
-
-                            global_context = vm->hashes;
-
-                            vm->hashes = _context;
-
-                            for (Int i = 0; i < varnames->size; i++)
-                            {
-                                hash_set(vm, data(varnames->data[i]).string, args->data[i]);
-                            }
-                            
-                            if (args->size - varnames->size > 0)
-                            {
-                                Int etc = register_list(vm, "...");
-                                IntList *list = (IntList*)data(etc).pointer;
-                                for (Int i = varnames->size; i < args->size; i++)
-                                {
-                                    list_push(*list, args->data[i]);
-                                }
-                            }
-
-                            vm->hashes = global_context;
-
-                            result = eval(vm, code, _context);
-
-                            while (_context->size > 0)
-                            {
-                                free(list_pop(*_context).key);
-                            }
-
-                            list_free(*_context);
-                            list_push(*args, func);
-                            list_reverse(*args);
-                            break;
-                    };
+                    Int etc = register_list(vm, "...");
+                    IntList *list = (IntList*)data(etc).pointer;
+                    data(etc).pointer = args;
+                    args = list;
                 }
+
+                // eval
+                result = eval(vm, data(func).string, _context);
+
+                // free context
+                while (_context->size > 0)
+                {
+                    free(list_pop(*_context).key);
+                }
+
+                list_free(*_context);
+
+                vm->hashes = global_context;
+
                 break;
         }
     }
@@ -1328,9 +1065,9 @@ Int interpret(VirtualMachine *vm, IntList *args, HashList *context)
     return result;
 }
 
-Int default_interpreter(void *vm, char* cmd, HashList *context)
+Int interpret(VirtualMachine *vm, char* cmd, HashList *context)
 {
-    IntList *args = parse((VirtualMachine*)vm, cmd, context);
+    IntList *args = parse(vm, cmd, context);
 
     if (args->size == 0)
     {
@@ -1339,7 +1076,7 @@ Int default_interpreter(void *vm, char* cmd, HashList *context)
     }
     
     
-    Int result = interpret((VirtualMachine*)vm, args, context);
+    Int result = interpret_args(vm, args, context);
     
     list_free(*args);
     
@@ -1350,7 +1087,7 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
 {
     if(strchr(cmd, ';') == NULL)
     {
-        return vm->interpret(vm, cmd, context);
+        return interpret(vm, cmd, context);
     }
 
     StringList *splited = special_split(cmd, ';');
@@ -1391,7 +1128,7 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
             free(str);
             continue;
         }
-        result = vm->interpret(vm, str, context);
+        result = interpret(vm, str, context);
         free(str);
         if (result > 0)
         {
@@ -1428,7 +1165,7 @@ void unuse_var(VirtualMachine *vm, Int index)
 
 char* list_stringify(VirtualMachine* vm, IntList *list)
 {
-    char* _str = str_duplicate("(: ");
+    char* _str = str_duplicate("(list: ");
     char* strbak;
     for (Int i = 0; i < list->size; i++)
     {
@@ -1436,13 +1173,7 @@ char* list_stringify(VirtualMachine* vm, IntList *list)
         {
         case TYPE_STRING:
             strbak = _str;
-            _str = str_concat(_str, "(@@");
-            free(strbak);
-            strbak = _str;
-            _str = str_concat(_str, data(list->data[i]).string);
-            free(strbak);
-            strbak = _str;
-            _str = str_concat(_str, ")");
+            _str = str_format("%s(@@ %s)", _str, data(list->data[i]).string); 
             free(strbak);
             break;
         case TYPE_NUMBER:
