@@ -201,7 +201,7 @@ bruter is a metaprogramable lightweight programming language;
   bruter has 3 operators:
   - `//` comment operator, usually this is not a operator, but, here it works as a operator, it will not parse anything after it to the end of the command;
   - `...` spread operator, it will spread a list;
-  - `@` memory operator, if @n are used, they will be the n-th element of the global stack, else if @name then it will return the index of the name as a number value;
+  - `@` memory operator, if @n are used, they will be the n-th element of the global stack, else if @name then it will return the index of the name as a number value, @ can be also used like name@subname or name@number or even @number@name;
 
   bruter has 5 delimiters:
   - `;` end of command delimiter;

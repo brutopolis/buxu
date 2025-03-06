@@ -1,3 +1,15 @@
+(06/03/2025) - version 0.7.6b
+
+- = operator removed, use the @ operator;
+- parenthesis now have the original behavior again;
+- special_space_split regret to original behavior;
+- arduino files updated;
+- removed the lookup function, use name@name2 instead;
+- added support for @number@name@number@name... in the @ operator;
+- if name1@name2 is not found it will create the element, and the variable if needed;
+- if name@number is not found it will create all the elements until the number and the variable if needed;
+- some fixes;
+
 (05/03/2025) - version 0.7.6a
 
 - string char access fixed;

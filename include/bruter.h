@@ -20,7 +20,7 @@
     #endif
 #endif
 
-#define VERSION "0.7.6a"
+#define VERSION "0.7.6b"
 
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1

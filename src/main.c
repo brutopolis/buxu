@@ -215,88 +215,73 @@ extern "C"
     
 }
 
-Int _ino_serial_begin(VirtualMachine *vm, IntList *args)
+function(_ino_serial_begin)
 {
     Serial.begin((Int)arg(0).number);
     return -1;
 }
 
-Int _ino_print(VirtualMachine *vm, IntList *args)
+function(_ino_print)
 {
-    //printf("Type: %d\n", vm->typestack->data[var]);
-
-    Value temp = arg(1);
-    Int _type = arg_t(1);
-    
-    if (_type == TYPE_NUMBER)
+    for (Int i = 0; i < args->size; i++)
     {
-        printf("%f\n", temp.number);
-    }
-    else if (_type == TYPE_STRING)
-    {
-        printf("%s\n", temp.string);
-    }
-    else
-    {
-        printf("(any)%ld\n", temp.integer);
+        print_element(vm, arg_i(i));
     }
     
     return -1;
 }
 
-Int _ino_delay(VirtualMachine *vm, IntList *args)
+function(_ino_delay)
 {
     delay((Int)arg(0).number);
     return -1;
 }
 
-Int _ino_millis(VirtualMachine *vm, IntList *args)
+function(_ino_millis)
 {
     return millis();
 }
 
-Int _ino_tone(VirtualMachine *vm, IntList *args)
+function(_ino_tone)
 {
     tone((int)arg(0).number, (int)arg(1).number);
     return -1;
 }
 
 
-Int _ino_noTone(VirtualMachine *vm, IntList *args)
+function(_ino_noTone)
 {
     noTone((Int)arg(0).number);
     return -1;
 }
 
-Int _ino_pinmode(VirtualMachine *vm, IntList *args)
+function(_ino_pinmode)
 {
     pinMode((Int)arg(0).number, (Int)arg(1).number);
     return -1;
 }
 
-Int _ino_digitalwrite(VirtualMachine *vm, IntList *args)
+function(_ino_digitalwrite)
 {
     digitalWrite((Int)arg(0).number, (Int)arg(1).number);
     return -1;
 }
 
-Int _ino_digitalread(VirtualMachine *vm, IntList *args)
+function(_ino_digitalread)
 {
     return digitalRead((Int)arg(0).number);
 }
 
-Int _ino_analogwrite(VirtualMachine *vm, IntList *args)
+function(_ino_analogwrite)
 {
     analogWrite((Int)arg(0).number, (Int)arg(1).number);
     return -1;
 }
 
-Int _ino_analogread(VirtualMachine *vm, IntList *args)
+function(_ino_analogread)
 {
     return analogRead((Int)arg(0).number);
 }
-
-
 
 class Bruter
 {
@@ -319,7 +304,7 @@ class Bruter
         this->vm = make_vm();
         // <libraries init>
         this->registerFunction((char*)"Serial.begin", _ino_serial_begin);
-        this->registerFunction((char*)"Serial.println", _ino_print);
+        this->registerFunction((char*)"print", _ino_print);
         this->registerFunction((char*)"delay", _ino_delay);
         this->registerFunction((char*)"millis", _ino_millis);
         this->registerFunction((char*)"tone", _ino_tone);
@@ -337,16 +322,14 @@ Bruter *session = new Bruter();
 void setup()
 {
     Serial.begin(115200);
-    session->run((char*)"#new 'str' (@@looping);");
-    session->run((char*)"Serial.println @str;");
-    session->run((char*)"Serial.println @str;");
+    session->run((char*)"print 'aoba\n';");
 }
 
 void loop()
 {
     delay(1000);
 
-    session->run((char*)"Serial.println @str;");
+    session->run((char*)"print 'aoba\n';");
 }
 
 #endif

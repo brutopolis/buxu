@@ -960,6 +960,7 @@ function(brl_std_type_cast)
             switch ((Int)arg(1).number)
             {
                 case TYPE_STRING:
+                {
                     IntList* backup = (IntList*)arg(0).pointer;
                     char* _str = list_stringify(vm, (IntList*)arg(0).pointer);
                     arg(0).string = _str;
@@ -967,6 +968,7 @@ function(brl_std_type_cast)
                     list_free(*backup);
                     return -1;
                     break;
+                }
             }
             break;
         case TYPE_ANY:

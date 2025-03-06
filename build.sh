@@ -180,9 +180,12 @@ if [[ $INO -eq 1 ]]; then
     echo "preparing arduino files..."
     rm -rf arduino
     mkdir -p arduino/bruter/src
-    cp include/bruter.h arduino/bruter/src/bruter.h
+    cp include/* arduino/bruter/src/
     cp src/bruter.c arduino/bruter/src/bruter.c
-    cp lib/* arduino/bruter/src/
+    if [[ -z $CLEAN ]]; then
+        cp -r lib/* arduino/bruter/src/
+    fi
+    
     cp src/main.c arduino/bruter/bruter.ino
 
     for file in ./lib/*.c; do
@@ -190,9 +193,11 @@ if [[ $INO -eq 1 ]]; then
         filename="${filename%.*}" 
 
         # if not clean
-        sed -i "s/<libraries header>/<libraries header>\\nvoid init_$filename(VirtualMachine* vm);/g" arduino/bruter/src/bruter.h
-        sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" arduino/bruter/bruter.ino
-        sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" arduino/bruter/src/*.c
+        if [[ -z $CLEAN ]]; then
+            sed -i "s/<libraries header>/<libraries header>\\nvoid init_$filename(VirtualMachine* vm);/g" arduino/bruter/src/bruter.h
+            sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" arduino/bruter/bruter.ino
+            sed -i "s/<libraries init>/<libraries init>\\ninit_$filename(vm);/g" arduino/bruter/src/*.c
+        fi
     done
 fi
 
