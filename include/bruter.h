@@ -80,7 +80,7 @@ typedef struct
 } VirtualMachine;
 
 //Function
-typedef Int (*Function)(VirtualMachine*, IntList*, HashList*);
+typedef Int (*Function)(VirtualMachine*, IntList*);
 typedef void (*InitFunction)(VirtualMachine*);
 
 //String
@@ -127,8 +127,7 @@ void hash_set(VirtualMachine *vm, char *key, Int index);
 void hash_unset(VirtualMachine *vm, char *key);
 
 // eval
-// pass NULL as context if you don't want to use a local context
-Int eval(VirtualMachine *vm, char *cmd, HashList *context);
+Int eval(VirtualMachine *vm, char *cmd);
 
 void print_element(VirtualMachine *vm, Int index);
 
@@ -143,14 +142,14 @@ void print_element(VirtualMachine *vm, Int index);
 #define arg_i(index) (args->data[index])
 #define arg_t(index) (vm->typestack->data[args->data[index]])
 
-#define function(name) Int name(VirtualMachine *vm, IntList *args, HashList *context)
+#define function(name) Int name(VirtualMachine *vm, IntList *args)
 #define init(name) void init_##name(VirtualMachine *vm)
 
-Int interpret_args(VirtualMachine *vm, IntList *args, HashList *context);
-Int interpret(VirtualMachine *vm, char *cmd, HashList *context);
+Int interpret_args(VirtualMachine *vm, IntList *args);
+Int interpret(VirtualMachine *vm, char *cmd);
 
 // functions
-IntList* parse(void* _vm, char* cmd, HashList* context);
+IntList* parse(void* _vm, char* cmd);
 
 // stringify function
 char* list_stringify(VirtualMachine* vm, IntList *list);

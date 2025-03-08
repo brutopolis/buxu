@@ -52,43 +52,17 @@ function(brl_os_time_clock)
 
 function(brl_std_hash_new)
 {
-    if (context != NULL)
+    if (hash_find(vm, arg(0).string) != -1)
     {
-        HashList *global_context = vm->hashes;
-        vm->hashes = context;
-        
-        if (hash_find(vm, arg(0).string) != -1)
-        {
-            hash_unset(vm, arg(0).string);
-        }
-        
-        hash_set(vm, arg(0).string, arg_i(1));
-        vm->hashes = global_context;
+        hash_unset(vm, arg(0).string);
     }
-    else 
-    {
-        if (hash_find(vm, arg(0).string) != -1)
-        {
-            hash_unset(vm, arg(0).string);
-        }
-        hash_set(vm, arg(0).string, arg_i(1));
-    }
+    hash_set(vm, arg(0).string, arg_i(1));
     return -1;
 }
 
 function(brl_std_hash_delete)
 {
-    if (context != NULL)
-    {
-        HashList *global_context = vm->hashes;
-        vm->hashes = context;
-        hash_unset(vm, arg(0).string);
-        vm->hashes = global_context;
-    }
-    else 
-    {
-        hash_unset(vm, arg(0).string);
-    }
+    hash_unset(vm, arg(0).string);
     return -1;
 }
 
@@ -130,26 +104,11 @@ function(brl_std_hash_priority)
 
 function(brl_std_hash_rename)
 {
-    if (context != NULL)
+    Int index = hash_find(vm, arg(0).string);
+    if (index != -1)
     {
-        HashList *global_context = vm->hashes;
-        vm->hashes = context;
-        Int index = hash_find(vm, arg(0).string);
-        if (index != -1)
-        {
-            free(hash(index).key);
-            hash(index).key = str_duplicate(arg(1).string);
-        }
-        vm->hashes = global_context;
-    }
-    else 
-    {
-        Int index = hash_find(vm, arg(0).string);
-        if (index != -1)
-        {
-            free(hash(index).key);
-            hash(index).key = str_duplicate(arg(1).string);
-        }
+        free(hash(index).key);
+        hash(index).key = str_duplicate(arg(1).string);
     }
     return -1;
 }
@@ -201,23 +160,11 @@ function(brl_std_io_ls)
 
 function(brl_std_io_ls_hashes)
 {
-    if (context != NULL)
+    for (Int i = 0; i < vm->hashes->size; i++)
     {
-        for (Int i = 0; i < context->size; i++)
-        {
-            printf("[%s] {%d} @%ld: ", context->data[i].key, vm->typestack->data[context->data[i].index], context->data[i].index);
-            print_element(vm, context->data[i].index);
-            printf("\n");
-        }
-    }
-    else 
-    {
-        for (Int i = 0; i < vm->hashes->size; i++)
-        {
-            printf("[%s] {%d} @%ld: ", vm->hashes->data[i].key, vm->typestack->data[vm->hashes->data[i].index], vm->hashes->data[i].index);
-            print_element(vm, vm->hashes->data[i].index);
-            printf("\n");
-        }
+        printf("[%s] {%d} @%ld: ", vm->hashes->data[i].key, vm->typestack->data[vm->hashes->data[i].index], vm->hashes->data[i].index);
+        print_element(vm, vm->hashes->data[i].index);
+        printf("\n");
     }
     return -1;
 }
@@ -568,7 +515,7 @@ function(brl_std_deplace)
     data(newindex) = value_duplicate(data(arg_i(1)), data_t(arg_i(1)));
     data_t(newindex) = data_t(arg_i(1));
     arg_i(1) = newindex;
-    interpret_args(vm, args, context);
+    interpret_args(vm, args);
     return newindex;
 }
 
@@ -1305,20 +1252,20 @@ function(brl_std_condition_if)
     Int result = -1;
     if (args->size == 2)
     {
-        if (eval(vm, arg(0).string, context))
+        if (eval(vm, arg(0).string))
         {
-            result = eval(vm, arg(1).string, context);
+            result = eval(vm, arg(1).string);
         }
     }
     else if (args->size == 3) // ifelse
     {
-        if (eval(vm, arg(0).string, context))
+        if (eval(vm, arg(0).string))
         {
-            result = eval(vm, arg(1).string, context);
+            result = eval(vm, arg(1).string);
         }
         else
         {
-            result = eval(vm, arg(2).string, context);
+            result = eval(vm, arg(2).string);
         }
     }
     return result;
@@ -1695,7 +1642,7 @@ function(brl_std_loop_while)
                 free(splited->data[i]);
                 continue;
             }
-            IntList *_args = parse(vm, splited->data[i], context);
+            IntList *_args = parse(vm, splited->data[i]);
             list_push(*arglist, *_args);
             free(splited->data[i]);
 
@@ -1703,13 +1650,13 @@ function(brl_std_loop_while)
         }
 
         list_free(*splited);
-        char cond = eval(vm,arg(0).string,context);
+        char cond = eval(vm,arg(0).string);
         while (cond)
         {
-            cond = eval(vm,arg(0).string,context);
+            cond = eval(vm,arg(0).string);
             for (Int i = 0; i < arglist->size; i++)
             {
-                result = interpret_args(vm, &arglist->data[i], context);
+                result = interpret_args(vm, &arglist->data[i]);
                 if (result > -1)
                 {
                     goto skip_to_return;
@@ -1729,9 +1676,9 @@ function(brl_std_loop_while)
     else
     {
         regret_optimization:
-        while (eval(vm,arg(0).string,context))
+        while (eval(vm,arg(0).string))
         {
-            result = eval(vm,arg(1).string,context);
+            result = eval(vm,arg(1).string);
             if (result > -1)
             {
                 break;
@@ -1777,7 +1724,7 @@ function(brl_std_loop_repeat)
                 free(splited->data[i]);
                 continue;
             }
-            IntList *_args = parse(vm, splited->data[i], context);
+            IntList *_args = parse(vm, splited->data[i]);
             list_push(*arglist, *_args);
             free(splited->data[i]);
 
@@ -1790,7 +1737,7 @@ function(brl_std_loop_repeat)
         {
             for (Int i = 0; i < arglist->size; i++)
             {
-                result = interpret_args(vm, &arglist->data[i], context);
+                result = interpret_args(vm, &arglist->data[i]);
                 if (result > -1)
                 {
                     goto skip_to_return;
@@ -1812,7 +1759,7 @@ function(brl_std_loop_repeat)
         regret_optimization:
         for (int i = 0; i < (Int)arg(0).number; i++)
         {
-            result = eval(vm,arg(1).string,context);
+            result = eval(vm,arg(1).string);
             if (result > -1)
             {
                 break;

@@ -1,0 +1,11 @@
+dl.open "lib/std.so";
+dl.open "lib/dyc.so";
+
+dycc.compile (@@
+    function(abc)
+    {   
+        printf("aooooooooooo\n");
+        return -1;
+    }
+) 'abc';
+abc;

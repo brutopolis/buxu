@@ -1,5 +1,10 @@
 
 
+(08/03/2025) - version 0.7.7a
+
+- dycc is back;
+- no more contexts;
+
 (06/03/2025) - version 0.7.7
 
 - removed the @ operator fore recursion;

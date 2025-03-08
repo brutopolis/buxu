@@ -300,7 +300,7 @@ StringList* str_split_char(char *str, char delim)
 }
 
 
-void process_string(VirtualMachine *vm, char *str, HashList *context, IntList *result) 
+void process_string(VirtualMachine *vm, char *str, IntList *result) 
 {
      if (!(str[0] == '"' || str[0] == '\'')) 
      {
@@ -424,7 +424,7 @@ void process_string(VirtualMachine *vm, char *str, HashList *context, IntList *r
                 {
                     /* Extrai a expressão entre os parênteses */
                     char *expr = str_nduplicate(token + 2, closing - (token + 2));
-                    Int index = eval(vm, expr, context);
+                    Int index = eval(vm, expr);
                     free(expr);
                     
                     if (index != -1) 
@@ -911,7 +911,7 @@ void free_vm(VirtualMachine *vm)
 }
 
 // Parser functions
-IntList* parse(void *_vm, char *cmd, HashList *context) 
+IntList* parse(void *_vm, char *cmd) 
 {
     VirtualMachine* vm = (VirtualMachine*)_vm;
     IntList *result = list_init(IntList);
@@ -936,7 +936,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
             {
                 char* temp = str + 1;
                 temp[strlen(temp) - 1] = '\0';
-                Int index = eval(vm, temp, context);
+                Int index = eval(vm, temp);
                 list_push(*result, index);
             }
         }
@@ -953,7 +953,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         }
         else if (str[0] == '"' || str[0] == '\'') // string
         {
-            process_string(vm, str, context, result);
+            process_string(vm, str, result);
         }
         else if (isdigit(str[0]) || (str[0] == '-' && isdigit(str[1]))) // number
         {
@@ -972,20 +972,7 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
         else //variable 
         {
             int index = -1;
-            
-            if (context != NULL) 
-            {
-                HashList* _global_context = vm->hashes;
-                vm->hashes = context;
-                index = hash_find(vm, str);
-                vm->hashes = _global_context;
-                if (index == -1) index = hash_find(vm, str);
-            } 
-            else 
-            {
-                index = hash_find(vm, str);
-            }
-
+            index = hash_find(vm, str);
 
             if (index == -1) 
             {
@@ -1003,15 +990,13 @@ IntList* parse(void *_vm, char *cmd, HashList *context)
     return result;
 }
 
-Int interpret_args(VirtualMachine *vm, IntList *args, HashList *context)
+Int interpret_args(VirtualMachine *vm, IntList *args)
 {
     Int func = list_shift(*args);
     Int result = -1;
     Int etc = -1;
     if (func > -1)
     {
-        HashList *global_context;
-        HashList *_context;
         IntList  *_list;
         Function _function;
 
@@ -1019,41 +1004,14 @@ Int interpret_args(VirtualMachine *vm, IntList *args, HashList *context)
         {
             case TYPE_ANY:
                 _function = vm->stack->data[func].pointer;
-                result = _function(vm, args, context);
+                result = _function(vm, args);
                 list_unshift(*args, func);
                 break;
 
                 
             case TYPE_STRING:
-                // create context
-                _context = list_init(HashList);
-
-                global_context = vm->hashes;
-                vm->hashes = _context;
-                
-                if (args->size > 0)
-                {
-                    etc = register_var(vm, "...");
-                    data_t(etc) = TYPE_LIST;
-                    data(etc).pointer = args;
-                }
-
-                vm->hashes = global_context;
-
                 // eval
-                result = eval(vm, data(func).string, _context);
-
-                // free context
-                while (_context->size > 0)
-                {
-                    free(list_pop(*_context).key);
-                }
-
-                list_free(*_context);
-
-                args = (IntList*)data(etc).pointer;
-                data_t(etc) = TYPE_ANY;
-
+                result = eval(vm, data(func).string);
                 break;
         }
     }
@@ -1064,9 +1022,9 @@ Int interpret_args(VirtualMachine *vm, IntList *args, HashList *context)
     return result;
 }
 
-Int interpret(VirtualMachine *vm, char* cmd, HashList *context)
+Int interpret(VirtualMachine *vm, char* cmd)
 {
-    IntList *args = parse(vm, cmd, context);
+    IntList *args = parse(vm, cmd);
 
     if (args->size == 0)
     {
@@ -1075,18 +1033,18 @@ Int interpret(VirtualMachine *vm, char* cmd, HashList *context)
     }
     
     
-    Int result = interpret_args(vm, args, context);
+    Int result = interpret_args(vm, args);
     
     list_free(*args);
     
     return result;
 }
 
-Int eval(VirtualMachine *vm, char *cmd, HashList *context)
+Int eval(VirtualMachine *vm, char *cmd)
 {
     if(strchr(cmd, ';') == NULL)
     {
-        return interpret(vm, cmd, context);
+        return interpret(vm, cmd);
     }
 
     StringList *splited = special_split(cmd, ';');
@@ -1127,7 +1085,7 @@ Int eval(VirtualMachine *vm, char *cmd, HashList *context)
             free(str);
             continue;
         }
-        result = interpret(vm, str, context);
+        result = interpret(vm, str);
         free(str);
         if (result > 0)
         {

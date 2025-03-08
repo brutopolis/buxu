@@ -131,7 +131,7 @@ done
 if [[ -n $LIB ]]; then
     # replace .c with .so
     LIB2=$(echo $LIB | sed 's/\.c/\.so/g')
-    $CC src/bruter.c $LIB -Iinclude -shared -fPIC -o $LIB2 -O3 -lm
+    $CC src/bruter.c $LIB -Iinclude -shared -o $LIB2 -O3 -lm -fPIC
     exit;
 fi
 
@@ -209,7 +209,7 @@ fi
 
 if [[ -z "$(ls -A lib)" ]]; then
     echo "no libs to compile, building main..."
-    $CC $MAIN ./src/bruter.c -o bruter -O3 -lm -I./include $DEBUGARGS
+    $CC $MAIN ./src/bruter.c -o bruter -O3 -lm -I./include $DEBUGARGS 
 elif [[ -z "$CLEAN" ]]; then 
     for file in ./lib/*.c; do
         filename="${file##*/}"  

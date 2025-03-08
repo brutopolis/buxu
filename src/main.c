@@ -53,7 +53,7 @@ Int repl(VirtualMachine *vm)
             free(cmd);
             break;
         }
-        result = eval(vm, cmd, NULL);
+        result = eval(vm, cmd);
         free(cmd);
     }
 
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
         {
             list_push(*fileargs, new_string(vm, list_shift(*args)));
         }
-        result = eval(vm, _code, NULL);
+        result = eval(vm, _code);
         free(_code);
     }
     Int dllist = hash_find(vm, "dl.list");
