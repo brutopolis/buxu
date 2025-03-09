@@ -1,7 +1,7 @@
 // implementation of the :s that previously were part of the bruter std;
 
 // Function: abs;
-#new "abs" (@@
+#new "abs" (@
     #new 'a' (get: ... 0); 
     if "< a 0" 
     "\$ * a -1" 
@@ -11,11 +11,11 @@ print "(abs -321) = " (abs -321);
 
 // Function: pow;
 #new "pow"
-(@@
+(@
     #new "a" (get: ... 0);
     #new "b" (get: ... 1);
     #new "result" 2;
-    repeat b (@@
+    repeat b (@
         * result a;
     );
     return result;

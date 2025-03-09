@@ -2,24 +2,24 @@
 
 // IDEA each implementation;
 
-#new "each" (@@
+#new "each" (@
     #new "callback" (get: ... 0);
     #new "__size" (len:);
     
     #new "___index" 0;
 
-    #new "test_func" (: "callback" "aaa" (@@callback (get: 1);));
+    #new "test_func" (: "callback" "aaa" (@callback (get: 1);));
 
     print __size;
 
     while "< ___index __size"
-    (@@
+    (@
         print (cbk (get: ___index));
         + ___index 1;
     );
 );
 
-#new "cbk" (@@
+#new "cbk" (@
     print (get: ... 0);
     return "uga buga";
 );

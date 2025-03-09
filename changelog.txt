@@ -1,9 +1,12 @@
 
 
-(08/03/2025) - version 0.7.7a
+(09/03/2025) - version 0.7.7a
 
 - dycc is back;
 - no more contexts;
+- no more commentary operator;
+- no more (@@ ), use (@ );
+- no more memory operator (@);
 
 (06/03/2025) - version 0.7.7
 

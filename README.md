@@ -35,17 +35,13 @@
 
 - `()` = expression
 
-- `(@@ )` = string delimiter
+- `(@ )` = string delimiter
 
 - `""` = string delimiter
 
 - `''` = string delimiter
 
 - `;` = end of command separator
-
-- `// ;` = comment deimiter
-
-- `@` = memory operator
 
 # Usage
 
@@ -63,7 +59,7 @@
     // comment;
     command "string";
     command 'string';
-    command (@@ string);
+    command (@ string);
     if "condition" "code";
     command (sub: @x @y);
 

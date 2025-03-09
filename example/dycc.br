@@ -1,7 +1,7 @@
 dl.open "lib/std.so";
 dl.open "lib/dyc.so";
 
-dycc.compile (@@
+dycc.compile (@
     function(abc)
     {   
         printf("aooooooooooo\n");
