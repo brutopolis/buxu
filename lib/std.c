@@ -1769,6 +1769,180 @@ function(brl_std_loop_repeat)
     return result;
 }
 
+
+// Função auxiliar para converter uma sequência de dígitos octais em um caractere
+char parse_octal(const char **str) 
+{
+    int value = 0;
+    for (int i = 0; i < 3 && isdigit((*str)[i]) && (*str)[i] >= '0' && (*str)[i] <= '7'; i++) 
+    {
+        value = value * 8 + ((*str)[i] - '0');
+    }
+    *str += strlen(*str) - 1; // Avança o ponteiro
+    return (char)value;
+}
+
+// Função auxiliar para converter uma sequência de dígitos hexadecimais em um caractere
+char parse_hex(const char **str) 
+{
+    int value = 0;
+    while (isxdigit(**str)) 
+    {
+        value = value * 16 + (isdigit(**str) ? **str - '0' : tolower(**str) - 'a' + 10);
+        (*str)++;
+    }
+    (*str)--; // Regride o ponteiro para o último dígito hexadecimal
+    return (char)value;
+}
+
+function(brl_std_string_format) 
+{
+    list_reverse(*args);
+    Int str = list_pop(*args);
+    Int result = -1;
+    const char* format = data(str).string;
+    char* buffer = NULL;
+    size_t buffer_size = 0;
+    FILE* stream = open_memstream(&buffer, &buffer_size);
+
+    while (*format) 
+    {
+        if (*format == '%') 
+        {
+            format++;
+            // Tratamento de especificadores de formato
+            switch (*format) 
+            {
+                case 'd':
+                case 'i': 
+                {
+                    Int value = list_pop(*args);
+                    fprintf(stream, "%ld", (Int)data(value).number);
+                    break;
+                }
+                case 'u': 
+                {
+                    Int value = list_pop(*args);
+                    fprintf(stream, "%lu", (unsigned long)data(value).number);
+                    break;
+                }
+                case 'f': 
+                {
+                    Int value = list_pop(*args);
+                    fprintf(stream, "%f", data(value).number);
+                    break;
+                }
+                case 's': 
+                {
+                    Int value = list_pop(*args);
+                    fprintf(stream, "%s", data(value).string);
+                    break;
+                }
+                case 'p': 
+                {
+                    Int value = list_pop(*args);
+                    fprintf(stream, "%p", data(value).pointer);
+                    break;
+                }
+                case 'c': 
+                {
+                    Int value = list_pop(*args);
+                    fprintf(stream, "%c", (char)data(value).number);
+                    break;
+                }
+                case 'x':
+                case 'X': 
+                {
+                    Int value = list_pop(*args);
+                    fprintf(stream, (*format == 'x') ? "%lx" : "%lX", (unsigned long)data(value).number);
+                    break;
+                }
+                case 'o': 
+                {
+                    Int value = list_pop(*args);
+                    fprintf(stream, "%lo", (unsigned long)data(value).number);
+                    break;
+                }
+                case '%': 
+                {
+                    fputc('%', stream);
+                    break;
+                }
+                default: 
+                {
+                    // Especificador de formato desconhecido, imprime literalmente
+                    fputc('%', stream);
+                    fputc(*format, stream);
+                    break;
+                }
+            }
+        } 
+        else if (*format == '\\') 
+        {
+            format++;
+            // Tratamento de sequências de escape
+            switch (*format) 
+            {
+                case 'n':
+                    fputc('\n', stream);
+                    break;
+                case 't':
+                    fputc('\t', stream);
+                    break;
+                case 'r':
+                    fputc('\r', stream);
+                    break;
+                case '\\':
+                    fputc('\\', stream);
+                    break;
+                case '\'':
+                    fputc('\'', stream);
+                    break;
+                case '\"':
+                    fputc('\"', stream);
+                    break;
+                case '0':
+                    fputc('\0', stream);
+                    break;
+                case 'x': 
+                {
+                    format++;
+                    char hex_char = parse_hex(&format);
+                    fputc(hex_char, stream);
+                    break;
+                }
+                default: 
+                {
+                    if (*format >= '0' && *format <= '7') 
+                    {
+                        char octal_char = parse_octal(&format);
+                        fputc(octal_char, stream);
+                    } 
+                    else 
+                    {
+                        // Sequência de escape desconhecida, imprime literalmente
+                        fputc('\\', stream);
+                        fputc(*format, stream);
+                    }
+                    break;
+                }
+            }
+        } 
+        else 
+        {
+            fputc(*format, stream);
+        }
+        format++;
+    }
+
+    fclose(stream);
+
+    result = new_var(vm);
+    data(result).string = buffer;
+    data_t(result) = TYPE_STRING;
+    return result;
+}
+
 // inits
 #ifndef ARDUINO
 void init_os(VirtualMachine *vm)
@@ -1798,6 +1972,8 @@ void init_basics(VirtualMachine *vm)
 
     register_builtin(vm, "while", brl_std_loop_while);
     register_builtin(vm, "repeat", brl_std_loop_repeat);
+
+    register_builtin(vm, "format", brl_std_string_format);
 
 #ifndef ARDUINO
     register_builtin(vm, "scan", brl_std_io_scan);// not avaliable on arduino

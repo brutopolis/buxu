@@ -1,13 +1,2 @@
 dl.open "lib/std.so";
-
-#new 'a' "word";
-#new 'b' 123;
-#new 'c' (list: 1 2 3);
-#new 'd' ($ pun 45);
-
-print "a = $a";
-print "b = $b";
-print "c = $c";
-print "d = $d";
-print "@45 = $45";
-print "123 \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+print (format "%d %f %s\n" 1 2.0 "three");
