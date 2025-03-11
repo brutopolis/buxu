@@ -1,4 +1,4 @@
-dl.open "lib/std.so";
+load "lib/std.so";
 
 #new "_size" 100000;
 #new "_index" 0;

@@ -1,5 +1,16 @@
 
 
+(11/03/2025) - version 0.7.7b
+
+- dl.open renamed to load;
+- dl.close renamed to unload;
+- dl.list is no more a thing, things are dealt internally now;
+- build.sh trimmed down;
+- some README updates;
+- no more folder lib;
+- no more arduino setup as its now even easier to include bruter in any project;
+- some examples updated;
+
 (11/03/2025) - version 0.7.7a
 
 - dycc is back;

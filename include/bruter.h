@@ -10,17 +10,12 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
 
 #ifndef ARDUINO
-    #ifndef __EMSCRIPTEN__
-        #include "dlfcn.h"
-    #endif
+    #include "dlfcn.h"
 #endif
 
-#define VERSION "0.7.7a"
+#define VERSION "0.7.7b"
 
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
@@ -154,21 +149,10 @@ IntList* parse(void* _vm, char* cmd);
 // stringify function
 char* list_stringify(VirtualMachine* vm, IntList *list);
 
-// <libraries header>
-
 #ifndef ARDUINO
 
 char* readfile(char *filename);
 void writefile(char *filename, char *content);
 
 #endif
-
-#ifdef __EMSCRIPTEN__
-
-//declarations
-Int wasm_new_vm();
-void wasm_destroy_vm(Int index);
-char* wasm_eval(Int index, char *cmd);
-#endif
-
 #endif

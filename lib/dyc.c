@@ -178,14 +178,8 @@ const char *bruter_header = "// bruter 0.7.5b\n"
 "#include <unistd.h>\n"
 "#include <ctype.h>\n"
 "\n"
-"#ifdef __EMSCRIPTEN__\n"
-"#include <emscripten.h>\n"
-"#endif\n"
-"\n"
 "#ifndef ARDUINO\n"
-"    #ifndef __EMSCRIPTEN__\n"
-"        #include \"dlfcn.h\"\n"
-"    #endif\n"
+"    #include \"dlfcn.h\"\n"
 "#endif\n"
 "\n"
 "#define VERSION \"0.7.7a\"\n"
@@ -320,8 +314,6 @@ const char *bruter_header = "// bruter 0.7.5b\n"
 "// stringify function\n"
 "char* list_stringify(VirtualMachine* vm, IntList *list);\n"
 "\n"
-"// <libraries header>\n"
-"\n"
 "#ifndef ARDUINO\n"
 "\n"
 "char* readfile(char *filename);\n"
@@ -329,13 +321,6 @@ const char *bruter_header = "// bruter 0.7.5b\n"
 "\n"
 "#endif\n"
 "\n"
-"#ifdef __EMSCRIPTEN__\n"
-"\n"
-"//declarations\n"
-"Int wasm_new_vm();\n"
-"void wasm_destroy_vm(Int index);\n"
-"char* wasm_eval(Int index, char *cmd);\n"
-"#endif\n"
 "\n"
 "#endif";
 
@@ -382,11 +367,6 @@ void add_common_symbols(TCCState *tcc)
         readfile,
         writefile,
 #endif
-#ifdef __EMSCRIPTEN__
-        wasm_new_vm,
-        wasm_destroy_vm,
-        wasm_eval,
-#endif
     };
 
     const char *core_names[] = {
@@ -428,11 +408,6 @@ void add_common_symbols(TCCState *tcc)
 #ifndef ARDUINO
         "readfile",
         "writefile",
-#endif
-#ifdef __EMSCRIPTEN__
-        "wasm_new_vm",
-        "wasm_destroy_vm",
-        "wasm_eval",
 #endif
     };
 

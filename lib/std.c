@@ -35,18 +35,6 @@ function(brl_os_system)
     return -1;
 }
 
-#ifndef __EMSCRIPTEN__
-function(brl_os_time_now)
-{
-    return new_number(vm, time(NULL));
-}
-
-function(brl_os_time_clock)
-{
-    return new_number(vm, clock());
-}
-
-#endif
 
 #endif
 
@@ -1854,10 +1842,6 @@ void init_os(VirtualMachine *vm)
     register_builtin(vm, "file.write", brl_os_file_write);
     register_builtin(vm, "system", brl_os_system);
 
-#ifndef __EMSCRIPTEN__
-    register_builtin(vm, "time", brl_os_time_now);
-    register_builtin(vm, "clock", brl_os_time_clock);
-#endif
 }
 #endif
 
