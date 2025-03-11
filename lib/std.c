@@ -1769,176 +1769,79 @@ function(brl_std_loop_repeat)
     return result;
 }
 
-
-// Função auxiliar para converter uma sequência de dígitos octais em um caractere
-char parse_octal(const char **str) 
+function(brl_std_string_format)
 {
-    int value = 0;
-    for (int i = 0; i < 3 && isdigit((*str)[i]) && (*str)[i] >= '0' && (*str)[i] <= '7'; i++) 
-    {
-        value = value * 8 + ((*str)[i] - '0');
-    }
-    *str += strlen(*str) - 1; // Avança o ponteiro
-    return (char)value;
-}
-
-// Função auxiliar para converter uma sequência de dígitos hexadecimais em um caractere
-char parse_hex(const char **str) 
-{
-    int value = 0;
-    while (isxdigit(**str)) 
-    {
-        value = value * 16 + (isdigit(**str) ? **str - '0' : tolower(**str) - 'a' + 10);
-        (*str)++;
-    }
-    (*str)--; // Regride o ponteiro para o último dígito hexadecimal
-    return (char)value;
-}
-
-function(brl_std_string_format) 
-{
-    list_reverse(*args);
-    Int str = list_pop(*args);
+    stack_reverse(*args);
+    Int str = stack_pop(*args);
     Int result = -1;
-    const char* format = data(str).string;
-    char* buffer = NULL;
-    size_t buffer_size = 0;
-    FILE* stream = open_memstream(&buffer, &buffer_size);
-
-    while (*format) 
+    char* _str = str_duplicate(data(str).string);
+    for (Int i = 0; i < strlen(_str); i++)
     {
-        if (*format == '%') 
+        if (_str[i] == '%')
         {
-            format++;
-            // Tratamento de especificadores de formato
-            switch (*format) 
+            if (_str[i+1] == 'd')
             {
-                case 'd':
-                case 'i': 
-                {
-                    Int value = list_pop(*args);
-                    fprintf(stream, "%ld", (Int)data(value).number);
-                    break;
-                }
-                case 'u': 
-                {
-                    Int value = list_pop(*args);
-                    fprintf(stream, "%lu", (unsigned long)data(value).number);
-                    break;
-                }
-                case 'f': 
-                {
-                    Int value = list_pop(*args);
-                    fprintf(stream, "%f", data(value).number);
-                    break;
-                }
-                case 's': 
-                {
-                    Int value = list_pop(*args);
-                    fprintf(stream, "%s", data(value).string);
-                    break;
-                }
-                case 'p': 
-                {
-                    Int value = list_pop(*args);
-                    fprintf(stream, "%p", data(value).pointer);
-                    break;
-                }
-                case 'c': 
-                {
-                    Int value = list_pop(*args);
-                    fprintf(stream, "%c", (char)data(value).number);
-                    break;
-                }
-                case 'x':
-                case 'X': 
-                {
-                    Int value = list_pop(*args);
-                    fprintf(stream, (*format == 'x') ? "%lx" : "%lX", (unsigned long)data(value).number);
-                    break;
-                }
-                case 'o': 
-                {
-                    Int value = list_pop(*args);
-                    fprintf(stream, "%lo", (unsigned long)data(value).number);
-                    break;
-                }
-                case '%': 
-                {
-                    fputc('%', stream);
-                    break;
-                }
-                default: 
-                {
-                    // Especificador de formato desconhecido, imprime literalmente
-                    fputc('%', stream);
-                    fputc(*format, stream);
-                    break;
-                }
+                Int value = stack_pop(*args);
+                char* _value = str_format("%ld", (Int)data(value).number);
+                char* _newstr = str_replace(_str, "\%d", _value);
+                free(_str);
+                _str = _newstr;
             }
-        } 
-        else if (*format == '\\') 
-        {
-            format++;
-            // Tratamento de sequências de escape
-            switch (*format) 
+            else if (_str[i+1] == 's')
             {
-                case 'n':
-                    fputc('\n', stream);
-                    break;
-                case 't':
-                    fputc('\t', stream);
-                    break;
-                case 'r':
-                    fputc('\r', stream);
-                    break;
-                case '\\':
-                    fputc('\\', stream);
-                    break;
-                case '\'':
-                    fputc('\'', stream);
-                    break;
-                case '\"':
-                    fputc('\"', stream);
-                    break;
-                case '0':
-                    fputc('\0', stream);
-                    break;
-                case 'x': 
-                {
-                    format++;
-                    char hex_char = parse_hex(&format);
-                    fputc(hex_char, stream);
-                    break;
-                }
-                default: 
-                {
-                    if (*format >= '0' && *format <= '7') 
-                    {
-                        char octal_char = parse_octal(&format);
-                        fputc(octal_char, stream);
-                    } 
-                    else 
-                    {
-                        // Sequência de escape desconhecida, imprime literalmente
-                        fputc('\\', stream);
-                        fputc(*format, stream);
-                    }
-                    break;
-                }
+                Int value = stack_pop(*args);
+                char* _value = data(value).string;
+                char* _newstr = str_replace(_str, "\%s", _value);
+                free(_str);
+                _str = _newstr;
             }
-        } 
-        else 
-        {
-            fputc(*format, stream);
+            else if (_str[i+1] == 'f')
+            {
+                Int value = stack_pop(*args);
+                char* _value = str_format("%f", data(value).number);
+                char* _newstr = str_replace(_str, "\%f", _value);
+                free(_str);
+                _str = _newstr;
+            }
+            else if (_str[i+1] == 'p')
+            {
+                Int value = stack_pop(*args);
+                char* _value = str_format("%p", data(value).pointer);
+                char* _newstr = str_replace(_str, "\%p", _value);
+                free(_str);
+                _str = _newstr;
+            }
         }
-        format++;
+        else if (_str[i] == '\\')
+        {
+            if (_str[i+1] == 'n')
+            {
+                char* _newstr = str_replace(_str, "\\n", "\n");
+                free(_str);
+                _str = _newstr;
+            }
+            else if (_str[i+1] == 't')
+            {
+                char* _newstr = str_replace(_str, "\\t", "\t");
+                free(_str);
+                _str = _newstr;
+            }
+            else if (_str[i+1] == 'r')
+            {
+                char* _newstr = str_replace(_str, "\\r", "\r");
+                free(_str);
+                _str = _newstr;
+            }
+            else if (_str[i+1] >= '0' && _str[i+1] <= '9')
+            {
+                char* _newstr = str_format("%s%c", _str + i + 1, (char)atoi(_str + i + 1));
+                free(_str);
+                _str = _newstr;
+            }
+        }
     }
-
-    fclose(stream);
-
     result = new_var(vm);
-    data(result).string = buffer;
+    data(result).string = _str;
     data_t(result) = TYPE_STRING;
     return result;
 }

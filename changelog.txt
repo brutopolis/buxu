@@ -1,6 +1,6 @@
 
 
-(09/03/2025) - version 0.7.7a
+(10/03/2025) - version 0.7.8
 
 - dycc is back;
 - no more contexts;
