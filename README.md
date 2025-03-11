@@ -5,32 +5,6 @@
 *`UNDER HEAVY DEVELOPMENT`*
 
 
-# Table of Contents
-
-
-- [bruter](#bruter)
-- [table of contents](#table-of-contents)
-- [Introduction](#introduction)
-- [Syntax](#syntax)
-- [Usage](#usage)
-- [Types](#types)
-- [Scope](#scope)
-- [Building instructions](#building-instructions)
-- [Standard Library](#standard-library)
-  - [std.math](#stdmath)
-  - [std.type](#stdtype)
-  - [std.condition (index-based)](#stdcondition-index-based)
-  - [std.hash](#stdhash)
-  - [std.loop](#stdloop)
-  - [std.mem](#stdmem)
-  - [std.list](#stdlist)
-  - [std.string](#stdstring)
-  - [std.global](#stdglobal)
-  - [std](#std)
-  - [Dynamic libraries](#dynamic-libraries)
-
-
-
 # Reserved
 
 - `()` = expression
@@ -49,19 +23,8 @@
     command ...;
     command (command (command ...));
     command variable_1 variable_2 ...;
-    #new "name" value; 
-    #new "name" (command ...);
-    #new "name" (: value value ...);
     command name;
     "script whatever";
-    repeat amount "code";
-    while "condition" "code";
-    // comment;
-    command "string";
-    command 'string';
-    command (@ string);
-    if "condition" "code";
-    command (sub: @x @y);
 
 # Types
       
@@ -132,7 +95,7 @@
 
   ## Dynamic libraries
 
-  dynamic libraries functions are actually not part of stdlib itself, it comes from the idea of clean bruter, a bruter withou std that can load dynamic libs, like the std itself, while dl.close is a thing, all dynamic libs are auto-closed at exit(except if you delete the dl.list);
+  dynamic libraries functions are built in the main.c file, while dl.close is a thing, all dynamic libs are auto-closed at exit(except if you delete the dl.list ofc);
 
   | Function    | Description                              | Function Signature                           |
   |-------------|------------------------------------------|----------------------------------------------|

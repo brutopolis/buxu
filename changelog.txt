@@ -1,12 +1,16 @@
 
 
-(10/03/2025) - version 0.7.8
+(11/03/2025) - version 0.7.7a
 
 - dycc is back;
 - no more contexts;
 - no more commentary operator;
 - no more (@@ ), use (@ );
 - no more memory operator (@);
+- every complext thing removed in favor of simplicity;
+- no more string formatter;
+- bruter is now meant mainly as a companion to C, where you can easily develop a proper language with lib;
+- std will not be considered as a part of bruter anymore;
 
 (06/03/2025) - version 0.7.7
 
