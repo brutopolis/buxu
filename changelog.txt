@@ -1,5 +1,11 @@
 
 
+(15/03/2025) - version 0.7.7c
+
+- bruterc, a shell script with embedded bruter files, for compiling libs;
+- bruterc is just a wrapper for build.sh --lib with embedded files to be used from anywhere;
+- new option --no-bruterc in build.sh, if you just want to compile the interpreter;
+
 (11/03/2025) - version 0.7.7b
 
 - dl.open renamed to load;

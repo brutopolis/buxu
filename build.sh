@@ -5,7 +5,7 @@
 
 # usage function
 usage() {
-    echo "usage: $0 [--debug] [--debug-file] [--cc gcc] [--lib libfile.c] [-h || --help]"
+    echo "usage: $0 [--debug] [--debug-file] [--cc gcc] [--lib libfile.c] [-h || --help] [--no-bruterc]"
     exit 1
 }
 
@@ -16,16 +16,16 @@ ORIGIN=$(pwd)
 DEBUG=0
 CC="gcc -Wformat=0"
 MAIN="src/main.c"
-EXEC=""
+NOBRUTERC=0
 
 # parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --exec) EXEC="$2"; shift 2 ;;
         --debug) DEBUG=1; shift ;;
         --debug-file) DEBUG=1; DEBUG_FILE="$2"; shift 2 ;;
         --cc) CC="$2"; shift 2 ;;
         --lib) LIB="$2"; shift 2 ;;
+        --no-bruterc) NOBRUTERC=1; shift ;;
         --help) usage ;;
         -h) usage ;;
         *) echo "unknown option: $1"; usage ;;
@@ -51,6 +51,46 @@ echo "compiler: $CC"
 
 rm -rf build
 mkdir -p build
+
+if [[ $NOBRUTERC -eq 0 ]]; then
+
+    BRUTERC_SCRIPT="build/bruterc"
+
+    echo '#!/bin/sh' > $BRUTERC_SCRIPT
+    echo '' >> $BRUTERC_SCRIPT
+
+    echo 'CC="gcc"' >> $BRUTERC_SCRIPT
+
+    echo 'while [[ $# -gt 0 ]]; do' >> $BRUTERC_SCRIPT
+    echo '    case $1 in' >> $BRUTERC_SCRIPT
+    echo '        --cc) CC="$2"; shift 2 ;;' >> $BRUTERC_SCRIPT
+    # echo '        *) echo "unknown option: $1"; exit 1 ;;' >> $BRUTERC_SCRIPT
+    echo '        *) break ;;' >> $BRUTERC_SCRIPT
+    echo '    esac' >> $BRUTERC_SCRIPT
+    echo 'done' >> $BRUTERC_SCRIPT
+    echo '' >> $BRUTERC_SCRIPT
+    echo 'rm -rf ./.bruter' >> $BRUTERC_SCRIPT
+    echo 'mkdir -p ./.bruter' >> $BRUTERC_SCRIPT
+    echo 'cd ./.bruter' >> $BRUTERC_SCRIPT
+    echo '' >> $BRUTERC_SCRIPT
+
+    echo 'base64 -d <<EOF | tar xz' >> $BRUTERC_SCRIPT
+    tar cz build.sh include/* src/* | base64 -w 0 >> $BRUTERC_SCRIPT
+    echo '' >> $BRUTERC_SCRIPT
+    echo 'EOF' >> $BRUTERC_SCRIPT
+    echo '' >> $BRUTERC_SCRIPT
+
+
+    echo 'cd ..;' >> $BRUTERC_SCRIPT
+
+    echo './.bruter/build.sh --lib $1' >> $BRUTERC_SCRIPT
+    echo '' >> $BRUTERC_SCRIPT
+    echo 'rm -rf ./.bruter' >> $BRUTERC_SCRIPT
+    echo 'exit' >> $BRUTERC_SCRIPT
+
+    chmod +x $BRUTERC_SCRIPT
+
+fi
 
 $CC $MAIN ./src/bruter.c -o build/bruter -O3 -lm -Iinclude $DEBUGARGS
 
