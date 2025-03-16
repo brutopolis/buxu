@@ -17,6 +17,7 @@ DEBUG=0
 CC="gcc -Wformat=0"
 MAIN="src/main.c"
 NOBRUTERC=0
+EXTRA=""
 
 # parse arguments
 while [[ $# -gt 0 ]]; do
@@ -26,6 +27,7 @@ while [[ $# -gt 0 ]]; do
         --cc) CC="$2"; shift 2 ;;
         --lib) LIB="$2"; shift 2 ;;
         --no-bruterc) NOBRUTERC=1; shift ;;
+        --extra) EXTRA="$2"; shift 2 ;;
         --help) usage ;;
         -h) usage ;;
         *) echo "unknown option: $1"; usage ;;
@@ -60,10 +62,13 @@ if [[ $NOBRUTERC -eq 0 ]]; then
     echo '' >> $BRUTERC_SCRIPT
 
     echo 'CC="gcc"' >> $BRUTERC_SCRIPT
+    echo 'EXTRA=""' >> $BRUTERC_SCRIPT
+    echo '' >> $BRUTERC_SCRIPT
 
     echo 'while [[ $# -gt 0 ]]; do' >> $BRUTERC_SCRIPT
     echo '    case $1 in' >> $BRUTERC_SCRIPT
     echo '        --cc) CC="$2"; shift 2 ;;' >> $BRUTERC_SCRIPT
+    echo '        --extra) EXTRA="$2"; shift 2 ;;' >> $BRUTERC_SCRIPT
     # echo '        *) echo "unknown option: $1"; exit 1 ;;' >> $BRUTERC_SCRIPT
     echo '        *) break ;;' >> $BRUTERC_SCRIPT
     echo '    esac' >> $BRUTERC_SCRIPT
@@ -79,12 +84,14 @@ if [[ $NOBRUTERC -eq 0 ]]; then
     echo '' >> $BRUTERC_SCRIPT
     echo 'EOF' >> $BRUTERC_SCRIPT
     echo '' >> $BRUTERC_SCRIPT
-
-
-    echo 'cd ..;' >> $BRUTERC_SCRIPT
-
-    echo './.bruter/build.sh --lib $1' >> $BRUTERC_SCRIPT
+    echo '# if $1 starts with / then its an absolute path' >> $BRUTERC_SCRIPT
+    echo 'if [[ $1 == /* ]]; then' >> $BRUTERC_SCRIPT
+    echo './build.sh --lib $1' >> $BRUTERC_SCRIPT
+    echo 'else' >> $BRUTERC_SCRIPT
+    echo './build.sh --lib ../$1 --extra "$EXTRA"' >> $BRUTERC_SCRIPT
+    echo 'fi' >> $BRUTERC_SCRIPT
     echo '' >> $BRUTERC_SCRIPT
+    echo 'cd ..' >> $BRUTERC_SCRIPT
     echo 'rm -rf ./.bruter' >> $BRUTERC_SCRIPT
     echo 'exit' >> $BRUTERC_SCRIPT
 
@@ -92,7 +99,7 @@ if [[ $NOBRUTERC -eq 0 ]]; then
 
 fi
 
-$CC $MAIN ./src/bruter.c -o build/bruter -O3 -lm -Iinclude $DEBUGARGS
+$CC $MAIN ./src/bruter.c -o build/bruter -O3 -lm -Iinclude $DEBUGARGS $EXTRA
 
 if [ -n "$DEBUG_FILE" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./build/bruter $DEBUG_FILE
