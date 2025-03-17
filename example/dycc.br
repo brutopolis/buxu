@@ -1,5 +1,5 @@
-dl.open "lib/std.so";
-dl.open "lib/dyc.so";
+load "lib/std.so";
+load "lib/dyc.so";
 
 dycc.compile (@
     function(abc)

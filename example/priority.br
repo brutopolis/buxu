@@ -1,3 +1,4 @@
+load "lib/std.so";
 #new "a" 1;
 #new "b" 2;
 #new "c" 3;
@@ -31,8 +32,15 @@
 #new "ae" 31;
 #new "af" 32;
 ls.hash;
-#priority 100; // set the base priority, default is 10;
-#priority "a" 10; // reorder the hash of a to aproximately 10/100 of the hash table;
+
+# "set the base priority, default is 10";
+#priority 100;
+
+# "reorder the hash of a to aproximately 10/100 of the hash table";
+#priority "a" 10;
+
 ls.hash;
-print "base priority is" (#priority); // print the base priority;
-// the less priority the more important;
+
+# "the less priority the more important";
+
+print "base priority is" (#priority); 

@@ -1,3 +1,4 @@
+load "lib/std.so";
 #new 'l' (list:);
 push: l 1;
 push: l 2;

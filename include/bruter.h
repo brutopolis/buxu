@@ -15,7 +15,7 @@
     #include "dlfcn.h"
 #endif
 
-#define VERSION "0.7.7b"
+#define VERSION "0.7.7c"
 
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
@@ -33,7 +33,7 @@
 #endif
 
 // c_list.h must be included after defining Int, because it also relies on it and will define it as a int(4byte) if not defined, instead of the pointer size(which might usually be 8 bytes);
-#include "c_list.h"
+#include <c_list.h>
 
 #ifndef NULL
 #define NULL 0

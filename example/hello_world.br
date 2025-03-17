@@ -1,2 +1,3 @@
+load "lib/std.so";
 print "hello world!";
 return 0;

@@ -1,4 +1,4 @@
-// bruter 0.7.5b
+// bruter 0.7.7c
 
 // type agnostic,
 // header only,
@@ -31,6 +31,8 @@
 #endif
 
 #ifndef C_LIST_H
+
+#include <stdlib.h>
 
 #define List(T) struct \
 { \
