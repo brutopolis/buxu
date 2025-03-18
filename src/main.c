@@ -177,7 +177,6 @@ int main(int argc, char **argv)
     
     if (libs->size > 0)
     {
-        printf("size: %ld\n", libs->size);
         for (Int i = 0; i < libs->size+1; i++)
         {
             dlclose((void*)libs->data[i]);
