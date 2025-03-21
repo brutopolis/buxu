@@ -117,7 +117,22 @@ function(brl_std_io_ls)
 {
     for (Int i = 0; i < vm->stack->size; i++)
     {
-        printf("(%ld): ", i);
+        printf("  |%ld    ", i);
+        switch (vm->typestack->data[vm->hashes->data[i].index]) 
+        {
+            case TYPE_STRING:
+                printf("string   ");
+                break;
+            case TYPE_NUMBER:
+                printf("number   ");
+                break;
+            case TYPE_LIST:
+                printf("list   ");
+                break;
+            case TYPE_ANY:
+                printf("any   ");
+                break;
+        }
         print_element(vm, i);
         printf("\n");
     }
@@ -127,12 +142,44 @@ function(brl_std_io_ls)
 
 function(brl_std_io_ls_hashes)
 {
-    for (Int i = 0; i < vm->hashes->size; i++)
+    Int max_len = 0;
+    for (Int i = 0; i < vm->hashes->size; i++) 
     {
-        printf("%s {%d} @%ld: ", vm->hashes->data[i].key, vm->typestack->data[vm->hashes->data[i].index], vm->hashes->data[i].index);
+        int len = snprintf(NULL, 0, "  |%ld   %s", vm->hashes->data[i].index, vm->hashes->data[i].key);
+        if ((Int)len > max_len) 
+        {
+            max_len = len;
+        }
+    }
+    Int col_width = max_len + 2;
+    for (Int i = 0; i < vm->hashes->size; i++) 
+    {
+        int len = snprintf(NULL, 0, "  |%ld   %s", vm->hashes->data[i].index, vm->hashes->data[i].key);
+        printf("  |%ld   %s", vm->hashes->data[i].index, vm->hashes->data[i].key);
+        Int pad = col_width > (Int)len ? col_width - len : 0;
+        for (Int j = 0; j < pad; j++) 
+        {
+            printf(" ");
+        }
+        switch (vm->typestack->data[vm->hashes->data[i].index]) 
+        {
+            case TYPE_STRING:
+                printf("|string   ");
+                break;
+            case TYPE_NUMBER:
+                printf("|number   ");
+                break;
+            case TYPE_LIST:
+                printf("|list   ");
+                break;
+            case TYPE_ANY:
+                printf("|any   ");
+                break;
+        }
         print_element(vm, vm->hashes->data[i].index);
         printf("\n");
     }
+
     return -1;
 }
 
@@ -1636,7 +1683,7 @@ function(brl_std_string_format)
             {
                 Int value = list_pop(*args);
                 char* _value = str_format("%ld", (Int)data(value).number);
-                char* _newstr = str_replace(_str, "\%ld", _value);
+                char* _newstr = str_replace(_str, "\%d", _value);
                 free(_str);
                 _str = _newstr;
             }

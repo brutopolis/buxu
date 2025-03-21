@@ -2,18 +2,16 @@
 // this is the buxu's interpreter frontend when not using as a lib
 // there are some tweaks that try be compatible with mac and windows, totally untested;
 // mingw, tcc and even other non-*cc compilers like cl.exe are expected to work;
-// beside the name 'main.c' this is a non-essential tool.
+// this is a non-essential tool.
 
 // beside having compatibility with windows, some features are only available on linux
 // the dynamic library loading is only available on linux, mac and mingw
-// the signal handling is only available on linux and macos, windows does have signals.h, but it is extremely limited and is not worth the effort to deal with such basic signal handling, another aproach would be needed, dealing exceptions the way intended for windows;
 
 // buxu header
 #include "../include/buxu.h"
 
-// linux and macos, not available on windows(neither mingw)
-#ifdef __unix__ 
-    #include <signal.h> // signal handling
+#ifdef __unix__
+    #include <signal.h>
 #endif
 
 // linux, macos and mingw

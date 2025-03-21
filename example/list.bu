@@ -9,7 +9,7 @@ unshift l 6;
 unshift l 7;
 new '_min' (pop l);
 new '_max' (shift l);
-print (sub @2 @40);
+print (sub (get 2) (get 40));
 print (get l 0);
 print l;
 print (get l 0);

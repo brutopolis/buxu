@@ -5,7 +5,7 @@
 # should work well on mac, though i haven't tested it, and have no plans to do so.
 # mingw might work with some tweaks, but i haven't tested it, might do soon or later.
 
-# the same applies to src/main.c and buxuc, both are made with linux in mind.
+# the same applies to src/cli.c and buxuc, both are made with linux in mind.
 # but they are only tools to build and interpret the language, so they are not really essential and better tools can be made for each platform.
 
 # libbuxu, it is, buxu.c and buxu.h are platform independent, and should(and need to) work on any platform that has a C compiler.
@@ -30,7 +30,7 @@ fi
 # default values
 DEBUG=0
 CC="gcc -Wformat=0"
-MAIN="src/main.c"
+MAIN="src/cli.c"
 NOBUXUC=0
 EXTRA=""
 INSTALL=0

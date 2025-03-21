@@ -37,7 +37,7 @@
 #define TYPE_STRING 2
 #define TYPE_LIST 3
 
-// left eye is intentionally different from the right eye
+// left eye is intentionally lower from the right eye
 #define EMOTICON_DEFAULT "[=º-°=]"
 #define EMOTICON_IDLE "[=º °=]"
 #define EMOTICON_WARNING "[=º~°=]"
@@ -70,7 +70,8 @@
 }
 
 // malloc and initialize a new list
-#define list_init(type) ({ \
+#define list_init(type) \
+({ \
     type *list = (type*)malloc(sizeof(type)); \
     list->data = NULL; \
     list->size = 0; \
@@ -79,32 +80,40 @@
 })
 
 // increase the capacity of the stack
-#define list_double(s) do { \
+#define list_double(s) do \
+{ \
     (s).capacity = (s).capacity == 0 ? 1 : (s).capacity * 2; \
     (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
 } while (0)
 
 // decrease the capacity of the stack
-#define list_half(s) do { \
+#define list_half(s) do \
+{ \
     (s).capacity /= 2; \
     (s).data = realloc((s).data, (s).capacity * sizeof(*(s).data)); \
-    if ((s).size > (s).capacity) { \
+    if ((s).size > (s).capacity) \
+    { \
         (s).size = (s).capacity; \
     } \
 } while (0)
 
-#define list_push(s, v) do { \
-    if ((s).size == (s).capacity) { \
+#define list_push(s, v) do \
+{ \
+    if ((s).size == (s).capacity) \
+    { \
         list_double(s); \
     } \
     (s).data[(s).size++] = (v); \
 } while (0)
 
-#define list_unshift(s, v) do { \
-    if ((s).size == (s).capacity) { \
+#define list_unshift(s, v) do \
+{ \
+    if ((s).size == (s).capacity) \
+    { \
         list_double(s); \
     } \
-    for (Int i = (s).size; i > 0; i--) { \
+    for (Int i = (s).size; i > 0; i--) \
+    { \
         (s).data[i] = (s).data[i - 1]; \
     } \
     (s).data[0] = (v); \
@@ -113,30 +122,40 @@
 
 #define list_pop(s) ((s).data[--(s).size])
 
-#define list_shift(s) ({ \
+#define list_shift(s) \
+({ \
     typeof((s).data[0]) ret = (s).data[0]; \
-    for (Int i = 0; i < (s).size - 1; i++) { \
+    for (Int i = 0; i < (s).size - 1; i++) \
+    { \
         (s).data[i] = (s).data[i + 1]; \
     } \
     (s).size--; \
     ret; \
 })
 
-#define list_free(s) ({free((s).data);free(&s);})
+#define list_free(s) \
+({\
+    free((s).data);\
+    free(&s);\
+})
 
 //swap elements from index i1 to index i2
-#define list_swap(s, i1, i2) do { \
+#define list_swap(s, i1, i2) do \
+{ \
     typeof((s).data[i1]) tmp = (s).data[i1]; \
     (s).data[i1] = (s).data[i2]; \
     (s).data[i2] = tmp; \
 } while (0)
 
 //insert element v at index i
-#define list_insert(s, i, v) do { \
-    if ((s).size == (s).capacity) { \
+#define list_insert(s, i, v) do \
+{ \
+    if ((s).size == (s).capacity) \
+    { \
         list_double(s); \
     } \
-    for (Int j = (s).size; j > i; j--) { \
+    for (Int j = (s).size; j > i; j--) \
+    { \
         (s).data[j] = (s).data[j - 1]; \
     } \
     (s).data[i] = (v); \
@@ -144,9 +163,11 @@
 } while (0)
 
 //remove element at index i and return it
-#define list_remove(s, i) ({ \
+#define list_remove(s, i) \
+({ \
     typeof((s).data[i]) ret = (s).data[i]; \
-    for (Int j = i; j < (s).size - 1; j++) { \
+    for (Int j = i; j < (s).size - 1; j++) \
+    { \
         (s).data[j] = (s).data[j + 1]; \
     } \
     (s).size--; \
@@ -154,30 +175,41 @@
 })
 
 //same as remove but does a swap and pop, faster but the order of the elements will change
-#define list_fast_remove(s, i) ({ \
+#define list_fast_remove(s, i) \
+({ \
     typeof((s).data[i]) ret = (s).data[i]; \
     list_swap(s, i, (s).size - 1); \
     list_pop(s); \
     ret; \
 })
 
-#define list_find(s, v) ({ \
+#define list_find(s, v) \
+({ \
     Int i = 0; \
-    while (i < (s).size && (s).data[i] != (v)) { \
+    while (i < (s).size && (s).data[i] != (v)) \
+    { \
         i++; \
     } \
     i == (s).size ? -1 : i; \
 })
 
-#define list_reverse(s) do { \
-    for (Int i = 0; i < (s).size / 2; i++) { \
+#define list_reverse(s) do \
+{ \
+    for (Int i = 0; i < (s).size / 2; i++) \
+    { \
         list_swap((s), i, (s).size - i - 1); \
     } \
 } while (0)
 
-#define list_set(s, i, v) ((s).data[i] = (v))
+#define list_set(s, i, v) \
+(\
+    (s).data[i] = (v)\
+)
 
-#define list_get(s, i) ((s).data[i])
+#define list_get(s, i) \
+(\
+    (s).data[i]\
+)
 
 //Value
 typedef union 

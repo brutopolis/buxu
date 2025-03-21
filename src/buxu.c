@@ -53,28 +53,24 @@ char* str_concat(const char *str1, const char *str2)
 
 char* str_replace(const char *str, const char *substr, const char *replacement)
 {
-    const char *pos = strstr(str, substr); // Localiza a primeira ocorrência de 'substr'
+    const char *pos = strstr(str, substr);
     if (!pos)
     {
-        // Se não encontrou, retorna uma cópia da string original
         char *newstr = (char *)malloc(strlen(str) + 1);
         strcpy(newstr, str);
         return newstr;
     }
 
-    // Calcula os tamanhos
     size_t len_before = pos - str;
     size_t substr_len = strlen(substr);
     size_t replacement_len = strlen(replacement);
     size_t new_len = strlen(str) - substr_len + replacement_len;
 
-    // Aloca memória para a nova string
     char *newstr = (char *)malloc(new_len + 1);
 
-    // Constrói a nova string
-    strncpy(newstr, str, len_before); // Parte antes da substring
-    strcpy(newstr + len_before, replacement); // Substituição
-    strcpy(newstr + len_before + replacement_len, pos + substr_len); // Parte após a substring
+    strncpy(newstr, str, len_before);
+    strcpy(newstr + len_before, replacement);
+    strcpy(newstr + len_before + replacement_len, pos + substr_len);
 
     return newstr;
 }
@@ -85,38 +81,35 @@ char* str_replace_all(const char *str, const char *substr, const char *replaceme
     size_t substr_len = strlen(substr);
     size_t replacement_len = strlen(replacement);
 
-    // Contar substrings e calcular tamanho necessário em uma única passagem
     size_t new_len = 0;
     size_t count = 0;
     for (const char *p = strstr(str, substr); p; p = strstr(p + substr_len, substr))
     {
         count++;
-        new_len += (p - str) - new_len; // Adiciona a parte antes da substring
-        new_len += replacement_len;    // Adiciona o tamanho da substituição
-        str = p + substr_len;          // Avança para o próximo trecho
+        new_len += (p - str) - new_len;
+        new_len += replacement_len;
+        str = p + substr_len;
     }
-    new_len += strlen(str); // Adiciona o restante da string
+    new_len += strlen(str);
 
-    // Aloca memória para a nova string
     char *newstr = (char *)malloc(new_len + 1);
     char *dest = newstr;
 
-    // Construir a nova string
-    str = str - new_len + strlen(newstr); // Reiniciar ponteiro para o início da string original
+    str = str - new_len + strlen(newstr);
     const char *p = strstr(str, substr);
     while (p)
     {
         size_t len_before = p - str;
-        strncpy(dest, str, len_before);    // Copiar parte antes da substring
+        strncpy(dest, str, len_before);
         dest += len_before;
 
-        strcpy(dest, replacement);        // Copiar substituição
+        strcpy(dest, replacement);
         dest += replacement_len;
 
-        str = p + substr_len;             // Avançar na string original
+        str = p + substr_len;
         p = strstr(str, substr);
     }
-    strcpy(dest, str);                    // Copiar o restante da string original
+    strcpy(dest, str);
 
     return newstr;
 }
@@ -157,26 +150,26 @@ StringList* special_space_split(char *str)
         else if (str[i] == '"')
         {
             int j = i;
-            j++;  // Avança para depois da abertura de aspas duplas
+            j++;
             while (str[j] != '"' && str[j] != '\0')
             {
                 j++;
             }
             char *tmp = str_nduplicate(str + i, j - i + 1);
             list_push(*splited, tmp);
-            i = j + 1;  // Avança para após o fechamento de aspas duplas
+            i = j + 1;
         }
         else if (str[i] == '\'')
         {
             int j = i;
-            j++;  // Avança para depois da abertura de aspas simples
+            j++;
             while (str[j] != '\'' && str[j] != '\0')
             {
                 j++;
             }
             char *tmp = str_nduplicate(str + i, j - i + 1);
             list_push(*splited, tmp);
-            i = j + 1;  // Avança para após o fechamento de aspas simples
+            i = j + 1;
         }
         else if (isspace(str[i]))
         {
@@ -219,23 +212,20 @@ StringList* special_split(char *str, char delim)
         }
         else if (str[i] == '"' && recursion == 0 && !inside_single_quotes)
         {
-            // Alterna o estado de dentro/fora de aspas duplas
             inside_double_quotes = !inside_double_quotes;
         }
         else if (str[i] == '\'' && recursion == 0 && !inside_double_quotes)
         {
-            // Alterna o estado de dentro/fora de aspas simples
             inside_single_quotes = !inside_single_quotes;
         }
 
-        // Se encontramos o delimitador e não estamos dentro de parênteses nem de aspas simples ou duplas
         if (str[i] == delim && recursion == 0 && !inside_double_quotes && !inside_single_quotes)
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i);
             list_push(*splited, tmp);
             last_i = i + 1;
         }
-        else if (str[i + 1] == '\0') // Checagem para o último token
+        else if (str[i + 1] == '\0')
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i + 1);
             list_push(*splited, tmp);

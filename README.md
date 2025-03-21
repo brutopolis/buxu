@@ -61,7 +61,7 @@
 
   ## Dynamic libraries
 
-  dynamic libraries functions are built in the main.c file, while unload is a thing, all dynamic libs are auto-closed at exit;
+  dynamic libraries functions are built in the cli.c file, while unload is a thing, all dynamic libs are auto-closed at exit;
 
   | Function    | Description                              | Function Signature                           |
   |-------------|------------------------------------------|----------------------------------------------|
