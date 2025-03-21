@@ -132,6 +132,19 @@ if [[ $NOBUXUC -eq 0 ]]; then
     echo 'if [[ $OUTPUT_NAME == "" ]]; then' >> $BUXUC_SCRIPT
     echo 'OUTPUT_NAME=$(echo "$1" | sed "s/\.c$/.so/")' >> $BUXUC_SCRIPT
     echo 'fi' >> $BUXUC_SCRIPT
+
+    # if /usr/lib does not exist print error
+    echo 'if [[ ! -d /usr/lib ]]; then' >> $BUXUC_SCRIPT
+    echo '    echo "[=°~°=]: /usr/lib does not exist"' >> $BUXUC_SCRIPT
+    echo '    echo "[=°-°=]: consider compiling the library manually e.g.:"' >> $BUXUC_SCRIPT
+    echo '    echo "[=°-°=]: $CC file.c -o file.so -shared -fPIC -O3 -lm -lbuxu -Wl,-rpath=/usr/lib"' >> $BUXUC_SCRIPT
+    echo '    echo "[=°-°=]: or"' >> $BUXUC_SCRIPT
+    echo '    echo "[=°-°=]: $CC file.c buxu.c -o file.so -Ibuxu/include -shared -fPIC -O3"' >> $BUXUC_SCRIPT
+    echo '    echo "[=°-°=]: or something similar"' >> $BUXUC_SCRIPT    
+    echo '    exit 1' >> $BUXUC_SCRIPT
+    echo 'fi' >> $BUXUC_SCRIPT
+
+
     echo '' >> $BUXUC_SCRIPT
     echo '$CC $1 -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=/usr/lib' >> $BUXUC_SCRIPT
     chmod +x $BUXUC_SCRIPT
@@ -158,8 +171,14 @@ echo "[=°-°=]: done building."
 
 if [[ $INSTALL -eq 1 ]]; then
     
+    # if /usr/bin does not exist print error
+    if [[ ! -d /usr/bin ]]; then
+        echo "[=°~°=]: /usr/bin does not exist"
+        exit 1
+    fi
+
     if [[ ! -f ./build/buxu ]]; then
-        echo "[=°~°=]: ./build/ not found"
+        echo "[=°~°=]: ./build/ not found, cant install buxu"
         exit 1
     fi
 

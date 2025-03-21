@@ -1,4 +1,4 @@
-#include "buxu.h"
+#include "../include/buxu.h"
 
 //string functions
 char* str_duplicate(const char *str)

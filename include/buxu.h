@@ -23,7 +23,7 @@
 // not part of the standard library
 #include <ctype.h>
 
-#define VERSION "0.7.7e"
+#define VERSION "0.7.8"
 
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
