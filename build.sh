@@ -14,7 +14,7 @@
 
 # usage function
 usage() {
-    echo "[=º-°=]: usage: $0 [--debug] [--debug-file] [--cc gcc] [--lib libfile.c] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-buxuc] [--no-shared] [--no-static]"
+    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [--cc gcc] [--lib libfile.c] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-buxuc] [--no-shared] [--no-static]"
     exit 1
 }
 
@@ -57,7 +57,7 @@ while [[ $# -gt 0 ]]; do
         --no-static) NO_STATIC=1; shift ;;
         --help) usage ;;
         -h) usage ;;
-        *) echo "[=º~°=]: unknown option: $1"; usage ;;
+        *) echo "[=°~°=]: unknown option: $1"; usage ;;
     esac
 done
 
@@ -85,7 +85,7 @@ if [[ $UNINSTALL -eq 1 ]]; then
 
     # verify if buxu, buxu.h, and buxuc are removed
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
-        echo "[=º~°=]: failed to uninstall buxu"
+        echo "[=°~°=]: failed to uninstall buxu"
         exit 1
     fi
 
@@ -95,23 +95,23 @@ fi
 
 if [[ $DEBUG -eq 1 ]]; then
     DEBUGARGS='-g'
-    echo "[=º-°=]: debug mode enabled"
+    echo "[=°-°=]: debug mode enabled"
 else
     DEBUGARGS=""
 fi
 
-echo "[=º-°=]: compiler: $CC"
+echo "[=°-°=]: compiler: $CC"
 
 rm -rf build
 mkdir -p build
 
 if [[ $NO_SHARED -eq 0 ]]; then # also build a shared library
-    echo "[=º-°=]: building shared library"
+    echo "[=°-°=]: building shared library"
     $CC src/buxu.c -o build/libbuxu.so -shared -fPIC -O3 -lm -Iinclude $DEBUGARGS $EXTRA
 fi
 
 if [[ $NO_STATIC -eq 0 ]]; then
-    echo "[=º-°=]: building static library"
+    echo "[=°-°=]: building static library"
     $CC src/buxu.c -o build/libbuxu.a -c -O3 -lm -Iinclude $DEBUGARGS $EXTRA
 fi
 
@@ -128,14 +128,14 @@ if [[ $NOBUXUC -eq 0 ]]; then
     echo '' >> $BUXUC_SCRIPT
 
     echo 'usage() {' >> $BUXUC_SCRIPT
-    echo '    echo "[=º-°=]: usage: $0 [--cc gcc] [--extra \"extra cc tags\"] [--debug] [-o output] [--help | -h] file1.c file2.c ..."' >> $BUXUC_SCRIPT
+    echo '    echo "[=°-°=]: usage: $0 [--cc gcc] [--extra \"extra cc tags\"] [--debug] [-o output] [--help | -h] file1.c file2.c ..."' >> $BUXUC_SCRIPT
     echo '    exit 1' >> $BUXUC_SCRIPT
     echo '}' >> $BUXUC_SCRIPT
     echo '' >> $BUXUC_SCRIPT
 
     #if no args, print help
     echo 'if [[ $# -eq 0 ]]; then' >> $BUXUC_SCRIPT
-    echo '    echo "[=ºx°=]: no arguments provided"' >> $BUXUC_SCRIPT
+    echo '    echo "[=°x°=]: no arguments provided"' >> $BUXUC_SCRIPT
     echo '    usage' >> $BUXUC_SCRIPT
     echo 'fi' >> $BUXUC_SCRIPT
     echo '' >> $BUXUC_SCRIPT
@@ -159,14 +159,14 @@ if [[ $NOBUXUC -eq 0 ]]; then
     echo '' >> $BUXUC_SCRIPT
     
     echo 'if [[ $FILES == "" ]]; then' >> $BUXUC_SCRIPT
-    echo '    echo "[=ºx°=]: no files provided"' >> $BUXUC_SCRIPT
+    echo '    echo "[=°x°=]: no files provided"' >> $BUXUC_SCRIPT
     echo '    exit 1' >> $BUXUC_SCRIPT
     echo 'fi' >> $BUXUC_SCRIPT
     echo '' >> $BUXUC_SCRIPT
 
     echo 'if [[ $DEBUG -eq 1 ]]; then' >> $BUXUC_SCRIPT
     echo '    DEBUGARGS="-g"' >> $BUXUC_SCRIPT
-    echo '    echo "[=º-°=]: debug mode enabled"' >> $BUXUC_SCRIPT
+    echo '    echo "[=°-°=]: debug mode enabled"' >> $BUXUC_SCRIPT
     echo 'else' >> $BUXUC_SCRIPT
     echo '    DEBUGARGS=""' >> $BUXUC_SCRIPT
     echo 'fi' >> $BUXUC_SCRIPT
@@ -176,9 +176,9 @@ if [[ $NOBUXUC -eq 0 ]]; then
     echo 'fi' >> $BUXUC_SCRIPT
 
     echo '' >> $BUXUC_SCRIPT
-    echo 'echo "[=º-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"' >> $BUXUC_SCRIPT
-    echo "\$CC \$FILES -o \$OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu \$EXTRA \$DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib" >> $BUXUC_SCRIPT
-    echo 'echo "[=º-°=]: $OUTPUT_NAME" has been compiled.' >> $BUXUC_SCRIPT
+    echo 'echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"' >> $BUXUC_SCRIPT
+    echo "\$CC \$FILES -o \$OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu \$EXTRA \$DEBUGARGS -Wl,-rpath=\$INSTALL_PATH/lib" >> $BUXUC_SCRIPT
+    echo 'echo "[=°-°=]: $OUTPUT_NAME" has been compiled.' >> $BUXUC_SCRIPT
     chmod +x $BUXUC_SCRIPT
 fi
 
@@ -199,10 +199,10 @@ if [ -n "$DEBUG_FILE" ]; then
     cd ./build
 fi
 
-echo "[=º-°=]: done building."
+echo "[=°-°=]: done building."
 
 if [[ $INSTALL -eq 1 ]]; then
-    echo "[=º-°=]: installing buxu at $INSTALL_PATH"
+    echo "[=°-°=]: installing buxu at $INSTALL_PATH"
     # if install path does not exist, create it(if install path first character is not /)
     if [[ ! -d $INSTALL_PATH ]]; then
         if [[ ${INSTALL_PATH:0:1} != "/" ]]; then
@@ -211,20 +211,20 @@ if [[ $INSTALL -eq 1 ]]; then
             mkdir -p $INSTALL_PATH/include
             mkdir -p $INSTALL_PATH/lib
         else
-            echo "[=º~°=]: $INSTALL_PATH does not exist, and will not be created because its a absolute path"
+            echo "[=°~°=]: $INSTALL_PATH does not exist, and will not be created because its a absolute path"
             exit 1
         fi
     fi
 
     if [[ ! -f ./build/buxu ]]; then
-        echo "[=º~°=]: ./build/ not found, cant install buxu"
+        echo "[=°~°=]: ./build/ not found, cant install buxu"
         exit 1
     fi
 
 
     # verify if user has $SUDO
     if [[ $($SUDO -n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
-        echo "[=º~°=]: $SUDO required"
+        echo "[=°~°=]: $SUDO required"
         exit 1
     fi
 
@@ -252,11 +252,11 @@ if [[ $INSTALL -eq 1 ]]; then
 
     # verify if buxu, buxu.h, and buxuc are in the correct place
     if [[ ! -f $INSTALL_PATH/bin/buxu ]]; then
-        echo "[=ºx°=]: failed to install buxu, buxu not found in $INSTALL_PATH/bin"
+        echo "[=°x°=]: failed to install buxu, buxu not found in $INSTALL_PATH/bin"
         exit 1
     fi
 
-    echo "[=º-°=]: installed buxu to $INSTALL_PATH/bin/buxu"
+    echo "[=°-°=]: installed buxu to $INSTALL_PATH/bin/buxu"
 
     exit 0
 fi

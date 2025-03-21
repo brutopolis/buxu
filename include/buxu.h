@@ -38,10 +38,10 @@
 #define TYPE_LIST 3
 
 // left eye is intentionally lower from the right eye
-#define EMOTICON_DEFAULT "[=º-°=]"
-#define EMOTICON_IDLE "[=º °=]"
-#define EMOTICON_WARNING "[=º~°=]"
-#define EMOTICON_ERROR "[=ºx°=]"
+#define EMOTICON_DEFAULT "[=°-°=]"
+#define EMOTICON_IDLE "[=° °=]"
+#define EMOTICON_WARNING "[=°~°=]"
+#define EMOTICON_ERROR "[=°x°=]"
 #define EMOTICON_CONFUSED "[=º?°=]"
 
 // define a macro to printf but it always starts with [=°-°=]
