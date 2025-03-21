@@ -21,6 +21,12 @@ usage() {
 # origin
 ORIGIN=$(pwd)
 
+# check if sudo is available
+SUDO=sudo
+if [[ $(which sudo | wc -l) -eq 0 ]]; then
+    SUDO=""
+fi
+
 # default values
 DEBUG=0
 CC="gcc -Wformat=0"
@@ -61,21 +67,21 @@ if [[ ${INSTALL_PATH: -1} == "/" ]]; then
 fi
 
 if [[ $UNINSTALL -eq 1 ]]; then
-    # verify if user has sudo
-    if [[ $(sudo -n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
-        echo "sudo required"
+    # verify if user has $SUDO
+    if [[ $($SUDO -n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
+        echo "$SUDO required"
         exit 1
     fi
 
     # remove buxu, and possibly buxuc from /usr/bin
-    sudo rm -f $INSTALL_PATH/bin/buxu
-    sudo rm -f $INSTALL_PATH/bin/buxuc
+    $SUDO rm -f $INSTALL_PATH/bin/buxu
+    $SUDO rm -f $INSTALL_PATH/bin/buxuc
 
     # remove buxu.h from /usr/include
-    sudo rm -f $INSTALL_PATH/include/buxu.h
+    $SUDO rm -f $INSTALL_PATH/include/buxu.h
 
     # remove libbuxu.so from /usr/lib
-    sudo rm -f $INSTALL_PATH/lib/libbuxu.so
+    $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
 
     # verify if buxu, buxu.h, and buxuc are removed
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
@@ -172,7 +178,7 @@ if [[ $NOBUXUC -eq 0 ]]; then
     echo '' >> $BUXUC_SCRIPT
     echo 'echo "[=º-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"' >> $BUXUC_SCRIPT
     echo "\$CC \$FILES -o \$OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu \$EXTRA \$DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib" >> $BUXUC_SCRIPT
-    echo "echo \"[=º-°=]: \$OUTPUT_NAME\" has been compiled." >> $BUXUC_SCRIPT
+    echo 'echo "[=º-°=]: $OUTPUT_NAME" has been compiled.' >> $BUXUC_SCRIPT
     chmod +x $BUXUC_SCRIPT
 fi
 
@@ -216,32 +222,32 @@ if [[ $INSTALL -eq 1 ]]; then
     fi
 
 
-    # verify if user has sudo
-    if [[ $(sudo -n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
-        echo "[=º~°=]: sudo required"
+    # verify if user has $SUDO
+    if [[ $($SUDO -n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
+        echo "[=º~°=]: $SUDO required"
         exit 1
     fi
 
     # lets remove it before installing
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
-        sudo rm -f $INSTALL_PATH/bin/buxu
-        sudo rm -f $INSTALL_PATH/bin/buxuc
-        sudo rm -f $INSTALL_PATH/include/buxu.h
-        sudo rm -f $INSTALL_PATH/lib/libbuxu.so
+        $SUDO rm -f $INSTALL_PATH/bin/buxu
+        $SUDO rm -f $INSTALL_PATH/bin/buxuc
+        $SUDO rm -f $INSTALL_PATH/include/buxu.h
+        $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
     fi
 
     # copy buxu, and possibly buxuc to /usr/bin
-    sudo cp ./build/buxu $INSTALL_PATH/bin/buxu
+    $SUDO cp ./build/buxu $INSTALL_PATH/bin/buxu
     
     # copy the header files to /usr/include
-    sudo cp include/buxu.h $INSTALL_PATH/include/
+    $SUDO cp include/buxu.h $INSTALL_PATH/include/
 
     if [[ $NOBUXUC -eq 0 ]]; then
-        sudo cp ./build/buxuc $INSTALL_PATH/bin/
+        $SUDO cp ./build/buxuc $INSTALL_PATH/bin/
     fi
 
     if [[ $NO_SHARED -eq 0 ]]; then
-        sudo cp ./build/libbuxu.so $INSTALL_PATH/lib/
+        $SUDO cp ./build/libbuxu.so $INSTALL_PATH/lib/
     fi
 
     # verify if buxu, buxu.h, and buxuc are in the correct place
