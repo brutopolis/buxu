@@ -10,10 +10,6 @@
 // buxu header
 #include "../include/buxu.h"
 
-#ifdef __unix__
-    #include <signal.h>
-#endif
-
 // linux, macos and mingw
 #if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__)
     #include <dlfcn.h> // dynamic library loading
