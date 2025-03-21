@@ -1,5 +1,5 @@
 
-# bruter
+# buxu
 
 
 *`UNDER HEAVY DEVELOPMENT`*
@@ -28,7 +28,7 @@
 
 # Types
       
-  bruter essentially has 4 types of data:
+  buxu essentially has 4 types of data:
   - `any`, a integer, or a native function or anything;
   - `number`, a floating point number, float or double;
   - `string`, a string pointer;
@@ -36,7 +36,7 @@
 
 # Building instructions
 
-  bruter include its own build script;
+  buxu include its own build script;
 
     # clean build for the current system;
     
@@ -48,7 +48,7 @@
 
     # you can also debug a specific file;
 
-    ./build.sh --debug-file path/to/bruter_file.br
+    ./build.sh --debug-file path/to/buxu_file.br
 
     # cc option:
     # you can also define the path to a compiler;

@@ -1,8 +1,8 @@
-#include "bruter.h"
+#include "buxu.h"
 
-// functions defitions for bruter
-// functions defitions for bruter
-// functions defitions for bruter
+// functions defitions for buxu
+// functions defitions for buxu
+// functions defitions for buxu
 
 // MAX priority is always 0
 // MIN priority is BASE_PRIORITY
@@ -111,7 +111,7 @@ function(brl_std_io_print)
         }
         else 
         {
-            printf("{out of stack}");
+            buxu_error("out of stack");
         }
 
         if (args->size > 0)
@@ -138,7 +138,7 @@ function(brl_std_io_ls)
 {
     for (Int i = 0; i < vm->stack->size; i++)
     {
-        printf("[%ld]: ", i);
+        printf("(%ld): ", i);
         print_element(vm, i);
         printf("\n");
     }
@@ -150,7 +150,7 @@ function(brl_std_io_ls_hashes)
 {
     for (Int i = 0; i < vm->hashes->size; i++)
     {
-        printf("[%s] {%d} @%ld: ", vm->hashes->data[i].key, vm->typestack->data[vm->hashes->data[i].index], vm->hashes->data[i].index);
+        printf("%s {%d} @%ld: ", vm->hashes->data[i].key, vm->typestack->data[vm->hashes->data[i].index], vm->hashes->data[i].index);
         print_element(vm, vm->hashes->data[i].index);
         printf("\n");
     }
@@ -425,7 +425,7 @@ function(brl_std_list_set)
         }
         else 
         {
-            printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
+            buxu_error("index %d out of range in list %d of size %d\n", index, list, lst->size);
         }
         return -1;
     }
@@ -447,7 +447,7 @@ function(brl_std_list_set)
         }
         else 
         {
-            printf("error: index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
+            buxu_error("index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
         }
         return -1;
     }
@@ -610,7 +610,7 @@ function(brl_std_list_get)
             }
             else 
             {
-                printf("error: index %d out of range in list %d of size %d\n", index, list, lst->size);
+                buxu_error("index %d out of range in list %d of size %d\n", index, list, lst->size);
             }
         }
     }
@@ -624,7 +624,7 @@ function(brl_std_list_get)
         }
         else 
         {
-            printf("error: index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
+            buxu_error("index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
         }
     }
     else // accest bytes of a value
@@ -839,7 +839,7 @@ function(brl_std_list_swap)
         }
         else 
         {
-            printf("error: index %d or %d out of range in list %d of size %d\n", index1, index2, list, lst->size);
+            buxu_error("index %d or %d out of range in list %d of size %d\n", index1, index2, list, lst->size);
         }
     }
     else if (arg_t(0) == TYPE_STRING)
@@ -855,7 +855,7 @@ function(brl_std_list_swap)
         }
         else 
         {
-            printf("error: index %d or %d out of range in string %d of size %d\n", index1, index2, arg(0).string, strlen(str));
+            buxu_error("index %d or %d out of range in string %d of size %d\n", index1, index2, arg(0).string, strlen(str));
         }
     }
     return -1;

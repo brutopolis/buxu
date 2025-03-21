@@ -1,11 +1,10 @@
-// bruter on arduino example
+// buxu on arduino example
 // just put this, the include folder and the src folder in the same folder
 // and you might be ready to go
 
 extern "C"
 {
-    #include "./src/bruter.h"
-    
+    #include <buxu.h>
 }
 
 function(_ino_serial_begin)

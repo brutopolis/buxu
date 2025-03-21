@@ -1,6 +1,6 @@
 
-// bruter header
-#include "../include/bruter.h"
+// buxu header
+#include "../include/buxu.h"
 
 // linux and macos, not available on windows(neither mingw)
 #ifdef __unix__ 
@@ -20,14 +20,14 @@ char *_code = NULL;
 
 Int repl(VirtualMachine *vm)
 {
-    printf("bruter v%s\n", VERSION);
+    buxu_say("v%s\n", VERSION);
     char *cmd;
     Int result = -1;
     int junk = 0;
     while (result == -1)
     {
         cmd = (char*)malloc(1024);
-        printf("@> ");
+        buxu_say("");
         junk = scanf("%[^\n]%*c", cmd);
         if (junk == 0)
         {
@@ -38,7 +38,7 @@ Int repl(VirtualMachine *vm)
         free(cmd);
     }
 
-    printf("repl returned: [@%ld]", result);
+    buxu_say("returned %ld", result);
     print_element(vm, result);
     printf("\n");
     return result;
@@ -48,7 +48,7 @@ Int repl(VirtualMachine *vm)
 
 function(brl_main_dl_open)
 {
-    void *handle = dlopen(arg(0).string, RTLD_LAZY | RTLD_GLOBAL);
+    void *handle = dlopen(arg(0).string, RTLD_LAZY );
 
     if (handle != NULL)
     {
@@ -57,7 +57,7 @@ function(brl_main_dl_open)
     }
     else 
     {
-        printf("error: %s\n", dlerror());
+        buxu_error("%s\n", dlerror());
     }
 
     StringList *splited = str_split_char(arg(0).string, '/');
@@ -74,8 +74,8 @@ function(brl_main_dl_open)
     }
     else 
     {
-        printf("error: %s\n", dlerror());
-        printf("error: init_%s not found\n", libname);
+        buxu_error("%s\n", dlerror());
+        buxu_error("init_%s not found\n", libname);
         // then lets close the library
         dlclose(handle);
         list_pop(*libs);
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
     // free all at exit
     if (atexit(_free_at_exit) != 0)
     {
-        printf("error: could not register the atexit function\n");
+        buxu_error("could not register the atexit function\n");
         return 1;
     }
 
@@ -177,13 +177,13 @@ int main(int argc, char **argv)
     {
         if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) // version
         {
-            printf("bruter v%s\n", VERSION);
+            buxu_say("v%s\n", VERSION);
             return 0;
         }
         else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) // help
         {
-            printf("bruter v%s\n", VERSION);
-            printf("usage: %s [file]\n", argv[0]);
+            buxu_say("v%s\n", VERSION);
+            buxu_say("usage: %s [file]\n", argv[0]);
             printf("  -v, --version\t\tprint version\n");
             printf("  -h, --help\t\tprint this help\n");
             return 0;
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
         _code = readfile(argv[1]);
         if (_code == NULL)
         {
-            printf("file %s not found\n", argv[1]);
+            buxu_error("file %s not found\n", argv[1]);
             return 1;
         }
 
@@ -235,7 +235,6 @@ int main(int argc, char **argv)
         }
 
         result = eval(vm, _code);
-        
     }
     
     return result;

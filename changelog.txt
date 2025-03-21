@@ -1,4 +1,21 @@
+# buxu changelog https://github.com/jardimdanificado/buxu
 
+(??/03/2025) - version 0.7.8
+
+- buxu created, all other logs before this are related to bruter specifically;
+- build.sh now builds libbuxu.a and libbuxu.so;
+- build.sh now have a --install option, it will install libbuxu.so to /usr/lib, buxu and buxuc to /usr/bin, and the headers to /usr/include;
+- build.sh now have a --uninstall option, it will uninstall libbuxu.so from /usr/lib, buxu and buxuc from /usr/bin, and the headers from /usr/include;
+- build.sh now new options --no-static and --no-shared, as static and shared are built by default and can be found ./build/;
+- --lib is no more a thing, use buxuc instead, it does the same thing, but no embed files;
+- buxuc is now as simple as it can be;
+- as buxu is a direct fork of bruter, we will keep the same versioning, ans the same changelog, but from now on, it will be related to buxu;
+- examples renamed from *.br to *.bx;
+- you can find bruter in its repository https://github.com/jardimdanificado/bruter
+- all examples updated;
+- some README updates;
+- lots of cleanup;
+- some fixes;
 
 (21/03/2025) - version 0.7.7d
 
@@ -6,7 +23,7 @@
 - new macro "Byte", essentially a uint8_t;
 - bruter .so files are now loaded RTLD_GLOBAL, to make things faster;
 - main.c: vm and args are now global, that make easier to free them, in exceptions;
-- 
+- dyc.c removed;
 
 (15/03/2025) - version 0.7.7c
 
