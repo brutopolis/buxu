@@ -21,12 +21,6 @@ usage() {
 # origin
 ORIGIN=$(pwd)
 
-# check if sudo is available
-SUDO=sudo
-if [[ $(which sudo | wc -l) -eq 0 ]]; then
-    SUDO=""
-fi
-
 # default values
 DEBUG=0
 CC="gcc -Wformat=0"
@@ -68,20 +62,20 @@ fi
 
 if [[ $UNINSTALL -eq 1 ]]; then
     # verify if user has $SUDO
-    if [[ $($SUDO -n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
-        echo "$SUDO required"
+    if [[ $(-n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
+        echo "required"
         exit 1
     fi
 
     # remove buxu, and possibly buxuc from /usr/bin
-    $SUDO rm -f $INSTALL_PATH/bin/buxu
-    $SUDO rm -f $INSTALL_PATH/bin/buxuc
+    rm -f $INSTALL_PATH/bin/buxu
+    rm -f $INSTALL_PATH/bin/buxuc
 
     # remove buxu.h from /usr/include
-    $SUDO rm -f $INSTALL_PATH/include/buxu.h
+    rm -f $INSTALL_PATH/include/buxu.h
 
     # remove libbuxu.so from /usr/lib
-    $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
+    rm -f $INSTALL_PATH/lib/libbuxu.so
 
     # verify if buxu, buxu.h, and buxuc are removed
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
@@ -223,34 +217,27 @@ if [[ $INSTALL -eq 1 ]]; then
 
 
     # verify if user has $SUDO
-    if [[ $($SUDO -n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
-        echo "[=°~°=]: $SUDO required"
+    if [[ $(-n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
+        echo "[=°~°=]: required"
         exit 1
     fi
 
-    # lets remove it before installing
-    if [[ -f $INSTALL_PATH/bin/buxu ]]; then
-        $SUDO rm -f $INSTALL_PATH/bin/buxu
-        $SUDO rm -f $INSTALL_PATH/bin/buxuc
-        $SUDO rm -f $INSTALL_PATH/include/buxu.h
-        $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
-    fi
 
     # copy buxu, and possibly buxuc to /usr/bin
-    $SUDO cp ./build/buxu $INSTALL_PATH/bin/buxu
+    cp ./build/buxu $INSTALL_PATH/bin/buxu
     
     # copy the header files to /usr/include
-    $SUDO cp include/buxu.h $INSTALL_PATH/include/
+    cp include/buxu.h $INSTALL_PATH/include/
 
     if [[ $NOBUXUC -eq 0 ]]; then
-        $SUDO cp ./build/buxuc $INSTALL_PATH/bin/
+        cp ./build/buxuc $INSTALL_PATH/bin/
     fi
 
     if [[ $NO_SHARED -eq 0 ]]; then
-        $SUDO cp ./build/libbuxu.so $INSTALL_PATH/lib/
+        cp build/libbuxu.so $INSTALL_PATH/lib/
     fi
 
-    # verify if buxu, buxu.h, and buxuc are in the correct place
+    # verify if buxu is in the correct place
     if [[ ! -f $INSTALL_PATH/bin/buxu ]]; then
         echo "[=°x°=]: failed to install buxu, buxu not found in $INSTALL_PATH/bin"
         exit 1
