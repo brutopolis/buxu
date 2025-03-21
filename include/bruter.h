@@ -1,21 +1,25 @@
 #ifndef BRUTER_H
 #define BRUTER_H 1
 
+// standard library
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <limits.h>
+
+// standard library
 #include <string.h>
 #include <math.h>
-#include <stdarg.h>
 #include <time.h>
-#include <unistd.h>
+#include <float.h>
+
+// not part of the standard library
 #include <ctype.h>
 
-
-#ifndef ARDUINO
-    #include "dlfcn.h"
-#endif
-
-#define VERSION "0.7.7c"
+#define VERSION "0.7.7d"
 
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
@@ -25,19 +29,18 @@
 // we use Int and Float instead of int and float because we need to use always the pointer size for any type that might share the fundamental union type;
 // bruter use a union as universal type, and bruter is able to manipulate and use pointers direcly so we need to use the pointer size;
 #if __SIZEOF_POINTER__ == 8
-    #define Int long
+    #define Int int64_t
     #define Float double
 #else
-    #define Int int
+    #define Int int32_t
     #define Float float
 #endif
+
+#define Byte uint8_t
 
 // c_list.h must be included after defining Int, because it also relies on it and will define it as a int(4byte) if not defined, instead of the pointer size(which might usually be 8 bytes);
 #include <c_list.h>
 
-#ifndef NULL
-#define NULL 0
-#endif
 
 //Value
 typedef union 
@@ -46,7 +49,7 @@ typedef union
     Int integer;
     char* string;
     void* pointer;
-    char byte[sizeof(Float)];
+    Byte byte[sizeof(Float)];
 } Value;
 
 //Hash
@@ -61,7 +64,7 @@ typedef List(Value) ValueList;
 typedef List(Hash) HashList;
 typedef List(char*) StringList;
 typedef List(Int) IntList;
-typedef List(char) CharList;
+typedef List(Byte) ByteList;
 
 typedef List(IntList) IntListList;
 
@@ -69,7 +72,7 @@ typedef List(IntList) IntListList;
 typedef struct
 {
     ValueList *stack;
-    CharList *typestack;
+    ByteList *typestack;
     HashList *hashes;
     IntList *unused;
 } VirtualMachine;
@@ -95,8 +98,6 @@ StringList* special_split(char *str, char delim);
 
 #define is_true(value, __type) (__type == value.integer == 0 ? 0 : 1)
 
-// #define is_space(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
-
 // variable
 
 VirtualMachine* make_vm();
@@ -109,7 +110,7 @@ Int new_builtin(VirtualMachine *vm, Function function);
 Int new_var(VirtualMachine *vm);
 Int new_list(VirtualMachine *vm);
 
-Value value_duplicate(Value value, char type);
+Value value_duplicate(Value value, Byte type);
 
 Int register_var(VirtualMachine *vm, char* varname);
 Int register_string(VirtualMachine *vm, char* varname, char* string);

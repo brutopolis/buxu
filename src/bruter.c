@@ -202,34 +202,34 @@ StringList* special_split(char *str, char delim)
     StringList *splited = list_init(StringList);
     
     int recursion = 0;
-    int inside_double_quotes = 0;
-    int inside_single_quotes = 0;
+    bool inside_double_quotes = 0;
+    bool inside_single_quotes = 0;
     int i = 0;
     int last_i = 0;
 
     while (str[i] != '\0')
     {
-        if (str[i] == '(' && inside_double_quotes == 0 && inside_single_quotes == 0)
+        if (str[i] == '(' && !inside_double_quotes && !inside_single_quotes)
         {
             recursion++;
         }
-        else if (str[i] == ')' && inside_double_quotes == 0 && inside_single_quotes == 0)
+        else if (str[i] == ')' && !inside_double_quotes && !inside_single_quotes)
         {
             recursion--;
         }
-        else if (str[i] == '"' && recursion == 0 && inside_single_quotes == 0)
+        else if (str[i] == '"' && recursion == 0 && !inside_single_quotes)
         {
             // Alterna o estado de dentro/fora de aspas duplas
             inside_double_quotes = !inside_double_quotes;
         }
-        else if (str[i] == '\'' && recursion == 0 && inside_double_quotes == 0)
+        else if (str[i] == '\'' && recursion == 0 && !inside_double_quotes)
         {
             // Alterna o estado de dentro/fora de aspas simples
             inside_single_quotes = !inside_single_quotes;
         }
 
         // Se encontramos o delimitador e não estamos dentro de parênteses nem de aspas simples ou duplas
-        if (str[i] == delim && recursion == 0 && inside_double_quotes == 0 && inside_single_quotes == 0)
+        if (str[i] == delim && recursion == 0 && !inside_double_quotes && !inside_single_quotes)
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i);
             list_push(*splited, tmp);
@@ -315,9 +315,6 @@ void print_element(VirtualMachine *vm, Int index)
         char* _str;
         char* strbak;
         char* stringified;
-        case TYPE_ANY:
-            printf("%ld", data(index).integer);
-            break;
         case TYPE_LIST:
             stringified = list_stringify(vm, (IntList*)data(index).pointer);
             printf("%s", stringified);
@@ -337,7 +334,7 @@ void print_element(VirtualMachine *vm, Int index)
             printf("%s", data(index).string);
             break;
         default:
-            printf("%d", data(index).pointer);
+            printf("%ld", (Int)data(index).pointer);
             break;
     }
 }
@@ -381,7 +378,7 @@ void writefile(char *filename, char *code)
 
 // value functions
 
-Value value_duplicate(Value value, char type)
+Value value_duplicate(Value value, Byte type)
 {
     Value dup;
 
@@ -449,7 +446,7 @@ VirtualMachine* make_vm()
 {
     VirtualMachine *vm = (VirtualMachine*)malloc(sizeof(VirtualMachine));
     vm->stack = list_init(ValueList);
-    vm->typestack = list_init(CharList);
+    vm->typestack = list_init(ByteList);
     vm->hashes = list_init(HashList);
     vm->unused = list_init(IntList);
 
@@ -669,7 +666,7 @@ Int interpret_args(VirtualMachine *vm, IntList *args)
     }
     else 
     {
-        printf("error: %d is not a function or script\n", func);
+        printf("error: %ld is not a function or script\n", func);
     }
     return result;
 }

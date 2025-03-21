@@ -2,6 +2,22 @@
 // bruter header
 #include "../include/bruter.h"
 
+// linux and macos, not available on windows(neither mingw)
+#ifdef __unix__ 
+    #include <signal.h> // signal handling
+#endif
+
+// linux, macos and mingw
+#if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__)
+    #include <dlfcn.h> // dynamic library loading
+#endif
+
+StringList *args;
+IntList* libs;
+StringList* libs_names;
+VirtualMachine* vm;
+char *_code = NULL;
+
 Int repl(VirtualMachine *vm)
 {
     printf("bruter v%s\n", VERSION);
@@ -28,13 +44,11 @@ Int repl(VirtualMachine *vm)
     return result;
 }
 
-IntList* libs;
-StringList* libs_names;
+#if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__) // only available on unix and mingw
 
 function(brl_main_dl_open)
 {
-    
-    void *handle = dlopen(arg(0).string, RTLD_LAZY);
+    void *handle = dlopen(arg(0).string, RTLD_LAZY | RTLD_GLOBAL);
 
     if (handle != NULL)
     {
@@ -101,80 +115,11 @@ function(brl_main_dl_close)
     return -1;
 }
 
-int main(int argc, char **argv)
+#endif
+
+void _free_at_exit()
 {
-    Int result = 0;
-    StringList *args = list_init(StringList);
-    char* code = NULL;
-    char* path = NULL;
-
-    libs = list_init(IntList);
-    libs_names = list_init(StringList);
-
-    for (int i = 1; i < argc; i++)
-    {
-        if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
-        {
-            printf("bruter v%s\n", VERSION);
-            return 0;
-        }
-        else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
-        {
-            printf("bruter v%s\n", VERSION);
-            printf("usage: %s [file]\n", argv[0]);
-            printf("  -v, --version\t\tprint version\n");
-            printf("  -h, --help\t\tprint this help\n");
-            return 0;
-        }
-        else
-        {
-            list_push(*args, argv[i]);
-        }
-    }
-    
-    VirtualMachine *vm = make_vm();
-    
-
-    register_builtin(vm, "load", brl_main_dl_open);
-    register_builtin(vm, "unload", brl_main_dl_close);
-
-    if (args->size == 0)
-    {
-        repl(vm);
-    }
-    else if (args->size > 0) 
-    {
-        char *_code = readfile(argv[1]);
-        if (_code == NULL)
-        {
-            printf("file %s not found\n", argv[1]);
-            return 1;
-        }
-        Int filepathindex = new_var(vm);
-        // path without file name
-        vm->typestack->data[filepathindex] = TYPE_STRING;
-        // remove file name
-        char *path = list_shift(*args);
-        char *last = strrchr(path, '/');
-        if (last == NULL)
-        {
-            vm->stack->data[filepathindex].string = str_duplicate("");
-        }
-        else
-        {
-            vm->stack->data[filepathindex].string = str_nduplicate(path, last - path + 1);
-        }
-        hash_set(vm, "file.path", filepathindex);
-        register_list(vm, "file.args");
-        IntList *fileargs = (IntList*)data(hash_find(vm, "file.args")).pointer;
-        while (args->size > 0)
-        {
-            list_push(*fileargs, new_string(vm, list_shift(*args)));
-        }
-        result = eval(vm, _code);
-        free(_code);
-    }
-    
+    #if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__) // only available on unix and mingw
     if (libs->size > 0)
     {
         for (Int i = 0; i < libs->size+1; i++)
@@ -184,9 +129,114 @@ int main(int argc, char **argv)
             free(list_pop(*libs_names));
         }
     }
-    list_free(*args);
     list_free(*libs);
     list_free(*libs_names);
+    #endif
+
+    list_free(*args);
     free_vm(vm);
+
+    if (_code != NULL)
+    {
+        free(_code);
+    }
+}
+
+int main(int argc, char **argv)
+{
+    // free all at exit
+    if (atexit(_free_at_exit) != 0)
+    {
+        printf("error: could not register the atexit function\n");
+        return 1;
+    }
+
+    // result
+    Int result = 0;
+
+    // virtual machine startup
+    vm = make_vm();
+
+    // arguments startup
+    args = list_init(StringList);
+    
+    #if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__) // only available on unix and mingw
+
+        // dynamic library functions
+        register_builtin(vm, "load", brl_main_dl_open);
+        register_builtin(vm, "unload", brl_main_dl_close);
+
+        // dynamic libraries lists startup
+        libs = list_init(IntList);
+        libs_names = list_init(StringList);
+    #endif
+
+
+    // arguments parsing
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) // version
+        {
+            printf("bruter v%s\n", VERSION);
+            return 0;
+        }
+        else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) // help
+        {
+            printf("bruter v%s\n", VERSION);
+            printf("usage: %s [file]\n", argv[0]);
+            printf("  -v, --version\t\tprint version\n");
+            printf("  -h, --help\t\tprint this help\n");
+            return 0;
+        }
+        else // push to args
+        {
+            list_push(*args, argv[i]);
+        }
+    }
+
+    if (args->size == 0)
+    {
+        repl(vm);
+    }
+    else if (args->size > 0) 
+    {
+        _code = readfile(argv[1]);
+        if (_code == NULL)
+        {
+            printf("file %s not found\n", argv[1]);
+            return 1;
+        }
+
+        Int filepathindex = new_var(vm);
+
+        // path without file name
+        vm->typestack->data[filepathindex] = TYPE_STRING;
+
+        // remove file name
+        char *path = list_shift(*args);
+        char *last = strrchr(path, '/');
+
+        if (last == NULL)
+        {
+            vm->stack->data[filepathindex].string = str_duplicate("");
+        }
+        else
+        {
+            vm->stack->data[filepathindex].string = str_nduplicate(path, last - path + 1);
+        }
+
+        hash_set(vm, "file.path", filepathindex);
+        register_list(vm, "file.args");
+        IntList *fileargs = (IntList*)data(hash_find(vm, "file.args")).pointer;
+
+        while (args->size > 0)
+        {
+            list_push(*fileargs, new_string(vm, list_shift(*args)));
+        }
+
+        result = eval(vm, _code);
+        
+    }
+    
     return result;
 }

@@ -1,3 +1,4 @@
+load "lib/std.so";
 #new "___index" 0;
 #new "_size" 100000;
 repeat _size "+ ___index 1;print ___index";

@@ -37,7 +37,7 @@ done
 if [[ -n $LIB ]]; then
     # replace .c with .so
     LIB2=$(echo $LIB | sed 's/\.c/\.so/g')
-    $CC src/bruter.c $LIB -Iinclude -shared -o $LIB2 -O3 -lm -fPIC
+    $CC src/bruter.c $LIB -Iinclude -shared -o $LIB2 -O3 -lm -fPIC $DEBUGARGS $EXTRA
     exit;
 fi
 
@@ -86,7 +86,7 @@ if [[ $NOBRUTERC -eq 0 ]]; then
     echo '' >> $BRUTERC_SCRIPT
     echo '# if $1 starts with / then its an absolute path' >> $BRUTERC_SCRIPT
     echo 'if [[ $1 == /* ]]; then' >> $BRUTERC_SCRIPT
-    echo './build.sh --lib $1' >> $BRUTERC_SCRIPT
+    echo './build.sh --lib $1 --extra "$EXTRA"' >> $BRUTERC_SCRIPT
     echo 'else' >> $BRUTERC_SCRIPT
     echo './build.sh --lib ../$1 --extra "$EXTRA"' >> $BRUTERC_SCRIPT
     echo 'fi' >> $BRUTERC_SCRIPT
