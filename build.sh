@@ -170,8 +170,8 @@ if [[ $NOBUXUC -eq 0 ]]; then
     echo 'fi' >> $BUXUC_SCRIPT
 
     echo '' >> $BUXUC_SCRIPT
-    echo 'echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"' >> $BUXUC_SCRIPT
-    echo "\$CC \$FILES -o \$OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu \$EXTRA \$DEBUGARGS -Wl,-rpath=\$INSTALL_PATH/lib" >> $BUXUC_SCRIPT
+    echo "echo \"[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib\"" >> $BUXUC_SCRIPT
+    echo "\$CC \$FILES -o \$OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu \$EXTRA \$DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib" >> $BUXUC_SCRIPT
     echo 'echo "[=°-°=]: $OUTPUT_NAME" has been compiled.' >> $BUXUC_SCRIPT
     chmod +x $BUXUC_SCRIPT
 fi
