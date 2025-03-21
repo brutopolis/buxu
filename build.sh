@@ -256,7 +256,7 @@ if [[ $INSTALL -eq 1 ]]; then
         exit 1
     fi
 
-    echo "[=º °=]: installed buxu to $INSTALL_PATH/bin/buxu"
+    echo "[=º-°=]: installed buxu to $INSTALL_PATH/bin/buxu"
 
     exit 0
 fi

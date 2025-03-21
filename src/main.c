@@ -259,52 +259,44 @@ int main(int argc, char **argv)
         register_list(vm, "file.args");
         IntList *fileargs = (IntList*)data(hash_find(vm, "file.args")).pointer;
 
-        while (args->size > 0)
+        
+        char* ___file = list_shift(*args);
+    
+        _code = readfile(___file);
+
+        if (_code == NULL)
+        {
+            buxu_error("file %s not found", ___file);
+            return 1;
+        }
+
+        Int filepathindex = new_var(vm);
+
+        // path without file name
+        vm->typestack->data[filepathindex] = TYPE_STRING;
+
+        // remove file name
+        char *path = list_shift(*args);
+        char *last = strrchr(path, '/');
+
+        if (last == NULL)
+        {
+            vm->stack->data[filepathindex].string = str_duplicate("");
+        }
+        else
+        {
+            vm->stack->data[filepathindex].string = str_nduplicate(path, last - path + 1);
+        }
+
+        hash_set(vm, "file.path", filepathindex);
+        
+        // push file args
+        while (fileargs->size > 0) // the remaining args are the file args
         {
             list_push(*fileargs, new_string(vm, list_shift(*args)));
         }
 
-        while (args->size > 0)
-        {
-            char* ___file = list_shift(*args);
-
-            if (___file[0] == '-')
-            {
-                buxu_error("invalid option %s", ___file);
-                continue;
-            }
-        
-            _code = readfile(___file);
-
-            if (_code == NULL)
-            {
-                buxu_error("file %s not found", ___file);
-                continue;
-            }
-
-            Int filepathindex = new_var(vm);
-
-            // path without file name
-            vm->typestack->data[filepathindex] = TYPE_STRING;
-
-            // remove file name
-            char *path = list_shift(*args);
-            char *last = strrchr(path, '/');
-
-            if (last == NULL)
-            {
-                vm->stack->data[filepathindex].string = str_duplicate("");
-            }
-            else
-            {
-                vm->stack->data[filepathindex].string = str_nduplicate(path, last - path + 1);
-            }
-
-            hash_set(vm, "file.path", filepathindex);
-            
-
-            result = eval(vm, _code);
-        }
+        result = eval(vm, _code);
     }
     return result;
 }
