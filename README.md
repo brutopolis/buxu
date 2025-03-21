@@ -48,7 +48,7 @@
 
     # you can also debug a specific file;
 
-    ./build.sh --debug-file path/to/buxu_file.br
+    ./build.sh --debug-file path/to/buxu_file.bu
 
     # cc option:
     # you can also define the path to a compiler;

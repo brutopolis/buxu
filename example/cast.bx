@@ -1,5 +1,0 @@
-load "lib/std.so";
-print ($ cast (list: "print a b 'hello world'") type.string);
-print ($ cast (list: 12 "123" 11 1 2 4 5 6) type.string);
-print (list: (list: "a" "b") "print a b 'hello world'");
-print (list: 12 123 11 1 2 4 5 6);

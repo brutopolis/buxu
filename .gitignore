@@ -8,3 +8,4 @@ arduino/
 *.wasm
 *.so
 .buxu
+*.out

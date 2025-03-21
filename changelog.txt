@@ -2,6 +2,7 @@
 
 (??/03/2025) - version 0.7.8
 
+- c_list.h merged into buxu.h;
 - buxu created, all other logs before this are related to bruter specifically;
 - build.sh now builds libbuxu.a and libbuxu.so;
 - build.sh now have a --install option, it will install libbuxu.so to /usr/lib, buxu and buxuc to /usr/bin, and the headers to /usr/include;
@@ -10,12 +11,21 @@
 - --lib is no more a thing, use buxuc instead, it does the same thing, but no embed files;
 - buxuc is now as simple as it can be;
 - as buxu is a direct fork of bruter, we will keep the same versioning, ans the same changelog, but from now on, it will be related to buxu;
-- examples renamed from *.br to *.bx;
+- examples renamed from *.br to *.bu;
 - you can find bruter in its repository https://github.com/jardimdanificado/bruter
+- main.c has new option --load path | -l path, to load a buxu lib;
+- main.c has new option --eval code | -e code, to evaluate a code;
+- in std all the #func renamed to just func;
+- print function removed use say, warn or error instead;
+- scan function removed, use hear instead;
+- file.read and file.write renamed to read and write;
+- all the func: were also renamed to just func;
 - all examples updated;
 - some README updates;
 - lots of cleanup;
 - some fixes;
+
+TODO: update the examples;
 
 (21/03/2025) - version 0.7.7d
 

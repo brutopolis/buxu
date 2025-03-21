@@ -625,7 +625,7 @@ IntList* parse(void *_vm, char *cmd)
 
             if (index == -1) 
             {
-                printf("variable %s not found\n", str);
+                buxu_error("variable %s not found", str);
             }
             else 
             {
@@ -666,7 +666,7 @@ Int interpret_args(VirtualMachine *vm, IntList *args)
     }
     else 
     {
-        printf("error: %ld is not a function or script\n", func);
+        buxu_error("%ld is not a function or script", func);
     }
     return result;
 }

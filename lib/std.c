@@ -81,7 +81,7 @@ function(brl_std_hash_priority)
 
     if (hash_index < 0)
     {
-        printf("could not find hash \"%s\"\n", hash_name);
+        buxu_error("could not find hash \"%s\"", hash_name);
     }
 
     Hash obj = list_fast_remove(*vm->hashes, hash_index);
@@ -101,30 +101,9 @@ function(brl_std_hash_rename)
     return -1;
 }
 
-function(brl_std_io_print)
-{
-    for (Int i = 0; i < args->size; i++)
-    {
-        if (arg_i(i) >= 0 || arg_i(i) < vm->stack->size)
-        {
-            print_element(vm, arg_i(i));
-        }
-        else 
-        {
-            buxu_error("out of stack");
-        }
-
-        if (args->size > 0)
-        {
-            printf(" ");
-        }
-    }
-    printf("\n");
-    return -1;
-}
-
 function(brl_std_io_scan) // always get string
 {
+    printf("%s: ", EMOTICON_CONFUSED);
     char *str = (char*)malloc(1024);
     fgets(str, 1024, stdin);
     str[strlen(str) - 1] = '\0';
@@ -425,7 +404,7 @@ function(brl_std_list_set)
         }
         else 
         {
-            buxu_error("index %d out of range in list %d of size %d\n", index, list, lst->size);
+            buxu_error("index %ld out of range in list %ld of size %ld", index, list, lst->size);
         }
         return -1;
     }
@@ -447,7 +426,7 @@ function(brl_std_list_set)
         }
         else 
         {
-            buxu_error("index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
+            buxu_error("index %ld out of range in string '%s' of size %ld", index, arg(0).string, strlen(str));
         }
         return -1;
     }
@@ -610,7 +589,7 @@ function(brl_std_list_get)
             }
             else 
             {
-                buxu_error("index %d out of range in list %d of size %d\n", index, list, lst->size);
+                buxu_error("index %ld out of range in list %ld of size %ld", index, list, lst->size);
             }
         }
     }
@@ -624,10 +603,10 @@ function(brl_std_list_get)
         }
         else 
         {
-            buxu_error("index %d out of range in string %d of size %d\n", index, arg(0).string, strlen(str));
+            buxu_error("index %ld out of range in string '%s' of size %ld", index, arg(0).string, strlen(str));
         }
     }
-    else // accest bytes of a value
+    else // access bytes of a value
     {
         Int index = (Int)arg(1).number;
         Int value = arg_i(0);
@@ -839,7 +818,7 @@ function(brl_std_list_swap)
         }
         else 
         {
-            buxu_error("index %d or %d out of range in list %d of size %d\n", index1, index2, list, lst->size);
+            buxu_error("index %ld or %ld out of range in list %ld of size %ld", index1, index2, list, lst->size);
         }
     }
     else if (arg_t(0) == TYPE_STRING)
@@ -855,7 +834,7 @@ function(brl_std_list_swap)
         }
         else 
         {
-            buxu_error("index %d or %d out of range in string %d of size %d\n", index1, index2, arg(0).string, strlen(str));
+            buxu_error("index %ld or %ld out of range in string '%s' of size %ld", index1, index2, arg(0).string, strlen(str));
         }
     }
     return -1;
@@ -950,6 +929,7 @@ function(brl_std_type_cast)
             }
             break;
     }
+    return -1;
 }
 
 // math functions
@@ -1269,13 +1249,15 @@ function(brl_std_condition_equals)// ==
             if (arg_i(i) != 0)
             {
                 result = i;
-                goto outside_the_loop;
+                break;
             }
         }
-        result = 1;
+
+        if (result == 0)
+        {
+            result = 1;
+        }
     }
-    outside_the_loop:
-    
     
     for (Int i = 1; i < args->size; i++)
     {
@@ -1335,12 +1317,15 @@ function(brl_std_condition_not_equals)// !=
             if (arg_i(i) != 0)
             {
                 result = i;
-                goto outside_the_loop;
+                break;
             }
         }
-        result = 1;
+
+        if (result == 0)
+        {
+            result = 1;
+        }
     }
-    outside_the_loop:
 
     for (Int i = 1; i < args->size; i++)
     {
@@ -1400,12 +1385,15 @@ function(brl_std_condition_greater)
             if (arg_i(i) != 0)
             {
                 result = i;
-                goto outside_the_loop;
+                break;
             }
         }
-        result = 1;
+
+        if (result == 0)
+        {
+            result = 1;
+        }
     }
-    outside_the_loop:
 
     switch (arg_t(1))
     {
@@ -1441,12 +1429,15 @@ function(brl_std_condition_greater_equals)
             if (arg_i(i) != 0)
             {
                 result = i;
-                goto outside_the_loop;
+                break;
             }
         }
-        result = 1;
+
+        if (result == 0)
+        {
+            result = 1;
+        }
     }
-    outside_the_loop:
 
     switch (arg_t(1))
     {
@@ -1482,12 +1473,15 @@ function(brl_std_condition_less)
             if (arg_i(i) != 0)
             {
                 result = i;
-                goto outside_the_loop;
+                break;
             }
         }
-        result = 1;
+
+        if (result == 0)
+        {
+            result = 1;
+        }
     }
-    outside_the_loop:
 
     switch (arg_t(1))
     {
@@ -1523,12 +1517,15 @@ function(brl_std_condition_less_equals)
             if (arg_i(i) != 0)
             {
                 result = i;
-                goto outside_the_loop;
+                break;
             }
         }
-        result = 1;
+
+        if (result == 0)
+        {
+            result = 1;
+        }
     }
-    outside_the_loop:
 
     switch (arg_t(1))
     {
@@ -1564,12 +1561,15 @@ function(brl_std_condition_and)
             if (arg_i(i) != 0)
             {
                 result = i;
-                goto outside_the_loop;
+                break;
             }
         }
-        result = 1;
+
+        if (result == 0)
+        {
+            result = 1;
+        }
     }
-    outside_the_loop:
 
     for (Int i = 1; i < args->size; i++)
     {
@@ -1597,80 +1597,12 @@ function(brl_std_condition_raw_or)
 function(brl_std_loop_while)
 {
     Int result = -1;
-    if (strchr(arg(1).string, '#') == NULL)
+    while (eval(vm,arg(0).string))
     {
+        result = eval(vm,arg(1).string);
+        if (result > -1)
         {
-            char* _parentesis = strchr(arg(1).string, '(');
-            if (_parentesis != NULL)
-            {
-                if (_parentesis[1] == '@' && _parentesis[2] == '@')
-                {
-                    // its a string 
-                    goto skip_safety_check;
-                }
-                else 
-                {
-                    // its a expression
-                    goto regret_optimization;
-                }
-            }
-        }
-
-        skip_safety_check:
-
-        StringList *splited = str_split(arg(1).string, ";");
-        
-        IntListList *arglist = list_init(IntListList);
-
-        for (Int i = 0; i < splited->size; i++)
-        {
-            //if splited->data[i] is empty or contains only spacy characters, skip it
-            if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) || splited->data[i][0] == 0)
-            {
-                free(splited->data[i]);
-                continue;
-            }
-            IntList *_args = parse(vm, splited->data[i]);
-            list_push(*arglist, *_args);
-            free(splited->data[i]);
-
-            free(_args);
-        }
-
-        list_free(*splited);
-        char cond = eval(vm,arg(0).string);
-        while (cond)
-        {
-            cond = eval(vm,arg(0).string);
-            for (Int i = 0; i < arglist->size; i++)
-            {
-                result = interpret_args(vm, &arglist->data[i]);
-                if (result > -1)
-                {
-                    goto skip_to_return;
-                }
-            }
-        }
-
-        skip_to_return:
-
-        for (Int i = 0; i < arglist->size; i++)
-        {
-            free(arglist->data[i].data);
-        }
-
-        list_free(*arglist);
-    }
-    else
-    {
-        regret_optimization:
-        while (eval(vm,arg(0).string))
-        {
-            result = eval(vm,arg(1).string);
-            if (result > -1)
-            {
-                break;
-            }
+            break;
         }
     }
     return result;
@@ -1679,79 +1611,12 @@ function(brl_std_loop_while)
 function(brl_std_loop_repeat)
 {
     Int result = -1;
-    if (strchr(arg(1).string, '#') == NULL)
+    for (int i = 0; i < (Int)arg(0).number; i++)
     {
+        result = eval(vm,arg(1).string);
+        if (result > -1)
         {
-            char* _parentesis = strchr(arg(1).string, '(');
-            if (_parentesis != NULL)
-            {
-                if (_parentesis[1] == '@' && _parentesis[2] == '@')
-                {
-                    // its a string 
-                    goto skip_safety_check;
-                }
-                else 
-                {
-                    // its a expression
-                    goto regret_optimization;
-                }
-            }
-        }
-
-        skip_safety_check:
-
-        StringList *splited = str_split(arg(1).string, ";");
-        
-        IntListList *arglist = list_init(IntListList);
-
-        for (Int i = 0; i < splited->size; i++)
-        {
-            //if splited->data[i] is empty or contains only spacy characters, skip it
-            if (strspn(splited->data[i], " \t\n\r\f\v") == strlen(splited->data[i]) || splited->data[i][0] == 0)
-            {
-                free(splited->data[i]);
-                continue;
-            }
-            IntList *_args = parse(vm, splited->data[i]);
-            list_push(*arglist, *_args);
-            free(splited->data[i]);
-
-            free(_args);
-        }
-
-        list_free(*splited);
-
-        for (Int i = 0; i < arg(0).number; i++)
-        {
-            for (Int i = 0; i < arglist->size; i++)
-            {
-                result = interpret_args(vm, &arglist->data[i]);
-                if (result > -1)
-                {
-                    goto skip_to_return;
-                }
-            }
-        }
-
-        skip_to_return:
-
-        for (Int i = 0; i < arglist->size; i++)
-        {
-            free(arglist->data[i].data);
-        }
-
-        list_free(*arglist);
-    }
-    else
-    {
-        regret_optimization:
-        for (int i = 0; i < (Int)arg(0).number; i++)
-        {
-            result = eval(vm,arg(1).string);
-            if (result > -1)
-            {
-                break;
-            }
+            break;
         }
     }
     return result;
@@ -1771,7 +1636,7 @@ function(brl_std_string_format)
             {
                 Int value = list_pop(*args);
                 char* _value = str_format("%ld", (Int)data(value).number);
-                char* _newstr = str_replace(_str, "\%d", _value);
+                char* _newstr = str_replace(_str, "\%ld", _value);
                 free(_str);
                 _str = _newstr;
             }
@@ -1834,18 +1699,109 @@ function(brl_std_string_format)
     return result;
 }
 
+function(buxulib_error)
+{
+    printf("%s: ", EMOTICON_ERROR);
+    for (Int i = 0; i < args->size; i++)
+    {
+        if (arg_i(i) >= 0 || arg_i(i) < vm->stack->size)
+        {
+            print_element(vm, arg_i(i));
+        }
+        else 
+        {
+            buxu_error("(out of stack)");
+        }
+
+        if (args->size > 0)
+        {
+            printf(" ");
+        }
+    }
+    printf("\n");
+    return -1;
+}
+
+function(buxulib_warn)
+{
+    printf("%s: ", EMOTICON_WARNING);
+    for (Int i = 0; i < args->size; i++)
+    {
+        if (arg_i(i) >= 0 || arg_i(i) < vm->stack->size)
+        {
+            print_element(vm, arg_i(i));
+        }
+        else 
+        {
+            buxu_error("(out of stack)");
+        }
+
+        if (args->size > 0)
+        {
+            printf(" ");
+        }
+    }
+    printf("\n");
+    return -1;
+}
+
+function(buxulib_print)
+{
+    printf("%s: ", EMOTICON_DEFAULT);
+    for (Int i = 0; i < args->size; i++)
+    {
+        if (arg_i(i) >= 0 || arg_i(i) < vm->stack->size)
+        {
+            print_element(vm, arg_i(i));
+        }
+        else 
+        {
+            buxu_error("(out of stack)");
+        }
+
+        if (args->size > 0)
+        {
+            printf(" ");
+        }
+    }
+    printf("\n");
+    return -1;
+}
+
+function(buxulib_print_custom)
+{
+    printf("%s: ", arg(0).string);
+    for (Int i = 1; i < args->size; i++)
+    {
+        if (arg_i(i) >= 0 || arg_i(i) < vm->stack->size)
+        {
+            print_element(vm, arg_i(i));
+        }
+        else 
+        {
+            buxu_error("(out of stack)");
+        }
+
+        if (args->size > 0)
+        {
+            printf(" ");
+        }
+    }
+    printf("\n");
+    return -1;
+}
+
 // inits
 #ifndef ARDUINO
-void init_os(VirtualMachine *vm)
+init(std_os)
 {
-    register_builtin(vm, "file.read", brl_os_file_read);
-    register_builtin(vm, "file.write", brl_os_file_write);
+    register_builtin(vm, "read", brl_os_file_read);
+    register_builtin(vm, "write", brl_os_file_write);
     register_builtin(vm, "system", brl_os_system);
-
 }
 #endif
 
-void init_basics(VirtualMachine *vm)
+init(std_basics)
 {
     register_builtin(vm, "#", brl_std_ignore);
     
@@ -1854,55 +1810,50 @@ void init_basics(VirtualMachine *vm)
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
 
-    register_builtin(vm, "print", brl_std_io_print);
     register_builtin(vm, "$", brl_std_deplace);
 
     register_builtin(vm, "while", brl_std_loop_while);
     register_builtin(vm, "repeat", brl_std_loop_repeat);
 
     register_builtin(vm, "format", brl_std_string_format);
-
-#ifndef ARDUINO
-    register_builtin(vm, "scan", brl_std_io_scan);// not avaliable on arduino
-#endif
 }
 
-void init_hash(VirtualMachine *vm)
+init(std_hash)
 {
-    register_builtin(vm, "#new", brl_std_hash_new);
-    register_builtin(vm, "#delete", brl_std_hash_delete);
-    register_builtin(vm, "#priority", brl_std_hash_priority);
-    register_builtin(vm, "#rename", brl_std_hash_rename);
+    register_builtin(vm, "new", brl_std_hash_new);
+    register_builtin(vm, "delete", brl_std_hash_delete);
+    register_builtin(vm, "priority", brl_std_hash_priority);
+    register_builtin(vm, "rename", brl_std_hash_rename);
 }
 
-void init_list(VirtualMachine *vm)
+init(std_list)
 {
-    register_builtin(vm, "list:", brl_std_list_new);
-    register_builtin(vm, "pop:", brl_std_list_pop);
-    register_builtin(vm, "set:", brl_std_list_set);
-    register_builtin(vm, "len:", brl_std_list_length);
-    register_builtin(vm, "push:", brl_std_list_push);
-    register_builtin(vm, "shift:", brl_std_list_shift);
-    register_builtin(vm, "unshift:", brl_std_list_unshift);
-    register_builtin(vm, "insert:", brl_std_list_insert);
-    register_builtin(vm, "remove:", brl_std_list_remove);
-    register_builtin(vm, "concat:", brl_std_list_concat);
-    register_builtin(vm, "find:", brl_std_list_find);
-    register_builtin(vm, "get:", brl_std_list_get);
-    register_builtin(vm, "sub:", brl_std_list_sub);
-    register_builtin(vm, "split:", brl_std_list_split);
-    register_builtin(vm, "replace:", brl_std_list_replace);
-    register_builtin(vm, "swap:", brl_std_list_swap);
+    register_builtin(vm, "list", brl_std_list_new);
+    register_builtin(vm, "pop", brl_std_list_pop);
+    register_builtin(vm, "set", brl_std_list_set);
+    register_builtin(vm, "len", brl_std_list_length);
+    register_builtin(vm, "push", brl_std_list_push);
+    register_builtin(vm, "shift", brl_std_list_shift);
+    register_builtin(vm, "unshift", brl_std_list_unshift);
+    register_builtin(vm, "insert", brl_std_list_insert);
+    register_builtin(vm, "remove", brl_std_list_remove);
+    register_builtin(vm, "concat", brl_std_list_concat);
+    register_builtin(vm, "find", brl_std_list_find);
+    register_builtin(vm, "get", brl_std_list_get);
+    register_builtin(vm, "sub", brl_std_list_sub);
+    register_builtin(vm, "split", brl_std_list_split);
+    register_builtin(vm, "replace", brl_std_list_replace);
+    register_builtin(vm, "swap", brl_std_list_swap);
 }
 
-void init_mem(VirtualMachine *vm)
+init(std_mem)
 {
     register_builtin(vm, "mem.copy", brl_mem_copy);
     register_builtin(vm, "mem.delete", brl_mem_delete);
 }
 
 // destructive/inplace!!
-void init_type(VirtualMachine *vm)
+init(std_type)
 {
     // type size(4 or 8 bytes)
     register_number(vm, "type.size", sizeof(Value));
@@ -1922,7 +1873,7 @@ void init_type(VirtualMachine *vm)
 }
 
 // destructive/inplace!!
-void init_std_math(VirtualMachine *vm)
+init(std_math)
 {
     // math functions are inplace(destructive), you might want to use $ to do non-destructive operations
     // e.g. $ + a 2; // a is not changed
@@ -1948,7 +1899,7 @@ void init_std_math(VirtualMachine *vm)
 }
 
 // index-based!!
-void init_std_condition(VirtualMachine *vm)
+init(std_condition)
 {
     register_builtin(vm, "==", brl_std_condition_equals);
     register_builtin(vm, "!=", brl_std_condition_not_equals);
@@ -1964,21 +1915,42 @@ void init_std_condition(VirtualMachine *vm)
     register_builtin(vm, "if", brl_std_condition_if);
 }
 
+init(buxu)
+{
+    register_builtin(vm, "warn", buxulib_warn);
+    register_builtin(vm, "error", buxulib_error);
+    register_builtin(vm, "print", buxulib_print);
+    register_builtin(vm, "print.custom", buxulib_print_custom);
+
+    #ifndef ARDUINO
+        register_builtin(vm, "scan", brl_std_io_scan);// not avaliable on arduino
+    #endif
+
+    register_string(vm, "buxu.default", EMOTICON_DEFAULT);
+    register_string(vm, "buxu.warning", EMOTICON_WARNING);
+    register_string(vm, "buxu.error", EMOTICON_ERROR);
+    register_string(vm, "buxu.idle", EMOTICON_IDLE);
+    register_string(vm, "buxu.confused", EMOTICON_CONFUSED);
+}
+
 // std init presets
-void init_std(VirtualMachine *vm)
+init(std)
 {
     // @0 = NULL
     register_var(vm, "NULL");
 
     #ifndef ARDUINO
-    init_os(vm);
+    init_std_os(vm);
     #endif
-    init_basics(vm);
-    init_hash(vm);
-    init_list(vm);
-    init_mem(vm);
+    
+    init_buxu(vm);
 
-    init_type(vm);
+    init_std_basics(vm);
+    init_std_hash(vm);
+    init_std_list(vm);
+    init_std_mem(vm);
+
+    init_std_type(vm);
     init_std_math(vm);
     init_std_condition(vm);
 

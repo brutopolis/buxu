@@ -1,4 +1,13 @@
 
+// this is the buxu's interpreter frontend when not using as a lib
+// there are some tweaks that try be compatible with mac and windows, totally untested;
+// mingw, tcc and even other non-*cc compilers like cl.exe are expected to work;
+// beside the name 'main.c' this is a non-essential tool.
+
+// beside having compatibility with windows, some features are only available on linux
+// the dynamic library loading is only available on linux, mac and mingw
+// the signal handling is only available on linux and macos, windows does have signals.h, but it is extremely limited and is not worth the effort to deal with such basic signal handling, another aproach would be needed, dealing exceptions the way intended for windows;
+
 // buxu header
 #include "../include/buxu.h"
 
@@ -15,19 +24,19 @@
 StringList *args;
 IntList* libs;
 StringList* libs_names;
-VirtualMachine* vm;
+VirtualMachine* vm; // global vm
 char *_code = NULL;
 
 Int repl(VirtualMachine *vm)
 {
-    buxu_say("v%s\n", VERSION);
+    buxu_print(EMOTICON_DEFAULT, "v%s", VERSION);
     char *cmd;
     Int result = -1;
     int junk = 0;
     while (result == -1)
     {
-        cmd = (char*)malloc(1024);
-        buxu_say("");
+        cmd = (char*)malloc(1024); // 1kb, should be enough
+        printf(EMOTICON_IDLE ": ");
         junk = scanf("%[^\n]%*c", cmd);
         if (junk == 0)
         {
@@ -38,7 +47,7 @@ Int repl(VirtualMachine *vm)
         free(cmd);
     }
 
-    buxu_say("returned %ld", result);
+    printf("%s: ", EMOTICON_DEFAULT);
     print_element(vm, result);
     printf("\n");
     return result;
@@ -46,26 +55,37 @@ Int repl(VirtualMachine *vm)
 
 #if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__) // only available on unix and mingw
 
-function(brl_main_dl_open)
+void buxu_dl_open(char* libpath)
 {
-    void *handle = dlopen(arg(0).string, RTLD_LAZY );
+    // check if the library is already loaded
+    for (Int i = 0; i < libs_names->size; i++)
+    {
+        if (strcmp(libpath, libs_names->data[i]) == 0)
+        {
+            // already loaded, it wouldnt crash, neither reload the lib, but would duplicate variables to the same pointers, a waste of memory
+            buxu_error("library %s already loaded", libpath);
+            return;
+        }
+    }   
+
+    void *handle = dlopen(libpath, RTLD_LAZY | RTLD_GLOBAL);
 
     if (handle != NULL)
     {
         list_push(*libs, (Int)handle);
-        list_push(*libs_names, str_duplicate(arg(0).string));
+        list_push(*libs_names, str_duplicate(libpath));
     }
     else 
     {
-        buxu_error("%s\n", dlerror());
+        buxu_error("%s", dlerror());
     }
 
-    StringList *splited = str_split_char(arg(0).string, '/');
+    StringList *splited = str_split_char(libpath, '/');
     StringList *splited2 = str_split_char(splited->data[splited->size - 1], '.');
-    char *libname = splited2->data[0];
+    char *_libpath = splited2->data[0];
 
     // now lets get the init_name function
-    char* tmp = str_format("init_%s", libname);
+    char* tmp = str_format("init_%s", _libpath);
     InitFunction _init = dlsym(handle, tmp);
     free(tmp);
     if (_init != NULL)
@@ -74,13 +94,13 @@ function(brl_main_dl_open)
     }
     else 
     {
-        buxu_error("%s\n", dlerror());
-        buxu_error("init_%s not found\n", libname);
+        buxu_error("%s", dlerror());
+        buxu_error("init_%s not found", libpath);
         // then lets close the library
         dlclose(handle);
         list_pop(*libs);
         list_pop(*libs_names);
-        return -1;
+        return;
     }
 
     for (Int i = 0; i < splited->size; i++)
@@ -95,23 +115,33 @@ function(brl_main_dl_open)
 
     list_free(*splited);
     list_free(*splited2);
-
-    return -1;
 }
 
-function(brl_main_dl_close)
+void buxu_dl_close(char* libpath)
 {
-    char* libname = arg(0).string;
     for (Int i = 0; i < libs_names->size; i++)
     {
-        if (strcmp(libname, libs_names->data[i]) == 0)
+        if (strcmp(libpath, libs_names->data[i]) == 0)
         {
             dlclose(data(libs->data[i]).pointer);
             list_fast_remove(*libs, i);
             free(libs_names->data[i]);
             list_fast_remove(*libs_names, i);
+            return;
         }
     }
+    buxu_error("library %s is not loaded.", libpath);
+}
+
+function(brl_main_dl_open)
+{
+    buxu_dl_open(arg(0).string);
+    return -1;
+}
+
+function(brl_main_dl_close)
+{
+    buxu_dl_close(arg(0).string);
     return -1;
 }
 
@@ -147,12 +177,12 @@ int main(int argc, char **argv)
     // free all at exit
     if (atexit(_free_at_exit) != 0)
     {
-        buxu_error("could not register the atexit function\n");
+        buxu_error("could not register the atexit function");
         return 1;
     }
 
     // result
-    Int result = 0;
+    Int result = -2; // -2 because no valid buxu program will ever return -2
 
     // virtual machine startup
     vm = make_vm();
@@ -177,16 +207,42 @@ int main(int argc, char **argv)
     {
         if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) // version
         {
-            buxu_say("v%s\n", VERSION);
+            buxu_print(EMOTICON_DEFAULT, "v%s", VERSION);
             return 0;
         }
         else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) // help
         {
-            buxu_say("v%s\n", VERSION);
-            buxu_say("usage: %s [file]\n", argv[0]);
+            buxu_print(EMOTICON_DEFAULT, "v%s", VERSION);
+            buxu_print(EMOTICON_DEFAULT, "usage: %s [file]", argv[0]);
             printf("  -v, --version\t\tprint version\n");
             printf("  -h, --help\t\tprint this help\n");
+            printf("  -l, --load\t\tload a library\n");
+            printf("  -e, --eval\t\teval a string\n");
             return 0;
+        }
+        else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--load") == 0) // preload libs
+        {
+            // if contains space then it is a list of libraries
+            if (strchr(argv[i+1], ' ') != NULL)
+            {
+                StringList *splited = special_space_split(argv[i+1]);
+                for (Int j = 0; j < splited->size; j++)
+                {
+                    buxu_dl_open(splited->data[j]);
+                }
+                list_free(*splited);
+            }
+            else
+            {
+                buxu_dl_open(argv[i+1]);
+            }
+
+            i+=1;// skip to the next argument
+        }
+        else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
+        {
+            result = eval(vm, argv[i+1]);
+            i+=1;// skip to the next argument
         }
         else // push to args
         {
@@ -194,38 +250,12 @@ int main(int argc, char **argv)
         }
     }
 
-    if (args->size == 0)
+    if (args->size == 0 && result == -2) // repl, only if no arguments and no eval rant
     {
         repl(vm);
     }
-    else if (args->size > 0) 
+    else if (args->size > 0) // run files
     {
-        _code = readfile(argv[1]);
-        if (_code == NULL)
-        {
-            buxu_error("file %s not found\n", argv[1]);
-            return 1;
-        }
-
-        Int filepathindex = new_var(vm);
-
-        // path without file name
-        vm->typestack->data[filepathindex] = TYPE_STRING;
-
-        // remove file name
-        char *path = list_shift(*args);
-        char *last = strrchr(path, '/');
-
-        if (last == NULL)
-        {
-            vm->stack->data[filepathindex].string = str_duplicate("");
-        }
-        else
-        {
-            vm->stack->data[filepathindex].string = str_nduplicate(path, last - path + 1);
-        }
-
-        hash_set(vm, "file.path", filepathindex);
         register_list(vm, "file.args");
         IntList *fileargs = (IntList*)data(hash_find(vm, "file.args")).pointer;
 
@@ -234,8 +264,47 @@ int main(int argc, char **argv)
             list_push(*fileargs, new_string(vm, list_shift(*args)));
         }
 
-        result = eval(vm, _code);
+        while (args->size > 0)
+        {
+            char* ___file = list_shift(*args);
+
+            if (___file[0] == '-')
+            {
+                buxu_error("invalid option %s", ___file);
+                continue;
+            }
+        
+            _code = readfile(___file);
+
+            if (_code == NULL)
+            {
+                buxu_error("file %s not found", ___file);
+                continue;
+            }
+
+            Int filepathindex = new_var(vm);
+
+            // path without file name
+            vm->typestack->data[filepathindex] = TYPE_STRING;
+
+            // remove file name
+            char *path = list_shift(*args);
+            char *last = strrchr(path, '/');
+
+            if (last == NULL)
+            {
+                vm->stack->data[filepathindex].string = str_duplicate("");
+            }
+            else
+            {
+                vm->stack->data[filepathindex].string = str_nduplicate(path, last - path + 1);
+            }
+
+            hash_set(vm, "file.path", filepathindex);
+            
+
+            result = eval(vm, _code);
+        }
     }
-    
     return result;
 }

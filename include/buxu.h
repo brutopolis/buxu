@@ -1,9 +1,16 @@
-#ifndef BUXU_H
-#define BUXU_H 1
-
 // [=°-°=] buxu
 // [=° °=] buxu
 // [=°~°=] buxu
+
+// libbuxu
+// libbuxu use no other libraries beside the standard C library
+// if libbuxu does not work on a platform, it is a bug, and should be reported.
+// it is meant to be compatible even with arduino and wasm, both tested.
+// so any platform that has a standard C library should be able to compile and run libbuxu.
+// even non-gcc-like compilers like cl.exe are expected to work.
+
+#ifndef BUXU_H
+#define BUXU_H 1
 
 // standard library
 #include <stdio.h>
@@ -30,14 +37,17 @@
 #define TYPE_STRING 2
 #define TYPE_LIST 3
 
-#define EMOTICON_DEFAULT "[=°-°=]"
-#define EMOTICON_WARNING "[=° °=]"
-#define EMOTICON_ERROR "[=°~°=]"
+// left eye is intentionally different from the right eye
+#define EMOTICON_DEFAULT "[=º-°=]"
+#define EMOTICON_IDLE "[=º °=]"
+#define EMOTICON_WARNING "[=º~°=]"
+#define EMOTICON_ERROR "[=ºx°=]"
+#define EMOTICON_CONFUSED "[=º?°=]"
 
 // define a macro to printf but it always starts with [=°-°=]
-#define buxu_say(...) printf(EMOTICON_DEFAULT ": "); printf(__VA_ARGS__)
-#define buxu_warn(...) printf(EMOTICON_WARNING ": warning: "); printf(__VA_ARGS__)
-#define buxu_error(...) printf(EMOTICON_ERROR ": error: "); printf(__VA_ARGS__)
+#define buxu_print(emoticon, ...) printf(emoticon ": "); printf(__VA_ARGS__); printf("\n")
+#define buxu_warn(...) printf(EMOTICON_WARNING ": warning: "); printf(__VA_ARGS__); printf("\n")
+#define buxu_error(...) printf(EMOTICON_ERROR ": error: "); printf(__VA_ARGS__); printf("\n")
 
 // we use Int and Float instead of int and float because we need to use always the pointer size for any type that might share the fundamental union type;
 // buxu use a union as universal type, and buxu is able to manipulate and use pointers direcly so we need to use the pointer size;
