@@ -5,7 +5,7 @@
 # should work well on mac, though i haven't tested it, and have no plans to do so.
 # mingw might work with some tweaks, but i haven't tested it, might do soon or later.
 
-# the same applies to src/cli.c and buxuc, both are made with linux in mind.
+# the same applies to src/cli.c and bucc, both are made with linux in mind.
 # but they are only tools to build and interpret the language, so they are not really essential and better tools can be made for each platform.
 
 # libbuxu, it is, buxu.c and buxu.h are platform independent, and should(and need to) work on any platform that has a C compiler.
@@ -14,7 +14,7 @@
 
 # usage function
 usage() {
-    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [--cc gcc] [--lib libfile.c] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-buxuc] [--no-shared] [--no-static]"
+    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [--cc gcc] [--lib libfile.c] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static]"
     exit 1
 }
 
@@ -31,7 +31,7 @@ fi
 DEBUG=0
 CC="gcc -Wformat=0"
 MAIN="src/cli.c"
-NOBUXUC=0
+NOBUCC=0
 EXTRA=""
 INSTALL=0
 UNINSTALL=0
@@ -47,7 +47,7 @@ while [[ $# -gt 0 ]]; do
         --debug-file) DEBUG=1; DEBUG_FILE="$2"; shift 2 ;;
         --cc) CC="$2"; shift 2 ;;
         --lib) LIB="$2"; shift 2 ;;
-        --no-buxuc) NOBUXUC=1; shift ;;
+        --no-bucc) NOBUCC=1; shift ;;
         --extra) EXTRA="$2"; shift 2 ;;
         --install) INSTALL=1; shift ;;
         --install-at) INSTALL=1; INSTALL_PATH="$2"; shift 2 ;;
@@ -73,9 +73,9 @@ if [[ $UNINSTALL -eq 1 ]]; then
         exit 1
     fi
 
-    # remove buxu, and possibly buxuc from /usr/bin
+    # remove buxu, and possibly bucc from /usr/bin
     $SUDO rm -f $INSTALL_PATH/bin/buxu
-    $SUDO rm -f $INSTALL_PATH/bin/buxuc
+    $SUDO rm -f $INSTALL_PATH/bin/bucc
 
     # remove buxu.h from /usr/include
     $SUDO rm -f $INSTALL_PATH/include/buxu.h
@@ -83,7 +83,7 @@ if [[ $UNINSTALL -eq 1 ]]; then
     # remove libbuxu.so from /usr/lib
     $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
 
-    # verify if buxu, buxu.h, and buxuc are removed
+    # verify if buxu, buxu.h, and bucc are removed
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
         echo "[=°~°=]: failed to uninstall buxu"
         exit 1
@@ -117,71 +117,71 @@ if [[ $NO_STATIC -eq 0 ]]; then
     $CC src/buxu.c -o build/libbuxu.a -c -O3 -lm -Iinclude $DEBUGARGS $EXTRA
 fi
 
-if [[ $NOBUXUC -eq 0 ]]; then
+if [[ $NOBUCC -eq 0 ]]; then
 
-    BUXUC_SCRIPT="build/buxuc"
+    BUCC_SCRIPT="build/bucc"
 
-    echo '#!/bin/bash' > $BUXUC_SCRIPT
-    echo '' >> $BUXUC_SCRIPT
+    echo '#!/bin/bash' > $BUCC_SCRIPT
+    echo '' >> $BUCC_SCRIPT
 
-    echo 'CC="gcc"' >> $BUXUC_SCRIPT
-    echo 'EXTRA=""' >> $BUXUC_SCRIPT
-    echo 'DEBUG=0' >> $BUXUC_SCRIPT
-    echo '' >> $BUXUC_SCRIPT
+    echo 'CC="gcc"' >> $BUCC_SCRIPT
+    echo 'EXTRA=""' >> $BUCC_SCRIPT
+    echo 'DEBUG=0' >> $BUCC_SCRIPT
+    echo '' >> $BUCC_SCRIPT
 
-    echo 'usage() {' >> $BUXUC_SCRIPT
-    echo '    echo "[=°-°=]: usage: $0 [--cc gcc] [--extra \"extra cc tags\"] [--debug] [-o output] [--help | -h] file1.c file2.c ..."' >> $BUXUC_SCRIPT
-    echo '    exit 1' >> $BUXUC_SCRIPT
-    echo '}' >> $BUXUC_SCRIPT
-    echo '' >> $BUXUC_SCRIPT
+    echo 'usage() {' >> $BUCC_SCRIPT
+    echo '    echo "[=°-°=]: usage: $0 [--cc gcc] [--extra \"extra cc tags\"] [--debug] [-o output] [--help | -h] file1.c file2.c ..."' >> $BUCC_SCRIPT
+    echo '    exit 1' >> $BUCC_SCRIPT
+    echo '}' >> $BUCC_SCRIPT
+    echo '' >> $BUCC_SCRIPT
 
     #if no args, print help
-    echo 'if [[ $# -eq 0 ]]; then' >> $BUXUC_SCRIPT
-    echo '    echo "[=°x°=]: no arguments provided"' >> $BUXUC_SCRIPT
-    echo '    usage' >> $BUXUC_SCRIPT
-    echo 'fi' >> $BUXUC_SCRIPT
-    echo '' >> $BUXUC_SCRIPT
-    echo 'FILES=""' >> $BUXUC_SCRIPT
-    echo '' >> $BUXUC_SCRIPT
-    echo 'while [[ $# -gt 0 ]]; do' >> $BUXUC_SCRIPT
-    echo '    case $1 in' >> $BUXUC_SCRIPT
-    echo '        --cc) CC="$2"; shift 2 ;;' >> $BUXUC_SCRIPT
-    echo '        --extra) EXTRA="$2"; shift 2 ;;' >> $BUXUC_SCRIPT
-    echo '        --debug) DEBUG=1; shift ;;' >> $BUXUC_SCRIPT
-    echo '        -o) OUTPUT_NAME="$2"; shift 2 ;;' >> $BUXUC_SCRIPT
-    echo '        --help) usage ;;' >> $BUXUC_SCRIPT
-    echo '        -h) usage ;;' >> $BUXUC_SCRIPT
+    echo 'if [[ $# -eq 0 ]]; then' >> $BUCC_SCRIPT
+    echo '    echo "[=°x°=]: no arguments provided"' >> $BUCC_SCRIPT
+    echo '    usage' >> $BUCC_SCRIPT
+    echo 'fi' >> $BUCC_SCRIPT
+    echo '' >> $BUCC_SCRIPT
+    echo 'FILES=""' >> $BUCC_SCRIPT
+    echo '' >> $BUCC_SCRIPT
+    echo 'while [[ $# -gt 0 ]]; do' >> $BUCC_SCRIPT
+    echo '    case $1 in' >> $BUCC_SCRIPT
+    echo '        --cc) CC="$2"; shift 2 ;;' >> $BUCC_SCRIPT
+    echo '        --extra) EXTRA="$2"; shift 2 ;;' >> $BUCC_SCRIPT
+    echo '        --debug) DEBUG=1; shift ;;' >> $BUCC_SCRIPT
+    echo '        -o) OUTPUT_NAME="$2"; shift 2 ;;' >> $BUCC_SCRIPT
+    echo '        --help) usage ;;' >> $BUCC_SCRIPT
+    echo '        -h) usage ;;' >> $BUCC_SCRIPT
         # concat file if its name does not start with -
-    echo '        *) if [[ ${1:0:1} != "-" ]]; then' >> $BUXUC_SCRIPT
-    echo '            FILES="$FILES $1"' >> $BUXUC_SCRIPT
-    echo '        fi' >> $BUXUC_SCRIPT
-    echo '        shift ;;' >> $BUXUC_SCRIPT
-    echo '    esac' >> $BUXUC_SCRIPT
-    echo 'done;' >> $BUXUC_SCRIPT
-    echo '' >> $BUXUC_SCRIPT
+    echo '        *) if [[ ${1:0:1} != "-" ]]; then' >> $BUCC_SCRIPT
+    echo '            FILES="$FILES $1"' >> $BUCC_SCRIPT
+    echo '        fi' >> $BUCC_SCRIPT
+    echo '        shift ;;' >> $BUCC_SCRIPT
+    echo '    esac' >> $BUCC_SCRIPT
+    echo 'done;' >> $BUCC_SCRIPT
+    echo '' >> $BUCC_SCRIPT
     
-    echo 'if [[ $FILES == "" ]]; then' >> $BUXUC_SCRIPT
-    echo '    echo "[=°x°=]: no files provided"' >> $BUXUC_SCRIPT
-    echo '    exit 1' >> $BUXUC_SCRIPT
-    echo 'fi' >> $BUXUC_SCRIPT
-    echo '' >> $BUXUC_SCRIPT
+    echo 'if [[ $FILES == "" ]]; then' >> $BUCC_SCRIPT
+    echo '    echo "[=°x°=]: no files provided"' >> $BUCC_SCRIPT
+    echo '    exit 1' >> $BUCC_SCRIPT
+    echo 'fi' >> $BUCC_SCRIPT
+    echo '' >> $BUCC_SCRIPT
 
-    echo 'if [[ $DEBUG -eq 1 ]]; then' >> $BUXUC_SCRIPT
-    echo '    DEBUGARGS="-g"' >> $BUXUC_SCRIPT
-    echo '    echo "[=°-°=]: debug mode enabled"' >> $BUXUC_SCRIPT
-    echo 'else' >> $BUXUC_SCRIPT
-    echo '    DEBUGARGS=""' >> $BUXUC_SCRIPT
-    echo 'fi' >> $BUXUC_SCRIPT
+    echo 'if [[ $DEBUG -eq 1 ]]; then' >> $BUCC_SCRIPT
+    echo '    DEBUGARGS="-g"' >> $BUCC_SCRIPT
+    echo '    echo "[=°-°=]: debug mode enabled"' >> $BUCC_SCRIPT
+    echo 'else' >> $BUCC_SCRIPT
+    echo '    DEBUGARGS=""' >> $BUCC_SCRIPT
+    echo 'fi' >> $BUCC_SCRIPT
 
-    echo 'if [[ -z $OUTPUT_NAME ]]; then' >> $BUXUC_SCRIPT
-    echo '    OUTPUT_NAME="a.out"' >> $BUXUC_SCRIPT
-    echo 'fi' >> $BUXUC_SCRIPT
+    echo 'if [[ -z $OUTPUT_NAME ]]; then' >> $BUCC_SCRIPT
+    echo '    OUTPUT_NAME="a.out"' >> $BUCC_SCRIPT
+    echo 'fi' >> $BUCC_SCRIPT
 
-    echo '' >> $BUXUC_SCRIPT
-    echo 'echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"' >> $BUXUC_SCRIPT
-    echo "\$CC \$FILES -o \$OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu \$EXTRA \$DEBUGARGS -Wl,-rpath=\$INSTALL_PATH/lib" >> $BUXUC_SCRIPT
-    echo 'echo "[=°-°=]: $OUTPUT_NAME" has been compiled.' >> $BUXUC_SCRIPT
-    chmod +x $BUXUC_SCRIPT
+    echo '' >> $BUCC_SCRIPT
+    echo 'echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"' >> $BUCC_SCRIPT
+    echo "\$CC \$FILES -o \$OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu \$EXTRA \$DEBUGARGS -Wl,-rpath=\$INSTALL_PATH/lib" >> $BUCC_SCRIPT
+    echo 'echo "[=°-°=]: $OUTPUT_NAME" has been compiled.' >> $BUCC_SCRIPT
+    chmod +x $BUCC_SCRIPT
 fi
 
 $CC $MAIN src/buxu.c -o build/buxu -O3 -lm -Iinclude $DEBUGARGS $EXTRA
@@ -233,26 +233,26 @@ if [[ $INSTALL -eq 1 ]]; then
     # lets remove it before installing
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
         $SUDO rm -f $INSTALL_PATH/bin/buxu
-        $SUDO rm -f $INSTALL_PATH/bin/buxuc
+        $SUDO rm -f $INSTALL_PATH/bin/bucc
         $SUDO rm -f $INSTALL_PATH/include/buxu.h
         $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
     fi
 
-    # copy buxu, and possibly buxuc to /usr/bin
+    # copy buxu, and possibly bucc to /usr/bin
     $SUDO cp ./build/buxu $INSTALL_PATH/bin/buxu
     
     # copy the header files to /usr/include
     $SUDO cp src/buxu.h $INSTALL_PATH/include/
 
-    if [[ $NOBUXUC -eq 0 ]]; then
-        $SUDO cp ./build/buxuc $INSTALL_PATH/bin/
+    if [[ $NOBUCC -eq 0 ]]; then
+        $SUDO cp ./build/bucc $INSTALL_PATH/bin/
     fi
 
     if [[ $NO_SHARED -eq 0 ]]; then
         $SUDO cp ./build/libbuxu.so $INSTALL_PATH/lib/
     fi
 
-    # verify if buxu, buxu.h, and buxuc are in the correct place
+    # verify if buxu, buxu.h, and bucc are in the correct place
     if [[ ! -f $INSTALL_PATH/bin/buxu ]]; then
         echo "[=°x°=]: failed to install buxu, buxu not found in $INSTALL_PATH/bin"
         exit 1
