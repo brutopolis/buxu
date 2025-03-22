@@ -18,11 +18,10 @@
 - cli.c has new option --load path | -l path, to load a buxu lib;
 - cli.c has new option --eval code | -e code, to evaluate a code;
 - in std all the #func renamed to just func;
-- print function removed use say, warn or error instead;
-- scan function removed, use hear instead;
 - file.read and file.write renamed to read and write;
 - all the func: were also renamed to just func;
 - std loop functions optimizations removed, for simplicity, maybe another optimization might be done in far future;
+- include folder removed, buxu.h is now under src/;
 - all examples updated;
 - some README updates;
 - lots of cleanup;

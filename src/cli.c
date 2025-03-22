@@ -8,7 +8,7 @@
 // the dynamic library loading is only available on linux, mac and mingw
 
 // buxu header
-#include "../include/buxu.h"
+#include "buxu.h"
 
 // linux, macos and mingw
 #if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__)

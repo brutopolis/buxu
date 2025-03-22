@@ -105,6 +105,8 @@ echo "[=°-°=]: compiler: $CC"
 rm -rf build
 mkdir -p build
 
+cp src/buxu.h include/
+
 if [[ $NO_SHARED -eq 0 ]]; then # also build a shared library
     echo "[=°-°=]: building shared library"
     $CC src/buxu.c -o build/libbuxu.so -shared -fPIC -O3 -lm -Iinclude $DEBUGARGS $EXTRA
@@ -240,7 +242,7 @@ if [[ $INSTALL -eq 1 ]]; then
     $SUDO cp ./build/buxu $INSTALL_PATH/bin/buxu
     
     # copy the header files to /usr/include
-    $SUDO cp include/buxu.h $INSTALL_PATH/include/
+    $SUDO cp src/buxu.h $INSTALL_PATH/include/
 
     if [[ $NOBUXUC -eq 0 ]]; then
         $SUDO cp ./build/buxuc $INSTALL_PATH/bin/
