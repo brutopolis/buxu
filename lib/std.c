@@ -1195,6 +1195,57 @@ function(brl_std_math_tan)
     return -1;
 }
 
+function(brl_std_math_bitwise_and)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).integer &= arg(i).integer;
+    }
+    return -1;
+}
+
+function(brl_std_math_bitwise_or)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).integer |= arg(i).integer;
+    }
+    return -1;
+}
+
+function(brl_std_math_bitwise_xor)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).integer ^= arg(i).integer;
+    }
+    return -1;
+}
+
+function(brl_std_math_bitwise_not)
+{
+    arg(0).integer = ~arg(0).integer;
+    return -1;
+}
+
+function(brl_std_math_bitwise_shift_left)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).integer <<= arg(i).integer;
+    }
+    return -1;
+}
+
+function(brl_std_math_bitwise_shift_right)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).integer >>= arg(i).integer;
+    }
+    return -1;
+}
+
 function(brl_std_min)
 {
     switch (arg_t(0))
@@ -1838,6 +1889,43 @@ function(buxulib_print_custom)
     return -1;
 }
 
+function(buxulib_collect)
+{
+    IntList *protected = list_init(IntList);
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        list_push(*protected, vm->hashes->data[i].index);
+    }
+
+    for (Int i = vm->stack->size-1; i > 0; i--)
+    {
+        if (data_t(i) == TYPE_LIST)
+        {
+            Int found = list_find(*protected, i);
+            
+            if (found >= 0)
+            {
+                // protect all the elements of the list
+                for (Int j = 0; j < ((IntList*)data(i).pointer)->size; j++)
+                {
+                    list_push(*protected, ((IntList*)data(i).pointer)->data[j]);
+                }
+            }
+        }
+    }
+
+    for (Int i = 0; i < vm->stack->size; i++)
+    {
+        if (list_find(*protected, i) != -1)
+        {
+            unuse_var(vm, i);
+        }
+    }
+
+    list_free(*protected);
+    return -1;
+}
+
 // inits
 #ifndef ARDUINO
 init(std_os)
@@ -1897,6 +1985,7 @@ init(std_mem)
 {
     register_builtin(vm, "mem.copy", brl_mem_copy);
     register_builtin(vm, "mem.delete", brl_mem_delete);
+    register_builtin(vm, "mem.collect", buxulib_collect);
 }
 
 // destructive/inplace!!
@@ -1943,6 +2032,14 @@ init(std_math)
 
     register_builtin(vm, "min", brl_std_min);
     register_builtin(vm, "max", brl_std_max);
+
+    // bitwise
+    register_builtin(vm, "&", brl_std_math_bitwise_and);
+    register_builtin(vm, "|", brl_std_math_bitwise_or);
+    register_builtin(vm, "^", brl_std_math_bitwise_xor);
+    register_builtin(vm, "~", brl_std_math_bitwise_not);
+    register_builtin(vm, "<<", brl_std_math_bitwise_shift_left);
+    register_builtin(vm, ">>", brl_std_math_bitwise_shift_right);
 }
 
 // index-based!!

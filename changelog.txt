@@ -1,6 +1,6 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
-(??/03/2025) - version 0.7.8
+(23/03/2025) - version 0.7.8
 
 - main.c renamed to cli.c;
 - c_list.h merged into buxu.h;
@@ -18,11 +18,14 @@
 - cli.c has new option --load path | -l path, to load a buxu lib;
 - cli.c has new option --eval code | -e code, to evaluate a code;
 - in std all the #func renamed to just func;
-- print function removed use say, warn or error instead;
-- scan function removed, use hear instead;
 - file.read and file.write renamed to read and write;
 - all the func: were also renamed to just func;
 - std loop functions optimizations removed, for simplicity, maybe another optimization might be done in far future;
+- include folder removed, buxu.h is now under src/;
+- bitwise functions added to std_math;
+- experimental tigr(https://github.com/erkkah/tigr) wrapper for buxu added;
+- list_find renamed to list_ocurrences;
+- new macro list_find;
 - all examples updated;
 - some README updates;
 - lots of cleanup;

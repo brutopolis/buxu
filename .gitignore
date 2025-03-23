@@ -9,3 +9,4 @@ arduino/
 *.so
 .buxu
 *.out
+lib/tigr/tigr
