@@ -1,0 +1,24 @@
+load "lib/std.so";
+load "lib/tigr.so";
+new "screen" (tigr.window 320 240 "Hello" 0);
+
+new "white" (list 255 255 255 255);
+new "pink" (list 255 192 203 255);
+new "_110" (get 110);
+new "_120" (get 120);
+new "_0" (get 0);
+new "txt" "Hello, world.";
+
+
+while "== (get _0) (tigr.closed screen)" 
+(@
+    ls;
+    tigr.clear screen pink;
+    tigr.print screen tigr.font _110 _120 white txt;
+    tigr.update screen;
+    
+);
+
+tigr.free screen;
+
+return 0;

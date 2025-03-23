@@ -1195,6 +1195,57 @@ function(brl_std_math_tan)
     return -1;
 }
 
+function(brl_std_math_bitwise_and)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).integer &= arg(i).integer;
+    }
+    return -1;
+}
+
+function(brl_std_math_bitwise_or)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).integer |= arg(i).integer;
+    }
+    return -1;
+}
+
+function(brl_std_math_bitwise_xor)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).integer ^= arg(i).integer;
+    }
+    return -1;
+}
+
+function(brl_std_math_bitwise_not)
+{
+    arg(0).integer = ~arg(0).integer;
+    return -1;
+}
+
+function(brl_std_math_bitwise_shift_left)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).integer <<= arg(i).integer;
+    }
+    return -1;
+}
+
+function(brl_std_math_bitwise_shift_right)
+{
+    for (Int i = 1; i < args->size; i++)
+    {
+        arg(0).integer >>= arg(i).integer;
+    }
+    return -1;
+}
+
 function(brl_std_min)
 {
     switch (arg_t(0))
@@ -1943,6 +1994,14 @@ init(std_math)
 
     register_builtin(vm, "min", brl_std_min);
     register_builtin(vm, "max", brl_std_max);
+
+    // bitwise
+    register_builtin(vm, "&", brl_std_math_bitwise_and);
+    register_builtin(vm, "|", brl_std_math_bitwise_or);
+    register_builtin(vm, "^", brl_std_math_bitwise_xor);
+    register_builtin(vm, "~", brl_std_math_bitwise_not);
+    register_builtin(vm, "<<", brl_std_math_bitwise_shift_left);
+    register_builtin(vm, ">>", brl_std_math_bitwise_shift_right);
 }
 
 // index-based!!

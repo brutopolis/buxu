@@ -14,7 +14,7 @@
 
 # usage function
 usage() {
-    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [--cc gcc] [--lib libfile.c] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static]"
+    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [--cc gcc] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static]"
     exit 1
 }
 
@@ -46,7 +46,6 @@ while [[ $# -gt 0 ]]; do
         --debug) DEBUG=1; shift ;;
         --debug-file) DEBUG=1; DEBUG_FILE="$2"; shift 2 ;;
         --cc) CC="$2"; shift 2 ;;
-        --lib) LIB="$2"; shift 2 ;;
         --no-bucc) NOBUCC=1; shift ;;
         --extra) EXTRA="$2"; shift 2 ;;
         --install) INSTALL=1; shift ;;
@@ -104,8 +103,6 @@ echo "[=°-°=]: compiler: $CC"
 
 rm -rf build
 mkdir -p build
-
-cp src/buxu.h include/
 
 if [[ $NO_SHARED -eq 0 ]]; then # also build a shared library
     echo "[=°-°=]: building shared library"

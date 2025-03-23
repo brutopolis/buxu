@@ -1,6 +1,6 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
-(??/03/2025) - version 0.7.8
+(23/03/2025) - version 0.7.8
 
 - main.c renamed to cli.c;
 - c_list.h merged into buxu.h;
@@ -22,6 +22,8 @@
 - all the func: were also renamed to just func;
 - std loop functions optimizations removed, for simplicity, maybe another optimization might be done in far future;
 - include folder removed, buxu.h is now under src/;
+- bitwise functions added to std_math;
+- experimental tigr(https://github.com/erkkah/tigr) wrapper for buxu added;
 - all examples updated;
 - some README updates;
 - lots of cleanup;
