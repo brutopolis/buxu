@@ -183,7 +183,7 @@
     ret; \
 })
 
-#define list_find(s, v) \
+#define list_ocurrences(s, v) \
 ({ \
     Int i = 0; \
     while (i < (s).size && (s).data[i] != (v)) \
@@ -191,6 +191,20 @@
         i++; \
     } \
     i == (s).size ? -1 : i; \
+})
+
+#define list_find(s, v) \
+({ \
+    Int i = -1; \
+    for (Int j = 0; j < (s).size; j++) \
+    { \
+        if ((s).data[j] == (v)) \
+        { \
+            i = j; \
+            break; \
+        } \
+    } \
+    i; \
 })
 
 #define list_reverse(s) do \
@@ -244,6 +258,7 @@ typedef struct
     ByteList *typestack;
     HashList *hashes;
     IntList *unused;
+    //IntListList *lists;
 } VirtualMachine;
 
 //Function

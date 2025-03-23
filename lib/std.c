@@ -1889,6 +1889,43 @@ function(buxulib_print_custom)
     return -1;
 }
 
+function(buxulib_collect)
+{
+    IntList *protected = list_init(IntList);
+    for (Int i = 0; i < vm->hashes->size; i++)
+    {
+        list_push(*protected, vm->hashes->data[i].index);
+    }
+
+    for (Int i = vm->stack->size-1; i > 0; i--)
+    {
+        if (data_t(i) == TYPE_LIST)
+        {
+            Int found = list_find(*protected, i);
+            
+            if (found >= 0)
+            {
+                // protect all the elements of the list
+                for (Int j = 0; j < ((IntList*)data(i).pointer)->size; j++)
+                {
+                    list_push(*protected, ((IntList*)data(i).pointer)->data[j]);
+                }
+            }
+        }
+    }
+
+    for (Int i = 0; i < vm->stack->size; i++)
+    {
+        if (list_find(*protected, i) != -1)
+        {
+            unuse_var(vm, i);
+        }
+    }
+
+    list_free(*protected);
+    return -1;
+}
+
 // inits
 #ifndef ARDUINO
 init(std_os)
@@ -1948,6 +1985,7 @@ init(std_mem)
 {
     register_builtin(vm, "mem.copy", brl_mem_copy);
     register_builtin(vm, "mem.delete", brl_mem_delete);
+    register_builtin(vm, "mem.collect", buxulib_collect);
 }
 
 // destructive/inplace!!

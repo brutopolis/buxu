@@ -24,6 +24,8 @@
 - include folder removed, buxu.h is now under src/;
 - bitwise functions added to std_math;
 - experimental tigr(https://github.com/erkkah/tigr) wrapper for buxu added;
+- list_find renamed to list_ocurrences;
+- new macro list_find;
 - all examples updated;
 - some README updates;
 - lots of cleanup;

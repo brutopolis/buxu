@@ -8,8 +8,8 @@ function(bu_tigr_window)
     Int result = new_var(vm);
     Int width = arg(0).number;
     Int height = arg(1).number;
-    Int flags = arg(2).number;
-    char* title = arg(3).string;
+    char* title = arg(2).string;
+    Int flags = arg(3).number;
     Tigr *bmp = tigrWindow(width, height, title, flags);
     data(result).pointer = bmp;
     return result;
@@ -389,20 +389,20 @@ function(bu_tigr_key_down)
 {
     Tigr *bmp = arg(0).pointer;
     int key = arg(1).number;
-    return new_number(vm, tigrKeyDown(bmp, key));
+    return tigrKeyDown(bmp, key);
 }
 
 function(bu_tigr_key_held)
 {
     Tigr *bmp = arg(0).pointer;
     int key = arg(1).number;
-    return new_number(vm, tigrKeyHeld(bmp, key));
+    return tigrKeyHeld(bmp, key);
 }
 
 function(bu_tigr_read_char)
 {
     Tigr *bmp = arg(0).pointer;
-    return new_number(vm, tigrReadChar(bmp));
+    return tigrReadChar(bmp);
 }
 
 function(bu_tigr_show_keyboard)
