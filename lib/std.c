@@ -40,10 +40,6 @@ function(brl_os_system)
 
 function(brl_std_hash_new)
 {
-    if (hash_find(vm, arg(0).string) != -1)
-    {
-        hash_unset(vm, arg(0).string);
-    }
     hash_set(vm, arg(0).string, arg_i(1));
     return -1;
 }
@@ -54,43 +50,7 @@ function(brl_std_hash_delete)
     return -1;
 }
 
-function(brl_std_hash_priority)
-{
-    if (args->size == 1)
-    {
-        BASE_PRIORITY = (Int)arg(0).number;
-        return -1;
-    }
-    else if (args->size == 0)
-    {
-        return new_number(vm, BASE_PRIORITY);
-    }
-
-    char* hash_name = arg(0).string;
-    Int priority = arg(1).number;
-    Int hash_index = -1;
-    
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {
-        if (strcmp(hash_name, hash(i).key) == 0)
-        {
-            hash_index = i;
-            break;
-        }
-    }
-
-    if (hash_index < 0)
-    {
-        buxu_error("could not find hash \"%s\"", hash_name);
-    }
-
-    Hash obj = list_fast_remove(*vm->hashes, hash_index);
-    Int position = priority * (Int)(vm->hashes->size/BASE_PRIORITY);
-    list_insert(*vm->hashes, position, obj);
-    return -1;
-}
-
-function(brl_std_hash_rename)
+/*function(brl_std_hash_rename)
 {
     Int index = hash_find(vm, arg(0).string);
     if (index != -1)
@@ -99,7 +59,7 @@ function(brl_std_hash_rename)
         hash(index).key = str_duplicate(arg(1).string);
     }
     return -1;
-}
+}*/
 
 function(brl_std_io_scan) // always get string
 {
@@ -118,7 +78,7 @@ function(brl_std_io_ls)
     for (Int i = 0; i < vm->stack->size; i++)
     {
         printf("  |%ld    ", i);
-        switch (vm->typestack->data[vm->hashes->data[i].index]) 
+        switch (data_t(i)) 
         {
             case TYPE_STRING:
                 printf("string   ");
@@ -143,25 +103,25 @@ function(brl_std_io_ls)
 function(brl_std_io_ls_hashes)
 {
     Int max_len = 0;
-    for (Int i = 0; i < vm->hashes->size; i++) 
+    for (Int i = 0; i < vm->hash_names->size; i++) 
     {
-        int len = snprintf(NULL, 0, "  |%ld   %s", vm->hashes->data[i].index, vm->hashes->data[i].key);
+        int len = snprintf(NULL, 0, "  |%ld   %s", vm->hash_indexes->data[i], vm->hash_names->data[i]);
         if ((Int)len > max_len) 
         {
             max_len = len;
         }
     }
     Int col_width = max_len + 2;
-    for (Int i = 0; i < vm->hashes->size; i++) 
+    for (Int i = 0; i < vm->hash_names->size; i++) 
     {
-        int len = snprintf(NULL, 0, "  |%ld   %s", vm->hashes->data[i].index, vm->hashes->data[i].key);
-        printf("  |%ld   %s", vm->hashes->data[i].index, vm->hashes->data[i].key);
+        int len = snprintf(NULL, 0, "  |%ld   %s", vm->hash_indexes->data[i], vm->hash_names->data[i]);
+        printf("  |%ld   %s", vm->hash_indexes->data[i], vm->hash_names->data[i]);
         Int pad = col_width > (Int)len ? col_width - len : 0;
         for (Int j = 0; j < pad; j++) 
         {
             printf(" ");
         }
-        switch (vm->typestack->data[vm->hashes->data[i].index]) 
+        switch (vm->typestack->data[vm->hash_indexes->data[i]]) 
         {
             case TYPE_STRING:
                 printf("|string   ");
@@ -176,7 +136,7 @@ function(brl_std_io_ls_hashes)
                 printf("|any   ");
                 break;
         }
-        print_element(vm, vm->hashes->data[i].index);
+        print_element(vm, vm->hash_indexes->data[i]);
         printf("\n");
     }
 
@@ -243,9 +203,9 @@ function(brl_std_list_unshift)
         list_unshift(*vm->stack, value_duplicate(arg(0), arg_t(0)));
         list_unshift(*vm->typestack, arg_t(0));
         // update hashes and lists indexes
-        for (Int i = 0; i < vm->hashes->size; i++)
+        for (Int i = 0; i < vm->hash_names->size; i++)
         {
-            vm->hashes->data[i].index++;
+            vm->hash_indexes->data[i]++;
         }
 
         for (Int i = 0; i < vm->stack->size; i++)
@@ -311,9 +271,9 @@ function(brl_std_list_shift)// returns the removed element
         list_shift(*vm->stack);
         list_shift(*vm->typestack);
         // update hashes and lists indexes
-        for (Int i = 0; i < vm->hashes->size; i++)
+        for (Int i = 0; i < vm->hash_names->size; i++)
         {
-            vm->hashes->data[i].index--;
+            vm->hash_indexes->data[i]--;
         }
 
         for (Int i = 0; i < vm->stack->size; i++)
@@ -362,11 +322,11 @@ function(brl_std_list_insert)
         vm->stack->data[arg_i(1)] = v;
 
         // update hashes and lists indexes
-        for (Int i = 0; i < vm->hashes->size; i++)
+        for (Int i = 0; i < vm->hash_names->size; i++)
         {
-            if (hash(i).index >= arg_i(1))
+            if (vm->hash_indexes->data[i] >= arg_i(1))
             {
-                hash(i).index++;
+                vm->hash_indexes->data[i]++;
             }
         }
     }
@@ -398,11 +358,11 @@ function(brl_std_list_remove)
         list_remove(*vm->stack, arg_i(0));
         list_remove(*vm->typestack, arg_i(0));
         // update hashes and lists indexes
-        for (Int i = 0; i < vm->hashes->size; i++)
+        for (Int i = 0; i < vm->hash_names->size; i++)
         {
-            if (hash(i).index >= arg_i(0))
+            if (vm->hash_indexes->data[i] >= arg_i(0))
             {
-                hash(i).index--;
+                vm->hash_indexes->data[i]--;
             }
         }
     }
@@ -483,7 +443,7 @@ function(brl_std_list_set)
         Int value = arg_i(0);
         if (index >= 0 && index < sizeof(Float))
         {
-            arg(0).byte[index] = (char)value;
+            arg(0).u8[index] = (char)value;
         }
     }
     return -1;
@@ -659,7 +619,7 @@ function(brl_std_list_get)
         Int value = arg_i(0);
         if (index >= 0 && index < sizeof(Float))
         {
-            return ((char)arg(0).byte[index]);
+            return ((char)arg(0).u8[index]);
         }
     }
     return -1;
@@ -893,8 +853,7 @@ function(brl_std_list_swap)
 
 function(brl_std_type_get)
 {
-    arg(0).integer = arg_t(0);
-    return -1;
+    return arg_t(0);
 }
 
 function(brl_std_type_set)
@@ -992,13 +951,29 @@ function(brl_std_math_add)
         case TYPE_NUMBER:
             for (Int i = 1; i < args->size; i++)
             {
-                arg(0).number += arg(i).number;
+                switch (arg_t(i))
+                {
+                    case TYPE_NUMBER:
+                        arg(0).number += arg(i).number;
+                        break;
+                    default:
+                        arg(0).number += (Float)arg(i).integer;
+                        break;
+                }
             }
             break;
         default:
             for (Int i = 1; i < args->size; i++)
             {
-                arg(0).integer += (Int)arg(i).integer;
+                switch (arg_t(i))
+                {
+                    case TYPE_NUMBER:
+                        arg(0).integer += (Int)arg(i).number;
+                        break;
+                    default:
+                        arg(0).integer += arg(i).integer;
+                        break;
+                }
             }
             break;
     }
@@ -1012,13 +987,29 @@ function(brl_std_math_sub)
         case TYPE_NUMBER:
             for (Int i = 1; i < args->size; i++)
             {
-                arg(0).number -= arg(i).number;
+                switch (arg_t(i))
+                {
+                    case TYPE_NUMBER:
+                        arg(0).number -= arg(i).number;
+                        break;
+                    default:
+                        arg(0).number -= (Float)arg(i).integer;
+                        break;
+                }
             }
             break;
         default:
             for (Int i = 1; i < args->size; i++)
             {
-                arg(0).integer -= arg(i).integer;
+                switch (arg_t(i))
+                {
+                    case TYPE_NUMBER:
+                        arg(0).integer -= (Int)arg(i).number;
+                        break;
+                    default:
+                        arg(0).integer -= arg(i).integer;
+                        break;
+                }
             }
             break;
     }
@@ -1032,13 +1023,29 @@ function(brl_std_math_mul)
         case TYPE_NUMBER:
             for (Int i = 1; i < args->size; i++)
             {
-                arg(0).number *= arg(i).number;
+                switch (arg_t(i))
+                {
+                    case TYPE_NUMBER:
+                        arg(0).number *= arg(i).number;
+                        break;
+                    default:
+                        arg(0).number *= (Float)arg(i).integer;
+                        break;
+                }
             }
             break;
         default:
             for (Int i = 1; i < args->size; i++)
             {
-                arg(0).integer *= arg(i).integer;
+                switch (arg_t(i))
+                {
+                    case TYPE_NUMBER:
+                        arg(0).integer *= (Int)arg(i).number;
+                        break;
+                    default:
+                        arg(0).integer *= arg(i).integer;
+                        break;
+                }
             }
             break;
     }
@@ -1052,13 +1059,29 @@ function(brl_std_math_div)
         case TYPE_NUMBER:
             for (Int i = 1; i < args->size; i++)
             {
-                arg(0).number /= arg(i).number;
+                switch (arg_t(i))
+                {
+                    case TYPE_NUMBER:
+                        arg(0).number /= arg(i).number;
+                        break;
+                    default:
+                        arg(0).number /= (Float)arg(i).integer;
+                        break;
+                }
             }
             break;
         default:
             for (Int i = 1; i < args->size; i++)
             {
-                arg(0).integer /= arg(i).integer;
+                switch (arg_t(i))
+                {
+                    case TYPE_NUMBER:
+                        arg(0).integer /= (Int)arg(i).number;
+                        break;
+                    default:
+                        arg(0).integer /= arg(i).integer;
+                        break;
+                }
             }
             break;
     }
@@ -1077,10 +1100,7 @@ function(brl_std_math_mod)
             #endif
             break;
         default:
-            for (Int i = 1; i < args->size; i++)
-            {
-                arg(0).integer %= arg(i).integer;
-            }
+            arg(0).integer %= arg(1).integer;
             break;
     }
     
@@ -1698,9 +1718,29 @@ function(brl_std_loop_while)
     while (eval(vm,arg(0).string))
     {
         result = eval(vm,arg(1).string);
-        if (result > -1)
+        switch (result)
         {
-            break;
+            case -1:
+                break;
+            default:
+                return result;
+        }
+    }
+    return result;
+}
+
+function(brl_std_loop_forever)
+{
+    Int result = -1;
+    while (1)
+    {
+        result = eval(vm,arg(0).string);
+        switch (result)
+        {
+            case -1:
+                break;
+            default:
+                return result;
         }
     }
     return result;
@@ -1712,9 +1752,12 @@ function(brl_std_loop_repeat)
     for (int i = 0; i < (Int)arg(0).number; i++)
     {
         result = eval(vm,arg(1).string);
-        if (result > -1)
+        switch (result)
         {
-            break;
+            case -1:
+                break;
+            default:
+                return result;
         }
     }
     return result;
@@ -1889,43 +1932,6 @@ function(buxulib_print_custom)
     return -1;
 }
 
-function(buxulib_collect)
-{
-    IntList *protected = list_init(IntList);
-    for (Int i = 0; i < vm->hashes->size; i++)
-    {
-        list_push(*protected, vm->hashes->data[i].index);
-    }
-
-    for (Int i = vm->stack->size-1; i > 0; i--)
-    {
-        if (data_t(i) == TYPE_LIST)
-        {
-            Int found = list_find(*protected, i);
-            
-            if (found >= 0)
-            {
-                // protect all the elements of the list
-                for (Int j = 0; j < ((IntList*)data(i).pointer)->size; j++)
-                {
-                    list_push(*protected, ((IntList*)data(i).pointer)->data[j]);
-                }
-            }
-        }
-    }
-
-    for (Int i = 0; i < vm->stack->size; i++)
-    {
-        if (list_find(*protected, i) != -1)
-        {
-            unuse_var(vm, i);
-        }
-    }
-
-    list_free(*protected);
-    return -1;
-}
-
 // inits
 #ifndef ARDUINO
 init(std_os)
@@ -1949,16 +1955,16 @@ init(std_basics)
 
     register_builtin(vm, "while", brl_std_loop_while);
     register_builtin(vm, "repeat", brl_std_loop_repeat);
+    register_builtin(vm, "forever", brl_std_loop_forever);
 
     register_builtin(vm, "format", brl_std_string_format);
+
 }
 
 init(std_hash)
 {
     register_builtin(vm, "new", brl_std_hash_new);
     register_builtin(vm, "delete", brl_std_hash_delete);
-    register_builtin(vm, "priority", brl_std_hash_priority);
-    register_builtin(vm, "rename", brl_std_hash_rename);
 }
 
 init(std_list)
@@ -1985,7 +1991,6 @@ init(std_mem)
 {
     register_builtin(vm, "mem.copy", brl_mem_copy);
     register_builtin(vm, "mem.delete", brl_mem_delete);
-    register_builtin(vm, "mem.collect", buxulib_collect);
 }
 
 // destructive/inplace!!
@@ -2000,9 +2005,6 @@ init(std_type)
     register_number(vm, "type.string", TYPE_STRING);
     register_number(vm, "type.list", TYPE_LIST);
 
-    // type functions are inplace(destructive), you might want to use $ to do non-destructive operations
-    // e.g. $ type a; // returns the type of a instead turning a into a number of its type
-    // type functions
     register_builtin(vm, "type", brl_std_type_get);
     register_builtin(vm, "pun", brl_std_type_set);
     register_builtin(vm, "cast", brl_std_type_cast);

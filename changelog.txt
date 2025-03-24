@@ -1,5 +1,19 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
+(24/03/2025) - version 0.7.8a
+
+- new function loop_forever;
+- new function int;
+- all the loop functions now can be interrupt the loop without returning if return -2;
+- Value union extended with new properties: u8, u16, u32, u64, i8, i16, i32, i64, f32, f64;
+- union.byte renamed to union.u8;
+- fixed hash_find, it was returning the stack index instead of the hash index;
+- vm->hashes has now been splited into vm->hash_names and vm->hash_indexes;
+- hash macro removed;
+- fixed some memory leaks;
+- fixed some bugs;
+- some optimizations;
+
 (23/03/2025) - version 0.7.8
 
 - main.c renamed to cli.c;

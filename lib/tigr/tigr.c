@@ -27,8 +27,7 @@ function(bu_tigr_bitmap)
 
 function(bu_tigr_free)
 {
-    Tigr *bmp = arg(0).pointer;
-    tigrFree(bmp);
+    tigrFree(arg(0).pointer);
     unuse_var(vm, arg_i(0));
     return -1;
 }
@@ -349,17 +348,9 @@ function(bu_tigr_mouse)
 {
     Tigr *bmp = arg(0).pointer;
 
-    Int result = new_list(vm);
-    IntList* list = data(result).pointer;
+    tigrMouse(bmp, &arg(1).i32[0], &arg(2).i32[0], &arg(3).i32[0]);
 
-    int* a, *b, *c;
-    tigrMouse(bmp, a, b, c);
-
-    list_push(*list, new_number(vm, *a));
-    list_push(*list, new_number(vm, *b));
-    list_push(*list, new_number(vm, *c));
-
-    return result;
+    return -1;
 }
 
 function(bu_tigr_touch)

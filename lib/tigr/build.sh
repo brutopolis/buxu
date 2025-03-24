@@ -1,6 +1,4 @@
 # check out tigr https://github.com/erkkah/tigr 
-rm -rf tigr
-git clone https://github.com/erkkah/tigr
 
 WINDOWS=0
 MAC=0
@@ -8,9 +6,11 @@ LIBS="-lGL -lGLU -lX11"
 CC="gcc"
 
 usage() {
-    echo "[=°-°=]: usage: $0 [--win] [--mac] [--help] [-h] [--cc compiler]"
+    echo "[=°-°=]: usage: $0 [--win] [--mac] [--help] [-h] [--cc compiler] [--clean]"
     exit 1
 }
+
+
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -18,10 +18,18 @@ while [[ $# -gt 0 ]]; do
         --win) WINDOWS=1; shift ;;
         --mac) MAC=1; shift ;;
         --help) usage ;;
+        --clean) rm -rf tigr.so tigr; exit 0 ;;
         -h) usage ;;
         *) echo "[=°~°=]: unknown option: $1"; usage ;;
     esac
 done
+
+
+# if tigr is not cloned, clone it
+if [ ! -d "tigr" ]; then
+    git clone https://github.com/erkkah/tigr
+fi
+
 
 if [[ $WINDOWS -eq 1 ]]; then
     echo "[=°-°=]: building for Windows"

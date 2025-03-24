@@ -397,11 +397,11 @@ Value value_duplicate(Value value, Byte type)
 
 Int hash_find(VirtualMachine *vm, char *varname)
 {
-    for (Int i = 0; i < vm->hashes->size; i++)
+    for (Int i = 0; i < vm->hash_names->size; i++)
     {
-        if (strcmp(vm->hashes->data[i].key, varname) == 0)
+        if (strcmp(vm->hash_names->data[i], varname) == 0)
         {
-            return vm->hashes->data[i].index;
+            return i;
         }
     }
     return -1;
@@ -409,14 +409,16 @@ Int hash_find(VirtualMachine *vm, char *varname)
 
 void hash_set(VirtualMachine *vm, char* varname, Int index)
 {
-    if (hash_find(vm, varname) != -1)
+    Int found = hash_find(vm, varname);
+    if (found != -1)
     {
-        hash_unset(vm, varname);
+        vm->hash_indexes->data[found] = index;
     }
-    Hash hash;
-    hash.key = str_duplicate(varname);
-    hash.index = index;
-    list_push(*vm->hashes, hash);
+    else 
+    {
+        list_push(*vm->hash_names, str_duplicate(varname));
+        list_push(*vm->hash_indexes, index);
+    }
 }
 
 void hash_unset(VirtualMachine *vm, char* varname)
@@ -424,11 +426,12 @@ void hash_unset(VirtualMachine *vm, char* varname)
     Int index = hash_find(vm, varname);
     if (index != -1)
     {
-        free(vm->hashes->data[index].key);
-        vm->hashes->data[index].key = NULL;
-        list_fast_remove(*vm->hashes, index);
+        free(list_fast_remove(*vm->hash_names, index));
+        list_fast_remove(*vm->hash_indexes, index);
     }
 }
+
+
 
 //variable functions
 
@@ -437,7 +440,8 @@ VirtualMachine* make_vm()
     VirtualMachine *vm = (VirtualMachine*)malloc(sizeof(VirtualMachine));
     vm->stack = list_init(ValueList);
     vm->typestack = list_init(ByteList);
-    vm->hashes = list_init(HashList);
+    vm->hash_names = list_init(StringList);
+    vm->hash_indexes = list_init(IntList);
     vm->unused = list_init(IntList);
 
     return vm;
@@ -550,10 +554,9 @@ void free_vm(VirtualMachine *vm)
         }
     }
 
-    while (vm->hashes->size > 0)
+    while (vm->hash_names->size > 0)
     {
-        Hash hash = list_pop(*vm->hashes);
-        free(hash.key);
+        free(list_pop(*vm->hash_names));
     }
 
     list_free(*vm->unused);
@@ -561,7 +564,8 @@ void free_vm(VirtualMachine *vm)
     list_free(*vm->stack);
     list_free(*vm->typestack);
 
-    list_free(*vm->hashes);
+    list_free(*vm->hash_names);
+    list_free(*vm->hash_indexes);
 
     free(vm);
 }
@@ -610,16 +614,16 @@ IntList* parse(void *_vm, char *cmd)
         }
         else //variable 
         {
-            int index = -1;
-            index = hash_find(vm, str);
+            int hashindex = -1;
+            hashindex = hash_find(vm, str);
 
-            if (index == -1) 
+            if (hashindex == -1) 
             {
                 buxu_error("variable %s not found", str);
             }
             else 
             {
-                list_push(*result, index);
+                list_push(*result, vm->hash_indexes->data[hashindex]);
             }
         }
 
@@ -752,9 +756,7 @@ void unuse_var(VirtualMachine *vm, Int index)
         default:
             break;
     }
-
-    // hashes associated to the index are not removed anymore
-
+    data(index).integer = 0;
     data_t(index) = TYPE_ANY;
     list_push(*vm->unused, index);
 }

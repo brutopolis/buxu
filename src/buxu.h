@@ -30,7 +30,7 @@
 // not part of the standard library
 #include <ctype.h>
 
-#define VERSION "0.7.8"
+#define VERSION "0.7.8a"
 
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
@@ -228,23 +228,35 @@
 //Value
 typedef union 
 {
+    // these types depend on the size of the pointer
     Float number;
     Int integer;
+
+    // these types are pointers
     char* string;
     void* pointer;
-    Byte byte[sizeof(Float)];
-} Value;
+    
+    // these types are arrays
+    uint8_t u8[sizeof(Float)];
+    uint16_t u16[sizeof(Float) / 2];
+    uint32_t u32[sizeof(Float) / 4];
 
-//Hash
-typedef struct
-{
-    char *key;
-    Int index;
-} Hash;
+    int8_t i8[sizeof(Float)];
+    int16_t i16[sizeof(Float) / 2];
+    int32_t i32[sizeof(Float) / 4];
+
+    float f32[sizeof(Float) / 4];
+
+    #if __SIZEOF_POINTER__ == 8
+        uint64_t u64[sizeof(Float) / 8];
+        int64_t i64[sizeof(Float) / 8];
+        double f64[sizeof(Float) / 8];
+    #endif
+
+} Value;
 
 //List
 typedef List(Value) ValueList;
-typedef List(Hash) HashList;
 typedef List(char*) StringList;
 typedef List(Int) IntList;
 typedef List(Byte) ByteList;
@@ -256,9 +268,11 @@ typedef struct
 {
     ValueList *stack;
     ByteList *typestack;
-    HashList *hashes;
     IntList *unused;
-    //IntListList *lists;
+    // hashes
+    StringList *hash_names;
+    IntList *hash_indexes;
+
 } VirtualMachine;
 
 //Function
@@ -315,8 +329,6 @@ void print_element(VirtualMachine *vm, Int index);
 // macros
 #define data(index) (vm->stack->data[index])
 #define data_t(index) (vm->typestack->data[index])
-
-#define hash(index) (vm->hashes->data[index])
 
 #define arg(index) (vm->stack->data[args->data[index]])
 #define arg_i(index) (args->data[index])
