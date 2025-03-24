@@ -2072,11 +2072,11 @@ init(buxu)
         register_builtin(vm, "scan", brl_std_io_scan);// not avaliable on arduino
     #endif
 
-    register_string(vm, "buxu.default", EMOTICON_DEFAULT);
-    register_string(vm, "buxu.warning", EMOTICON_WARNING);
-    register_string(vm, "buxu.error", EMOTICON_ERROR);
-    register_string(vm, "buxu.idle", EMOTICON_IDLE);
-    register_string(vm, "buxu.confused", EMOTICON_CONFUSED);
+    register_string(vm, "bu.default", EMOTICON_DEFAULT);
+    register_string(vm, "bu.warning", EMOTICON_WARNING);
+    register_string(vm, "bu.error", EMOTICON_ERROR);
+    register_string(vm, "bu.idle", EMOTICON_IDLE);
+    register_string(vm, "bu.confused", EMOTICON_CONFUSED);
 }
 
 // std init presets
