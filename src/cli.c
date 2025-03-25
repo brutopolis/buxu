@@ -250,10 +250,6 @@ int main(int argc, char **argv)
     }
     else if (args->size > 0) // run files
     {
-        register_list(vm, "file.args");
-        IntList *fileargs = (IntList*)data(hash_find(vm, "file.args")).pointer;
-
-        
         char* ___file = list_shift(*args);
     
         _code = readfile(___file);
@@ -284,12 +280,16 @@ int main(int argc, char **argv)
 
         hash_set(vm, "file.path", filepathindex);
         
-        // push file args
-        while (fileargs->size > 0) // the remaining args are the file args
-        {
-            list_push(*fileargs, new_string(vm, list_shift(*args)));
-        }
+        Int _list = new_list(vm, args->size);
+        hash_set(vm, "file.args", _list);
 
+        // push file args
+        while (args->size > 0)
+        {
+            list_push(*vm->stack, (Value){.string = list_shift(*args)});
+            list_push(*vm->typestack, TYPE_STRING);
+        }
+    
         result = eval(vm, _code);
     }
     return result;

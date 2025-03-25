@@ -14,3 +14,8 @@ print (get l 0);
 print l;
 print (get l 0);
 return 0
+
+
+# "new list imagination";
+
+new "l" (list 5); // size 5;

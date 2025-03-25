@@ -306,7 +306,7 @@ Int new_number(VirtualMachine *vm, Float number);
 Int new_string(VirtualMachine *vm, char *str);
 Int new_builtin(VirtualMachine *vm, Function function);
 Int new_var(VirtualMachine *vm);
-Int new_list(VirtualMachine *vm);
+Int new_list(VirtualMachine *vm, Int size);
 
 Value value_duplicate(Value value, Byte type);
 
@@ -314,7 +314,7 @@ Int register_var(VirtualMachine *vm, char* varname);
 Int register_string(VirtualMachine *vm, char* varname, char* string);
 Int register_number(VirtualMachine *vm, char* varname, Float number);
 Int register_builtin(VirtualMachine *vm, char* varname, Function function);
-Int register_list(VirtualMachine *vm, char* varname);
+Int register_list(VirtualMachine *vm, char* varname, Int size);
 
 Int hash_find(VirtualMachine *vm, char *key);
 void hash_set(VirtualMachine *vm, char *key, Int index);
@@ -344,7 +344,7 @@ Int interpret(VirtualMachine *vm, char *cmd);
 IntList* parse(void* _vm, char* cmd);
 
 // stringify function
-char* list_stringify(VirtualMachine* vm, IntList *list);
+char* list_stringify(VirtualMachine* vm, Int list_index);
 
 #ifndef ARDUINO
 

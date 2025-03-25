@@ -294,7 +294,7 @@ void print_element(VirtualMachine *vm, Int index)
 {
     if (index < 0 || index >= vm->stack->size)
     {
-        printf("(return (get: -1))");
+        printf("(return (get -1))");
         return;
     }
 
@@ -306,7 +306,7 @@ void print_element(VirtualMachine *vm, Int index)
         char* strbak;
         char* stringified;
         case TYPE_LIST:
-            stringified = list_stringify(vm, (IntList*)data(index).pointer);
+            stringified = list_stringify(vm, index);
             printf("%s", stringified);
             free(stringified);
             break;
@@ -376,14 +376,6 @@ Value value_duplicate(Value value, Byte type)
     {
         case TYPE_STRING:
             dup.string = str_duplicate(value.string);
-            break;
-        case TYPE_LIST:
-            dup.pointer = list_init(IntList);
-            IntList *list = (IntList*)value.pointer;
-            for (Int i = 0; i < list->size; i++)
-            {
-                list_push(*((IntList*)dup.pointer), list->data[i]);
-            }
             break;
         default:
             dup.integer = value.integer;
@@ -488,15 +480,19 @@ Int new_builtin(VirtualMachine *vm, Function function)
     return id;
 }
 
-Int new_list(VirtualMachine *vm)
+Int new_list(VirtualMachine *vm, Int size)
 {
-    Int id = new_var(vm);
-    vm->stack->data[id].pointer = list_init(IntList);
-    vm->typestack->data[id] = TYPE_LIST;
+    // lists dont resuse unused indexes
+    list_push(*vm->stack, (Value){.number = size});
+    list_push(*vm->typestack, TYPE_LIST);
+    Int id = vm->stack->size - 1;
+    for (Int i = 0; i < size; i++)
+    {
+        list_push(*vm->stack, (Value){.pointer = NULL});
+        list_push(*vm->typestack, TYPE_ANY);
+    }
     return id;
 }
-
-// var register
 
 Int register_var(VirtualMachine *vm, char* varname)
 {
@@ -526,15 +522,14 @@ Int register_builtin(VirtualMachine *vm, char* varname, Function function)
     return index;
 }
 
-Int register_list(VirtualMachine *vm, char* varname)
+Int register_list(VirtualMachine *vm, char* varname, Int size)
 {
-    Int index = new_list(vm);
+    Int index = new_list(vm, size);
     hash_set(vm, varname, index);
     return index;
 }
 
 //frees
-
 void free_vm(VirtualMachine *vm)
 {
     Value value;
@@ -545,9 +540,6 @@ void free_vm(VirtualMachine *vm)
         {
             case TYPE_STRING:
                 free(value.string);
-                break;
-            case TYPE_LIST:
-                list_free(*((IntList*)value.pointer));
                 break;
             default:
                 break;
@@ -750,9 +742,6 @@ void unuse_var(VirtualMachine *vm, Int index)
         case TYPE_STRING:
             free(data(index).string);
             break;
-        case TYPE_LIST:
-            list_free(*((IntList*)data(index).pointer));
-            break;
         default:
             break;
     }
@@ -761,31 +750,50 @@ void unuse_var(VirtualMachine *vm, Int index)
     list_push(*vm->unused, index);
 }
 
-char* list_stringify(VirtualMachine* vm, IntList *list)
+char* list_stringify(VirtualMachine* vm, Int list_index)
 {
     char* _str = str_duplicate("(list: ");
     char* strbak;
-    for (Int i = 0; i < list->size; i++)
+
+    Int list_size = data(list_index).number;
+
+    if (list_size == 0)
     {
-        switch (data_t(list->data[i]))
+        strbak = _str;
+        _str = str_concat(_str, ")");
+        free(strbak);
+        return _str;
+    }
+    else if (list_index + list_size + 1 > vm->stack->size)
+    {
+        buxu_error("misformed list @%ld, size %ld", list_index, list_size);
+        strbak = _str;
+        _str = str_concat(_str, ")");
+        free(strbak);
+        return _str;
+    }
+
+    for (Int i = list_index+1; i < list_index + list_size + 1; i++)
+    {
+        switch (data_t(i))
         {
         case TYPE_STRING:
             strbak = _str;
-            _str = str_format("%s(@ %s)", _str, data(list->data[i]).string); 
+            _str = str_format("%s(@ %s)", _str, data(i).string); 
             free(strbak);
             break;
         case TYPE_NUMBER:
             strbak = _str;
             
-            if (data(list->data[i]).number == (Int)data(list->data[i]).number)
+            if (data(i).number == (Int)data(i).number)
             {
-                char* str = str_format("%ld", (Int)data(list->data[i]).number);
+                char* str = str_format("%ld", (Int)data(i).number);
                 _str = str_concat(_str, str);
                 free(str);
             }
             else 
             {
-                char* str = str_format("%lf", data(list->data[i]).number);
+                char* str = str_format("%lf", data(i).number);
                 _str = str_concat(_str, str);
                 free(str);
             }
@@ -794,17 +802,18 @@ char* list_stringify(VirtualMachine* vm, IntList *list)
             break;
         case TYPE_LIST:
             strbak = _str;
-            char* stringified = list_stringify(vm, (IntList*)data(list->data[i]).pointer);
+            char* stringified = list_stringify(vm, i);
             _str = str_concat(_str, stringified);
             free(strbak);
             break;
         default:
             strbak = _str;
-            _str = str_format("%s%ld", _str, data(list->data[i]).integer);
+            _str = str_format("%s%ld", _str, data(i).integer);
             free(strbak);
             break;
         }
-        if (i < list->size - 1)
+
+        if (i < list_index + list_size)
         {
             strbak = _str;
             _str = str_concat(_str, " ");
