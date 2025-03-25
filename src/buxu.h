@@ -37,7 +37,6 @@
 #define TYPE_STRING 2
 #define TYPE_LIST 3
 
-// left eye is intentionally lower from the right eye
 #define EMOTICON_DEFAULT "[=°-°=]"
 #define EMOTICON_IDLE "[=° °=]"
 #define EMOTICON_WARNING "[=°~°=]"
@@ -112,26 +111,25 @@
     { \
         list_double(s); \
     } \
-    for (Int i = (s).size; i > 0; i--) \
-    { \
-        (s).data[i] = (s).data[i - 1]; \
-    } \
+    memmove(&(s).data[1], &(s).data[0], (s).size * sizeof(*(s).data)); \
     (s).data[0] = (v); \
     (s).size++; \
 } while (0)
+
 
 #define list_pop(s) ((s).data[--(s).size])
 
 #define list_shift(s) \
 ({ \
     typeof((s).data[0]) ret = (s).data[0]; \
-    for (Int i = 0; i < (s).size - 1; i++) \
-    { \
-        (s).data[i] = (s).data[i + 1]; \
+    if ((s).size > 1) { \
+        memmove(&(s).data[0], &(s).data[1], ((s).size - 1) * sizeof(*(s).data)); \
     } \
     (s).size--; \
     ret; \
 })
+
+
 
 #define list_free(s) \
 ({\
@@ -147,29 +145,31 @@
     (s).data[i2] = tmp; \
 } while (0)
 
-//insert element v at index i
+// insert element v at index i
 #define list_insert(s, i, v) do \
 { \
     if ((s).size == (s).capacity) \
     { \
         list_double(s); \
     } \
-    for (Int j = (s).size; j > i; j--) \
-    { \
-        (s).data[j] = (s).data[j - 1]; \
+    if (i <= (s).size) { \
+        memmove(&(s).data[i + 1], &(s).data[i], ((s).size - i) * sizeof(*(s).data)); \
+        (s).data[i] = (v); \
+        (s).size++; \
+    } else { \
+        buxu_error("index %ld out of range in list of size %ld", i, (s).size); \
+        exit(EXIT_FAILURE); \
     } \
-    (s).data[i] = (v); \
-    (s).size++; \
 } while (0)
 
+
+
 //remove element at index i and return it
+// Remove element at index i and return it
 #define list_remove(s, i) \
 ({ \
     typeof((s).data[i]) ret = (s).data[i]; \
-    for (Int j = i; j < (s).size - 1; j++) \
-    { \
-        (s).data[j] = (s).data[j + 1]; \
-    } \
+    memmove(&(s).data[i], &(s).data[i + 1], ((s).size - (i) - 1) * sizeof(*(s).data)); \
     (s).size--; \
     ret; \
 })
