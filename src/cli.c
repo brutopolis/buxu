@@ -280,14 +280,13 @@ int main(int argc, char **argv)
 
         hash_set(vm, "file.path", filepathindex);
         
-        Int _list = new_list(vm, args->size);
+        Int _list = new_array(vm, args->size);
         hash_set(vm, "file.args", _list);
 
-        // push file args
-        while (args->size > 0)
+        //s file args
+        for (Int i = 0; i < args->size; i++)
         {
-            list_push(*vm->stack, (Value){.string = list_shift(*args)});
-            list_push(*vm->typestack, TYPE_STRING);
+            data(_list + 1 + i).string = list_pop(*args);
         }
     
         result = eval(vm, _code);

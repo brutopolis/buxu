@@ -305,7 +305,7 @@ void print_element(VirtualMachine *vm, Int index)
         char* _str;
         char* strbak;
         char* stringified;
-        case TYPE_LIST:
+        case TYPE_ARRAY:
             stringified = list_stringify(vm, index);
             printf("%s", stringified);
             free(stringified);
@@ -480,11 +480,11 @@ Int new_builtin(VirtualMachine *vm, Function function)
     return id;
 }
 
-Int new_list(VirtualMachine *vm, Int size)
+Int new_array(VirtualMachine *vm, Int size)
 {
     // lists dont resuse unused indexes
     list_push(*vm->stack, (Value){.number = size});
-    list_push(*vm->typestack, TYPE_LIST);
+    list_push(*vm->typestack, TYPE_ARRAY);
     Int id = vm->stack->size - 1;
     for (Int i = 0; i < size; i++)
     {
@@ -524,7 +524,7 @@ Int register_builtin(VirtualMachine *vm, char* varname, Function function)
 
 Int register_list(VirtualMachine *vm, char* varname, Int size)
 {
-    Int index = new_list(vm, size);
+    Int index = new_array(vm, size);
     hash_set(vm, varname, index);
     return index;
 }
@@ -632,7 +632,6 @@ Int interpret_args(VirtualMachine *vm, IntList *args)
     Int etc = -1;
     if (func > -1)
     {
-        IntList  *_list;
         Function _function;
 
         switch (vm->typestack->data[func])
@@ -800,7 +799,7 @@ char* list_stringify(VirtualMachine* vm, Int list_index)
 
             free(strbak);
             break;
-        case TYPE_LIST:
+        case TYPE_ARRAY:
             strbak = _str;
             char* stringified = list_stringify(vm, i);
             _str = str_concat(_str, stringified);

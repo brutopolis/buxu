@@ -77,7 +77,7 @@ function(bu_tigr_get)
     int x = arg(1).number;
     int y = arg(2).number;
     TPixel pix = tigrGet(bmp, x, y);
-    Int result = new_list(vm);
+    Int result = new_array(vm);
     IntList* list = data(result).pointer;
     list_push(*list, new_number(vm, pix.r));
     list_push(*list, new_number(vm, pix.g));
@@ -358,7 +358,7 @@ function(bu_tigr_touch)
     Tigr *bmp = arg(0).pointer;
     int maxPoints = arg(1).number;
 
-    Int result = new_list(vm);
+    Int result = new_array(vm);
     IntList* list = data(result).pointer;
 
     TigrTouchPoint points[maxPoints];
@@ -366,7 +366,7 @@ function(bu_tigr_touch)
 
     while (n--)
     {
-        Int point = new_list(vm);
+        Int point = new_array(vm);
         IntList* pointList = data(point).pointer;
         list_push(*pointList, new_number(vm, points[n].x));
         list_push(*pointList, new_number(vm, points[n].y));

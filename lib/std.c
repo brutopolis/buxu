@@ -86,8 +86,8 @@ function(brl_std_io_ls)
             case TYPE_NUMBER:
                 printf("number   ");
                 break;
-            case TYPE_LIST:
-                printf("list   ");
+            case TYPE_ARRAY:
+                printf("array   ");
                 break;
             case TYPE_ANY:
                 printf("any   ");
@@ -129,8 +129,8 @@ function(brl_std_io_ls_hashes)
             case TYPE_NUMBER:
                 printf("|number   ");
                 break;
-            case TYPE_LIST:
-                printf("|list   ");
+            case TYPE_ARRAY:
+                printf("|array   ");
                 break;
             case TYPE_ANY:
                 printf("|any   ");
@@ -161,236 +161,32 @@ function(brl_std_return)
 // list functions
 // list functions
 
-function(brl_std_list_new)
+function(brl_std_array_new)
 {
-    Int index = new_list(vm);
-    IntList *list = (IntList*)data(index).pointer;
-    for (Int i = 0; i < args->size; i++)
+    Int index;
+    if (args->size == 0)
     {
-        list_push(*list, arg_i(i));
+        index = new_array(vm, 0);
+    }
+    else
+    {
+        index = new_array(vm, args->size);
+        for (Int i = 0; i < args->size; i++)
+        {
+            data(index + 1 + i) = value_duplicate(arg(i), arg_t(i));
+        }
     }
     return index;
 }
 
-function(brl_std_list_push)
-{
-    if (args->size == 1) // push to global vm->stack
-    {
-        list_push(*vm->stack, value_duplicate(arg(0), arg_t(0)));
-        list_push(*vm->typestack, arg_t(0));
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        IntList *list = (IntList*)arg(0).pointer;
-        for (Int i = 1; i < args->size; i++)
-        {
-            list_push(*list, arg_i(i));
-        }
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        arg(0).string = (char*)realloc(arg(0).string, strlen(arg(0).string) + 1);
-        arg(0).string[strlen(arg(0).string) + 1] = '\0';
-        arg(0).string[strlen(arg(0).string)] = arg_i(1);
-    }
-    return -1;
-}
-
-function(brl_std_list_unshift)
-{
-    if (args->size == 1) // unshift to global vm->stack
-    {
-        list_unshift(*vm->stack, value_duplicate(arg(0), arg_t(0)));
-        list_unshift(*vm->typestack, arg_t(0));
-        // update hashes and lists indexes
-        for (Int i = 0; i < vm->hash_names->size; i++)
-        {
-            vm->hash_indexes->data[i]++;
-        }
-
-        for (Int i = 0; i < vm->stack->size; i++)
-        {
-            if (data_t(i) == TYPE_LIST)
-            {
-                IntList *list = (IntList*)data(i).pointer;
-                for (Int j = 0; j < list->size; j++)
-                {
-                    list->data[j]++;
-                }
-            }
-        }
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        IntList *list = (IntList*)arg(0).pointer;
-        for (Int i = 1; i < args->size; i++)
-        {
-            list_unshift(*list, arg_i(i));
-        }
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        arg(0).string = (char*)realloc(arg(0).string, strlen(arg(0).string) + 1);
-        arg(0).string[strlen(arg(0).string) + 1] = '\0';
-        for (Int i = strlen(arg(0).string); i > 0; i--)
-        {
-            arg(0).string[i] = arg(0).string[i - 1];
-        }
-        arg(0).string[0] = arg_i(1);
-    }
-    return -1;   
-}
-
-// :pop
-function(brl_std_list_pop)// returns the removed element
-{
-    if (args->size == 0) // pop from global vm->stack
-    {
-        list_pop(*vm->stack);
-        list_pop(*vm->typestack);
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        IntList *list = (IntList*)arg(0).pointer;
-        return list_pop(*list);
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        char *str = arg(0).string;
-        Int result = str[strlen(str) - 2];
-        str[strlen(str) - 1] = '\0';
-        return result;
-    }
-    return -1;
-}
-
-function(brl_std_list_shift)// returns the removed element
-{
-    if (args->size == 0) // shift from global vm->stack
-    {
-        list_shift(*vm->stack);
-        list_shift(*vm->typestack);
-        // update hashes and lists indexes
-        for (Int i = 0; i < vm->hash_names->size; i++)
-        {
-            vm->hash_indexes->data[i]--;
-        }
-
-        for (Int i = 0; i < vm->stack->size; i++)
-        {
-            if (data_t(i) == TYPE_LIST)
-            {
-                IntList *list = (IntList*)data(i).pointer;
-                for (Int j = 0; j < list->size; j++)
-                {
-                    list->data[j]--;
-                }
-            }
-        }
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        IntList *list = (IntList*)arg(0).pointer;
-        return list_shift(*list);
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        char *str = arg(0).string;
-        char c = str[0];
-        for (Int i = 0; i < strlen(str); i++)
-        {
-            str[i] = str[i+1];
-        }
-        return c;
-    }
-    return -1;
-}
-
-function(brl_std_list_insert)
-{
-    if (args->size == 2) // insert to global vm->stack
-    {
-        // lets do it  with push
-        Value v = value_duplicate(arg(0), arg_t(0));
-        list_push(*vm->stack, v);
-        list_push(*vm->typestack, arg_t(0));
-        // relocate the element to the desired index
-        for (Int i = vm->stack->size - 1; i > arg_i(1); i--)
-        {
-            vm->stack->data[i] = vm->stack->data[i - 1];
-        }
-        vm->stack->data[arg_i(1)] = v;
-
-        // update hashes and lists indexes
-        for (Int i = 0; i < vm->hash_names->size; i++)
-        {
-            if (vm->hash_indexes->data[i] >= arg_i(1))
-            {
-                vm->hash_indexes->data[i]++;
-            }
-        }
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        IntList *list = (IntList*)arg(0).pointer;
-        list_insert(*list, (Int)arg(1).number, arg_i(2));
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        char *str = arg(0).string;
-        char c = arg_i(2);
-        Int index = arg(1).number;
-        str = (char*)realloc(str, strlen(str) + 1);
-        str[strlen(str) + 1] = '\0';
-        for (Int i = strlen(str); i > index; i--)
-        {
-            str[i] = str[i - 1];
-        }
-        str[index] = c;
-    }
-    return -1;
-}
-
-function(brl_std_list_remove)
-{
-    if (args->size == 1) // remove from global vm->stack
-    {
-        list_remove(*vm->stack, arg_i(0));
-        list_remove(*vm->typestack, arg_i(0));
-        // update hashes and lists indexes
-        for (Int i = 0; i < vm->hash_names->size; i++)
-        {
-            if (vm->hash_indexes->data[i] >= arg_i(0))
-            {
-                vm->hash_indexes->data[i]--;
-            }
-        }
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        IntList *list = (IntList*)arg(0).pointer;
-        list_remove(*list, (Int)arg(1).number);
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        char *str = arg(0).string;
-        Int index = arg(1).number;
-        for (Int i = index; i < strlen(str); i++)
-        {
-            str[i] = str[i + 1];
-        }
-    }
-    return -1;
-}
-
-function(brl_std_list_set)
+function(brl_std_array_set)
 {
     if (args->size == 2)
     {
         if (arg_i(0) >= 0 && arg_i(0) < vm->stack->size)
         {
-            // if the value is a list or a string, we need to free it before
-            if (arg_t(0) == TYPE_LIST || arg_t(0) == TYPE_STRING)
+            // if the value is a string, we need to free it before
+            if (arg_t(0) == TYPE_STRING)
             {
                 unuse_var(vm, arg_i(0));
             }
@@ -399,19 +195,19 @@ function(brl_std_list_set)
             arg_t(0) = arg_t(1);
         }
     }
-    else if (arg_t(0) == TYPE_LIST)
+    else if (arg_t(0) == TYPE_ARRAY)
     {
-        Int list = arg_i(0);
-        Int index = arg(1).number;
-        Int value = arg_i(2);
-        IntList *lst = (IntList*)data(list).pointer;
-        if (index >= 0 && index < lst->size)
+        Int list_size = arg(0).number;
+        Int index = arg_i(0);
+
+        
+        if (index >= 0 && index < arg_i(0) + list_size /*&& index < vm->stack->size*/)
         {
-            lst->data[index] = value;
+            data(index) = value_duplicate(arg(1), arg_t(1));
         }
         else 
         {
-            buxu_error("index %ld out of range in list %ld of size %ld", index, list, lst->size);
+            buxu_error("index %ld out of range in list %ld of size %ld", index, arg_i(0), list_size);
         }
         return -1;
     }
@@ -449,15 +245,15 @@ function(brl_std_list_set)
     return -1;
 }
 
-function(brl_std_list_length)
+function(brl_std_array_length)
 {
     if (args->size == 0)
     {
         return new_number(vm, vm->stack->size);
     }
-    else if (arg_t(0) == TYPE_LIST)
+    else if (arg_t(0) == TYPE_ARRAY)
     {
-        return new_number(vm, ((IntList*)arg(0).pointer)->size);
+        return new_number(vm, arg(0).number);
     }
     else if (arg_t(0) == TYPE_STRING)
     {
@@ -465,6 +261,107 @@ function(brl_std_list_length)
     }
     return -1;
 }
+
+function(brl_std_array_get)
+{
+    if (args->size == 1) // global
+    {
+        return arg(0).number;
+    }
+    else if (arg_t(0) == TYPE_ARRAY) // array
+    {
+        Int index = arg_i(0);
+        Int list_size = data(index).number;
+        Int i = arg_i(1);
+        if (i >= 0 && i < list_size)
+        {
+            return index + 1 + i;
+        }
+        else 
+        {
+            buxu_error("index %ld out of range in array %ld of size %ld", i, index, list_size);
+        }
+    }
+    else if (arg_t(0) == TYPE_STRING) // 
+    {
+        Int index = arg_i(0);
+        Int i = arg_i(1);
+        if (i >= 0 && i < strlen(arg(0).string))
+        {
+            return new_number(vm, arg(0).string[i]);
+        }
+        else 
+        {
+            buxu_error("index %ld out of range in string '%s' of size %ld", i, arg(0).string, strlen(arg(0).string));
+        }
+    }
+    else 
+    {
+        Int index = (Int)arg(0).number;
+        Int i = arg_i(1);
+        if (i >= 0 && i < sizeof(Float))
+        {
+            return new_number(vm, arg(0).u8[i]);
+        }
+    }
+    return -1;
+}
+
+function(buxu_std_array_resize)
+{
+    // we reallocate the stack data
+    Int array_index = arg_i(0);
+    Int new_size = arg_i(1);
+    Int old_size = data(array_index).number;
+    Int diff = new_size - old_size;
+    if (diff > 0)
+    {
+        // lets see if the capacity is enough
+        if (vm->stack->capacity < vm->stack->size + diff)
+        {
+            list_double(*vm->stack);
+            list_double(*vm->typestack);
+        }
+        
+        // lets move the elements manually with memmove then we update the size
+        memmove(&(vm->stack->data[array_index + 1 + new_size]), &(vm->stack->data[array_index + 1 + old_size]), (vm->stack->size - (array_index + 1 + old_size)) * sizeof(Value));
+        memmove(&(vm->typestack->data[array_index + 1 + new_size]), &(vm->typestack->data[array_index + 1 + old_size]), (vm->typestack->size - (array_index + 1 + old_size)) * sizeof(Byte));
+        
+        // lets update the size
+        vm->stack->size += diff;
+        vm->typestack->size += diff;
+        
+        // lets update the size of the array
+        data(array_index).number = new_size;
+
+        // lets initialize the new elements with zeroes
+        for (Int i = 0; i < diff; i++)
+        {
+            data(array_index + 1 + old_size + i).number = 0;
+            data_t(array_index + 1 + old_size + i) = TYPE_ANY;
+        }
+    }
+    else if (diff < 0)
+    {
+        // lets move the elements manually with memmove then we update the size
+        memmove(&(vm->stack->data[array_index + 1 + new_size]), &(vm->stack->data[array_index + 1 + old_size]), (vm->stack->size - (array_index + 1 + new_size)) * sizeof(Value));
+        memmove(&(vm->typestack->data[array_index + 1 + new_size]), &(vm->typestack->data[array_index + 1 + old_size]), (vm->typestack->size - (array_index + 1 + new_size)) * sizeof(Byte));
+        
+        // lets update the size
+        vm->stack->size += diff;
+        vm->typestack->size += diff;
+        
+        // lets update the size of the array
+        data(array_index).number = new_size;
+    }
+    else 
+    {
+        // nothing to do
+        buxu_warn("resizing array @%ld to the same size: %ld", array_index, new_size);
+    }
+    return -1;
+}
+
 
 function(brl_mem_copy)
 {
@@ -491,360 +388,6 @@ function(brl_std_deplace)
     arg_i(1) = newindex;
     interpret_args(vm, args);
     return newindex;
-}
-
-
-function(brl_std_list_concat)
-{
-    if (args->size == 1) // duplicate and concat each element from the list
-    {
-        IntList* list = (IntList*)data(arg_i(0)).pointer;
-        for (Int i = 0; i < list->size; i++)
-        {
-            list_push(*vm->stack, value_duplicate(data(list->data[i]), data_t(list->data[i])));
-            list_push(*vm->typestack, data_t(list->data[i]));
-        }
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        Int _newlist = new_list(vm);
-        IntList *newlist = (IntList*)data(_newlist).pointer;
-        for (Int i = 0; i < args->size; i++)
-        {
-            if (arg_t(i) == TYPE_LIST)
-            {
-                IntList *list = (IntList*)arg(i).pointer;
-                for (Int j = 0; j < list->size; j++)
-                {
-                    list_push(*newlist, list->data[j]);
-                }
-            }
-        }
-        return _newlist;
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        Int _newstr = new_string(vm, "");
-        char* newstr = data(_newstr).string;
-        for (Int i = 0; i < args->size; i++)
-        {
-            if (arg_t(i) == TYPE_STRING)
-            {
-                strcat(newstr, arg(i).string);
-            }
-        }
-        return _newstr;
-    }
-    return -1;
-}
-
-function(brl_std_list_find)
-{
-    if (args->size == 1)
-    {
-        Int value = arg(0).integer;
-        for (Int i = 0; i < vm->stack->size; i++)
-        {
-            if (data(i).integer == value)
-            {
-                return new_number(vm, i);
-            }
-        }
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        Int list = arg_i(0);
-        Int value = arg_i(1);
-        if (arg_t(0) == TYPE_LIST)
-        {
-            IntList *lst = (IntList*)data(list).pointer;
-            for (Int i = 0; i < lst->size; i++)
-            {
-                if (lst->data[i] == list)
-                {
-                    return new_number(vm, i);
-                }
-            }
-        }
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        char *str = arg(0).string;
-        char *substr = arg(1).string;
-        return(new_number(vm, str_find(str, substr)));
-    }
-
-    return -1;
-}
-
-function(brl_std_list_get)
-{
-    if (args->size == 1)
-    {
-        return((Int)arg(0).number);
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        Int list = arg_i(0);
-        Int index = arg(1).number;
-        if (arg_t(0) == TYPE_LIST)
-        {
-            IntList *lst = (IntList*)data(list).pointer;
-            if (index >= 0 && index < lst->size)
-            {
-                return lst->data[index];
-            }
-            else 
-            {
-                buxu_error("index %ld out of range in list %ld of size %ld", index, list, lst->size);
-            }
-        }
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        char *str = arg(0).string;
-        Int index = arg(1).number;
-        if (index >= 0 && index < strlen(str))
-        {
-            return str[index];
-        }
-        else 
-        {
-            buxu_error("index %ld out of range in string '%s' of size %ld", index, arg(0).string, strlen(str));
-        }
-    }
-    else // access bytes of a value
-    {
-        Int index = (Int)arg(1).number;
-        Int value = arg_i(0);
-        if (index >= 0 && index < sizeof(Float))
-        {
-            return ((char)arg(0).u8[index]);
-        }
-    }
-    return -1;
-}
-
-
-function(brl_std_list_sub)
-{
-    if (args->size == 2)// create a list with the indexes of the elements in the range
-    {
-        IntList *list = list_init(IntList);
-        Int start = arg_i(0);
-        Int end = arg_i(1);
-        for (Int i = start; i < end; i++)
-        {
-            list_push(*list, i);
-        }
-        Int result = new_var(vm);
-        data(result).pointer = list;
-        data_t(result) = TYPE_LIST;
-        return result;
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        char* _str = str_nduplicate(arg(0).string, arg(1).number);
-        Int result = new_string(vm, _str);
-        return result;
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        IntList *list = (IntList*)arg(0).pointer;
-        IntList *newlist = list_init(IntList);
-        for (Int i = 0; i < arg(1).number; i++)
-        {
-            list_push(*newlist, list->data[i]);
-        }
-        Int result = new_var(vm);
-        data(result).pointer = newlist;
-        data_t(result) = TYPE_LIST;
-        return result;
-    }
-    return -1;
-}
-
-function(brl_std_list_split)
-{
-    if (args->size == 1)// split the global stack, create lists with the indexes of each slice
-    {
-        IntList *list = list_init(IntList);
-        Int separator = arg(0).number;
-        Int start = 0;
-        for (Int i = 0; i < vm->stack->size; i++)
-        {
-            if (vm->stack->data[i].integer == separator)
-            {
-                Int sublist = new_list(vm);
-                IntList *sub = (IntList*)data(sublist).pointer;
-                for (Int j = start; j < i; j++)
-                {
-                    list_push(*sub, j);
-                }
-                list_push(*list, sublist);
-                start = i + 1;
-            }
-        }
-        Int sublist = new_list(vm);
-        IntList *sub = (IntList*)data(sublist).pointer;
-        for (Int j = start; j < vm->stack->size; j++)
-        {
-            list_push(*sub, j);
-        }
-        list_push(*list, sublist);
-        Int result = new_var(vm);
-        data(result).pointer = list;
-        data_t(result) = TYPE_LIST;
-        return result;
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        Int _splited = new_list(vm);
-        IntList *__splited = (IntList*)data(_splited).pointer;
-        char* str = arg(0).string;
-        char* separator = arg(1).string;
-        StringList *splited = str_split(str, separator);
-        for (Int i = 0; i < splited->size; i++)
-        {
-            Int _str = new_string(vm, splited->data[i]);
-            list_push(*__splited, _str);
-        }
-        for (Int i = 0; i < splited->size; i++)
-        {
-            free(splited->data[i]);
-        }
-        list_free(*splited);
-        return _splited;
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        Int _splited = new_list(vm);
-        IntList *__splited = (IntList*)data(_splited).pointer;
-        IntList *list = (IntList*)arg(0).pointer;
-        Int separator = arg_i(1);
-        Int temp = new_list(vm);
-        IntList *_temp = (IntList*)data(temp).pointer;
-        for (Int i = 0; i < list->size; i++)
-        {
-            if (list->data[i] == separator)
-            {
-                list_push(*__splited, temp);
-                temp = new_list(vm);
-                _temp = (IntList*)data(temp).pointer;
-            }
-            else 
-            {
-                list_push(*_temp, list->data[i]);
-            }
-        }
-        list_push(*__splited, temp);
-        return _splited;
-    }
-    return -1;
-}
-
-function(brl_std_list_replace)
-{
-    if (args->size == 2)// replace elements from the global stack
-    {
-        Int target = arg_i(0);
-        Int replacement = arg_i(1);
-        for (Int i = 0; i < vm->stack->size; i++)
-        {
-            if (vm->stack->data[i].integer == vm->stack->data[target].integer)
-            {
-                // if list or string we need to free it before
-                if (data_t(i) == TYPE_LIST || data_t(i) == TYPE_STRING)
-                {
-                    unuse_var(vm, i);
-                }
-                vm->stack->data[i] = vm->stack->data[replacement];
-                break;
-            }
-        }
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        Int str = arg_i(0);
-        Int substr = arg_i(1);
-        Int replacement = arg_i(2);
-        char* _str = data(str).string;
-        char* _substr = data(substr).string;
-        char* _replacement = data(replacement).string;
-        char* _newstr = str_replace(_str, _substr, _replacement);
-        Int result = new_string(vm, _newstr);
-        free(_newstr);
-        return result;
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        Int _newlist = new_list(vm);
-        IntList *newlist = (IntList*)data(_newlist).pointer;
-        IntList *list = (IntList*)arg(0).pointer;
-        Int substr = arg_i(1);
-        Int replacement = arg_i(2);
-        char done = 0;
-        for (Int i = 0; i < list->size; i++)
-        {
-            if (list->data[i] == substr && !done)
-            {
-                list_push(*newlist, replacement);
-                done = 1; // replace only the first occurence
-            }
-            else 
-            {
-                list_push(*newlist, list->data[i]);
-            }
-        }
-        return _newlist;
-    }
-    return -1;
-}
-
-function(brl_std_list_swap)
-{
-    if (args->size == 2)// swap elements from the global stack
-    {
-        Int index1 = arg_i(0);
-        Int index2 = arg_i(1);
-        Value temp = vm->stack->data[index1];
-        vm->stack->data[index1] = vm->stack->data[index2];
-        vm->stack->data[index2] = temp;
-    }
-    else if (arg_t(0) == TYPE_LIST)
-    {
-        Int list = arg_i(0);
-        Int index1 = arg(1).number;
-        Int index2 = arg(2).number;
-        IntList *lst = (IntList*)data(list).pointer;
-        if (index1 >= 0 && index1 < lst->size && index2 >= 0 && index2 < lst->size)
-        {
-            Int temp = lst->data[index1];
-            lst->data[index1] = lst->data[index2];
-            lst->data[index2] = temp;
-        }
-        else 
-        {
-            buxu_error("index %ld or %ld out of range in list %ld of size %ld", index1, index2, list, lst->size);
-        }
-    }
-    else if (arg_t(0) == TYPE_STRING)
-    {
-        char *str = arg(0).string;
-        Int index1 = arg(1).number;
-        Int index2 = arg(2).number;
-        if (index1 >= 0 && index1 < strlen(str) && index2 >= 0 && index2 < strlen(str))
-        {
-            char temp = str[index1];
-            str[index1] = str[index2];
-            str[index2] = temp;
-        }
-        else 
-        {
-            buxu_error("index %ld or %ld out of range in string '%s' of size %ld", index1, index2, arg(0).string, strlen(str));
-        }
-    }
-    return -1;
 }
 
 // std type
@@ -903,17 +446,15 @@ function(brl_std_type_cast)
                     break;
             }
             break;
-        case TYPE_LIST:
+        case TYPE_ARRAY:
             switch ((Int)arg(1).number)
             {
                 case TYPE_STRING:
                 {
-                    IntList* backup = (IntList*)arg(0).pointer;
-                    char* _str = list_stringify(vm, (IntList*)arg(0).pointer);
-                    arg(0).string = _str;
-                    arg_t(0) = TYPE_STRING;
-                    list_free(*backup);
-                    return -1;
+                    char* _str = list_stringify(vm, arg_i(0));
+                    Int result = new_string(vm, _str);
+                    free(_str);
+                    return result;
                     break;
                 }
             }
@@ -1393,26 +934,6 @@ function(brl_std_condition_equals)// ==
                         return 0;
                     }
                     break;
-                case TYPE_LIST:
-
-                    if (arg(i - 1).pointer == arg(i).pointer)
-                    {
-                        return result;
-                    }
-                    else if (((IntList*)arg(i - 1).pointer)->size != ((IntList*)arg(i).pointer)->size)
-                    {
-                        return 0;
-                    }
-                    
-
-                    for (Int j = 0; j < ((IntList*)arg(i - 1).pointer)->size; j++)
-                    {
-                        if (((IntList*)arg(i - 1).pointer)->data[j] != ((IntList*)arg(i).pointer)->data[j])
-                        {
-                            return 0;
-                        }
-                    }
-                    break;
                 default:
                     if (arg(i - 1).integer != arg(i).integer)
                     {
@@ -1459,25 +980,6 @@ function(brl_std_condition_not_equals)// !=
                     if (strcmp(arg(i - 1).string, arg(i).string) == 0)
                     {
                         return 0;
-                    }
-                    break;
-                case TYPE_LIST:
-
-                    if (arg(i - 1).pointer == arg(i).pointer)
-                    {
-                        return 0;
-                    }
-                    else if (((IntList*)arg(i - 1).pointer)->size != ((IntList*)arg(i).pointer)->size)
-                    {
-                        return 0;
-                    }
-
-                    for (Int j = 0; j < ((IntList*)arg(i - 1).pointer)->size; j++)
-                    {
-                        if (((IntList*)arg(i - 1).pointer)->data[j] == ((IntList*)arg(i).pointer)->data[j])
-                        {
-                            return 0;
-                        }
                     }
                     break;
                 default:
@@ -1969,22 +1471,10 @@ init(std_hash)
 
 init(std_list)
 {
-    register_builtin(vm, "list", brl_std_list_new);
-    register_builtin(vm, "pop", brl_std_list_pop);
-    register_builtin(vm, "set", brl_std_list_set);
-    register_builtin(vm, "len", brl_std_list_length);
-    register_builtin(vm, "push", brl_std_list_push);
-    register_builtin(vm, "shift", brl_std_list_shift);
-    register_builtin(vm, "unshift", brl_std_list_unshift);
-    register_builtin(vm, "insert", brl_std_list_insert);
-    register_builtin(vm, "remove", brl_std_list_remove);
-    register_builtin(vm, "concat", brl_std_list_concat);
-    register_builtin(vm, "find", brl_std_list_find);
-    register_builtin(vm, "get", brl_std_list_get);
-    register_builtin(vm, "sub", brl_std_list_sub);
-    register_builtin(vm, "split", brl_std_list_split);
-    register_builtin(vm, "replace", brl_std_list_replace);
-    register_builtin(vm, "swap", brl_std_list_swap);
+    register_builtin(vm, "list", brl_std_array_new);
+    register_builtin(vm, "set", brl_std_array_set);
+    register_builtin(vm, "len", brl_std_array_length);
+    register_builtin(vm, "resize", buxu_std_array_resize);
 }
 
 init(std_mem)
@@ -2003,7 +1493,7 @@ init(std_type)
     register_number(vm, "type.any", TYPE_ANY);
     register_number(vm, "type.number", TYPE_NUMBER);
     register_number(vm, "type.string", TYPE_STRING);
-    register_number(vm, "type.list", TYPE_LIST);
+    register_number(vm, "type.array", TYPE_ARRAY);
 
     register_builtin(vm, "type", brl_std_type_get);
     register_builtin(vm, "pun", brl_std_type_set);

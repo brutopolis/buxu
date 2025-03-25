@@ -3,8 +3,11 @@
 (25/03/2025) - version 0.7.9
 
 - lists macros now do use memmove instead of moving one by one;
-- changed TYPE_LIST behaviour;
-- buxe will now treat lists as a number element on the stack as list, the number is the amount of elements after it are part of the list;
+- TYPE_LIST replaced by TYPE_ARRAY;
+- TYPE_ARRAY treat arrays as a number element on the stack as list, the number is the amount of elements after it are part of the array;
+- functions list, pop, push, shift, unshift, insert, remove, split, concat, replace, swap, find and sub were removed;
+- new function array;
+- new function resize;
 
 (24/03/2025) - version 0.7.8a
 

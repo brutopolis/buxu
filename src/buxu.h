@@ -30,20 +30,23 @@
 // not part of the standard library
 #include <ctype.h>
 
-#define VERSION "0.7.8a"
+// version
+#define VERSION "0.7.9"
 
+// types
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
 #define TYPE_STRING 2
-#define TYPE_LIST 3
+#define TYPE_ARRAY 3
 
+// emoticons
 #define EMOTICON_DEFAULT "[=°-°=]"
 #define EMOTICON_IDLE "[=° °=]"
 #define EMOTICON_WARNING "[=°~°=]"
 #define EMOTICON_ERROR "[=°x°=]"
 #define EMOTICON_CONFUSED "[=º?°=]"
 
-// define a macro to printf but it always starts with [=°-°=]
+// define a macro to printf but it always starts with [=°-°=] and ends with a newline
 #define buxu_print(emoticon, ...) printf(emoticon ": "); printf(__VA_ARGS__); printf("\n")
 #define buxu_warn(...) printf(EMOTICON_WARNING ": warning: "); printf(__VA_ARGS__); printf("\n")
 #define buxu_error(...) printf(EMOTICON_ERROR ": error: "); printf(__VA_ARGS__); printf("\n")
@@ -96,6 +99,7 @@
     } \
 } while (0)
 
+// add an element to the end of the list
 #define list_push(s, v) do \
 { \
     if ((s).size == (s).capacity) \
@@ -105,6 +109,7 @@
     (s).data[(s).size++] = (v); \
 } while (0)
 
+// add an element to the beginning of the list
 #define list_unshift(s, v) do \
 { \
     if ((s).size == (s).capacity) \
@@ -116,9 +121,10 @@
     (s).size++; \
 } while (0)
 
-
+// remove the last element and return it
 #define list_pop(s) ((s).data[--(s).size])
 
+// remove the first element and return it
 #define list_shift(s) \
 ({ \
     typeof((s).data[0]) ret = (s).data[0]; \
@@ -129,8 +135,7 @@
     ret; \
 })
 
-
-
+// free the list
 #define list_free(s) \
 ({\
     free((s).data);\
@@ -306,7 +311,7 @@ Int new_number(VirtualMachine *vm, Float number);
 Int new_string(VirtualMachine *vm, char *str);
 Int new_builtin(VirtualMachine *vm, Function function);
 Int new_var(VirtualMachine *vm);
-Int new_list(VirtualMachine *vm, Int size);
+Int new_array(VirtualMachine *vm, Int size);
 
 Value value_duplicate(Value value, Byte type);
 
