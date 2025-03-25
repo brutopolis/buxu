@@ -259,6 +259,12 @@ function(brl_std_array_length)
     {
         return new_number(vm, strlen(arg(0).string));
     }
+    /*
+    else 
+    {
+        return new_number(vm, sizeof(Float));
+    }
+    */
     return -1;
 }
 
@@ -288,7 +294,7 @@ function(brl_std_array_get)
         Int i = arg_i(1);
         if (i >= 0 && i < strlen(arg(0).string))
         {
-            return new_number(vm, arg(0).string[i]);
+            return arg(0).string[i];
         }
         else 
         {
@@ -297,11 +303,11 @@ function(brl_std_array_get)
     }
     else 
     {
-        Int index = (Int)arg(0).number;
+        Int index = (Int)arg(0).integer;
         Int i = arg_i(1);
         if (i >= 0 && i < sizeof(Float))
         {
-            return new_number(vm, arg(0).u8[i]);
+            return arg(0).u8[i];
         }
     }
     return -1;
@@ -362,6 +368,10 @@ function(buxu_std_array_resize)
     return -1;
 }
 
+function(brl_std_index)
+{
+    return (new_number(vm, arg_i(0)));
+}
 
 function(brl_mem_copy)
 {
@@ -1481,6 +1491,8 @@ init(std_mem)
 {
     register_builtin(vm, "mem.copy", brl_mem_copy);
     register_builtin(vm, "mem.delete", brl_mem_delete);
+
+    register_builtin(vm, "index", brl_std_index);
 }
 
 // destructive/inplace!!

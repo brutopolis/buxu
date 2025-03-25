@@ -6,8 +6,14 @@
 - TYPE_LIST replaced by TYPE_ARRAY;
 - TYPE_ARRAY treat arrays as a number element on the stack as list, the number is the amount of elements after it are part of the array;
 - functions list, pop, push, shift, unshift, insert, remove, split, concat, replace, swap, find and sub were removed;
+- priority removed;
 - new function array;
 - new function resize;
+- new function index;
+- new experimental function precise.c;
+
+TODO: test precise lib;
+TODO: update all examples;
 
 (24/03/2025) - version 0.7.8a
 

@@ -7,8 +7,8 @@ new "screen" (tigr.window 100 100 "Hello" flags);
 new "screen2" (tigr.window 320 240 "Hello2" flags);
 
 
-new "white" (list 255 255 255 255);
-new "pink" (list 255 192 203 255);
+new "white" (tigr.rgba 255 255 255 255);
+new "pink" (tigr.rgba 255 192 203 255);
 new "_110" 110;
 new "_120" 120;
 new "_50" 50;
