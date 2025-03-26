@@ -11,9 +11,12 @@
 - new function resize;
 - new function index;
 - new experimental function precise.c;
-
-TODO: test precise lib;
-TODO: update all examples;
+- NULL declaration moved to make_vm;
+- load can now load lib from the lib paths;
+- new variable file.path;
+- new functions clear and fill;
+- new cli option -p | --path to add a path to the lib paths;
+- some new examples;
 
 (24/03/2025) - version 0.7.8a
 

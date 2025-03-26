@@ -364,6 +364,17 @@ void writefile(char *filename, char *code)
     fclose(file);
 }
 
+bool file_exists(char* filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        return false;
+    }
+    fclose(file);
+    return true;
+}
+
 #endif
 
 // value functions
@@ -436,6 +447,9 @@ VirtualMachine* make_vm()
     vm->hash_indexes = list_init(IntList);
     vm->unused = list_init(IntList);
 
+    // @0 = NULL
+    register_var(vm, "NULL");
+
     return vm;
 }
 
@@ -482,7 +496,7 @@ Int new_builtin(VirtualMachine *vm, Function function)
 
 Int new_array(VirtualMachine *vm, Int size)
 {
-    // lists dont resuse unused indexes
+    // arrays dont resuse unused indexes
     list_push(*vm->stack, (Value){.number = size});
     list_push(*vm->typestack, TYPE_ARRAY);
     Int id = vm->stack->size - 1;
@@ -751,7 +765,7 @@ void unuse_var(VirtualMachine *vm, Int index)
 
 char* list_stringify(VirtualMachine* vm, Int list_index)
 {
-    char* _str = str_duplicate("(list: ");
+    char* _str = str_duplicate("(array: ");
     char* strbak;
 
     Int list_size = data(list_index).number;
@@ -765,7 +779,7 @@ char* list_stringify(VirtualMachine* vm, Int list_index)
     }
     else if (list_index + list_size + 1 > vm->stack->size)
     {
-        buxu_error("misformed list @%ld, size %ld", list_index, list_size);
+        buxu_error("misformed array @%ld, size %ld", list_index, list_size);
         strbak = _str;
         _str = str_concat(_str, ")");
         free(strbak);

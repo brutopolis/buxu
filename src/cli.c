@@ -51,6 +51,15 @@ Int repl(VirtualMachine *vm)
 
 void buxu_dl_open(char* libpath)
 {
+    bool usingLibName = false;
+    char* name_backup = libpath;
+
+    #if defined(__MINGW32__) || defined(__MINGW64__)
+        const char* extension = ".dll";
+    #else
+        const char* extension = ".so";
+    #endif
+
     // check if the library is already loaded
     for (Int i = 0; i < libs_names->size; i++)
     {
@@ -60,18 +69,49 @@ void buxu_dl_open(char* libpath)
             buxu_error("library %s already loaded", libpath);
             return;
         }
-    }   
+    }
+
+    if (!file_exists(libpath))
+    {
+        // not in a direct path, lets try the lib paths
+        StringList *splited = str_split_char(data(hash_find(vm, "file.path")).string, ';');
+        for (Int i = 0; i < splited->size; i++)
+        {
+            char* _libpath = str_format("%s/%s%s", splited->data[i], libpath, extension);
+            if (file_exists(_libpath))
+            {
+                usingLibName = true;
+                libpath = _libpath;
+                break;
+            }
+            free(_libpath);
+        }
+        list_free(*splited);
+        if (!usingLibName)
+        {
+            buxu_error("library %s not found", libpath);
+            return;
+        }
+    }
 
     void *handle = dlopen(libpath, RTLD_LAZY | RTLD_GLOBAL);
 
     if (handle != NULL)
     {
         list_push(*libs, (Int)handle);
-        list_push(*libs_names, str_duplicate(libpath));
+        if (usingLibName)
+        {
+            list_push(*libs_names, str_duplicate(libpath));
+        }
+        else
+        {
+            list_push(*libs_names, str_duplicate(name_backup));
+        }
     }
     else 
     {
         buxu_error("%s", dlerror());
+        return;
     }
 
     StringList *splited = str_split_char(libpath, '/');
@@ -181,6 +221,14 @@ int main(int argc, char **argv)
     // virtual machine startup
     vm = make_vm();
 
+    // lib search paths
+    char* backup;
+
+    Int index = new_var(vm);
+    data_t(index) = TYPE_STRING;
+    data(index).string = str_format("./lib/");
+    hash_set(vm, "file.path", index);
+
     // arguments startup
     args = list_init(StringList);
     
@@ -211,6 +259,7 @@ int main(int argc, char **argv)
             printf("  -v, --version\t\tprint version\n");
             printf("  -h, --help\t\tprint this help\n");
             printf("  -l, --load\t\tload a library\n");
+            printf("  -p, --path\t\tadd a path to the library search path\n");
             printf("  -e, --eval\t\teval a string\n");
             return 0;
         }
@@ -231,12 +280,20 @@ int main(int argc, char **argv)
                 buxu_dl_open(argv[i+1]);
             }
 
-            i+=1;// skip to the next argument
+            i+=1; // skip to the next argument
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
             result = eval(vm, argv[i+1]);
             i+=1;// skip to the next argument
+        }
+        else if (strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--path") == 0) // add path
+        {
+            Int index = hash_find(vm, "file.path");
+            backup = data(index).string;
+            data(index).string = str_format("%s;%s", data(index).string, argv[i+1]);
+            free(backup);
+            i+=1; // skip to the next argument
         }
         else // push to args
         {

@@ -355,6 +355,7 @@ char* list_stringify(VirtualMachine* vm, Int list_index);
 
 char* readfile(char *filename);
 void writefile(char *filename, char *content);
+bool file_exists(char *filename);
 
 #endif
 #endif

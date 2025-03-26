@@ -170,11 +170,7 @@ function(brl_std_array_new)
     }
     else
     {
-        index = new_array(vm, args->size);
-        for (Int i = 0; i < args->size; i++)
-        {
-            data(index + 1 + i) = value_duplicate(arg(i), arg_t(i));
-        }
+        index = new_array(vm, arg(0).number);
     }
     return index;
 }
@@ -317,9 +313,10 @@ function(buxu_std_array_resize)
 {
     // we reallocate the stack data
     Int array_index = arg_i(0);
-    Int new_size = arg_i(1);
+    Int new_size = arg(1).number;
     Int old_size = data(array_index).number;
     Int diff = new_size - old_size;
+
     if (diff > 0)
     {
         // lets see if the capacity is enough
@@ -364,7 +361,57 @@ function(buxu_std_array_resize)
     {
         // nothing to do
         buxu_warn("resizing array @%ld to the same size: %ld", array_index, new_size);
+        return -1;
     }
+
+    // lets update the hashes
+    for (Int i = 0; i < vm->hash_names->size; i++)
+    {
+        if (vm->hash_indexes->data[i] > array_index + old_size)
+        {
+            vm->hash_indexes->data[i] += diff;
+        }
+    }
+    return -1;
+}
+
+function(buxu_std_array_fill)
+{
+    if (arg_t(0) == TYPE_ARRAY)
+    {
+        Int index = arg_i(0);
+        Int size = data(index).number;
+        memset(&(data(index + 1)), arg_i(1), size * sizeof(Value));
+        if (args->size == 3)
+        {
+            memset(&(data_t(index + 1)), arg_i(2), size * sizeof(Byte));
+        }
+        else 
+        {
+            memset(&(data_t(index + 1)), 0, size * sizeof(Byte));
+        }
+    }
+    else 
+    {
+        buxu_error("@%ld is not an array", arg_i(0));
+    }
+    return -1;
+}
+
+function(buxu_std_array_clear)
+{
+    if (arg_t(0) == TYPE_ARRAY)
+    {
+        Int index = arg_i(0);
+        Int size = data(index).number;
+        memset(&(data(index + 1)), 0, size * sizeof(Value));
+        memset(&(data_t(index + 1)), 0, size * sizeof(Byte));
+        for (Int i = arg_i(0) + 1; i < arg_i(0) + 1 + data(arg_i(0)).number; i++)
+        {
+            list_push(*vm->unused, i);
+        }
+    }
+    
     return -1;
 }
 
@@ -500,11 +547,13 @@ function(brl_std_math_add)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             for (Int i = 1; i < args->size; i++)
             {
                 switch (arg_t(i))
                 {
                     case TYPE_NUMBER:
+                    case TYPE_ARRAY:
                         arg(0).number += arg(i).number;
                         break;
                     default:
@@ -519,6 +568,7 @@ function(brl_std_math_add)
                 switch (arg_t(i))
                 {
                     case TYPE_NUMBER:
+                    case TYPE_ARRAY:
                         arg(0).integer += (Int)arg(i).number;
                         break;
                     default:
@@ -536,11 +586,13 @@ function(brl_std_math_sub)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             for (Int i = 1; i < args->size; i++)
             {
                 switch (arg_t(i))
                 {
                     case TYPE_NUMBER:
+                    case TYPE_ARRAY:
                         arg(0).number -= arg(i).number;
                         break;
                     default:
@@ -555,6 +607,7 @@ function(brl_std_math_sub)
                 switch (arg_t(i))
                 {
                     case TYPE_NUMBER:
+                    case TYPE_ARRAY:
                         arg(0).integer -= (Int)arg(i).number;
                         break;
                     default:
@@ -572,11 +625,13 @@ function(brl_std_math_mul)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             for (Int i = 1; i < args->size; i++)
             {
                 switch (arg_t(i))
                 {
                     case TYPE_NUMBER:
+                    case TYPE_ARRAY:
                         arg(0).number *= arg(i).number;
                         break;
                     default:
@@ -591,6 +646,7 @@ function(brl_std_math_mul)
                 switch (arg_t(i))
                 {
                     case TYPE_NUMBER:
+                    case TYPE_ARRAY:
                         arg(0).integer *= (Int)arg(i).number;
                         break;
                     default:
@@ -613,6 +669,7 @@ function(brl_std_math_div)
                 switch (arg_t(i))
                 {
                     case TYPE_NUMBER:
+                    case TYPE_ARRAY:
                         arg(0).number /= arg(i).number;
                         break;
                     default:
@@ -627,6 +684,7 @@ function(brl_std_math_div)
                 switch (arg_t(i))
                 {
                     case TYPE_NUMBER:
+                    case TYPE_ARRAY:
                         arg(0).integer /= (Int)arg(i).number;
                         break;
                     default:
@@ -644,6 +702,7 @@ function(brl_std_math_mod)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             #if __SIZEOF_POINTER__ == 8
                 arg(0).number = fmod(arg(0).number, arg(1).number);
             #else
@@ -714,6 +773,7 @@ function(brl_std_math_sin)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             #if __SIZEOF_POINTER__ == 8
                 arg(0).number = sin(arg(0).number);
             #else
@@ -733,6 +793,7 @@ function(brl_std_math_cos)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             #if __SIZEOF_POINTER__ == 8
                 arg(0).number = cos(arg(0).number);
             #else
@@ -752,6 +813,7 @@ function(brl_std_math_tan)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             #if __SIZEOF_POINTER__ == 8
                 arg(0).number = tan(arg(0).number);
             #else
@@ -822,6 +884,7 @@ function(brl_std_min)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
         {
             Float min = arg(0).number;
             for (Int i = 1; i < args->size; i++)
@@ -853,6 +916,7 @@ function(brl_std_max)
     switch (arg_t(0))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
         {
             Float max = arg(0).number;
             for (Int i = 1; i < args->size; i++)
@@ -1028,6 +1092,7 @@ function(brl_std_condition_greater)
     switch (arg_t(1))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             for (Int i = 1; i < args->size; i++)
             {
                 if (arg(i - 1).number <= arg(i).number)
@@ -1072,6 +1137,7 @@ function(brl_std_condition_greater_equals)
     switch (arg_t(1))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             for (Int i = 1; i < args->size; i++)
             {
                 if (arg(i - 1).number < arg(i).number)
@@ -1116,6 +1182,7 @@ function(brl_std_condition_less)
     switch (arg_t(1))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             for (Int i = 1; i < args->size; i++)
             {
                 if (arg(i - 1).number >= arg(i).number)
@@ -1160,6 +1227,7 @@ function(brl_std_condition_less_equals)
     switch (arg_t(1))
     {
         case TYPE_NUMBER:
+        case TYPE_ARRAY:
             for (Int i = 1; i < args->size; i++)
             {
                 if (arg(i - 1).number > arg(i).number)
@@ -1479,12 +1547,15 @@ init(std_hash)
     register_builtin(vm, "delete", brl_std_hash_delete);
 }
 
-init(std_list)
+init(std_array)
 {
-    register_builtin(vm, "list", brl_std_array_new);
+    register_builtin(vm, "array", brl_std_array_new);
     register_builtin(vm, "set", brl_std_array_set);
+    register_builtin(vm, "get", brl_std_array_get);
     register_builtin(vm, "len", brl_std_array_length);
     register_builtin(vm, "resize", buxu_std_array_resize);
+    register_builtin(vm, "fill", buxu_std_array_fill);
+    register_builtin(vm, "clear", buxu_std_array_clear);
 }
 
 init(std_mem)
@@ -1584,9 +1655,6 @@ init(buxu)
 // std init presets
 init(std)
 {
-    // @0 = NULL
-    register_var(vm, "NULL");
-
     #ifndef ARDUINO
     init_std_os(vm);
     #endif
@@ -1595,7 +1663,7 @@ init(std)
 
     init_std_basics(vm);
     init_std_hash(vm);
-    init_std_list(vm);
+    init_std_array(vm);
     init_std_mem(vm);
 
     init_std_type(vm);
