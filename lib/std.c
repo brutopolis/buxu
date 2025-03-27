@@ -443,7 +443,7 @@ function(brl_std_deplace)
     data(newindex) = value_duplicate(data(arg_i(1)), data_t(arg_i(1)));
     data_t(newindex) = data_t(arg_i(1));
     arg_i(1) = newindex;
-    interpret_args(vm, args);
+    //interpret_args(vm, args);
     return newindex;
 }
 

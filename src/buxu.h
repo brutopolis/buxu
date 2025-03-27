@@ -274,10 +274,10 @@ typedef struct
     ValueList *stack;
     ByteList *typestack;
     IntList *unused;
+
     // hashes
     StringList *hash_names;
     IntList *hash_indexes;
-
 } VirtualMachine;
 
 //Function
@@ -342,7 +342,7 @@ void print_element(VirtualMachine *vm, Int index);
 #define function(name) Int name(VirtualMachine *vm, IntList *args)
 #define init(name) void init_##name(VirtualMachine *vm)
 
-Int interpret_args(VirtualMachine *vm, IntList *args);
+//Int interpret_args(VirtualMachine *vm, IntList *args);
 Int interpret(VirtualMachine *vm, char *cmd);
 
 // functions

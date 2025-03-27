@@ -1,6 +1,6 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
-(25/03/2025) - version 0.7.9
+(27/03/2025) - version 0.7.9
 
 - lists macros now do use memmove instead of moving one by one;
 - TYPE_LIST replaced by TYPE_ARRAY;
@@ -10,7 +10,6 @@
 - new function array;
 - new function resize;
 - new function index;
-- new experimental function precise.c;
 - NULL declaration moved to make_vm;
 - load can now load lib from the lib paths;
 - new variable file.path;

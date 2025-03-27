@@ -210,16 +210,16 @@ StringList* special_split(char *str, char delim)
         {
             recursion--;
         }
-        else if (str[i] == '"' && recursion == 0 && !inside_single_quotes)
+        else if (str[i] == '"' && !recursion && !inside_single_quotes)
         {
             inside_double_quotes = !inside_double_quotes;
         }
-        else if (str[i] == '\'' && recursion == 0 && !inside_double_quotes)
+        else if (str[i] == '\'' && !recursion && !inside_double_quotes)
         {
             inside_single_quotes = !inside_single_quotes;
         }
 
-        if (str[i] == delim && recursion == 0 && !inside_double_quotes && !inside_single_quotes)
+        if (str[i] == delim && !recursion && !inside_double_quotes && !inside_single_quotes)
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i);
             list_push(*splited, tmp);
@@ -402,7 +402,7 @@ Int hash_find(VirtualMachine *vm, char *varname)
 {
     for (Int i = 0; i < vm->hash_names->size; i++)
     {
-        if (strcmp(vm->hash_names->data[i], varname) == 0)
+        if (!strcmp(vm->hash_names->data[i], varname))
         {
             return i;
         }
@@ -639,8 +639,16 @@ IntList* parse(void *_vm, char *cmd)
     return result;
 }
 
-Int interpret_args(VirtualMachine *vm, IntList *args)
+Int interpret(VirtualMachine *vm, char* cmd)
 {
+    IntList *args = parse(vm, cmd);
+
+    if (!args->size)
+    {
+        list_free(*args);
+        return -1;
+    }
+    
     Int func = list_shift(*args);
     Int result = -1;
     Int etc = -1;
@@ -667,21 +675,6 @@ Int interpret_args(VirtualMachine *vm, IntList *args)
     {
         buxu_error("%ld is not a function or script", func);
     }
-    return result;
-}
-
-Int interpret(VirtualMachine *vm, char* cmd)
-{
-    IntList *args = parse(vm, cmd);
-
-    if (args->size == 0)
-    {
-        list_free(*args);
-        return -1;
-    }
-    
-    
-    Int result = interpret_args(vm, args);
     
     list_free(*args);
     
@@ -701,7 +694,7 @@ Int eval(VirtualMachine *vm, char *cmd)
     Int last = splited->size - 1;
     while (last >= 0)
     {
-        if (strlen(splited->data[last]) == 0)
+        if (!strlen(splited->data[last]))
         {
             free(splited->data[last]);
             list_pop(*splited);
@@ -713,6 +706,7 @@ Int eval(VirtualMachine *vm, char *cmd)
             {
                 i++;
             }
+
             if (splited->data[last][i] == '\0')
             {
                 free(splited->data[last]);
@@ -728,7 +722,7 @@ Int eval(VirtualMachine *vm, char *cmd)
     {
         
         char *str = list_pop(*splited);
-        if (strlen(str) == 0)
+        if (!strlen(str))
         {
             free(str);
             continue;
@@ -770,7 +764,7 @@ char* list_stringify(VirtualMachine* vm, Int list_index)
 
     Int list_size = data(list_index).number;
 
-    if (list_size == 0)
+    if (!list_size) // if 0
     {
         strbak = _str;
         _str = str_concat(_str, ")");
