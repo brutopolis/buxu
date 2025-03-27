@@ -274,10 +274,11 @@ typedef struct
     ValueList *stack;
     ByteList *typestack;
     IntList *unused;
-
+    
     // hashes
     StringList *hash_names;
     IntList *hash_indexes;
+
 } VirtualMachine;
 
 //Function
@@ -319,16 +320,13 @@ Int register_var(VirtualMachine *vm, char* varname);
 Int register_string(VirtualMachine *vm, char* varname, char* string);
 Int register_number(VirtualMachine *vm, char* varname, Float number);
 Int register_builtin(VirtualMachine *vm, char* varname, Function function);
-Int register_list(VirtualMachine *vm, char* varname, Int size);
+Int register_array(VirtualMachine *vm, char* varname, Int size);
 
 Int hash_find(VirtualMachine *vm, char *key);
 void hash_set(VirtualMachine *vm, char *key, Int index);
 void hash_unset(VirtualMachine *vm, char *key);
 
-// eval
-Int eval(VirtualMachine *vm, char *cmd);
 
-void print_element(VirtualMachine *vm, Int index);
 
 
 // macros
@@ -342,8 +340,11 @@ void print_element(VirtualMachine *vm, Int index);
 #define function(name) Int name(VirtualMachine *vm, IntList *args)
 #define init(name) void init_##name(VirtualMachine *vm)
 
-//Int interpret_args(VirtualMachine *vm, IntList *args);
+// eval
+Int eval(VirtualMachine *vm, char *cmd);
 Int interpret(VirtualMachine *vm, char *cmd);
+
+void print_element(VirtualMachine *vm, Int index);
 
 // functions
 IntList* parse(void* _vm, char* cmd);

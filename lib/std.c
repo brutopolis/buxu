@@ -436,17 +436,6 @@ function(brl_mem_delete)
     return -1;
 }
 
-function(brl_std_deplace)
-{
-    Int newindex = new_var(vm);
-    Int func = arg_i(0);
-    data(newindex) = value_duplicate(data(arg_i(1)), data_t(arg_i(1)));
-    data_t(newindex) = data_t(arg_i(1));
-    arg_i(1) = newindex;
-    //interpret_args(vm, args);
-    return newindex;
-}
-
 // std type
 // std type
 // std type
@@ -1526,19 +1515,16 @@ init(std_basics)
 {
     register_builtin(vm, "#", brl_std_ignore);
     
-    register_builtin(vm, "return", brl_std_return);
+    register_builtin(vm, ":", brl_std_return);
 
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);
-
-    register_builtin(vm, "$", brl_std_deplace);
 
     register_builtin(vm, "while", brl_std_loop_while);
     register_builtin(vm, "repeat", brl_std_loop_repeat);
     register_builtin(vm, "forever", brl_std_loop_forever);
 
     register_builtin(vm, "format", brl_std_string_format);
-
 }
 
 init(std_hash)

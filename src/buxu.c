@@ -178,7 +178,7 @@ StringList* special_space_split(char *str)
         else
         {
             int j = i;
-            while (!isspace(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')' && str[j] != '"' && str[j] != '\'')
+            while (!isspace(str[j]) && str[j] != '\0' && str[j] != '(' && str[j] != ')')
             {
                 j++;
             }
@@ -536,7 +536,7 @@ Int register_builtin(VirtualMachine *vm, char* varname, Function function)
     return index;
 }
 
-Int register_list(VirtualMachine *vm, char* varname, Int size)
+Int register_array(VirtualMachine *vm, char* varname, Int size)
 {
     Int index = new_array(vm, size);
     hash_set(vm, varname, index);
@@ -589,6 +589,7 @@ IntList* parse(void *_vm, char *cmd)
     while (splited->size > 0)
     {
         char* str = list_pop(*splited);
+        
         if (str[0] == '(')
         {
             if(str[1] == '@') //string
@@ -683,7 +684,7 @@ Int interpret(VirtualMachine *vm, char* cmd)
 
 Int eval(VirtualMachine *vm, char *cmd)
 {
-    if(strchr(cmd, ';') == NULL)
+    if(!strchr(cmd, ';')) // if == NULL
     {
         return interpret(vm, cmd);
     }
@@ -696,8 +697,7 @@ Int eval(VirtualMachine *vm, char *cmd)
     {
         if (!strlen(splited->data[last]))
         {
-            free(splited->data[last]);
-            list_pop(*splited);
+            free(list_pop(*splited));
         }
         else
         {

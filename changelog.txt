@@ -15,6 +15,8 @@
 - new variable file.path;
 - new functions clear and fill;
 - new cli option -p | --path to add a path to the lib paths;
+- deplace "($ ...)" removed;
+- 'return' renamed to ':' again;
 - some new examples;
 
 (24/03/2025) - version 0.7.8a

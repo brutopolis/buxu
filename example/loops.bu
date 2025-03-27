@@ -1,12 +1,12 @@
-load "lib/std.so";
+load (@lib/std.so);
 
 
-new "_size" 100000;
-new "_index" 0;
+new (@_size) 100000;
+new (@_index) 0;
 
-new "cond" "< _index _size";
+new (@cond) (@< _index _size);
 
-new "code" "
+new (@code) (@
     + _index 1;
     print _index;
     + _index 1;
@@ -32,12 +32,12 @@ new "code" "
     + _index 1;
     print _index;
     clear temp;
-";
+);
 
-new "temp" (array 12);
+new (@temp) (array 12);
 clear temp;
 
 while cond code;
 
 ls;
-return 0;
+: 0;
