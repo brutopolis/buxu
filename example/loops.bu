@@ -40,4 +40,4 @@ clear temp;
 while cond code;
 
 ls;
-: 0;
+return 0;

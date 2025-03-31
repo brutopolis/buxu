@@ -1515,7 +1515,7 @@ init(std_basics)
 {
     register_builtin(vm, "#", brl_std_ignore);
     
-    register_builtin(vm, ":", brl_std_return);
+    register_builtin(vm, "return", brl_std_return);
 
     register_builtin(vm, "ls", brl_std_io_ls);
     register_builtin(vm, "ls.hash", brl_std_io_ls_hashes);

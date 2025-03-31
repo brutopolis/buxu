@@ -9,4 +9,4 @@ repeat _size (@
     print ___index;
 );
 
-: 0;
+return 0;

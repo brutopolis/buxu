@@ -266,8 +266,6 @@ typedef List(char*) StringList;
 typedef List(Int) IntList;
 typedef List(Byte) ByteList;
 
-typedef List(IntList) IntListList;
-
 
 typedef struct
 {
