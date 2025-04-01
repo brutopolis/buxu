@@ -365,9 +365,9 @@ function(bu_tigr_mouse)
     return -1;
 }
 
-function(bu_tigr_touch)
+function(bu_tigr_touch) // need to be fixed
 {
-    Tigr *bmp = arg(0).pointer;
+    /*Tigr *bmp = arg(0).pointer;
     int maxPoints = arg(1).number;
 
     Int result = new_array(vm, 10);
@@ -381,7 +381,7 @@ function(bu_tigr_touch)
         data(result+i+1).u16[1] = points[i].y;
     }
 
-    return result;
+    return result;*/
 }
 
 function(bu_tigr_key_down)

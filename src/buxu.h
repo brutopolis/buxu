@@ -37,7 +37,6 @@
 #define TYPE_ANY 0
 #define TYPE_NUMBER 1
 #define TYPE_STRING 2
-#define TYPE_ARRAY 3
 
 // emoticons
 #define EMOTICON_DEFAULT "[=°-°=]"
@@ -310,7 +309,6 @@ Int new_number(VirtualMachine *vm, Float number);
 Int new_string(VirtualMachine *vm, char *str);
 Int new_builtin(VirtualMachine *vm, Function function);
 Int new_var(VirtualMachine *vm);
-Int new_array(VirtualMachine *vm, Int size);
 
 Value value_duplicate(Value value, Byte type);
 
@@ -318,7 +316,6 @@ Int register_var(VirtualMachine *vm, char* varname);
 Int register_string(VirtualMachine *vm, char* varname, char* string);
 Int register_number(VirtualMachine *vm, char* varname, Float number);
 Int register_builtin(VirtualMachine *vm, char* varname, Function function);
-Int register_array(VirtualMachine *vm, char* varname, Int size);
 
 Int hash_find(VirtualMachine *vm, char *key);
 void hash_set(VirtualMachine *vm, char *key, Int index);
@@ -342,13 +339,8 @@ void hash_unset(VirtualMachine *vm, char *key);
 Int eval(VirtualMachine *vm, char *cmd);
 Int interpret(VirtualMachine *vm, char *cmd);
 
-void print_element(VirtualMachine *vm, Int index);
-
 // functions
 IntList* parse(void* _vm, char* cmd);
-
-// stringify function
-char* list_stringify(VirtualMachine* vm, Int list_index);
 
 #ifndef ARDUINO
 

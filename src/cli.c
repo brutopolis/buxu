@@ -42,7 +42,26 @@ Int repl(VirtualMachine *vm)
     }
 
     printf("%s: ", EMOTICON_DEFAULT);
-    print_element(vm, result);
+    switch (data_t(result))
+    {
+        case TYPE_STRING:
+            printf("%s", data(result).string);
+            break;
+        case TYPE_NUMBER:
+            if (((Int)data(result).number) == data(result).number)
+            {
+                printf("%ld", (Int)data(result).number);
+            }
+            else
+            {
+                printf("%f", data(result).number);
+            }
+            break;
+        default:
+            printf("%ld", (Int)data(result).pointer);
+            break;
+    }
+    
     printf("\n");
     return result;
 }
@@ -337,14 +356,19 @@ int main(int argc, char **argv)
 
         hash_set(vm, "file.path", filepathindex);
         
-        Int _list = new_array(vm, args->size);
-        hash_set(vm, "file.args", _list);
-
-        //s file args
-        for (Int i = 0; i < args->size; i++)
+        if (args->size > 0)
         {
-            data(_list + 1 + i).string = list_pop(*args);
+            Int __index = new_number(vm, args->size);
+            hash_set(vm, "file.args", __index);
+            //s file args
+            for (Int i = 0; i < args->size; i++)
+            {
+                Int index = new_var(vm);
+                data(index).string = list_pop(*args);
+                data_t(index) = TYPE_STRING;
+            }
         }
+        
     
         result = eval(vm, _code);
     }

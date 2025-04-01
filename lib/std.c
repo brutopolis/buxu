@@ -4,11 +4,147 @@
 // functions defitions for buxu
 // functions defitions for buxu
 
-// MAX priority is always 0
-// MIN priority is BASE_PRIORITY
-Int BASE_PRIORITY = 10;
-
 #ifndef ARDUINO
+
+#define TYPE_ARRAY 3
+
+Int new_array(VirtualMachine *vm, Int size)
+{
+    // arrays dont resuse unused indexes
+    list_push(*vm->stack, (Value){.number = size});
+    list_push(*vm->typestack, TYPE_ARRAY);
+    Int id = vm->stack->size - 1;
+    for (Int i = 0; i < size; i++)
+    {
+        list_push(*vm->stack, (Value){.pointer = NULL});
+        list_push(*vm->typestack, TYPE_ANY);
+    }
+    return id;
+}
+
+Int register_array(VirtualMachine *vm, char* varname, Int size)
+{
+    Int index = new_array(vm, size);
+    hash_set(vm, varname, index);
+    return index;
+}
+
+
+char* array_stringify(VirtualMachine* vm, Int list_index)
+{
+    char* _str = str_duplicate("(array: ");
+    char* strbak;
+
+    Int list_size = data(list_index).number;
+
+    if (!list_size) // if 0
+    {
+        strbak = _str;
+        _str = str_concat(_str, ")");
+        free(strbak);
+        return _str;
+    }
+    else if (list_index + list_size + 1 > vm->stack->size)
+    {
+        buxu_error("misformed array @%ld, size %ld", list_index, list_size);
+        strbak = _str;
+        _str = str_concat(_str, ")");
+        free(strbak);
+        return _str;
+    }
+
+    for (Int i = list_index+1; i < list_index + list_size + 1; i++)
+    {
+        switch (data_t(i))
+        {
+        case TYPE_STRING:
+            strbak = _str;
+            _str = str_format("%s(@ %s)", _str, data(i).string); 
+            free(strbak);
+            break;
+        case TYPE_NUMBER:
+            strbak = _str;
+            
+            if (data(i).number == (Int)data(i).number)
+            {
+                char* str = str_format("%ld", (Int)data(i).number);
+                _str = str_concat(_str, str);
+                free(str);
+            }
+            else 
+            {
+                char* str = str_format("%lf", data(i).number);
+                _str = str_concat(_str, str);
+                free(str);
+            }
+
+            free(strbak);
+            break;
+        case TYPE_ARRAY:
+            strbak = _str;
+            char* stringified = array_stringify(vm, i);
+            _str = str_concat(_str, stringified);
+            free(strbak);
+            break;
+        default:
+            strbak = _str;
+            _str = str_format("%s%ld", _str, data(i).integer);
+            free(strbak);
+            break;
+        }
+
+        if (i < list_index + list_size)
+        {
+            strbak = _str;
+            _str = str_concat(_str, " ");
+            free(strbak);
+        }
+    }
+    strbak = _str;
+    _str = str_concat(_str, ")");
+    free(strbak);
+    return _str;
+}
+
+// print 
+void print_element(VirtualMachine *vm, Int index)
+{
+    if (index < 0 || index >= vm->stack->size)
+    {
+        printf("(return (get -1))");
+        return;
+    }
+
+    Value temp = vm->stack->data[index];
+
+    switch (data_t(index))
+    {
+        char* _str;
+        char* strbak;
+        char* stringified;
+        case TYPE_ARRAY:
+            stringified = array_stringify(vm, index);
+            printf("%s", stringified);
+            free(stringified);
+            break;
+        case TYPE_NUMBER:
+            if (((Int)data(index).number) == data(index).number)
+            {
+                printf("%ld", (Int)data(index).number);
+            }
+            else
+            {
+                printf("%f", data(index).number);
+            }
+            break;
+        case TYPE_STRING:
+            printf("%s", data(index).string);
+            break;
+        default:
+            printf("%ld", (Int)data(index).pointer);
+            break;
+    }
+}
 
 function(brl_os_file_read)
 {
@@ -140,11 +276,6 @@ function(brl_std_io_ls_hashes)
         printf("\n");
     }
 
-    return -1;
-}
-
-function(brl_std_ignore)
-{
     return -1;
 }
 
@@ -497,7 +628,7 @@ function(brl_std_type_cast)
             {
                 case TYPE_STRING:
                 {
-                    char* _str = list_stringify(vm, arg_i(0));
+                    char* _str = array_stringify(vm, arg_i(0));
                     Int result = new_string(vm, _str);
                     free(_str);
                     return result;
@@ -1478,29 +1609,6 @@ function(buxulib_print)
     return -1;
 }
 
-function(buxulib_print_custom)
-{
-    printf("%s: ", arg(0).string);
-    for (Int i = 1; i < args->size; i++)
-    {
-        if (arg_i(i) >= 0 || arg_i(i) < vm->stack->size)
-        {
-            print_element(vm, arg_i(i));
-        }
-        else 
-        {
-            buxu_error("(out of stack)");
-        }
-
-        if (args->size > 0)
-        {
-            printf(" ");
-        }
-    }
-    printf("\n");
-    return -1;
-}
-
 // inits
 #ifndef ARDUINO
 init(std_os)
@@ -1513,8 +1621,6 @@ init(std_os)
 
 init(std_basics)
 {
-    register_builtin(vm, "#", brl_std_ignore);
-    
     register_builtin(vm, "return", brl_std_return);
 
     register_builtin(vm, "ls", brl_std_io_ls);
@@ -1625,7 +1731,6 @@ init(buxu)
     register_builtin(vm, "warn", buxulib_warn);
     register_builtin(vm, "error", buxulib_error);
     register_builtin(vm, "print", buxulib_print);
-    register_builtin(vm, "print.custom", buxulib_print_custom);
 
     #ifndef ARDUINO
         register_builtin(vm, "scan", brl_std_io_scan);// not avaliable on arduino

@@ -24,15 +24,15 @@ cast mouse_x type.any;
 cast mouse_y type.any;
 cast mouse_b type.any;
 
-new "cond" "||
+new "cond" (@||
     (tigr.key_down screen tigr.escape) 
     (tigr.key_down screen2 tigr.escape) 
     (tigr.closed screen) 
-    (tigr.closed screen2)";
+    (tigr.closed screen2));
 
 new "code" "return 0;";
 ls;
-# (forever (@
+(@) (forever (@
     tigr.mouse screen mouse_x mouse_y mouse_b;
     
     tigr.clear screen pink;

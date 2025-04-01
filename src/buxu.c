@@ -289,46 +289,6 @@ StringList* str_split_char(char *str, char delim)
     return splited;
 }
 
-// print 
-void print_element(VirtualMachine *vm, Int index)
-{
-    if (index < 0 || index >= vm->stack->size)
-    {
-        printf("(return (get -1))");
-        return;
-    }
-
-    Value temp = vm->stack->data[index];
-
-    switch (data_t(index))
-    {
-        char* _str;
-        char* strbak;
-        char* stringified;
-        case TYPE_ARRAY:
-            stringified = list_stringify(vm, index);
-            printf("%s", stringified);
-            free(stringified);
-            break;
-        case TYPE_NUMBER:
-            if (((Int)data(index).number) == data(index).number)
-            {
-                printf("%ld", (Int)data(index).number);
-            }
-            else
-            {
-                printf("%f", data(index).number);
-            }
-            break;
-        case TYPE_STRING:
-            printf("%s", data(index).string);
-            break;
-        default:
-            printf("%ld", (Int)data(index).pointer);
-            break;
-    }
-}
-
 #ifndef ARDUINO
 
 // file functions
@@ -434,8 +394,6 @@ void hash_unset(VirtualMachine *vm, char* varname)
     }
 }
 
-
-
 //variable functions
 
 VirtualMachine* make_vm()
@@ -447,8 +405,8 @@ VirtualMachine* make_vm()
     vm->hash_indexes = list_init(IntList);
     vm->unused = list_init(IntList);
 
-    // @0 = NULL
-    register_var(vm, "NULL");
+    // @0 = null
+    register_var(vm, "null");
 
     return vm;
 }
@@ -494,20 +452,6 @@ Int new_builtin(VirtualMachine *vm, Function function)
     return id;
 }
 
-Int new_array(VirtualMachine *vm, Int size)
-{
-    // arrays dont resuse unused indexes
-    list_push(*vm->stack, (Value){.number = size});
-    list_push(*vm->typestack, TYPE_ARRAY);
-    Int id = vm->stack->size - 1;
-    for (Int i = 0; i < size; i++)
-    {
-        list_push(*vm->stack, (Value){.pointer = NULL});
-        list_push(*vm->typestack, TYPE_ANY);
-    }
-    return id;
-}
-
 Int register_var(VirtualMachine *vm, char* varname)
 {
     Int index = new_var(vm);
@@ -532,13 +476,6 @@ Int register_string(VirtualMachine *vm, char* varname, char* string)
 Int register_builtin(VirtualMachine *vm, char* varname, Function function)
 {
     Int index = new_builtin(vm, function);
-    hash_set(vm, varname, index);
-    return index;
-}
-
-Int register_array(VirtualMachine *vm, char* varname, Int size)
-{
-    Int index = new_array(vm, size);
     hash_set(vm, varname, index);
     return index;
 }
@@ -652,7 +589,6 @@ Int interpret(VirtualMachine *vm, char* cmd)
     
     Int func = list_shift(*args);
     Int result = -1;
-    Int etc = -1;
     if (func > -1)
     {
         Function _function;
@@ -757,78 +693,3 @@ void unuse_var(VirtualMachine *vm, Int index)
     list_push(*vm->unused, index);
 }
 
-char* list_stringify(VirtualMachine* vm, Int list_index)
-{
-    char* _str = str_duplicate("(array: ");
-    char* strbak;
-
-    Int list_size = data(list_index).number;
-
-    if (!list_size) // if 0
-    {
-        strbak = _str;
-        _str = str_concat(_str, ")");
-        free(strbak);
-        return _str;
-    }
-    else if (list_index + list_size + 1 > vm->stack->size)
-    {
-        buxu_error("misformed array @%ld, size %ld", list_index, list_size);
-        strbak = _str;
-        _str = str_concat(_str, ")");
-        free(strbak);
-        return _str;
-    }
-
-    for (Int i = list_index+1; i < list_index + list_size + 1; i++)
-    {
-        switch (data_t(i))
-        {
-        case TYPE_STRING:
-            strbak = _str;
-            _str = str_format("%s(@ %s)", _str, data(i).string); 
-            free(strbak);
-            break;
-        case TYPE_NUMBER:
-            strbak = _str;
-            
-            if (data(i).number == (Int)data(i).number)
-            {
-                char* str = str_format("%ld", (Int)data(i).number);
-                _str = str_concat(_str, str);
-                free(str);
-            }
-            else 
-            {
-                char* str = str_format("%lf", data(i).number);
-                _str = str_concat(_str, str);
-                free(str);
-            }
-
-            free(strbak);
-            break;
-        case TYPE_ARRAY:
-            strbak = _str;
-            char* stringified = list_stringify(vm, i);
-            _str = str_concat(_str, stringified);
-            free(strbak);
-            break;
-        default:
-            strbak = _str;
-            _str = str_format("%s%ld", _str, data(i).integer);
-            free(strbak);
-            break;
-        }
-
-        if (i < list_index + list_size)
-        {
-            strbak = _str;
-            _str = str_concat(_str, " ");
-            free(strbak);
-        }
-    }
-    strbak = _str;
-    _str = str_concat(_str, ")");
-    free(strbak);
-    return _str;
-}

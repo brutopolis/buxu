@@ -1,9 +1,10 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
-(30/03/2025) - version 0.7.9
+(01/04/2025) - version 0.7.9
 
 - lists macros now do use memmove instead of moving one by one;
-- TYPE_LIST replaced by TYPE_ARRAY;
+- TYPE_LIST removed;
+- new type in stdlib TYPE_ARRAY;
 - TYPE_ARRAY treat arrays as a number element on the stack as list, the number is the amount of elements after it are part of the array;
 - functions list, pop, push, shift, unshift, insert, remove, split, concat, replace, swap, find and sub were removed;
 - priority removed;
@@ -11,12 +12,13 @@
 - new function resize;
 - new function index;
 - NULL declaration moved to make_vm;
+- NULL is now a null;
 - load can now load lib from the lib paths;
 - new variable file.path;
 - new functions clear and fill;
 - new cli option -p | --path to add a path to the lib paths;
-- deplace "($ ...)" removed;
-- 'return' renamed to ':' again;
+- function "$" removed;
+- function "#" removed;
 - some new examples;
 
 (24/03/2025) - version 0.7.8a
