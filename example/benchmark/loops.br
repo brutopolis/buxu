@@ -1,0 +1,12 @@
+load (@lib/std.so);
+new (@___index) 0;
+new (@_size) 100000;
+new (@_1) 1;
+
+
+repeat _size (@
+    + ___index _1;
+    print ___index;
+);
+
+return 0;

@@ -4,36 +4,6 @@
 
 *`UNDER HEAVY DEVELOPMENT`*
 
-
-# Reserved
-
-- `()` = expression
-
-- `(@ )` = string delimiter
-
-- `""` = string delimiter
-
-- `''` = string delimiter
-
-- `;` = end of command separator
-
-# Usage
-
-    command;
-    command ...;
-    command (command (command ...));
-    command variable_1 variable_2 ...;
-    command name;
-    "script whatever";
-
-# Types
-      
-  buxu essentially has 4 types of data:
-  - `any`, a integer, or a native function or anything;
-  - `number`, a floating point number, float or double;
-  - `string`, a string pointer;
-  - `list`, a list;
-
 # Building instructions
 
   buxu include its own build script;
@@ -67,3 +37,7 @@
   |-------------|------------------------------------------|----------------------------------------------|
   | `load`   | load a library                           | `void function(string path);`                |
   | `unload` | unload a library                         | `void function(string path);`                |
+
+  # BRUTER
+
+  you may want to know how the BRUTER vm works: https://github.com/jardimdanificado/bruter

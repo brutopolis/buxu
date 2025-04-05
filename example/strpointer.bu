@@ -1,7 +1,0 @@
-load "lib/std.so";
-new "str" "Hello, world!";
-new "int5" ($ cast 5 type.any);
-+ str int5;
-print str;
-# "move back to the original pointer to avoid memory leak and errors";
-- str int5;

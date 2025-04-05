@@ -10,3 +10,5 @@ arduino/
 .buxu
 *.out
 lib/tigr/tigr
+vgcore*
+bruter

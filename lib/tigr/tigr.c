@@ -27,8 +27,7 @@ function(bu_tigr_bitmap)
 
 function(bu_tigr_free)
 {
-    Tigr *bmp = arg(0).pointer;
-    tigrFree(bmp);
+    tigrFree(arg(0).pointer);
     unuse_var(vm, arg_i(0));
     return -1;
 }
@@ -78,12 +77,11 @@ function(bu_tigr_get)
     int x = arg(1).number;
     int y = arg(2).number;
     TPixel pix = tigrGet(bmp, x, y);
-    Int result = new_list(vm);
-    IntList* list = data(result).pointer;
-    list_push(*list, new_number(vm, pix.r));
-    list_push(*list, new_number(vm, pix.g));
-    list_push(*list, new_number(vm, pix.b));
-    list_push(*list, new_number(vm, pix.a));
+    Int result = new_var(vm);
+    data(result).u8[0] = pix.r;
+    data(result).u8[1] = pix.g;
+    data(result).u8[2] = pix.b;
+    data(result).u8[3] = pix.a;
     return result;
 }
 
@@ -92,12 +90,12 @@ function(bu_tigr_plot)
     Tigr *bmp = arg(0).pointer;
     int x = arg(1).number;
     int y = arg(2).number;
-    IntList* list = arg(3).pointer;
+
     TPixel pix;
-    pix.r = data(list->data[0]).number;
-    pix.g = data(list->data[1]).number;
-    pix.b = data(list->data[2]).number;
-    pix.a = data(list->data[3]).number;
+    pix.r = arg(3).u8[0];
+    pix.g = arg(3).u8[1];
+    pix.b = arg(3).u8[2];
+    pix.a = arg(3).u8[3];
 
     tigrPlot(bmp, x, y, pix);
     return -1;
@@ -106,13 +104,11 @@ function(bu_tigr_plot)
 function(bu_tigr_clear)
 {
     Tigr *bmp = arg(0).pointer;
-    IntList* list = arg(1).pointer;
     TPixel pix;
-    pix.r = data(list->data[0]).number;
-    pix.g = data(list->data[1]).number;
-    pix.b = data(list->data[2]).number;
-    pix.a = data(list->data[3]).number;
-
+    pix.r = arg(1).u8[0];
+    pix.g = arg(1).u8[1];
+    pix.b = arg(1).u8[2];
+    pix.a = arg(1).u8[3];
     tigrClear(bmp, pix);
     return -1;
 }
@@ -124,12 +120,11 @@ function(bu_tigr_fill)
     int y = arg(2).number;
     int w = arg(3).number;
     int h = arg(4).number;
-    IntList* list = arg(5).pointer;
     TPixel pix;
-    pix.r = data(list->data[0]).number;
-    pix.g = data(list->data[1]).number;
-    pix.b = data(list->data[2]).number;
-    pix.a = data(list->data[3]).number;
+    pix.r = arg(5).u8[0];
+    pix.g = arg(5).u8[1];
+    pix.b = arg(5).u8[2];
+    pix.a = arg(5).u8[3];
 
     tigrFill(bmp, x, y, w, h, pix);
     return -1;
@@ -142,12 +137,12 @@ function(bu_tigr_line)
     int y0 = arg(2).number;
     int x1 = arg(3).number;
     int y1 = arg(4).number;
-    IntList* list = arg(5).pointer;
+
     TPixel pix;
-    pix.r = data(list->data[0]).number;
-    pix.g = data(list->data[1]).number;
-    pix.b = data(list->data[2]).number;
-    pix.a = data(list->data[3]).number;
+    pix.r = arg(5).u8[0];
+    pix.g = arg(5).u8[1];
+    pix.b = arg(5).u8[2];
+    pix.a = arg(5).u8[3];
 
     tigrLine(bmp, x0, y0, x1, y1, pix);
     return -1;
@@ -160,12 +155,12 @@ function(bu_tigr_rect)
     int y = arg(2).number;
     int w = arg(3).number;
     int h = arg(4).number;
-    IntList* list = arg(5).pointer;
+
     TPixel pix;
-    pix.r = data(list->data[0]).number;
-    pix.g = data(list->data[1]).number;
-    pix.b = data(list->data[2]).number;
-    pix.a = data(list->data[3]).number;
+    pix.r = arg(5).u8[0];
+    pix.g = arg(5).u8[1];
+    pix.b = arg(5).u8[2];
+    pix.a = arg(5).u8[3];
 
     tigrRect(bmp, x, y, w, h, pix);
     return -1;
@@ -178,12 +173,12 @@ function(bu_tigr_fill_rect)
     int y = arg(2).number;
     int w = arg(3).number;
     int h = arg(4).number;
-    IntList* list = arg(5).pointer;
+
     TPixel pix;
-    pix.r = data(list->data[0]).number;
-    pix.g = data(list->data[1]).number;
-    pix.b = data(list->data[2]).number;
-    pix.a = data(list->data[3]).number;
+    pix.r = arg(5).u8[0];
+    pix.g = arg(5).u8[1];
+    pix.b = arg(5).u8[2];
+    pix.a = arg(5).u8[3];
 
     tigrFillRect(bmp, x, y, w, h, pix);
     return -1;
@@ -195,12 +190,12 @@ function(bu_tigr_circle)
     int x = arg(1).number;
     int y = arg(2).number;
     int r = arg(3).number;
-    IntList* list = arg(4).pointer;
+
     TPixel pix;
-    pix.r = data(list->data[0]).number;
-    pix.g = data(list->data[1]).number;
-    pix.b = data(list->data[2]).number;
-    pix.a = data(list->data[3]).number;
+    pix.r = arg(4).u8[0];
+    pix.g = arg(4).u8[1];
+    pix.b = arg(4).u8[2];
+    pix.a = arg(4).u8[3];
 
     tigrCircle(bmp, x, y, r, pix);
     return -1;
@@ -212,12 +207,11 @@ function(bu_tigr_fill_circle)
     int x = arg(1).number;
     int y = arg(2).number;
     int r = arg(3).number;
-    IntList* list = arg(4).pointer;
     TPixel pix;
-    pix.r = data(list->data[0]).number;
-    pix.g = data(list->data[1]).number;
-    pix.b = data(list->data[2]).number;
-    pix.a = data(list->data[3]).number;
+    pix.r = arg(4).u8[0];
+    pix.g = arg(4).u8[1];
+    pix.b = arg(4).u8[2];
+    pix.a = arg(4).u8[3];
 
     tigrFillCircle(bmp, x, y, r, pix);
     return -1;
@@ -274,12 +268,12 @@ function(bu_tigr_blit_tint)
     int sy = arg(5).number;
     int w = arg(6).number;
     int h = arg(7).number;
-    IntList* list = arg(8).pointer;
+
     TPixel tint;
-    tint.r = data(list->data[0]).number;
-    tint.g = data(list->data[1]).number;
-    tint.b = data(list->data[2]).number;
-    tint.a = data(list->data[3]).number;
+    tint.r = arg(8).u8[0];
+    tint.g = arg(8).u8[1];
+    tint.b = arg(8).u8[2];
+    tint.a = arg(8).u8[3];
 
     tigrBlitTint(dest, src, dx, dy, sx, sy, w, h, tint);
     return -1;
@@ -293,8 +287,25 @@ function(bu_tigr_blit_mode)
     return -1;
 }
 
-// function(tigr_rgb){}
-// function(tigr_rgba){}
+function(bu_tigr_rgb)
+{
+    Int result = new_var(vm);
+    data(result).u8[0] = arg(0).number;
+    data(result).u8[1] = arg(1).number;
+    data(result).u8[2] = arg(2).number;
+    data(result).u8[3] = 255;
+    return result;
+}
+
+function(bu_tigr_rgba)
+{
+    Int result = new_var(vm);
+    data(result).u8[0] = arg(0).number;
+    data(result).u8[1] = arg(1).number;
+    data(result).u8[2] = arg(2).number;
+    data(result).u8[3] = arg(3).number;
+    return result;
+}
 
 function(bu_tigr_load_font)
 {
@@ -320,12 +331,12 @@ function(bu_tigr_print) // no endless arguments for now
     TigrFont *font = arg(1).pointer;
     int x = arg(2).number;
     int y = arg(3).number;
-    IntList* list = arg(4).pointer;
+
     TPixel color;
-    color.r = data(list->data[0]).number;
-    color.g = data(list->data[1]).number;
-    color.b = data(list->data[2]).number;
-    color.a = data(list->data[3]).number;
+    color.r = arg(4).u8[0];
+    color.g = arg(4).u8[1];
+    color.b = arg(4).u8[2];
+    color.a = arg(4).u8[3];
     char* text = arg(5).string;
     tigrPrint(dest, font, x, y, color, text);
     return -1;
@@ -349,40 +360,28 @@ function(bu_tigr_mouse)
 {
     Tigr *bmp = arg(0).pointer;
 
-    Int result = new_list(vm);
-    IntList* list = data(result).pointer;
+    tigrMouse(bmp, &arg(1).i32[0], &arg(2).i32[0], &arg(3).i32[0]);
 
-    int* a, *b, *c;
-    tigrMouse(bmp, a, b, c);
-
-    list_push(*list, new_number(vm, *a));
-    list_push(*list, new_number(vm, *b));
-    list_push(*list, new_number(vm, *c));
-
-    return result;
+    return -1;
 }
 
-function(bu_tigr_touch)
+function(bu_tigr_touch) // need to be fixed
 {
-    Tigr *bmp = arg(0).pointer;
+    /*Tigr *bmp = arg(0).pointer;
     int maxPoints = arg(1).number;
 
-    Int result = new_list(vm);
-    IntList* list = data(result).pointer;
+    Int result = new_array(vm, 10);
 
     TigrTouchPoint points[maxPoints];
     int n = tigrTouch(bmp, points, maxPoints);
 
-    while (n--)
+    for (int i = 0; i < n; i++)
     {
-        Int point = new_list(vm);
-        IntList* pointList = data(point).pointer;
-        list_push(*pointList, new_number(vm, points[n].x));
-        list_push(*pointList, new_number(vm, points[n].y));
-        list_push(*list, point);
+        data(result+i+1).u16[0] = points[i].x;
+        data(result+i+1).u16[1] = points[i].y;
     }
-    
-    return result;
+
+    return result;*/
 }
 
 function(bu_tigr_key_down)
@@ -645,9 +644,7 @@ init(tigr)
     hash_set(vm, "tigr.font", index);
 
 
-
-    // tigr_rgb and tigr_rgba are not needed because we use list to pass color values
-    // register_builtin(vm, "tigr_rgb", bu_tigr_rgb);
-    // register_builtin(vm, "tigr_rgba", bu_tigr_rgba);
+    register_builtin(vm, "tigr.rgb", bu_tigr_rgb);
+    register_builtin(vm, "tigr.rgba", bu_tigr_rgba);
 
 }
