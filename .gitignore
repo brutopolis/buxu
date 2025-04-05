@@ -11,3 +11,4 @@ arduino/
 *.out
 lib/tigr/tigr
 vgcore*
+bruter

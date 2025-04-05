@@ -23,13 +23,14 @@ char *_code = NULL;
 
 Int repl(VirtualMachine *vm)
 {
-    buxu_print(EMOTICON_DEFAULT, "v%s", VERSION);
+    buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
+    buxu_print(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
     char *cmd;
     Int result = -1;
     int junk = 0;
     while (result == -1)
     {
-        cmd = (char*)malloc(1024); // 1kb, should be enough
+        cmd = (char*)malloc(1024); // 1kb, should be enough for a repl
         printf(EMOTICON_IDLE ": ");
         junk = scanf("%[^\n]%*c", cmd);
         if (junk == 0)

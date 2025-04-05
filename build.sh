@@ -2,19 +2,15 @@
 
 # this buxu building front-end is a non-essential script meant for linux,
 # all filepath are unix based, the commands are also unix based
-# should work well on mac, though i haven't tested it, and have no plans to do so.
-# mingw might work with some tweaks, but i haven't tested it, might do soon or later.
+# should work well on mac, though i haven't tested it
+# mingw might work with some tweaks, but i haven't tested it
 
 # the same applies to src/cli.c and bucc, both are made with linux in mind.
 # but they are only tools to build and interpret the language, so they are not really essential and better tools can be made for each platform.
 
-# libbuxu, it is, buxu.c and buxu.h are platform independent, and should(and need to) work on any platform that has a C compiler.
-# libbuxu use no other libraries beside the standard C library
-# if libbuxu is does not work on a platform, it is a bug, and should be reported.
-
 # usage function
 usage() {
-    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [--cc gcc] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static]"
+    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [--cc gcc] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static] [--update-bruter]"
     exit 1
 }
 
@@ -37,6 +33,7 @@ INSTALL=0
 UNINSTALL=0
 NO_SHARED=0
 NO_STATIC=0
+UPDATE=0
 DEBUG_FILE=""
 INSTALL_PATH="/usr" # default install path
 
@@ -54,11 +51,21 @@ while [[ $# -gt 0 ]]; do
         --uninstall-from) UNINSTALL=1; INSTALL_PATH="$2"; shift 2 ;;
         --no-shared) NO_SHARED=1; shift ;;
         --no-static) NO_STATIC=1; shift ;;
+        --update-bruter) UPDATE=1; shift ;;
         --help) usage ;;
         -h) usage ;;
         *) echo "[=°~°=]: unknown option: $1"; usage ;;
     esac
 done
+
+# if no bruter folder is found, or if UPDATE is set to 1, clone the bruter repo
+if [[ ! -d bruter || $UPDATE -eq 1 ]]; then
+    rm -rf ./bruter
+    git clone https://github.com/jardimdanificado/bruter -b experimental
+    cd bruter
+    ./build.sh --cc "$CC" # we want both shared and static
+    cd ..
+fi
 
 # remove / if it is the last character
 if [[ ${INSTALL_PATH: -1} == "/" ]]; then
@@ -78,9 +85,10 @@ if [[ $UNINSTALL -eq 1 ]]; then
 
     # remove buxu.h from /usr/include
     $SUDO rm -f $INSTALL_PATH/include/buxu.h
+    $SUDO rm -f $INSTALL_PATH/include/bruter.h
 
-    # remove libbuxu.so from /usr/lib
-    $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
+    # remove libbruter.so from /usr/lib
+    $SUDO rm -f $INSTALL_PATH/lib/libbruter.so
 
     # verify if buxu, buxu.h, and bucc are removed
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
@@ -103,16 +111,6 @@ echo "[=°-°=]: compiler: $CC"
 
 rm -rf build
 mkdir -p build
-
-if [[ $NO_SHARED -eq 0 ]]; then # also build a shared library
-    echo "[=°-°=]: building shared library"
-    $CC src/buxu.c -o build/libbuxu.so -shared -fPIC -O3 -lm -Iinclude $DEBUGARGS $EXTRA
-fi
-
-if [[ $NO_STATIC -eq 0 ]]; then
-    echo "[=°-°=]: building static library"
-    $CC src/buxu.c -o build/libbuxu.a -c -O3 -lm -Iinclude $DEBUGARGS $EXTRA
-fi
 
 if [[ $NOBUCC -eq 0 ]]; then
 
@@ -175,13 +173,13 @@ if [[ $NOBUCC -eq 0 ]]; then
     echo 'fi' >> $BUCC_SCRIPT
 
     echo '' >> $BUCC_SCRIPT
-    echo 'echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"' >> $BUCC_SCRIPT
-    echo "\$CC \$FILES -o \$OUTPUT_NAME -shared -fPIC -O3 -lm -lbuxu \$EXTRA \$DEBUGARGS -Wl,-rpath=\$INSTALL_PATH/lib" >> $BUCC_SCRIPT
+    echo 'echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbruter $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"' >> $BUCC_SCRIPT
+    echo "\$CC \$FILES -o \$OUTPUT_NAME -shared -fPIC -O3 -lm -lbruter \$EXTRA \$DEBUGARGS -Wl,-rpath=\$INSTALL_PATH/lib" >> $BUCC_SCRIPT
     echo 'echo "[=°-°=]: $OUTPUT_NAME" has been compiled.' >> $BUCC_SCRIPT
     chmod +x $BUCC_SCRIPT
 fi
 
-$CC $MAIN src/buxu.c -o build/buxu -O3 -lm -Iinclude $DEBUGARGS $EXTRA
+$CC $MAIN bruter/build/libbruter.a -o build/buxu -O3 -lm -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
 
 if [ -n "$DEBUG_FILE" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./build/buxu $DEBUG_FILE
@@ -232,7 +230,6 @@ if [[ $INSTALL -eq 1 ]]; then
         $SUDO rm -f $INSTALL_PATH/bin/buxu
         $SUDO rm -f $INSTALL_PATH/bin/bucc
         $SUDO rm -f $INSTALL_PATH/include/buxu.h
-        $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
     fi
 
     # copy buxu, and possibly bucc to /usr/bin
@@ -240,13 +237,14 @@ if [[ $INSTALL -eq 1 ]]; then
     
     # copy the header files to /usr/include
     $SUDO cp src/buxu.h $INSTALL_PATH/include/
+    $SUDO cp bruter/src/bruter.h $INSTALL_PATH/include/
 
     if [[ $NOBUCC -eq 0 ]]; then
         $SUDO cp ./build/bucc $INSTALL_PATH/bin/
     fi
 
     if [[ $NO_SHARED -eq 0 ]]; then
-        $SUDO cp ./build/libbuxu.so $INSTALL_PATH/lib/
+        $SUDO cp ./bruter/build/libbruter.so $INSTALL_PATH/lib/
     fi
 
     # verify if buxu, buxu.h, and bucc are in the correct place
