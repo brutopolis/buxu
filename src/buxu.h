@@ -1,7 +1,7 @@
 #ifndef BUXU_H
 #define BUXU_H 1
 // bruter
-#include "bruter.h"
+#include <bruter.h>
 
 #define BUXU_VERSION "0.0.4"
 

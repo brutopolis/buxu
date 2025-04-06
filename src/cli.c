@@ -46,20 +46,20 @@ Int repl(VirtualMachine *vm)
     switch (data_t(result))
     {
         case TYPE_STRING:
-            printf("%s", data(result).string);
+            printf("%s", data(result).s);
             break;
         case TYPE_NUMBER:
-            if (((Int)data(result).number) == data(result).number)
+            if (((Int)data(result).f) == data(result).f)
             {
-                printf("%ld", (Int)data(result).number);
+                printf("%ld", (Int)data(result).f);
             }
             else
             {
-                printf("%f", data(result).number);
+                printf("%f", data(result).f);
             }
             break;
         default:
-            printf("%ld", (Int)data(result).pointer);
+            printf("%ld", (Int)data(result).p);
             break;
     }
     
@@ -94,7 +94,7 @@ void buxu_dl_open(char* libpath)
     if (!file_exists(libpath))
     {
         // not in a direct path, lets try the lib paths
-        StringList *splited = str_split_char(data(hash_find(vm, "file.path")).string, ';');
+        StringList *splited = str_split_char(data(hash_find(vm, "file.path")).s, ';');
         for (Int i = 0; i < splited->size; i++)
         {
             char* _libpath = str_format("%s/%s%s", splited->data[i], libpath, extension);
@@ -177,7 +177,7 @@ void buxu_dl_close(char* libpath)
     {
         if (strcmp(libpath, libs_names->data[i]) == 0)
         {
-            dlclose(data(libs->data[i]).pointer);
+            dlclose(data(libs->data[i]).p);
             list_fast_remove(*libs, i);
             free(libs_names->data[i]);
             list_fast_remove(*libs_names, i);
@@ -189,13 +189,13 @@ void buxu_dl_close(char* libpath)
 
 function(brl_main_dl_open)
 {
-    buxu_dl_open(arg(0).string);
+    buxu_dl_open(arg(0).s);
     return -1;
 }
 
 function(brl_main_dl_close)
 {
-    buxu_dl_close(arg(0).string);
+    buxu_dl_close(arg(0).s);
     return -1;
 }
 
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
 
     Int index = new_var(vm);
     data_t(index) = TYPE_STRING;
-    data(index).string = str_format("./lib/");
+    data(index).s = str_format("./lib/");
     hash_set(vm, "file.path", index);
 
     // arguments startup
@@ -311,8 +311,8 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--path") == 0) // add path
         {
             Int index = hash_find(vm, "file.path");
-            backup = data(index).string;
-            data(index).string = str_format("%s;%s", data(index).string, argv[i+1]);
+            backup = data(index).s;
+            data(index).s = str_format("%s;%s", data(index).s, argv[i+1]);
             free(backup);
             i+=1; // skip to the next argument
         }
@@ -349,11 +349,11 @@ int main(int argc, char **argv)
 
         if (last == NULL)
         {
-            vm->stack->data[filepathindex].string = str_duplicate("");
+            vm->stack->data[filepathindex].s = str_duplicate("");
         }
         else
         {
-            vm->stack->data[filepathindex].string = str_nduplicate(path, last - path + 1);
+            vm->stack->data[filepathindex].s = str_nduplicate(path, last - path + 1);
         }
 
         hash_set(vm, "file.path", filepathindex);
@@ -366,7 +366,7 @@ int main(int argc, char **argv)
             for (Int i = 0; i < args->size; i++)
             {
                 Int index = new_var(vm);
-                data(index).string = list_pop(*args);
+                data(index).s = list_pop(*args);
                 data_t(index) = TYPE_STRING;
             }
         }

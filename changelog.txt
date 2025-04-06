@@ -5,6 +5,9 @@
 - --cc options replaced by --compiler and -cc;
 - --version and -v options now print both bruter and buxu version;
 - new option for build.sh --branch it specify the bruter branch to use, it defaults to main;
+- std math functions are now under math.c;
+- std array functions are now under array.c;
+- std condition functions are now under condition.c;
 - README.me updated;
 
 (05/04/2025) - version 0.0.3

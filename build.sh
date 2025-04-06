@@ -66,7 +66,7 @@ if [[ ! -d bruter || $UPDATE_BRUTER -eq 1 || ! $BRANCH == "main" ]]; then
     rm -rf ./bruter
     git clone https://github.com/jardimdanificado/bruter -b $BRANCH --depth 1
     cd bruter
-    ./build.sh -cc "$CC" # we want both shared and static
+    ./build.sh -cc "$CC"
     cd ..
 fi
 
@@ -76,7 +76,7 @@ if [[ ${INSTALL_PATH: -1} == "/" ]]; then
 fi
 
 if [[ $UNINSTALL -eq 1 ]]; then
-    # verify if user has $SUDO
+    # verify if user has sudo
     if [[ $($SUDO -n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
         echo "$SUDO required"
         exit 1
