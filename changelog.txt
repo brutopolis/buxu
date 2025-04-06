@@ -1,5 +1,12 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
+(06/04/2025) - version 0.0.4
+
+- --cc options replaced by --compiler and -cc;
+- --version and -v options now print both bruter and buxu version;
+- new option for build.sh --branch it specify the bruter branch to use, it defaults to main;
+- README.me updated;
+
 (05/04/2025) - version 0.0.3
 
 - buxu is now separated from bruter, while bruter is the vm, buxu is a set of tools that provide: 

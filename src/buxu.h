@@ -3,7 +3,7 @@
 // bruter
 #include "bruter.h"
 
-#define BUXU_VERSION "0.0.2"
+#define BUXU_VERSION "0.0.4"
 
 // emoticons
 #define EMOTICON_DEFAULT "[=°-°=]"

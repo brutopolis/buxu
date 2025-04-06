@@ -10,7 +10,7 @@
 
 # usage function
 usage() {
-    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [--cc gcc] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static] [--update-bruter]"
+    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [-cc || --compiler gcc] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static] [--update-bruter] [--branch branch]"
     exit 1
 }
 
@@ -33,16 +33,18 @@ INSTALL=0
 UNINSTALL=0
 NO_SHARED=0
 NO_STATIC=0
-UPDATE=0
+UPDATE_BRUTER=0
 DEBUG_FILE=""
 INSTALL_PATH="/usr" # default install path
+BRANCH="main"
 
 # parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         --debug) DEBUG=1; shift ;;
         --debug-file) DEBUG=1; DEBUG_FILE="$2"; shift 2 ;;
-        --cc) CC="$2"; shift 2 ;;
+        -cc) CC="$2"; shift 2 ;;
+        --compiler) CC="$2"; shift 2 ;;
         --no-bucc) NOBUCC=1; shift ;;
         --extra) EXTRA="$2"; shift 2 ;;
         --install) INSTALL=1; shift ;;
@@ -51,7 +53,8 @@ while [[ $# -gt 0 ]]; do
         --uninstall-from) UNINSTALL=1; INSTALL_PATH="$2"; shift 2 ;;
         --no-shared) NO_SHARED=1; shift ;;
         --no-static) NO_STATIC=1; shift ;;
-        --update-bruter) UPDATE=1; shift ;;
+        --update-bruter) UPDATE_BRUTER=1; shift ;;
+        --branch) BRANCH="$2"; UPDATE_BRUTER=1; shift 2 ;;
         --help) usage ;;
         -h) usage ;;
         *) echo "[=°~°=]: unknown option: $1"; usage ;;
@@ -59,11 +62,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 # if no bruter folder is found, or if UPDATE is set to 1, clone the bruter repo
-if [[ ! -d bruter || $UPDATE -eq 1 ]]; then
+if [[ ! -d bruter || $UPDATE_BRUTER -eq 1 || ! $BRANCH == "main" ]]; then
     rm -rf ./bruter
-    git clone https://github.com/jardimdanificado/bruter -b experimental
+    git clone https://github.com/jardimdanificado/bruter -b $BRANCH --depth 1
     cd bruter
-    ./build.sh --cc "$CC" # we want both shared and static
+    ./build.sh -cc "$CC" # we want both shared and static
     cd ..
 fi
 
@@ -125,7 +128,7 @@ if [[ $NOBUCC -eq 0 ]]; then
     echo '' >> $BUCC_SCRIPT
 
     echo 'usage() {' >> $BUCC_SCRIPT
-    echo '    echo "[=°-°=]: usage: $0 [--cc gcc] [--extra \"extra cc tags\"] [--debug] [-o output] [--help | -h] file1.c file2.c ..."' >> $BUCC_SCRIPT
+    echo '    echo "[=°-°=]: usage: $0 [--compiler || -cc gcc] [--extra \"extra cc tags\"] [--debug] [-o output] [--help | -h] file1.c file2.c ..."' >> $BUCC_SCRIPT
     echo '    exit 1' >> $BUCC_SCRIPT
     echo '}' >> $BUCC_SCRIPT
     echo '' >> $BUCC_SCRIPT
@@ -140,10 +143,13 @@ if [[ $NOBUCC -eq 0 ]]; then
     echo '' >> $BUCC_SCRIPT
     echo 'while [[ $# -gt 0 ]]; do' >> $BUCC_SCRIPT
     echo '    case $1 in' >> $BUCC_SCRIPT
-    echo '        --cc) CC="$2"; shift 2 ;;' >> $BUCC_SCRIPT
+    echo '        --compiler) CC="$2"; shift 2 ;;' >> $BUCC_SCRIPT
+    echo '        -cc) CC="$2"; shift 2 ;;' >> $BUCC_SCRIPT
     echo '        --extra) EXTRA="$2"; shift 2 ;;' >> $BUCC_SCRIPT
     echo '        --debug) DEBUG=1; shift ;;' >> $BUCC_SCRIPT
     echo '        -o) OUTPUT_NAME="$2"; shift 2 ;;' >> $BUCC_SCRIPT
+    echo '        --version) buxu --version; exit 0 ;;' >> $BUCC_SCRIPT
+    echo '        -v) buxu -v; exit 0 ;;' >> $BUCC_SCRIPT
     echo '        --help) usage ;;' >> $BUCC_SCRIPT
     echo '        -h) usage ;;' >> $BUCC_SCRIPT
         # concat file if its name does not start with -

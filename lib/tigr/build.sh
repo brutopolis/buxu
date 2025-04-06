@@ -6,7 +6,7 @@ LIBS="-lGL -lGLU -lX11"
 CC="gcc"
 
 usage() {
-    echo "[=°-°=]: usage: $0 [--win] [--mac] [--help] [-h] [--cc compiler] [--clean]"
+    echo "[=°-°=]: usage: $0 [--win] [--mac] [--help] [-h] [--compiler || -cc compiler] [--clean]"
     exit 1
 }
 
@@ -14,7 +14,8 @@ usage() {
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --cc) CC="$2"; shift 2 ;;
+        --compiler) CC="$2"; shift 2 ;;
+        -cc) CC="$2"; shift 2 ;;
         --win) WINDOWS=1; shift ;;
         --mac) MAC=1; shift ;;
         --help) usage ;;
@@ -48,5 +49,5 @@ echo "[=°-°=]: compiler: $CC"
 
 rm -rf ../../tigr.so 
 
-bucc -o ../../tigr.so tigr.c ../tigr.c --extra "$LIBS" --cc "$CC"
+bucc -o ../../tigr.so tigr.c ../tigr.c --extra "$LIBS" -cc "$CC"
 cd ..
