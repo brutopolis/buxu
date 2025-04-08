@@ -474,7 +474,7 @@ function(bu_tigr_decode_utf8) // might not work properly
     char* text = arg(0).string;
     int codepoint;
     Int result = new_var(vm);
-    data(result).string = str_duplicate(tigrDecodeUTF8(text, &codepoint));
+    data(result).string = strdup(tigrDecodeUTF8(text, &codepoint));
     data_t(result) = TYPE_STRING;
     return result;
 }
@@ -484,7 +484,7 @@ function(bu_tigr_encode_utf8) // might not work properly
     char* text = arg(0).string;
     int codepoint = arg(1).number;
     Int result = new_var(vm);
-    data(result).string = str_duplicate(tigrEncodeUTF8(text, codepoint));
+    data(result).string = strdup(tigrEncodeUTF8(text, codepoint));
     data_t(result) = TYPE_STRING;
     return result;
 }

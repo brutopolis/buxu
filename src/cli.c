@@ -21,6 +21,23 @@ StringList* libs_names;
 VirtualMachine* vm; // global vm
 char *_code = NULL;
 
+StringList* str_split_char(char *str, char delim)
+{
+    StringList *splited = list_init(StringList);
+
+    char* tok = strtok(str, &delim);
+
+    while (tok != NULL)
+    {
+        char *tmp = (char*)malloc(strlen(tok) + 1);
+        strcpy(tmp, tok);
+        list_push(*splited, tmp);
+        tok = strtok(NULL, &delim);
+    }
+
+    return splited;
+}
+
 Int repl(VirtualMachine *vm)
 {
     buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
@@ -45,21 +62,11 @@ Int repl(VirtualMachine *vm)
     printf("%s: ", EMOTICON_DEFAULT);
     switch (data_t(result))
     {
-        case TYPE_STRING:
+        case TYPE_ALLOC:
             printf("%s", data(result).s);
             break;
-        case TYPE_NUMBER:
-            if (((Int)data(result).f) == data(result).f)
-            {
-                printf("%ld", (Int)data(result).f);
-            }
-            else
-            {
-                printf("%f", data(result).f);
-            }
-            break;
         default:
-            printf("%ld", (Int)data(result).p);
+            printf("%ld", (Int)data(result).i);
             break;
     }
     
@@ -121,11 +128,11 @@ void buxu_dl_open(char* libpath)
         list_push(*libs, (Int)handle);
         if (usingLibName)
         {
-            list_push(*libs_names, str_duplicate(libpath));
+            list_push(*libs_names, strdup(libpath));
         }
         else
         {
-            list_push(*libs_names, str_duplicate(name_backup));
+            list_push(*libs_names, strdup(name_backup));
         }
     }
     else 
@@ -244,9 +251,7 @@ int main(int argc, char **argv)
     // lib search paths
     char* backup;
 
-    Int index = new_var(vm);
-    data_t(index) = TYPE_STRING;
-    data(index).s = str_format("./lib/");
+    Int index = new_var(vm, TYPE_ALLOC, pun(strdup("./lib/"), s, i));
     hash_set(vm, "file.path", index);
 
     // arguments startup
@@ -255,8 +260,8 @@ int main(int argc, char **argv)
     #if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__) // only available on unix and mingw
 
         // dynamic library functions
-        register_builtin(vm, "load", brl_main_dl_open);
-        register_builtin(vm, "unload", brl_main_dl_close);
+        register_var(vm, "load", 0, pun(brl_main_dl_open, p, i));
+        register_var(vm, "unload", 0, pun(brl_main_dl_close, p, i));
 
         // dynamic libraries lists startup
         libs = list_init(IntList);
@@ -338,10 +343,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        Int filepathindex = new_var(vm);
-
-        // path without file name
-        vm->typestack->data[filepathindex] = TYPE_STRING;
+        Int filepathindex = new_var(vm, TYPE_ALLOC, pun(strdup(___file), s, i));
 
         // remove file name
         char *path = list_shift(*args);
@@ -349,27 +351,16 @@ int main(int argc, char **argv)
 
         if (last == NULL)
         {
-            vm->stack->data[filepathindex].s = str_duplicate("");
+            vm->stack->data[filepathindex].s = strdup("");
         }
         else
         {
-            vm->stack->data[filepathindex].s = str_nduplicate(path, last - path + 1);
+            vm->stack->data[filepathindex].s = strndup(path, last - path + 1);
         }
 
         hash_set(vm, "file.path", filepathindex);
         
-        if (args->size > 0)
-        {
-            Int __index = new_number(vm, args->size);
-            hash_set(vm, "file.args", __index);
-            //s file args
-            for (Int i = 0; i < args->size; i++)
-            {
-                Int index = new_var(vm);
-                data(index).s = list_pop(*args);
-                data_t(index) = TYPE_STRING;
-            }
-        }
+        
         
     
         result = eval(vm, _code);

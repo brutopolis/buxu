@@ -65,10 +65,11 @@ done
 if [[ ! -d bruter || $UPDATE_BRUTER -eq 1 || ! $BRANCH == "main" ]]; then
     rm -rf ./bruter
     git clone https://github.com/jardimdanificado/bruter -b $BRANCH --depth 1
-    cd bruter
-    ./build.sh -cc "$CC"
-    cd ..
 fi
+
+cd bruter
+./build.sh -cc "$CC"
+cd ..
 
 # remove / if it is the last character
 if [[ ${INSTALL_PATH: -1} == "/" ]]; then
@@ -185,7 +186,7 @@ if [[ $NOBUCC -eq 0 ]]; then
     chmod +x $BUCC_SCRIPT
 fi
 
-$CC $MAIN bruter/build/libbruter.a -o build/buxu -O3 -lm -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
+$CC $MAIN bruter/src/bruter.c -o build/buxu -O3 -lm -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
 
 if [ -n "$DEBUG_FILE" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./build/buxu $DEBUG_FILE
