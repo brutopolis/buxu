@@ -32,16 +32,16 @@ function(print_index)
 
 function(print_float_index)
 {
-    printf("%f\n", arg_f(0));
+    printf("%f\n", pun(arg_i(0), i, f));
     return -1;
 }
 
 init(std)
 {
-    register_function(vm, "new", TYPE_DATA, new);
-    register_function(vm, "print.float", TYPE_DATA, print_float);
-    register_function(vm, "print.int", TYPE_DATA, print_int);
-    register_function(vm, "print.string", TYPE_DATA, print_string);
-    register_function(vm, "print.index", TYPE_DATA, print_index);
-    register_function(vm, "print.float.index", TYPE_DATA, print_float_index);
+    register_function(vm, "new", new);
+    register_function(vm, "print.float", print_float);
+    register_function(vm, "print.int", print_int);
+    register_function(vm, "print.string", print_string);
+    register_function(vm, "print.index", print_index);
+    register_function(vm, "print.float.index", print_float_index);
 }
