@@ -260,8 +260,8 @@ int main(int argc, char **argv)
     #if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__) // only available on unix and mingw
 
         // dynamic library functions
-        register_var(vm, "load", 0, pun(brl_main_dl_open, p, i));
-        register_var(vm, "unload", 0, pun(brl_main_dl_close, p, i));
+        register_function(vm, "load", brl_main_dl_open);
+        register_function(vm, "unload", brl_main_dl_close);
 
         // dynamic libraries lists startup
         libs = list_init(IntList);

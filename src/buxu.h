@@ -18,4 +18,7 @@
 #define buxu_error(...) printf(EMOTICON_ERROR ": error: "); printf(__VA_ARGS__); printf("\n")
 #define buxu_info(...) printf(EMOTICON_DEFAULT ": info: "); printf(__VA_ARGS__); printf("\n")
 
+#define register_function(vm, name, func) \
+    register_var(vm, name, TYPE_DATA, pun(func, p, i))
+
 #endif

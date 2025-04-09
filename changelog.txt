@@ -1,8 +1,9 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
-(08/04/2025) - version 0.0.5
+(09/04/2025) - version 0.0.5
 
 - rewrite from scratch in progress;
+- new macro register_function;
 
 (06/04/2025) - version 0.0.4
 
