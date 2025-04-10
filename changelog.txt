@@ -4,6 +4,9 @@
 
 - rewrite from scratch in progress;
 - new macro register_function;
+- dyc.c is back;
+- file functions are now in cli.c;
+- move some internal functions from cli.c into a new file called buxu.c might be a good idea;
 
 (06/04/2025) - version 0.0.4
 

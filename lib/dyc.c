@@ -28,7 +28,6 @@ void add_common_symbols(TCCState *tcc)
         make_vm,
         free_vm,
         new_var,
-        value_duplicate,
         register_var,
         hash_find,
         hash_set,
@@ -39,6 +38,7 @@ void add_common_symbols(TCCState *tcc)
 #ifndef ARDUINO
         readfile,
         writefile,
+        file_exists,
 #endif
     };
 
@@ -49,7 +49,6 @@ void add_common_symbols(TCCState *tcc)
         "make_vm",
         "free_vm",
         "new_var",
-        "value_duplicate",
         "register_var",
         "hash_find",
         "hash_set",
@@ -60,6 +59,7 @@ void add_common_symbols(TCCState *tcc)
 #ifndef ARDUINO
         "readfile",
         "writefile",
+        "file_exists",
 #endif
     };
 
@@ -95,7 +95,7 @@ function(brl_tcc_c_new_function) // a combo of new_state + compile + relocate + 
     char *code = str_format("%s\n%s", bruter_header, arg(0).s);
     
     add_common_symbols(tcc);
-    
+
     if (tcc_compile_string(tcc, code) < 0) 
     {
         fprintf(stderr, "could not compile string\n");
