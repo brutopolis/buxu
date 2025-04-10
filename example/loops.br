@@ -1,14 +1,14 @@
-load (@lib/std.so);
-load (@lib/math.so);
-load (@lib/condition.so);
+load (@@lib/std.so);
+load (@@lib/math.so);
+load (@@lib/condition.so);
 
 
-new (@_size) 100000;
-new (@_index) 0;
+new (@@_size) 100000;
+new (@@_index) 0;
 
-while (@
+while (@@
     + _index 1;
     print _index;
-) (@< _index _size);
+) (@@< _index _size);
 
 return 0;

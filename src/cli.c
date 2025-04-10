@@ -25,14 +25,23 @@ StringList* str_split_char(char *str, char delim)
 {
     StringList *splited = list_init(StringList);
 
-    char* tok = strtok(str, &delim);
-
-    while (tok != NULL)
+    Int i = 0;
+    while (str[i] != '\0')
     {
-        char *tmp = (char*)malloc(strlen(tok) + 1);
-        strcpy(tmp, tok);
-        list_push(*splited, tmp);
-        tok = strtok(NULL, &delim);
+        if (str[i] == delim)
+        {
+            i++;
+        }
+        else
+        {
+            Int j = i;
+            while (str[j] != delim && str[j] != '\0')
+            {
+                j++;
+            }
+            list_push(*splited, strndup(str + i, j - i));
+            i = j;
+        }
     }
 
     return splited;
@@ -343,7 +352,8 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        Int filepathindex = new_var(vm, TYPE_ALLOC, pun(strdup(___file), s, i));
+        // this does not seems right, review it if some memory leak or crash occurs
+        Int filepathindex = new_var(vm, TYPE_ALLOC, pun(___file, s, i));
 
         // remove file name
         char *path = list_shift(*args);

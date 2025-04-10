@@ -1,0 +1,13 @@
+load "lib/std.so";
+load "lib/dyc.so";
+
+dycc.compile (@@
+
+    function(abc)
+    {   
+        printf("aooooooooooo\n");
+        return -1;
+    }
+
+) 'abc';
+abc;

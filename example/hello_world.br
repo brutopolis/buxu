@@ -1,3 +1,4 @@
 load "lib/std.so";
-print.string "hello world!";
+print.string (@@hello world!);
+ls;
 return 0;
