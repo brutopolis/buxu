@@ -3,6 +3,7 @@
 function(new)
 {
     register_var(vm, arg(0).s , TYPE_DATA, arg(1).i);
+    printf("new %s\n", arg(0).s);
     return -1;
 }
 
@@ -59,6 +60,30 @@ function(std_ls_hash)
     return -1;
 }
 
+function(brl_std_loop_repeat)
+{
+    Int result = -1;
+    
+    for (int i = 0; i < (Int)arg(0).i; i++)
+    {
+        result = eval(vm,arg(1).s);
+        if (result > -1)
+        {
+            break;
+        }
+    }
+    
+    return result;
+}
+
+function(brl_std_add)
+{
+    arg(0).f += arg(1).f;
+    return -1;
+}
+
+
+
 init(std)
 {
     register_function(vm, "new", new);
@@ -70,4 +95,7 @@ init(std)
     register_function(vm, "return", std_return);
     register_function(vm, "ls", std_ls);
     register_function(vm, "ls.hash", std_ls_hash);
+
+    register_function(vm, "repeat", brl_std_loop_repeat);
+    register_function(vm, "+", brl_std_add);
 }
