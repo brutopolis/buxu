@@ -1,11 +1,6 @@
 
 // this is the buxu's interpreter frontend when not using as a lib
 // there are some tweaks that try be compatible with mac and windows, totally untested;
-// mingw, tcc and even other non-*cc compilers like cl.exe are expected to work;
-// this is a non-essential tool.
-
-// beside having compatibility with windows, some features are only available on linux
-// the dynamic library loading is only available on linux, mac and mingw
 
 // buxu header
 #include "buxu.h"
