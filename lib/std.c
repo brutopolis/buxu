@@ -3,25 +3,44 @@
 function(new)
 {
     register_var(vm, arg(0).s , TYPE_DATA, arg(1).i);
-    printf("new %s\n", arg(0).s);
     return -1;
 }
 
-function(print_float)
+function(print)
 {
-    printf("%f\n", arg(0).f);
-    return -1;
-}
-
-function(print_int)
-{
-    printf("%d\n", arg(0).i);
-    return -1;
-}
-
-function(print_string)
-{
-    printf("%s\n", arg(0).s);
+    switch (arg_t(0).string)
+    {
+        case 1:
+            switch (arg_t(0).alloc)
+            {
+                case 1:
+                    printf("%s\n", arg(0).s);
+                    break;
+                case 0:
+                    printf("%s\n", arg(0).i8);
+                    break;
+        }
+        break;
+        case 0:
+            switch (arg_t(0).floating_point)
+            {
+                case 1:
+                    printf("%f\n", arg(0).f);
+                    break;
+                case 0:
+                    switch (arg_t(0).alloc)
+                    {
+                        case 1:
+                            printf("%p\n", arg(0).p);
+                            break;
+                        case 0:
+                            printf("%ld\n", (Int)arg(0).i);
+                            break;
+                    }
+                    break;
+            }
+        break;
+    }
     return -1;
 }
 
@@ -39,6 +58,10 @@ function(print_float_index)
 
 function(std_return)
 {
+    if (args->size == 0)
+    {
+        return -1;
+    }
     return arg(0).i;
 }
 
@@ -46,7 +69,40 @@ function(std_ls)
 {
     for (Int i = 0; i < vm->stack->size; i++)
     {
-        printf("TYPE: %d VALUE: %d\n", vm->typestack->data[i], vm->stack->data[i].i);
+        switch (data_t(i).string)
+        {
+            case 1:
+                switch (data_t(i).alloc)
+                {
+                    case 1:
+                        printf("(%d)\t\t[%s]\n", i, data(i).s);
+                        break;
+                    case 0:
+                        printf("(%d)\t\t[%s]\n", i, data(i).i8);
+                        break;
+                }
+                break;
+            case 0:
+                switch (data_t(i).floating_point)
+                {
+                    case 1:
+                        printf("(%d)\t\t[%f]\n", i, data(i).f);
+                        break;
+                    case 0:
+                        switch (data_t(i).alloc)
+                        {
+                            case 1:
+                                printf("(%d)\t\t[%p]\n", i, data(i).p);
+                                break;
+                            case 0:
+                                printf("(%d)\t\t[%ld]\n", i, (Int)data(i).i);
+                                break;
+                        }
+                        break;
+                }
+                break;
+                
+        }
     }
     return -1;
 }
@@ -55,7 +111,40 @@ function(std_ls_hash)
 {
     for (Int i = 0; i < vm->hash_names->size; i++)
     {
-        printf("KEY: %s TYPE: %d VALUE: %d\n", vm->hash_names->data[i], data_t(vm->hash_indexes->data[i]), data(vm->hash_indexes->data[i]).i);
+        switch (data_t(i).string)
+        {
+            case 1:
+                switch (data_t(i).alloc)
+                {
+                    case 1:
+                        printf("(%d)\t%s\t[%s]\n", i, vm->hash_names->data[i], data(i).s);
+                        break;
+                    case 0:
+                        printf("(%d)\t%s\t[%s]\n", i, vm->hash_names->data[i], data(i).i8);
+                        break;
+                }
+                break;
+            case 0:
+                switch (data_t(i).floating_point)
+                {
+                    case 1:
+                        printf("(%d)\t%s\t[%f]\n", i, vm->hash_names->data[i], data(i).f);
+                        break;
+                    case 0:
+                        switch (data_t(i).alloc)
+                        {
+                            case 1:
+                                printf("(%d)\t%s\t[%p]\n", i, vm->hash_names->data[i], data(i).p);
+                                break;
+                            case 0:
+                                printf("(%d)\t%s\t[%ld]\n", i, vm->hash_names->data[i], (Int)data(i).i);
+                                break;
+                        }
+                        break;
+                }
+                break;
+                
+        }
     }
     return -1;
 }
@@ -87,9 +176,7 @@ function(brl_std_add)
 init(std)
 {
     register_function(vm, "new", new);
-    register_function(vm, "print.float", print_float);
-    register_function(vm, "print.int", print_int);
-    register_function(vm, "print.string", print_string);
+    register_function(vm, "print", print);
     register_function(vm, "print.index", print_index);
     register_function(vm, "print.float.index", print_float_index);
     register_function(vm, "return", std_return);

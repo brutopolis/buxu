@@ -5,10 +5,7 @@
 // buxu header
 #include "buxu.h"
 
-// linux, macos and mingw
-#if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__)
-    #include <dlfcn.h> // dynamic library loading
-#endif
+#include <dlfcn.h> // dynamic library loading
 
 StringList *args;
 IntList* libs;
@@ -108,9 +105,9 @@ Int repl(VirtualMachine *vm)
     }
 
     printf("%s: ", EMOTICON_DEFAULT);
-    switch (data_t(result))
+    switch (data_t(result).alloc)
     {
-        case TYPE_ALLOC:
+        case 1:
             printf("%s", data(result).s);
             break;
         default:
@@ -121,8 +118,6 @@ Int repl(VirtualMachine *vm)
     printf("\n");
     return result;
 }
-
-#if defined(__unix__) || defined(__MINGW32__) || defined(__MINGW64__) // only available on unix and mingw
 
 void buxu_dl_open(char* libpath)
 {
@@ -254,7 +249,6 @@ function(brl_main_dl_close)
     return -1;
 }
 
-#endif
 
 void _free_at_exit()
 {

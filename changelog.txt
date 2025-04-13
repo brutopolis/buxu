@@ -1,5 +1,11 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
+(13/04/2025) - version 0.0.6
+
+- removed some macros that were meant to be usend in msvc, but we will focus on gcc's standard for now, so, use mingw if on windows;
+- new typing system;
+- with the new typing system prints functions are now one;
+
 (09/04/2025) - version 0.0.5
 
 - rewrite from scratch in progress;
