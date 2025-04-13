@@ -2,7 +2,7 @@
 
 function(new)
 {
-    register_var(vm, arg(0).s , TYPE_DATA, arg(1).i);
+    hash_set(vm, arg(0).s, arg_i(1));
     return -1;
 }
 
@@ -62,7 +62,7 @@ function(std_return)
     {
         return -1;
     }
-    return arg(0).i;
+    return arg_i(0);
 }
 
 function(std_ls)

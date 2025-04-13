@@ -5,6 +5,7 @@
 - removed some macros that were meant to be usend in msvc, but we will focus on gcc's standard for now, so, use mingw if on windows;
 - new typing system;
 - with the new typing system prints functions are now one;
+- return fixed;
 
 (09/04/2025) - version 0.0.5
 

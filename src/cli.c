@@ -293,7 +293,7 @@ int main(int argc, char **argv)
     // lib search paths
     char* backup;
 
-    Int index = new_var(vm, TYPE_ALLOC, pun(strdup("./lib/"), s, i));
+    Int index = new_var(vm, TYPE_ALLOC);
     hash_set(vm, "file.path", index);
 
     // arguments startup
@@ -336,7 +336,7 @@ int main(int argc, char **argv)
             // if contains space then it is a list of libraries
             if (strchr(argv[i+1], ' ') != NULL)
             {
-                StringList *splited = special_space_split(argv[i+1]);
+                StringList *splited = str_split_char(argv[i+1], ' ');
                 for (Int j = 0; j < splited->size; j++)
                 {
                     buxu_dl_open(splited->data[j]);
@@ -386,7 +386,8 @@ int main(int argc, char **argv)
         }
 
         // this does not seems right, review it if some memory leak or crash occurs
-        Int filepathindex = new_var(vm, TYPE_ALLOC, pun(___file, s, i));
+        Int filepathindex = new_var(vm, TYPE_ALLOC);
+        data(filepathindex).s = ___file;
 
         // remove file name
         char *path = list_shift(*args);

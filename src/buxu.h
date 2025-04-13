@@ -19,6 +19,10 @@
 #define buxu_info(...) printf(EMOTICON_DEFAULT ": info: "); printf(__VA_ARGS__); printf("\n")
 
 #define register_function(vm, name, func) \
-    register_var(vm, name, TYPE_FUNC, pun(func, p, i))
+({ \
+    Int index = register_var(vm, name, TYPE_FUNC); \
+    data(index).p = func; \
+    index; \
+})
 
 #endif
