@@ -22,7 +22,7 @@ function(print)
         }
         break;
         case 0:
-            switch (arg_t(0).floating_point)
+            switch (arg_t(0).floating)
             {
                 case 1:
                     printf("%f\n", arg(0).f);
@@ -83,7 +83,7 @@ function(std_ls)
                 }
                 break;
             case 0:
-                switch (data_t(i).floating_point)
+                switch (data_t(i).floating)
                 {
                     case 1:
                         printf("(%d)\t\t[%f]\n", i, data(i).f);
@@ -125,7 +125,7 @@ function(std_ls_hash)
                 }
                 break;
             case 0:
-                switch (data_t(i).floating_point)
+                switch (data_t(i).floating)
                 {
                     case 1:
                         printf("(%d)\t%s\t[%f]\n", i, vm->hash_names->data[i], data(i).f);

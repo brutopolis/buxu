@@ -13,32 +13,6 @@ StringList* libs_names;
 VirtualMachine* vm; // global vm
 char *_code = NULL;
 
-StringList* str_split_char(char *str, char delim)
-{
-    StringList *splited = list_init(StringList);
-
-    Int i = 0;
-    while (str[i] != '\0')
-    {
-        if (str[i] == delim)
-        {
-            i++;
-        }
-        else
-        {
-            Int j = i;
-            while (str[j] != delim && str[j] != '\0')
-            {
-                j++;
-            }
-            list_push(*splited, strndup(str + i, j - i));
-            i = j;
-        }
-    }
-
-    return splited;
-}
-
 // file functions
 char* readfile(char *filename)
 {
@@ -144,7 +118,7 @@ void buxu_dl_open(char* libpath)
     if (!file_exists(libpath))
     {
         // not in a direct path, lets try the lib paths
-        StringList *splited = str_split_char(data(hash_find(vm, "file.path")).s, ';');
+        StringList *splited = special_split(data(hash_find(vm, "file.path")).s, ';');
         for (Int i = 0; i < splited->size; i++)
         {
             char* _libpath = str_format("%s/%s%s", splited->data[i], libpath, extension);
@@ -184,8 +158,8 @@ void buxu_dl_open(char* libpath)
         return;
     }
 
-    StringList *splited = str_split_char(libpath, '/');
-    StringList *splited2 = str_split_char(splited->data[splited->size - 1], '.');
+    StringList *splited = special_split(libpath, '/');
+    StringList *splited2 = special_split(splited->data[splited->size - 1], '.');
     char *_libpath = splited2->data[0];
 
     // now lets get the init_name function
@@ -336,7 +310,7 @@ int main(int argc, char **argv)
             // if contains space then it is a list of libraries
             if (strchr(argv[i+1], ' ') != NULL)
             {
-                StringList *splited = str_split_char(argv[i+1], ' ');
+                StringList *splited = special_split(argv[i+1], ' ');
                 for (Int j = 0; j < splited->size; j++)
                 {
                     buxu_dl_open(splited->data[j]);
