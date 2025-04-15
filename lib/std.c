@@ -6,183 +6,77 @@ function(new)
     return -1;
 }
 
-function(print)
+function(ls)
 {
-    switch (arg_t(0).string)
+    for (Int i = 0; i < vm->values->size; i++)
     {
-        case 1:
-            switch (arg_t(0).alloc)
-            {
-                case 1:
-                    printf("%s\n", arg(0).s);
-                    break;
-                case 0:
-                    printf("%s\n", arg(0).i8);
-                    break;
+        if (vm->hashes->data[i].p != NULL)
+        {
+            printf("[%ld](\"%s\"):\t\t", i, vm->hashes->data[i].s);
         }
-        break;
-        case 0:
-            switch (arg_t(0).floating)
-            {
-                case 1:
-                    printf("%f\n", arg(0).f);
-                    break;
-                case 0:
-                    switch (arg_t(0).alloc)
-                    {
-                        case 1:
-                            printf("%p\n", arg(0).p);
-                            break;
-                        case 0:
-                            printf("%ld\n", (Int)arg(0).i);
-                            break;
-                    }
-                    break;
-            }
-        break;
+        else
+        {
+            printf("[%ld](\"\"):\t\t", i);
+        }
+
+        printf(" %i\n", vm->values->data[i].s);
     }
     return -1;
 }
 
-function(print_index)
+function(_return)
 {
-    printf("%d\n", arg_i(0));
-    return -1;
-}
-
-function(print_float_index)
-{
-    printf("%f\n", pun(arg_i(0), i, f));
-    return -1;
-}
-
-function(std_return)
-{
-    if (args->size == 0)
+    if (args->size < 1)
     {
         return -1;
     }
-    return arg_i(0);
+    else
+    {
+        return arg_i(0);
+    }
 }
 
-function(std_ls)
+function(_add)
 {
-    for (Int i = 0; i < vm->stack->size; i++)
-    {
-        switch (data_t(i).string)
-        {
-            case 1:
-                switch (data_t(i).alloc)
-                {
-                    case 1:
-                        printf("(%d)\t\t[%s]\n", i, data(i).s);
-                        break;
-                    case 0:
-                        printf("(%d)\t\t[%s]\n", i, data(i).i8);
-                        break;
-                }
-                break;
-            case 0:
-                switch (data_t(i).floating)
-                {
-                    case 1:
-                        printf("(%d)\t\t[%f]\n", i, data(i).f);
-                        break;
-                    case 0:
-                        switch (data_t(i).alloc)
-                        {
-                            case 1:
-                                printf("(%d)\t\t[%p]\n", i, data(i).p);
-                                break;
-                            case 0:
-                                printf("(%d)\t\t[%ld]\n", i, (Int)data(i).i);
-                                break;
-                        }
-                        break;
-                }
-                break;
-                
-        }
-    }
+    arg(0).i += arg(1).i;
     return -1;
 }
 
-function(std_ls_hash)
+function(_repeat)
 {
-    for (Int i = 0; i < vm->hash_names->size; i++)
-    {
-        switch (data_t(i).string)
-        {
-            case 1:
-                switch (data_t(i).alloc)
-                {
-                    case 1:
-                        printf("(%d)\t%s\t[%s]\n", i, vm->hash_names->data[i], data(i).s);
-                        break;
-                    case 0:
-                        printf("(%d)\t%s\t[%s]\n", i, vm->hash_names->data[i], data(i).i8);
-                        break;
-                }
-                break;
-            case 0:
-                switch (data_t(i).floating)
-                {
-                    case 1:
-                        printf("(%d)\t%s\t[%f]\n", i, vm->hash_names->data[i], data(i).f);
-                        break;
-                    case 0:
-                        switch (data_t(i).alloc)
-                        {
-                            case 1:
-                                printf("(%d)\t%s\t[%p]\n", i, vm->hash_names->data[i], data(i).p);
-                                break;
-                            case 0:
-                                printf("(%d)\t%s\t[%ld]\n", i, vm->hash_names->data[i], (Int)data(i).i);
-                                break;
-                        }
-                        break;
-                }
-                break;
-                
-        }
-    }
-    return -1;
-}
-
-function(brl_std_loop_repeat)
-{
+    Int times = arg(0).i;
+    char* code = arg(1).s;
     Int result = -1;
-    
-    for (int i = 0; i < (Int)arg(0).i; i++)
+    for (Int i = 0; i < times; i++)
     {
-        result = eval(vm,arg(1).s);
-        if (result > -1)
+        result = eval(vm, code);
+        if (result != -1)
         {
             break;
         }
     }
-    
     return result;
 }
 
-function(brl_std_add)
+function(print_float)
 {
-    arg(0).f += arg(1).f;
+    printf("%f\n", arg(0).f);
     return -1;
 }
 
-
+function(print_int)
+{
+    printf("%ld\n", arg(0).i);
+    return -1;
+}
 
 init(std)
 {
-    register_function(vm, "new", new);
-    register_function(vm, "print", print);
-    register_function(vm, "print.index", print_index);
-    register_function(vm, "print.float.index", print_float_index);
-    register_function(vm, "return", std_return);
-    register_function(vm, "ls", std_ls);
-    register_function(vm, "ls.hash", std_ls_hash);
-
-    register_function(vm, "repeat", brl_std_loop_repeat);
-    register_function(vm, "+", brl_std_add);
+    new_function(vm, "new", new);
+    new_function(vm, "ls", ls);
+    new_function(vm, "return", _return);
+    new_function(vm, "add", _add);
+    new_function(vm, "repeat", _repeat);
+    new_function(vm, "print.float", print_float);
+    new_function(vm, "print.int", print_int);
 }

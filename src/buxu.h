@@ -3,7 +3,7 @@
 // bruter
 #include <bruter.h>
 
-#define BUXU_VERSION "0.0.6"
+#define BUXU_VERSION "0.0.7"
 
 // emoticons
 #define EMOTICON_DEFAULT "[=°-°=]"
@@ -18,9 +18,9 @@
 #define buxu_error(...) printf(EMOTICON_ERROR ": error: "); printf(__VA_ARGS__); printf("\n")
 #define buxu_info(...) printf(EMOTICON_DEFAULT ": info: "); printf(__VA_ARGS__); printf("\n")
 
-#define register_function(vm, name, func) \
+#define new_function(vm, name, func) \
 ({ \
-    Int index = register_var(vm, name, TYPE_FUNC); \
+    Int index = new_var(vm, name); \
     data(index).p = func; \
     index; \
 })

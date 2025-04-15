@@ -1,5 +1,14 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
+(14/04/2025) - version 0.0.7
+
+- everything that was annoying in bruter have been reworked;
+- updated to meet bruter 0.8.1 needs;
+- std rewrite from ground once again;
+- for now, load function will only be able to load from lib file path, no smart lib search for now;
+- tigr and dyc are outdated as hell, but this is not meant as a release version;
+- maybe i should create a package manager and integrate it here, moving the packages itself to a specific repository for them;
+
 (13/04/2025) - version 0.0.6
 
 - removed some macros that were meant to be usend in msvc, but we will focus on gcc's standard for now, so, use mingw if on windows;
