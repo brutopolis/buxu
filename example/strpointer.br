@@ -1,5 +1,5 @@
-load "lib/std.so";
-load "lib/math.so";
+load "lib/std.brl";
+load "lib/math.brl";
 new "str" "Hello, world!";
 + str int5;
 print str;

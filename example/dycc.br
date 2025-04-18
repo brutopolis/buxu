@@ -1,5 +1,5 @@
-load "lib/std.so";
-load "lib/dyc.so";
+load "lib/std.brl";
+load "lib/dyc.brl";
 
 dycc.compile (@@
 

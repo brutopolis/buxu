@@ -1,2 +1,2 @@
-load "lib/std.so";
+load "lib/std.brl";
 print (format "%d %f %s\n" 1 2.0 "three");
