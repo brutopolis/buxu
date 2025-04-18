@@ -28,18 +28,12 @@ void add_common_symbols(TCCState *tcc)
         make_vm,
         free_vm,
         new_var,
-        register_var,
         hash_find,
         hash_set,
         hash_unset,
         eval,
         interpret,
-        parse,
-#ifndef ARDUINO
-        readfile,
-        writefile,
-        file_exists,
-#endif
+        parse
     };
 
     const char *core_names[] = {
@@ -49,21 +43,16 @@ void add_common_symbols(TCCState *tcc)
         "make_vm",
         "free_vm",
         "new_var",
-        "register_var",
         "hash_find",
         "hash_set",
         "hash_unset",
         "eval",
         "interpret",
-        "parse",
-#ifndef ARDUINO
-        "readfile",
-        "writefile",
-        "file_exists",
-#endif
+        "parse"
     };
 
-    for (Int i = 0; i < sizeof(core_funcs) / sizeof(core_funcs[0]); i++) {
+    for (Int i = 0; i < sizeof(core_funcs) / sizeof(core_funcs[0]); i++) 
+    {
         tcc_add_symbol(tcc, core_names[i], core_funcs[i]);
     }
 }
@@ -139,8 +128,8 @@ init(dyc)
 {
     tcc_states_temp = list_init(SymbolAssociationList);
 
-    register_function(vm, "dycc.clear", brl_tcc_clear_states);
-    register_function(vm, "dycc.compile", brl_tcc_c_new_function);
+    add_function(vm, "dycc.clear", brl_tcc_clear_states);
+    add_function(vm, "dycc.compile", brl_tcc_c_new_function);
 
     atexit(_terminate_tcc_at_exit_handler);
 }

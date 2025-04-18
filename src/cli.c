@@ -13,56 +13,6 @@ List* libs_names;
 VirtualMachine* vm; // global vm
 char *_code = NULL;
 
-// file functions
-char* readfile(char *filename)
-{
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
-    {
-        return NULL;
-    }
-    char *code = (char*)malloc(1);
-    if (code == NULL)
-    {
-        buxu_error("could not allocate memory for file");
-        fclose(file);
-        return NULL;
-    }
-    code[0] = '\0';
-    char *line = NULL;
-    size_t len = 0;
-    while (getline(&line, &len, file) != -1)
-    {
-        code = (char*)realloc(code, strlen(code) + strlen(line) + 1);
-        strcat(code, line);
-    }
-    free(line);
-    fclose(file);
-    return code;
-};
-
-void writefile(char *filename, char *code)
-{
-    FILE *file = fopen(filename, "w");
-    if (file == NULL)
-    {
-        return;
-    }
-    fprintf(file, "%s", code);
-    fclose(file);
-}
-
-bool file_exists(char* filename)
-{
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
-    {
-        return false;
-    }
-    fclose(file);
-    return true;
-}
-
 Int repl(VirtualMachine *vm)
 {
     buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
@@ -262,8 +212,8 @@ int main(int argc, char **argv)
     args = list_init(0);
     
     // dynamic library functions
-    new_function(vm, "load", brl_main_dl_open);
-    new_function(vm, "unload", brl_main_dl_close);
+    add_function(vm, "load", brl_main_dl_open);
+    add_function(vm, "unload", brl_main_dl_close);
 
     // dynamic libraries lists startup
     libs = list_init(0);

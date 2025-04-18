@@ -36,12 +36,6 @@ function(_return)
     }
 }
 
-function(_add)
-{
-    arg(0).i += arg(1).i;
-    return -1;
-}
-
 function(_repeat)
 {
     Int times = arg(0).i;
@@ -58,25 +52,10 @@ function(_repeat)
     return result;
 }
 
-function(print_float)
-{
-    printf("%f\n", arg(0).f);
-    return -1;
-}
-
-function(print_int)
-{
-    printf("%ld\n", arg(0).i);
-    return -1;
-}
-
 init(std)
 {
-    new_function(vm, "new", new);
-    new_function(vm, "ls", ls);
-    new_function(vm, "return", _return);
-    new_function(vm, "add", _add);
-    new_function(vm, "repeat", _repeat);
-    new_function(vm, "print.float", print_float);
-    new_function(vm, "print.int", print_int);
+    add_function(vm, "new", new);
+    add_function(vm, "ls", ls);
+    add_function(vm, "return", _return);
+    add_function(vm, "repeat", _repeat);
 }
