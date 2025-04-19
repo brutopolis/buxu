@@ -1,0 +1,208 @@
+#!/bin/bash
+
+
+# this buxu building front-end is a non-essential script meant for linux,
+
+# usage function
+usage() {
+    echo "[=°-°=]: usage: $0 [install|remove|build|run] <package> [--repo <repo>] [--help] [-h]"
+    exit 1
+}
+
+# origin
+ORIGIN=$(pwd)
+
+# check if sudo is available
+SUDO=sudo
+if [[ $(which sudo | wc -l) -eq 0 ]]; then
+    SUDO=""
+fi
+
+# default values
+CC="gcc -Wformat=0"
+REPO="https://jardimdanificado.github.io/bpm_packages" # modify this to permanently change the repo
+PACKAGE=""
+
+_INSTALL=0
+_UNINSTALL=0
+_BUILD=0
+_RUN=0
+_SETUP=0
+_CLEAN=0
+_UPDATE=0
+
+case $1 in
+    install)
+        _INSTALL=1
+        PACKAGE="$2"
+        if [[ -z $PACKAGE ]]; then
+            echo "[=°~°=]: no package specified"
+            exit 1
+        fi
+        shift 2
+        ;;
+    remove)
+        _UNINSTALL=1
+        PACKAGE="$2"
+        if [[ -z $PACKAGE ]]; then
+            echo "[=°~°=]: no package specified"
+            exit 1
+        fi
+        shift 2
+        ;;
+    build)
+        _BUILD=1
+        shift 1
+        ;;
+    run)
+        _RUN=1
+        shift 1
+        ;;
+    *)
+        echo "[=°~°=]: unknown command: $1"
+        usage
+        ;;
+esac
+
+# parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --repo) REPO=$2; shift 2 ;;
+        --help) usage ;;
+        -h) usage ;;
+        *) echo "[=°~°=]: unknown option: $1"; usage ;;
+    esac
+done
+
+# if build
+if [[ $_BUILD -eq 1 ]]; then
+    # if no package.sh found, exit
+    if [[ ! -f "./package.sh" ]]; then
+        echo "[=°~°=]: no package.sh found"
+        exit 1
+    fi
+
+    source package.sh
+
+    # if BUILD variable is not set, exit
+    if [[ -z $BUILD ]]; then
+        echo "[=°~°=]: no BUILD variable found in package.sh"
+        exit 1
+    fi
+
+    $BUILD;
+fi
+
+# if run
+if [[ $_RUN -eq 1 ]]; then
+    # if no package.sh found, exit
+    if [[ ! -f "./package.sh" ]]; then
+        echo "[=°~°=]: no package.sh found"
+        exit 1
+    fi
+
+    source package.sh
+
+    # if RUN variable is not set, exit
+    if [[ -z $RUN ]]; then
+        echo "[=°~°=]: no RUN variable found in package.sh"
+        exit 1
+    fi
+
+    $RUN;
+fi
+
+# if build
+if [[ $_SETUP -eq 1 ]]; then
+    # if no package.sh found, exit
+    if [[ ! -f "./package.sh" ]]; then
+        echo "[=°~°=]: no package.sh found"
+        exit 1
+    fi
+
+    source package.sh
+
+    # if SETUP variable is not set, exit
+    if [[ -z $SETUP ]]; then
+        echo "[=°~°=]: no SETUP variable found in package.sh"
+        exit 1
+    fi
+
+    $SETUP;
+fi
+
+
+# if clean
+if [[ $_CLEAN -eq 1 ]]; then
+    # if no package.sh found, exit
+    if [[ ! -f "./package.sh" ]]; then
+        echo "[=°~°=]: no package.sh found"
+        exit 1
+    fi
+
+    source package.sh
+
+    # if CLEAN variable is not set, exit
+    if [[ -z $CLEAN ]]; then
+        echo "[=°~°=]: no CLEAN variable found in package.sh"
+        exit 1
+    fi
+
+    $CLEAN;
+fi
+
+# if update
+if [[ $_UPDATE -eq 1 ]]; then
+    # if no package.sh found, exit
+    if [[ ! -f "./package.sh" ]]; then
+        echo "[=°~°=]: no package.sh found"
+        exit 1
+    fi
+
+    source package.sh
+
+    # if UPDATE variable is not set, exit
+    if [[ -z $UPDATE ]]; then
+        echo "[=°~°=]: no UPDATE variable found in package.sh"
+        exit 1
+    fi
+
+    $UPDATE;
+fi
+
+# if no folder .buxu found, create it
+if [[ ! -d .buxu ]]; then
+    mkdir ./.buxu/bpm -p
+fi
+
+cd .buxu/bpm
+
+if [[ ! -d "./$PACKAGE" ]]; then
+    rm -rf "./$PACKAGE"
+    mkdir "./$PACKAGE"
+    cd "./$PACKAGE"
+    
+    curl -LO "$REPO/$PACKAGE/package.sh"
+    source package.sh
+    
+    # if no FILES variable is found, exit
+    if [[ -z $FILES ]]; then
+        echo "[=°~°=]: no files found in package.sh"
+        exit 1
+    fi
+
+    for file in $FILES
+    do
+    {
+        curl -s -O "$REPO/$PACKAGE/$file"
+    }
+    done
+
+    # if no BUILD variable is found, exit
+    if [[ -z $BUILD ]]; then
+        echo "[=°~°=]: no BUILD variable found in package.sh"
+        exit 1
+    fi
+
+    $BUILD
+fi

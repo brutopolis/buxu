@@ -150,16 +150,33 @@ void buxu_dl_close(char* libpath)
 
 function(brl_main_dl_open)
 {
-    buxu_dl_open(arg(0).s);
+    if (strstr(arg(0).s, ".brl") != NULL)
+    {
+        buxu_dl_open(arg(0).s);
+    }
+    else 
+    {
+        char* path = str_format(".buxu/bpm/%s/%s.brl", arg(0).s, arg(0).s);
+        buxu_dl_open(path);
+        free(path);
+    }
     return -1;
 }
 
 function(brl_main_dl_close)
 {
-    buxu_dl_close(arg(0).s);
+    if (strstr(arg(0).s, ".brl") != NULL)
+    {
+        buxu_dl_close(arg(0).s);
+    }
+    else 
+    {
+        char* path = str_format("./.buxu/bpm/%s/%s.brl", arg(0).s, arg(0).s);
+        buxu_dl_close(path);
+        free(path);
+    }
     return -1;
 }
-
 
 void _free_at_exit()
 {
@@ -242,20 +259,9 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--load") == 0) // preload libs
         {
-            // if contains space then it is a list of libraries
-            if (strchr(argv[i+1], ' ') != NULL)
-            {
-                List *splited = special_split(argv[i+1], ' ');
-                for (Int j = 0; j < splited->size; j++)
-                {
-                    buxu_dl_open(splited->data[j].s);
-                }
-                list_free(splited);
-            }
-            else
-            {
-                buxu_dl_open(argv[i+1]);
-            }
+            char *libname = str_format("load (@@%s)", argv[i+1]);
+            eval(vm, libname);
+            free(libname);
 
             i+=1; // skip to the next argument
         }

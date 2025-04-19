@@ -10,7 +10,7 @@
 
 # usage function
 usage() {
-    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [-cc || --compiler gcc] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static] [--update-bruter] [--branch branch]"
+    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [-cc || --compiler gcc] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static] [--no-bpm] [--update-bruter] [--branch branch]"
     exit 1
 }
 
@@ -28,6 +28,7 @@ DEBUG=0
 CC="gcc -Wformat=0"
 MAIN="src/cli.c"
 NOBUCC=0
+NOBPM=0
 EXTRA=""
 INSTALL=0
 UNINSTALL=0
@@ -116,75 +117,8 @@ echo "[=°-°=]: compiler: $CC"
 rm -rf build
 mkdir -p build
 
-if [[ $NOBUCC -eq 0 ]]; then
-
-    BUCC_SCRIPT="build/bucc"
-
-    echo '#!/bin/bash' > $BUCC_SCRIPT
-    echo '' >> $BUCC_SCRIPT
-
-    echo 'CC="gcc"' >> $BUCC_SCRIPT
-    echo 'EXTRA=""' >> $BUCC_SCRIPT
-    echo 'DEBUG=0' >> $BUCC_SCRIPT
-    echo '' >> $BUCC_SCRIPT
-
-    echo 'usage() {' >> $BUCC_SCRIPT
-    echo '    echo "[=°-°=]: usage: $0 [--compiler || -cc gcc] [--extra \"extra cc tags\"] [--debug] [-o output] [--help | -h] file1.c file2.c ..."' >> $BUCC_SCRIPT
-    echo '    exit 1' >> $BUCC_SCRIPT
-    echo '}' >> $BUCC_SCRIPT
-    echo '' >> $BUCC_SCRIPT
-
-    #if no args, print help
-    echo 'if [[ $# -eq 0 ]]; then' >> $BUCC_SCRIPT
-    echo '    echo "[=°x°=]: no arguments provided"' >> $BUCC_SCRIPT
-    echo '    usage' >> $BUCC_SCRIPT
-    echo 'fi' >> $BUCC_SCRIPT
-    echo '' >> $BUCC_SCRIPT
-    echo 'FILES=""' >> $BUCC_SCRIPT
-    echo '' >> $BUCC_SCRIPT
-    echo 'while [[ $# -gt 0 ]]; do' >> $BUCC_SCRIPT
-    echo '    case $1 in' >> $BUCC_SCRIPT
-    echo '        --compiler) CC="$2"; shift 2 ;;' >> $BUCC_SCRIPT
-    echo '        -cc) CC="$2"; shift 2 ;;' >> $BUCC_SCRIPT
-    echo '        --extra) EXTRA="$2"; shift 2 ;;' >> $BUCC_SCRIPT
-    echo '        --debug) DEBUG=1; shift ;;' >> $BUCC_SCRIPT
-    echo '        -o) OUTPUT_NAME="$2"; shift 2 ;;' >> $BUCC_SCRIPT
-    echo '        --version) buxu --version; exit 0 ;;' >> $BUCC_SCRIPT
-    echo '        -v) buxu -v; exit 0 ;;' >> $BUCC_SCRIPT
-    echo '        --help) usage ;;' >> $BUCC_SCRIPT
-    echo '        -h) usage ;;' >> $BUCC_SCRIPT
-        # concat file if its name does not start with -
-    echo '        *) if [[ ${1:0:1} != "-" ]]; then' >> $BUCC_SCRIPT
-    echo '            FILES="$FILES $1"' >> $BUCC_SCRIPT
-    echo '        fi' >> $BUCC_SCRIPT
-    echo '        shift ;;' >> $BUCC_SCRIPT
-    echo '    esac' >> $BUCC_SCRIPT
-    echo 'done;' >> $BUCC_SCRIPT
-    echo '' >> $BUCC_SCRIPT
-    
-    echo 'if [[ $FILES == "" ]]; then' >> $BUCC_SCRIPT
-    echo '    echo "[=°x°=]: no files provided"' >> $BUCC_SCRIPT
-    echo '    exit 1' >> $BUCC_SCRIPT
-    echo 'fi' >> $BUCC_SCRIPT
-    echo '' >> $BUCC_SCRIPT
-
-    echo 'if [[ $DEBUG -eq 1 ]]; then' >> $BUCC_SCRIPT
-    echo '    DEBUGARGS="-g"' >> $BUCC_SCRIPT
-    echo '    echo "[=°-°=]: debug mode enabled"' >> $BUCC_SCRIPT
-    echo 'else' >> $BUCC_SCRIPT
-    echo '    DEBUGARGS=""' >> $BUCC_SCRIPT
-    echo 'fi' >> $BUCC_SCRIPT
-
-    echo 'if [[ -z $OUTPUT_NAME ]]; then' >> $BUCC_SCRIPT
-    echo '    OUTPUT_NAME="a.out"' >> $BUCC_SCRIPT
-    echo 'fi' >> $BUCC_SCRIPT
-
-    echo '' >> $BUCC_SCRIPT
-    echo 'echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lm -lbruter $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"' >> $BUCC_SCRIPT
-    echo "\$CC \$FILES -o \$OUTPUT_NAME -shared -fPIC -O3 -lm -lbruter \$EXTRA \$DEBUGARGS -Wl,-rpath=\$INSTALL_PATH/lib" >> $BUCC_SCRIPT
-    echo 'echo "[=°-°=]: $OUTPUT_NAME" has been compiled.' >> $BUCC_SCRIPT
-    chmod +x $BUCC_SCRIPT
-fi
+cp bpm build/bpm
+cp bucc build/bucc
 
 $CC $MAIN bruter/src/bruter.c -o build/buxu -O3 -lm -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
 
@@ -239,7 +173,7 @@ if [[ $INSTALL -eq 1 ]]; then
         $SUDO rm -f $INSTALL_PATH/include/buxu.h
     fi
 
-    # copy buxu, and possibly bucc to /usr/bin
+    # copy buxu
     $SUDO cp ./build/buxu $INSTALL_PATH/bin/buxu
     
     # copy the header files to /usr/include
@@ -248,6 +182,10 @@ if [[ $INSTALL -eq 1 ]]; then
 
     if [[ $NOBUCC -eq 0 ]]; then
         $SUDO cp ./build/bucc $INSTALL_PATH/bin/
+    fi
+
+    if [[ $NOBPM -eq 0 ]]; then
+        $SUDO cp ./build/bpm $INSTALL_PATH/bin/
     fi
 
     if [[ $NO_SHARED -eq 0 ]]; then
