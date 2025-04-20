@@ -1,8 +1,0 @@
-load "std";
-load "math";
-load "io";
-new "str" "Hello, world!";
-iadd str int5;
-print.string str;
-ignore "move back to the original pointer to avoid memory leak and errors";
-isub str int5;
