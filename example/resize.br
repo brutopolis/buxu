@@ -1,5 +1,0 @@
-load "lib/std.brl";
-
-new 'l' (array 1 2 3 4 5);
-resize l 10;
-ls;

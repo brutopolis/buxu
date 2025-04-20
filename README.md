@@ -5,9 +5,10 @@
 
   buxu includes, but is not limited to:
   - buxu, a bruter interpreter and repl;
-  - a stdlib to be used in bruter scripts;
+  - bpm, stands for Buxu Package Manager;
   - bucc, a tool to compile bruter c files into bruter-compatible shared libraries, stants for Buxu C Compiler;
   - buxu's build script, it builds buxu and bruter, can install and uninstall them, can debug etc;
+  - some examples;
 
 *`UNDER HEAVY DEVELOPMENT`*
 
@@ -83,6 +84,28 @@
     # print version;
     ./bucc --version
     ./bucc -v
+
+  "bpm" executable is the package manager, it deals with a simple repository system, it can list, install and uninstall packages, and have some user-defined commands like build, clear, update, etc;
+
+    # install a package;
+    ./bpm install package_name
+
+    # uninstall a package;
+    ./bpm uninstall package_name
+
+    # update a package;
+    ./bpm update
+
+    # build a package;
+    ./bpm build
+
+    # clear a package;
+    ./bpm clear
+
+    # print help message;
+    ./bpm --help
+    ./bpm -h
+
 
 # Install
 

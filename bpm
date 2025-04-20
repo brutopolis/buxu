@@ -58,6 +58,23 @@ case $1 in
         _RUN=1
         shift 1
         ;;
+    list)
+        curl -LO "$REPO/repository.sh"
+        source repository.sh
+        # if no PKGS variable is found, exit
+        if [[ -z $PKGS ]]; then
+            echo "[=°~°=]: no packages found in repository.sh"
+            exit 1
+        fi
+        echo "[=°~°=]: available packages:"
+        for pkg in $PKGS
+        do
+            echo "[=°~°=]: $pkg"
+        done
+        echo "[=°~°=]: use 'bpm install <package>' to install a package"
+        echo "[=°~°=]: use 'bpm remove <package>' to remove a package"
+        shift
+        ;;
     *)
         echo "[=°~°=]: unknown command: $1"
         usage

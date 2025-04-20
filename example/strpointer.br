@@ -1,7 +1,8 @@
-load "lib/std.brl";
-load "lib/math.brl";
+load "std";
+load "math";
+load "io";
 new "str" "Hello, world!";
-+ str int5;
-print str;
-(@) "move back to the original pointer to avoid memory leak and errors";
-- str int5;
+iadd str int5;
+print.string str;
+ignore "move back to the original pointer to avoid memory leak and errors";
+isub str int5;

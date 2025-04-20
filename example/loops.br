@@ -1,5 +1,5 @@
-load (@@lib/std.brl);
-load (@@lib/io.brl);
+load (@@std);
+load (@@io);
 new "_index" 0;
 new "_1" 1;
 repeat 100000 (@@add _index _1;print.int _index;);

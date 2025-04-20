@@ -1,6 +1,6 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
-(19/04/2025) - version 0.0.8
+(20/04/2025) - version 0.0.8
 
 - new_function renamed to add_function;
 - in-progress buxu package manager(bpm);
