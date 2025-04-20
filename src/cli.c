@@ -61,9 +61,6 @@ Int repl(VirtualMachine *vm)
 
 void buxu_dl_open(char* libpath)
 {
-    bool usingLibName = false;
-    char* name_backup = libpath;
-    
     // check if the library is already loaded
     for (Int i = 0; i < libs_names->size; i++)
     {
@@ -80,14 +77,7 @@ void buxu_dl_open(char* libpath)
     if (handle != NULL)
     {
         list_push(libs, (Value){.p = handle});
-        if (usingLibName)
-        {
-            list_push(libs_names, (Value){.s = str_duplicate(libpath)});
-        }
-        else
-        {
-            list_push(libs_names, (Value){.s = str_duplicate(name_backup)});
-        }
+        list_push(libs_names, (Value){.s = str_duplicate(libpath)});
     }
     else 
     {
@@ -150,13 +140,14 @@ void buxu_dl_close(char* libpath)
 
 function(brl_main_dl_open)
 {
-    if (strstr(arg(0).s, ".brl") != NULL)
+    char* str = &arg(0).u8[0];
+    if (strstr(str, ".brl") != NULL)
     {
-        buxu_dl_open(arg(0).s);
+        buxu_dl_open(str);
     }
     else 
     {
-        char* path = str_format(".buxu/bpm/%s/%s.brl", arg(0).s, arg(0).s);
+        char* path = str_format(".buxu/bpm/%s/%s.brl", str, str);
         buxu_dl_open(path);
         free(path);
     }
@@ -165,13 +156,14 @@ function(brl_main_dl_open)
 
 function(brl_main_dl_close)
 {
-    if (strstr(arg(0).s, ".brl") != NULL)
+    char* str = &arg(0).u8[0];
+    if (strstr(str, ".brl") != NULL)
     {
-        buxu_dl_close(arg(0).s);
+        buxu_dl_close(str);
     }
     else 
     {
-        char* path = str_format("./.buxu/bpm/%s/%s.brl", arg(0).s, arg(0).s);
+        char* path = str_format("./.buxu/bpm/%s/%s.brl", str, str);
         buxu_dl_close(path);
         free(path);
     }
@@ -182,10 +174,9 @@ void _free_at_exit()
 {
     if (libs->size > 0)
     {
-        for (Int i = 0; i < libs->size+1; i++)
+        while (libs->size > 0)
         {
-            dlclose(libs->data[i].p);
-            list_pop(libs);
+            dlclose(list_pop(libs).p);
             free(list_pop(libs_names).p);
         }
     }
@@ -290,22 +281,6 @@ int main(int argc, char **argv)
         {
             buxu_error("file %s not found", ___file);
             return 1;
-        }
-
-        Int file_path_index = new_first_var(vm, "file.path");
-
-
-        // remove file name
-        char *path = list_shift(args).s;
-        char *last = strrchr(path, '/');
-
-        if (last == NULL)
-        {
-            vm->values->data[file_path_index].s = str_duplicate("");
-        }
-        else
-        {
-            vm->values->data[file_path_index].s = str_nduplicate(path, last - path + 1);
         }
     
         result = eval(vm, _code);

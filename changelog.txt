@@ -3,6 +3,10 @@
 (20/04/2025) - version 0.0.9
 
 - bpm install and remove now supports multiple packages;
+- buxu is now updated to meet bruter 0.8.2 needs;
+- cli doesnt register filepath anymore;
+- as strings are now part of the value list instead a separated pointer, strpointer example was removed;
+- cli bug fixes;
 
 (20/04/2025) - version 0.0.8
 

@@ -1,3 +1,5 @@
 load "io";
+load "std";
+load "math";
 print.string (@@hello world!);
 return 0;
