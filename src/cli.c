@@ -1,5 +1,5 @@
 
-// this is the buxu's interpreter frontend when not using as a lib
+// this is the buxu's interpreter frontend
 // there are some tweaks that try be compatible with mac and windows, totally untested;
 
 // buxu header
@@ -110,7 +110,7 @@ void buxu_dl_open(char* libpath)
     else 
     {
         buxu_error("%s", dlerror());
-        buxu_error("init_%s not found", libpath);
+        buxu_error("init_%s not found", _libpath);
         // then lets close the library
         dlclose(handle);
         list_pop(libs);
