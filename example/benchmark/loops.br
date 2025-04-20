@@ -1,4 +1,5 @@
-load (@lib/std.so);
+load (@lib/std.brl);
+load (@lib/io.brl);
 new (@___index) 0;
 new (@_size) 100000;
 new (@_1) 1;

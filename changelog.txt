@@ -1,5 +1,47 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
+(20/04/2025) - version 0.0.8
+
+- new_function renamed to add_function;
+- in-progress buxu package manager(bpm);
+- default extension changed from .so to .brl;
+- file functions moved to header;
+- libs moved to a separated repository;
+
+(14/04/2025) - version 0.0.7
+
+- everything that was annoying in bruter have been reworked;
+- updated to meet bruter 0.8.1 needs;
+- std rewrite from ground once again;
+- for now, load function will only be able to load from lib file path, no smart lib search for now;
+- tigr and dyc are outdated as hell, but this is not meant as a release version;
+- maybe i should create a package manager and integrate it here, moving the packages itself to a specific repository for them;
+
+(13/04/2025) - version 0.0.6
+
+- removed some macros that were meant to be usend in msvc, but we will focus on gcc's standard for now, so, use mingw if on windows;
+- new typing system;
+- with the new typing system prints functions are now one;
+- return fixed;
+
+(09/04/2025) - version 0.0.5
+
+- rewrite from scratch in progress;
+- new macro register_function;
+- dyc.c is back;
+- file functions are now in cli.c;
+- move some internal functions from cli.c into a new file called buxu.c might be a good idea;
+
+(06/04/2025) - version 0.0.4
+
+- --cc options replaced by --compiler and -cc;
+- --version and -v options now print both bruter and buxu version;
+- new option for build.sh --branch it specify the bruter branch to use, it defaults to main;
+- std math functions are now under math.c;
+- std array functions are now under array.c;
+- std condition functions are now under condition.c;
+- README.me updated;
+
 (05/04/2025) - version 0.0.3
 
 - buxu is now separated from bruter, while bruter is the vm, buxu is a set of tools that provide: 
