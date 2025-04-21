@@ -5,7 +5,18 @@
 # usage function
 usage() 
 {
-    echo "[=°-°=]: usage: $0 [install|remove|build|run|list] <package> [--repo <repo>] [--help] [-h]"
+    echo "[=°-°=]: usage: $0 [install|install-from|remove|build|run|setup|clean|update|list|help] [package]"
+    echo "[=°~°=]: install: install a package from the repository"
+    echo "[=°~°=]: install-from: install a package from a custom repository"
+    echo "[=°~°=]: remove: remove a package"
+    echo "[=°~°=]: build: user-defined build step"
+    echo "[=°~°=]: run: user-defined run step"
+    echo "[=°~°=]: setup: user-defined setup step"
+    echo "[=°~°=]: clean: user-defined clean step"
+    echo "[=°~°=]: update: user-defined update step"
+    echo "[=°~°=]: list: list available packages in the repository"
+    echo "[=°~°=]: help: show this help message"
+    echo "[=°~°=]: package: name of the package to install/remove"
 }
 
 # store current path
