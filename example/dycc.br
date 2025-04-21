@@ -1,7 +1,7 @@
 load "std";
 load "dyc";
 
-dycc.compile (@@
+dycc.compile (@
 
     function(abc)
     {   

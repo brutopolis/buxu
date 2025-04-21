@@ -1,4 +1,4 @@
 load "io";
 load "std";
-print.string (@@hello world!);
+print.string (@hello world!);
 return 0;

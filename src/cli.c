@@ -250,7 +250,7 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--load") == 0) // preload libs
         {
-            char *libname = str_format("load (@@%s)", argv[i+1]);
+            char *libname = str_format("load (@%s)", argv[i+1]);
             eval(vm, libname);
             free(libname);
 
