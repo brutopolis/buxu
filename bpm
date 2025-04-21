@@ -5,7 +5,7 @@
 # usage function
 usage() 
 {
-    echo "[=°-°=]: usage: $0 [install|install-from|remove|build|run|setup|clean|update|list|help] [package]"
+    echo "[=°-°=]: usage: $0 [install|install-from|remove|build|run|setup|clean|update|help] [package]"
     echo "[=°~°=]: install: install a package from the repository"
     echo "[=°~°=]: install-from: install a package from a custom repository"
     echo "[=°~°=]: remove: remove a package"
@@ -14,7 +14,6 @@ usage()
     echo "[=°~°=]: setup: user-defined setup step"
     echo "[=°~°=]: clean: user-defined clean step"
     echo "[=°~°=]: update: user-defined update step"
-    echo "[=°~°=]: list: list available packages in the repository"
     echo "[=°~°=]: help: show this help message"
     echo "[=°~°=]: package: name of the package to install/remove"
 }
@@ -52,37 +51,7 @@ run)      { _RUN=1; shift; } ;;
 setup)    { _SETUP=1; shift; } ;;
 clean)    { _CLEAN=1; shift; } ;;
 update)   { _UPDATE=1; shift; } ;;
-list)    { _LIST=1; shift; } ;;
 help)   { usage; exit 0; } ;;
-list)
-{
-    if [[ ! -d .buxu/bpm ]]; then
-        mkdir -p .buxu/bpm
-    fi
-    cd .buxu/bpm
-    curl -sLO "$REPO/repository.sh"
-    if [[ ! -f "repository.sh" ]]; then
-        echo "[=°~°=]: failed to fetch repository.sh"
-        exit 1
-    fi
-    source repository.sh
-    cd ../..
-    if [[ -z $PKGS ]]; then
-        echo "[=°~°=]: no packages found in repository.sh"
-        exit 1
-    fi
-
-    echo "[=°~°=]: available packages:"
-    for pkg in $PKGS
-    do
-        echo "[=°~°=]: $pkg"
-    done
-
-    echo "[=°~°=]: use 'bpm install <package>' to install a package"
-    echo "[=°~°=]: use 'bpm remove <package>' to remove a package"
-    exit 0
-}
-;;
 *) 
 {
     echo "[=°~°=]: unknown command: $1"
