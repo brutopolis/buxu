@@ -5,5 +5,5 @@ new "_index" 0;
 new "_1" 1;
 repeat 100000 'iadd _index _1;print.int _index';
 ls;
-print.string @33;
+print.string (get 33);
 return 0;

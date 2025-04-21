@@ -6,8 +6,8 @@ new (@_1) 1;
 
 
 repeat _size (@
-    + ___index _1;
-    print ___index;
+    iadd ___index _1;
+    print.int ___index;
 );
 
 return 0;
