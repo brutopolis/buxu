@@ -1,7 +1,9 @@
-load (@@std);
-load (@@io);
+load 'std';
+load 'io';
+load 'math';
 new "_index" 0;
 new "_1" 1;
-repeat 100000 (@@add _index _1;print.int _index;);
+repeat 100000 'iadd _index _1;print.int _index';
 ls;
+print.string @33;
 return 0;

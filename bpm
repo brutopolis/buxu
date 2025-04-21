@@ -34,9 +34,15 @@ _UPDATE=0
 # read command
 case $1 in
 install)  { _INSTALL=1; shift; } ;;
+install-from) { _INSTALL=1; REPO=$2; shift 2; } ;;
 remove)   { _UNINSTALL=1; shift; } ;;
 build)    { _BUILD=1; shift; } ;;
 run)      { _RUN=1; shift; } ;;
+setup)    { _SETUP=1; shift; } ;;
+clean)    { _CLEAN=1; shift; } ;;
+update)   { _UPDATE=1; shift; } ;;
+list)    { _LIST=1; shift; } ;;
+help)   { usage; exit 0; } ;;
 list)
 {
     if [[ ! -d .buxu/bpm ]]; then
@@ -74,27 +80,6 @@ list)
 }
 ;;
 esac
-
-# parse options
-while [[ $# -gt 0 ]]
-do
-    case "$1" in
-    --repo) 
-    {
-        REPO=$2
-        shift 2
-    } ;;
-    --help|-h) 
-    {
-        usage
-        exit 0
-    } ;;
-    *) 
-    {
-        break  # stop parsing options
-    } ;;
-    esac
-done
 
 # create local build folder if needed
 if [[ ! -d .buxu/bpm ]]; then
