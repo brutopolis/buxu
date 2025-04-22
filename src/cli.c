@@ -140,7 +140,7 @@ void buxu_dl_close(char* libpath)
 
 function(brl_main_dl_open)
 {
-    char* str = &arg(0).u8[0];
+    char* str = arg_s(0);
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -156,7 +156,7 @@ function(brl_main_dl_open)
 
 function(brl_main_dl_close)
 {
-    char* str = &arg(0).u8[0];
+    char* str = arg_s(0);
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);

@@ -117,8 +117,8 @@ echo "[=°-°=]: compiler: $CC"
 rm -rf build
 mkdir -p build
 
-cp bpm build/bpm
-cp bucc build/bucc
+cp src/bpm build/bpm
+cp src/bucc build/bucc
 
 $CC $MAIN bruter/src/bruter.c -o build/buxu -O3 -lm -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
 

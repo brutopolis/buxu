@@ -28,8 +28,8 @@ if ! command -v sudo >/dev/null; then
 fi
 
 # default values
-CC="gcc -Wformat=0"
-REPO="https://jardimdanificado.github.io/bpm_packages"
+CC="gcc"
+REPO="https://brutopolis.github.io/packages"
 PACKAGE=""
 
 # action flags
