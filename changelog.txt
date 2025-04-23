@@ -1,12 +1,17 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
-(20/04/2025) - version 0.0.9
+(22/04/2025) - version 0.1.0
+
+- from this version and on bruter and all it related stuff will be under the brutopolis organization;
+
+(21/04/2025) - version 0.0.9
 
 - bpm install and remove now supports multiple packages;
 - buxu is now updated to meet bruter 0.8.2 needs;
 - cli doesnt register filepath anymore;
 - as strings are now part of the value list instead a separated pointer, strpointer example was removed;
 - cli bug fixes;
+- new commands help and install-from;
 
 (20/04/2025) - version 0.0.8
 

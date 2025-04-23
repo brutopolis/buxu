@@ -5,7 +5,17 @@
 # usage function
 usage() 
 {
-    echo "[=°-°=]: usage: $0 [install|remove|build|run|list] <package> [--repo <repo>] [--help] [-h]"
+    echo "[=°-°=]: usage: $0 [install|install-from|remove|build|run|setup|clean|update|help] [package]"
+    echo "[=°~°=]: install: install a package from the repository"
+    echo "[=°~°=]: install-from: install a package from a custom repository"
+    echo "[=°~°=]: remove: remove a package"
+    echo "[=°~°=]: build: user-defined build step"
+    echo "[=°~°=]: run: user-defined run step"
+    echo "[=°~°=]: setup: user-defined setup step"
+    echo "[=°~°=]: clean: user-defined clean step"
+    echo "[=°~°=]: update: user-defined update step"
+    echo "[=°~°=]: help: show this help message"
+    echo "[=°~°=]: package: name of the package to install/remove"
 }
 
 # store current path
@@ -18,8 +28,8 @@ if ! command -v sudo >/dev/null; then
 fi
 
 # default values
-CC="gcc -Wformat=0"
-REPO="https://jardimdanificado.github.io/bpm_packages"
+CC="gcc"
+REPO="https://brutopolis.github.io/packages"
 PACKAGE=""
 
 # action flags
@@ -34,38 +44,14 @@ _UPDATE=0
 # read command
 case $1 in
 install)  { _INSTALL=1; shift; } ;;
+install-from) { _INSTALL=1; REPO=$2; shift 2; } ;;
 remove)   { _UNINSTALL=1; shift; } ;;
 build)    { _BUILD=1; shift; } ;;
 run)      { _RUN=1; shift; } ;;
-list)
-{
-    if [[ ! -d .buxu/bpm ]]; then
-        mkdir -p .buxu/bpm
-    fi
-    cd .buxu/bpm
-    curl -sLO "$REPO/repository.sh"
-    if [[ ! -f "repository.sh" ]]; then
-        echo "[=°~°=]: failed to fetch repository.sh"
-        exit 1
-    fi
-    source repository.sh
-    cd ../..
-    if [[ -z $PKGS ]]; then
-        echo "[=°~°=]: no packages found in repository.sh"
-        exit 1
-    fi
-
-    echo "[=°~°=]: available packages:"
-    for pkg in $PKGS
-    do
-        echo "[=°~°=]: $pkg"
-    done
-
-    echo "[=°~°=]: use 'bpm install <package>' to install a package"
-    echo "[=°~°=]: use 'bpm remove <package>' to remove a package"
-    exit 0
-}
-;;
+setup)    { _SETUP=1; shift; } ;;
+clean)    { _CLEAN=1; shift; } ;;
+update)   { _UPDATE=1; shift; } ;;
+help)   { usage; exit 0; } ;;
 *) 
 {
     echo "[=°~°=]: unknown command: $1"
@@ -74,27 +60,6 @@ list)
 }
 ;;
 esac
-
-# parse options
-while [[ $# -gt 0 ]]
-do
-    case "$1" in
-    --repo) 
-    {
-        REPO=$2
-        shift 2
-    } ;;
-    --help|-h) 
-    {
-        usage
-        exit 0
-    } ;;
-    *) 
-    {
-        break  # stop parsing options
-    } ;;
-    esac
-done
 
 # create local build folder if needed
 if [[ ! -d .buxu/bpm ]]; then
