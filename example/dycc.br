@@ -1,4 +1,3 @@
-load "std";
 load "dyc";
 
 dycc.compile (@
@@ -6,7 +5,7 @@ dycc.compile (@
     function(abc)
     {   
         printf("aooooooooooo\n");
-        return -1;
+        return (Int)-1;
     }
 
 ) 'abc';
