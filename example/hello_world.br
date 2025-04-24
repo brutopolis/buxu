@@ -1,4 +1,7 @@
 load {io};
 load {std};
-print.string {hello world!};
+
+void @a {hello world!};
+print.string a;
+
 return 0;

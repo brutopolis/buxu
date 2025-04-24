@@ -1,4 +1,4 @@
-load "dyc";
+load {dyc};
 
 dycc.compile {
 

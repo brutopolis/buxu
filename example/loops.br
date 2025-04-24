@@ -11,8 +11,4 @@ repeat 100000
     print.int _index
 };
 
-ls;
-
-print.string (get 41);
-
 return 0;
