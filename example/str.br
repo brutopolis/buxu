@@ -1,0 +1,11 @@
+load {std};
+load {str};
+load {io};
+
+void @str0 {abcdefghijklmnopqrstuvwxyz};
+void @str1 {ABCDEFGHIJKLMNOPQRSTUVWXYZ};
+print.string str0;
+str.concat str0 str1;
+ls;
+print.string str0;
+return 0;
