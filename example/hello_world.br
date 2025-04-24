@@ -1,7 +1,9 @@
 load {io};
 load {std};
 
-void @a {hello world!};
-print.string a;
-
+print.string @_hello_world_string {hello world!};
+print.string _hello_world_string; 
+void @msg {we created a new value "hello world!" and set "_hello_world_string" as its label};
+print.string msg;
+ls;
 return 0;
