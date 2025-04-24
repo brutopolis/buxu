@@ -209,7 +209,7 @@ int main(int argc, char **argv)
     Int result = -2; // -2 because no valid buxu program will ever return -2
 
     // virtual machine startup
-    vm = make_vm(16); // starts with capacity of 16 vars, to avoid reallocations, it will grow as needed
+    vm = make_vm(48); // starts with capacity of 48 vars, to avoid reallocations, it will grow as needed
 
     // lib search paths
     char* backup;
@@ -217,15 +217,15 @@ int main(int argc, char **argv)
 
 
     // arguments startup
-    args = list_init(0);
+    args = list_init(sizeof(void*));
     
     // dynamic library functions
     add_function(vm, "load", brl_main_dl_open);
     add_function(vm, "unload", brl_main_dl_close);
 
     // dynamic libraries lists startup
-    libs = list_init(0);
-    libs_names = list_init(0);
+    libs = list_init(sizeof(void*));
+    libs_names = list_init(sizeof(void*));
 
 
     // arguments parsing
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--load") == 0) // preload libs
         {
-            char *libname = str_format("load (@%s)", argv[i+1]);
+            char *libname = str_format("load {%s}", argv[i+1]);
             eval(vm, libname);
             free(libname);
 
