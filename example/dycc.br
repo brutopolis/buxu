@@ -1,6 +1,6 @@
-load "dyc";
+load {dyc};
 
-dycc.compile (@
+dycc.compile {
 
     function(abc)
     {   
@@ -8,5 +8,5 @@ dycc.compile (@
         return (Int)-1;
     }
 
-) 'abc';
+} {abc};
 abc;

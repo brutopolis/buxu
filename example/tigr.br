@@ -1,5 +1,8 @@
 load "std";
 load "tigr";
+
+ignore { this will be updated soon };
+
 new "flags" tigr.auto;
 
 new "screen" (tigr.window 100 100 "Hello" flags);
