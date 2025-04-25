@@ -5,7 +5,14 @@ load {io};
 void @str0 {abcdefghijklmnopqrstuvwxyz};
 void @str1 {ABCDEFGHIJKLMNOPQRSTUVWXYZ};
 print.string str0;
-str.concat str0 str1;
+string.concat str0 str1;
 ls;
 print.string str0;
+print.string str1;
+
+string.set str0 40 {aaaaaaaa884921740128974184198};
+print.string str0;
+print.string str1;
+ls;
+
 return 0;
