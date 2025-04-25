@@ -1,12 +1,13 @@
 load {std};
-load {str};
+load {string};
 load {io};
 
 void @str0 {abcdefghijklmnopqrstuvwxyz};
 void @str1 {ABCDEFGHIJKLMNOPQRSTUVWXYZ};
 print.string str0;
-string.concat str0 str1;
+void @newstr (string.format {%s%s} str0 str1);
 ls;
+print.string newstr;
 print.string str0;
 print.string str1;
 
@@ -15,4 +16,8 @@ print.string str0;
 print.string str1;
 ls;
 
+print.string @a {((((\}};
+print.string newstr;
+string.delete newstr;
+ls;
 return 0;
