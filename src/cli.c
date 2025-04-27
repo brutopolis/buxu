@@ -32,28 +32,8 @@ Int repl(VirtualMachine *vm)
     }
 
     printf("%s: ", EMOTICON_DEFAULT);
-    Int nullindex = -1;
-    for (Int i = 0; i < vm->values->size; i++)
-    {
-        if (vm->labels->data[i].p != NULL && strcmp(vm->labels->data[i].s, "NULL") == 0)
-        {
-            nullindex = i;
-            break;
-        }
-    }
 
-    if (result < nullindex)
-    {
-        printf("%p", vm->values->data[result].s);
-    }
-    else if (result == nullindex)
-    {
-        printf("NULL");
-    }
-    else
-    {
-        printf("%ld", vm->values->data[result].i);
-    }
+    printf("%ld", data(result).i);
     
     printf("\n");
     return result;

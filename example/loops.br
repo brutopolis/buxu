@@ -2,8 +2,8 @@ load {std};
 load {io};
 load {math};
 
-new {_index} 0;
-new {_1} 1;
+label {_index} 0;
+label {_1} 1;
 
 repeat 100000 
 {
