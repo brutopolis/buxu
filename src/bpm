@@ -149,7 +149,7 @@ run_package_function()
 {
     local varname=$1
     local label=$2
-    ls
+    
     if [[ ! -f "../../package.sh" ]]; then
         echo "[=°~°=]: no package.sh found"
         exit 1
