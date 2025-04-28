@@ -149,13 +149,13 @@ run_package_function()
 {
     local varname=$1
     local label=$2
-
-    if [[ ! -f "package.sh" ]]; then
+    ls
+    if [[ ! -f "../../package.sh" ]]; then
         echo "[=°~°=]: no package.sh found"
         exit 1
     fi
 
-    source package.sh
+    source ../../package.sh # ../../ becouse we are in .buxu/bpm/PACKAGE
 
     if [[ -z ${!varname} ]]; then
         echo "[=°~°=]: no $label variable found in package.sh"
