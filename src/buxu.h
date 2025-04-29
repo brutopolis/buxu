@@ -1,9 +1,15 @@
 #ifndef BUXU_H
 #define BUXU_H 1
 // bruter
-#include <bruter.h>
+#include "bruter.h"
 
-#define BUXU_VERSION "0.1.0"
+#ifndef ARDUINO
+char* readfile(char *filename);
+bool file_exists(char* filename);
+void writefile(char *filename, char *code);
+#endif
+
+#define BUXU_VERSION "0.1.2"
 
 // emoticons
 #define EMOTICON_DEFAULT "[=°-°=]"
@@ -20,7 +26,7 @@
 
 #define add_function(vm, name, func) \
 ({ \
-    Int index = new_var(vm, name); \
+    Int index = new_var(vm); \
     data(index).p = func; \
     index; \
 })

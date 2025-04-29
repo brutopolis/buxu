@@ -2,22 +2,15 @@ load {std};
 load {string};
 load {io};
 
-void @str0 {abcdefghijklmnopqrstuvwxyz};
+void {abcdefghijklmnopqrstuvwxyz} @str0;
 void @str1 {ABCDEFGHIJKLMNOPQRSTUVWXYZ};
-print.string str0;
-void @newstr (string.format {%s%s} str0 str1);
 ls;
-print.string newstr;
-print.string str0;
-print.string str1;
+print.string {deleting};
+string.delete str0;
 
-string.set str0 40 {aaaaaaaa884921740128974184198};
-print.string str0;
-print.string str1;
+print.string @a (string.format {str1: %s\n} str1);
 ls;
-
-print.string @a {((((\}};
-print.string newstr;
-string.delete newstr;
+print.string a;
+print.string @b {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa};
 ls;
 return 0;

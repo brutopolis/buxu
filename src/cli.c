@@ -10,10 +10,10 @@
 List *args;
 List* libs;
 List* libs_names;
-VirtualMachine* vm; // global vm
+List* vm; // global vm
 char *_code = NULL;
 
-Int repl(VirtualMachine *vm)
+Int repl(List *vm)
 {
     buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
     buxu_print(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
@@ -168,7 +168,8 @@ void _free_at_exit()
         free(args->data[i].s);
     }
     list_free(args);
-    free_vm(vm);
+
+    list_free(vm);
 
     if (_code != NULL)
     {
