@@ -1,0 +1,16 @@
+load {std};
+load {string};
+load {io};
+
+ignore {abcdefghijklmnopqrstuvwxyz} @str0;
+ignore @str1 {ABCDEFGHIJKLMNOPQRSTUVWXYZ};
+ls;
+print.string {deleting};
+string.delete str0;
+
+print.string @a (string.format {str1: %s\n} str1);
+ls;
+print.string a;
+print.string @b {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa};
+ls;
+return 0;

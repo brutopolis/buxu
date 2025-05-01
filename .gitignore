@@ -2,7 +2,6 @@ main
 *.exe
 *.appimage
 .vscode
-valgrind-out.txt
 build/
 arduino/
 *.wasm
@@ -13,3 +12,4 @@ lib/tigr/tigr
 vgcore*
 bruter
 *.brl
+valgrind-out*

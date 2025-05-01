@@ -120,7 +120,19 @@ mkdir -p build
 cp src/bpm build/bpm
 cp src/bucc build/bucc
 
-$CC $MAIN bruter/src/bruter.c -o build/buxu -O3 -lm -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
+$CC $MAIN src/buxu.c bruter/src/bruter.c -o build/buxu -O3 -lm -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
+
+# libbuxu also 
+if [[ $NO_SHARED -eq 0 ]]; then
+    $CC src/buxu.c bruter/src/bruter.c -o build/libbuxu.so -shared -fPIC -O3 -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
+    cp build/libbuxu.so ./bruter/build/
+fi
+
+# need to fix it later
+# if [[ $NO_STATIC -eq 0 ]]; then
+    # $CC src/buxu.c bruter/src/bruter.c -o build/libbuxu.a $DEBUGARGS $EXTRA -Ibruter/src -static -Iinclude
+    # cp build/libbuxu.a ./bruter/build/
+# fi
 
 if [ -n "$DEBUG_FILE" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./build/buxu $DEBUG_FILE
@@ -190,6 +202,7 @@ if [[ $INSTALL -eq 1 ]]; then
 
     if [[ $NO_SHARED -eq 0 ]]; then
         $SUDO cp ./bruter/build/libbruter.so $INSTALL_PATH/lib/
+        $SUDO cp ./build/libbuxu.so $INSTALL_PATH/lib/
     fi
 
     # verify if buxu, buxu.h, and bucc are in the correct place
