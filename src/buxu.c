@@ -329,6 +329,19 @@ List* parse(void *_context, char *cmd)
             context->data[index] = parse_number(str);
             list_push(result, (Value){.i = index}, NULL);
         }
+        else if (str[0] == '@') // label
+        {
+            if (result->size <= 0)
+            {
+                buxu_error("%s has no previous value", str);
+                list_push(result, (Value){.i = -1}, NULL);
+            }
+            else 
+            {
+                context->keys[result->data[result->size - 1].i] = str_duplicate(str + 1);
+                // thats it, we dont need to push anything to the result
+            }
+        }
         else
         {
             Int index = list_find(context, (Value){.p = NULL}, str);

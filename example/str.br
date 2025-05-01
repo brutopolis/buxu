@@ -2,8 +2,8 @@ load {std};
 load {string};
 load {io};
 
-void {abcdefghijklmnopqrstuvwxyz} @str0;
-void @str1 {ABCDEFGHIJKLMNOPQRSTUVWXYZ};
+ignore {abcdefghijklmnopqrstuvwxyz} @str0;
+ignore @str1 {ABCDEFGHIJKLMNOPQRSTUVWXYZ};
 ls;
 print.string {deleting};
 string.delete str0;
