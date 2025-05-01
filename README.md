@@ -130,6 +130,7 @@
     command 0o00000000;
     command 0.000000;
     command 0;
+    command value @label;
 
 # Dynamic libraries
 

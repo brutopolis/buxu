@@ -3,14 +3,15 @@ load {string};
 load {io};
 
 ignore {abcdefghijklmnopqrstuvwxyz} @str0;
-ignore @str1 {ABCDEFGHIJKLMNOPQRSTUVWXYZ};
+ignore {ABCDEFGHIJKLMNOPQRSTUVWXYZ} @str1;
 ls;
+ignore (string.concat str0 str1) @c;
 print.string {deleting};
 string.delete str0;
+ls;
 
-print.string @a (string.format {str1: %s\n} str1);
-ls;
+print.string (string.format {str1: %s\n} str1) @a;
 print.string a;
-print.string @b {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa};
-ls;
+print.string {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} @b;
+print.string c;
 return 0;
