@@ -9,11 +9,10 @@
 
 List *args;
 List* libs;
-List* libs_names;
-List* vm; // global vm
+List* context; // global context
 char *_code = NULL;
 
-Int repl(List *vm)
+Int repl(List *context)
 {
     buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
     buxu_print(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
@@ -28,7 +27,7 @@ Int repl(List *vm)
         {
             break;
         }
-        result = eval(vm, cmd);
+        result = eval(context, cmd);
     }
 
     printf("%s: ", EMOTICON_DEFAULT);
@@ -42,22 +41,18 @@ Int repl(List *vm)
 void buxu_dl_open(char* libpath)
 {
     // check if the library is already loaded
-    for (Int i = 0; i < libs_names->size; i++)
+    Int found = list_find(libs, (Value){.p = NULL}, libpath);
+    if (found != -1)
     {
-        if (strcmp(libpath, libs_names->data[i].s) == 0)
-        {
-            // already loaded, it wouldnt crash, neither reload the lib, but would duplicate variables to the same pointers, a waste of memory
-            buxu_error("library %s already loaded", libpath);
-            return;
-        }
+        buxu_error("library %s already loaded", libpath);
+        return;
     }
 
     void *handle = dlopen(libpath, RTLD_LAZY | RTLD_GLOBAL);
 
     if (handle != NULL)
     {
-        list_push(libs, (Value){.p = handle});
-        list_push(libs_names, (Value){.s = str_duplicate(libpath)});
+        list_push(libs, (Value){.p = handle}, libpath);
     }
     else 
     {
@@ -75,7 +70,7 @@ void buxu_dl_open(char* libpath)
     free(tmp);
     if (_init != NULL)
     {
-        _init(vm);
+        _init(context);
     }
     else 
     {
@@ -84,7 +79,6 @@ void buxu_dl_open(char* libpath)
         // then lets close the library
         dlclose(handle);
         list_pop(libs);
-        list_pop(libs_names);
         return;
     }
 
@@ -104,14 +98,12 @@ void buxu_dl_open(char* libpath)
 
 void buxu_dl_close(char* libpath)
 {
-    for (Int i = 0; i < libs_names->size; i++)
+    for (Int i = 0; i < libs->size; i++)
     {
-        if (strcmp(libpath, libs_names->data[i].s) == 0)
+        if (strcmp(libpath, libs->keys[i]) == 0)
         {
             dlclose(data(libs->data[i].i).p);
             list_fast_remove(libs, i);
-            free(libs_names->data[i].s);
-            list_fast_remove(libs_names, i);
             return;
         }
     }
@@ -157,11 +149,9 @@ void _free_at_exit()
         while (libs->size > 0)
         {
             dlclose(list_pop(libs).p);
-            free(list_pop(libs_names).p);
         }
     }
     list_free(libs);
-    list_free(libs_names);
 
     for (Int i = 0; i < args->size; i++)
     {
@@ -169,7 +159,7 @@ void _free_at_exit()
     }
     list_free(args);
 
-    list_free(vm);
+    list_free(context);
 
     if (_code != NULL)
     {
@@ -190,23 +180,20 @@ int main(int argc, char **argv)
     Int result = -2; // -2 because no valid buxu program will ever return -2
 
     // virtual machine startup
-    vm = make_vm(48); // starts with capacity of 48 vars, to avoid reallocations, it will grow as needed
+    context = list_init(48, true); // starts with capacity of 48 vars, to avoid reallocations, it will grow as needed
 
     // lib search paths
     char* backup;
 
-
-
     // arguments startup
-    args = list_init(sizeof(void*));
+    args = list_init(sizeof(void*), false);
     
     // dynamic library functions
-    add_function(vm, "load", brl_main_dl_open);
-    add_function(vm, "unload", brl_main_dl_close);
+    add_function(context, "load", brl_main_dl_open);
+    add_function(context, "unload", brl_main_dl_close);
 
     // dynamic libraries lists startup
-    libs = list_init(sizeof(void*));
-    libs_names = list_init(sizeof(void*));
+    libs = list_init(sizeof(void*), true);
 
 
     // arguments parsing
@@ -232,25 +219,25 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--load") == 0) // preload libs
         {
             char *libname = str_format("load {%s}", argv[i+1]);
-            eval(vm, libname);
+            eval(context, libname);
             free(libname);
 
             i+=1; // skip to the next argument
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
-            result = eval(vm, argv[i+1]);
+            result = eval(context, argv[i+1]);
             i+=1;// skip to the next argument
         }
         else // push to args
         {
-            list_push(args, (Value){.s = str_duplicate(argv[i])});
+            list_push(args, (Value){.s = str_duplicate(argv[i])}, NULL);
         }
     }
 
     if (args->size == 0 && result == -2) // repl, only if no arguments and no eval rant
     {
-        repl(vm);
+        repl(context);
     }
     else if (args->size > 0) // run files
     {
@@ -264,7 +251,7 @@ int main(int argc, char **argv)
             return 1;
         }
     
-        result = eval(vm, _code);
+        result = eval(context, _code);
         free(___file);
     }
     return result;

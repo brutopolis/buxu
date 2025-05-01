@@ -1,5 +1,12 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
+(01/05/2025) - version 0.1.3
+
+- from this version and on everything that not a list_* is not part of bruter anymore;
+- everything about language eval and parsing is now part of buxu;
+- arg* functions can now access the function pointer, using arg*(-1);
+- everything updated to meet bruter 0.8.4 needs;
+
 (24/04/2025) - version 0.1.0
 
 - from this version and on bruter and all it related stuff will be under the brutopolis organization;
