@@ -115,6 +115,8 @@
 
 - `;` = end of command separator
 
+- `@` = label operator
+
 # Language usage
 
     command;
