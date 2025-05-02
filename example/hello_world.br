@@ -1,9 +1,10 @@
-load {io};
-load {std};
-
-ignore 
-{hello world!} @str;
-
-ls;
-print.string str;
-return 0;
+(load {std})
+(load {io})
+[
+    {hello world!} @str
+]
+(ls)
+(print.string str) 
+([] {hello world!})
+@ hello world will be returned and interrupt the program
+[@ this is a comment, the @ interrupt the parsing of this block]
