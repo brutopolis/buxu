@@ -1,5 +1,14 @@
 # buxu changelog https://github.com/jardimdanificado/buxu
 
+(02/05/2025) - version 0.1.4
+
+- a @ interrupts the parsing;
+- it can be used as comment if on the beginning;
+- ; is no more a thing, everything is now is delimited by [] () or {};
+- instead of spliting by ; then parse line by line, it will now parse the whole file at once;
+- if the first arg is < 0, it will be treated as a return(of the next valid arg, if any);
+- ([] 44) is the same as (return 44) or 44;
+
 (01/05/2025) - version 0.1.3
 
 - from this version and on everything that not a list_* is not part of bruter anymore;

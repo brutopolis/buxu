@@ -12,6 +12,19 @@ List* libs;
 List* context; // global context
 char *_code = NULL;
 
+List* string_split(char *str, char* delim)//using strtok
+{
+    List *splited = list_init(8, true);
+    char *token = strtok(str, delim);
+    while (token != NULL)
+    {
+        list_push(splited, (Value){.s = str_duplicate(token)}, NULL);
+        token = strtok(NULL, delim);
+    }
+    return splited;
+}
+
+
 Int repl(List *context)
 {
     buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
@@ -19,7 +32,7 @@ Int repl(List *context)
     char cmd[1024];
     Int result = -1;
     int junk = 0;
-    while (result == -1)
+    while (result < 0)
     {
         printf(EMOTICON_IDLE ": ");
         junk = scanf("%[^\n]%*c", cmd);
@@ -60,8 +73,8 @@ void buxu_dl_open(char* libpath)
         return;
     }
 
-    List *splited = special_split(libpath, '/');
-    List *splited2 = special_split(splited->data[splited->size - 1].s, '.');
+    List *splited = string_split(libpath, "/");
+    List *splited2 = string_split(splited->data[splited->size - 1].s, ".");
     char *_libpath = splited2->data[0].s;
 
     // now lets get the init_name function
@@ -226,7 +239,12 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
-            result = eval(context, argv[i+1]);
+            List *parsed = parse(context, _code);
+            if (parsed->size > 0)
+            {
+                result = list_pop(parsed).i;
+            }
+            list_free(parsed);
             i+=1;// skip to the next argument
         }
         else // push to args
@@ -250,9 +268,9 @@ int main(int argc, char **argv)
             buxu_error("file %s not found", ___file);
             return 1;
         }
-    
         result = eval(context, _code);
         free(___file);
     }
+    buxu_print(EMOTICON_DEFAULT, "result: %d", data(result).i);
     return result;
 }

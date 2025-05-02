@@ -1,6 +1,6 @@
-load {ffi};
+(load {ffi})
 
-ffi.compile {
+(ffi.compile {
 
     function(abc)
     {   
@@ -8,5 +8,6 @@ ffi.compile {
         return (Int)-1;
     }
 
-};
-abc;
+})
+
+(abc)

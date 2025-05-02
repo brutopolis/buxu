@@ -113,7 +113,9 @@
 
 - `{}` = string delimiter
 
-- `;` = end of command separator
+- `[]` = \[ignored\]
+
+- `@` = label operator/parser interruptor
 
 - `@` = label operator
 
@@ -131,6 +133,7 @@
     command 0.000000;
     command 0;
     command value @label;
+    [ignored];
 
 # Dynamic libraries
 

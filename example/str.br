@@ -1,17 +1,20 @@
-load {std};
-load {string};
-load {io};
+(load {std})
+(load {string})
+(load {io})
 
-ignore {abcdefghijklmnopqrstuvwxyz} @str0;
-ignore {ABCDEFGHIJKLMNOPQRSTUVWXYZ} @str1;
-ls;
-ignore (string.concat str0 str1) @c;
-print.string {deleting};
-string.delete str0;
-ls;
+[
+    {abcdefghijklmnopqrstuvwxyz} @str0
+    {ABCDEFGHIJKLMNOPQRSTUVWXYZ} @str1 
+]
 
-print.string (string.format {str1: %s\n} str1) @a;
-print.string a;
-print.string {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} @b;
-print.string c;
-return 0;
+(ls)
+[(string.concat str0 str1) @c]
+(print.string {deleting})
+(string.delete str0)
+(ls)
+
+(print.string (string.format {str1: %s\n} str1) @a)
+(print.string a)
+(print.string {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} @b)
+(print.string c)
+0

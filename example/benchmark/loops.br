@@ -1,15 +1,19 @@
-load {std};
-load {io};
-load {math};
+(load {std})
+(load {io})
+(load {math})
 
-new {___index} 0;
-new {_size} 100000;
-new {_1} 1;
+[
+    0 @___index
+    100000 @_size
+    1 @_1
+]
 
+(
+    repeat _size 
+    {
+        (iadd ___index _1)
+        (print.int ___index)
+    }
+)
 
-repeat _size {
-    iadd ___index _1;
-    print.int ___index;
-};
-
-return 0;
+0
