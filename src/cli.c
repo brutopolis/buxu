@@ -268,12 +268,7 @@ int main(int argc, char **argv)
             buxu_error("file %s not found", ___file);
             return 1;
         }
-        List *parsed = parse(context, _code);
-        if (parsed->size > 0)
-        {
-            result = list_pop(parsed).i;
-        }
-        list_free(parsed);
+        result = eval(context, _code);
         free(___file);
     }
     buxu_print(EMOTICON_DEFAULT, "result: %d", data(result).i);
