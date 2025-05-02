@@ -1,4 +1,3 @@
-
 (load {std})
 (load {string})
 (load {io})

@@ -117,6 +117,8 @@
 
 - `@` = label operator/parser interruptor
 
+- `@` = label operator
+
 # Language usage
 
     command;
