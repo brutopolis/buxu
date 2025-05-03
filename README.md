@@ -143,4 +143,4 @@
 
   # BRUTER
 
-  you might want to know how the BRUTER vm works: https://github.com/jardimdanificado/bruter
+  you might want to know how BRUTER works: https://github.com/jardimdanificado/bruter

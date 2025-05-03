@@ -2,10 +2,11 @@ load {std};
 load {io};
 load {math};
 
-label {_index} 0;
-label {_1} 1;
+ignore 
+0 @_index 
+1 @_1;
 
-repeat 100000 
+repeat 100000 @size 
 {
     iadd _index _1;
     print.int _index

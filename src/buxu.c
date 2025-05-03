@@ -32,7 +32,7 @@ char* str_nduplicate(const char *str, UInt n)
 }
 
 // file stuff
-char* readfile(char *filename)
+char* file_read(char *filename)
 {
     FILE *file = fopen(filename, "r");
     if (file == NULL)
@@ -73,7 +73,7 @@ char* readfile(char *filename)
     return code;
 }
 
-void writefile(char *filename, char *code)
+void file_write(char *filename, char *code)
 {
     FILE *file = fopen(filename, "w");
     if (file == NULL)
@@ -364,6 +364,12 @@ List* parse(void *_context, char *cmd)
     return result;
 }
 
+Int context_call(List *context, List *args)
+{
+    Int(*_function)(List*,List*) = args->data[0].p;
+    return _function(context, args);
+}
+
 Int eval(List *context, char *cmd)
 {
     List *splited = special_split(cmd, ';');
@@ -401,7 +407,7 @@ Int eval(List *context, char *cmd)
         List *args = parse(context, str);
 
         args->data[0].p = context->data[args->data[0].i].p;
-        result = list_call(context, args);
+        result = context_call(context, args);
         free(str);
         list_free(args);
 

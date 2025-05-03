@@ -243,7 +243,7 @@ int main(int argc, char **argv)
     {
         char* ___file = list_shift(args).s;
     
-        _code = readfile(___file);
+        _code = file_read(___file);
 
         if (_code == NULL)
         {
