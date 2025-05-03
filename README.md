@@ -113,9 +113,7 @@
 
 - `{}` = string delimiter
 
-- `[]` = \[ignored\]
-
-- `@` = label operator/parser interruptor
+- `;` = end of command separator
 
 - `@` = label operator
 
@@ -133,7 +131,6 @@
     command 0.000000;
     command 0;
     command value @label;
-    [ignored];
 
 # Dynamic libraries
 
@@ -146,4 +143,4 @@
 
   # BRUTER
 
-  you might want to know how the BRUTER vm works: https://github.com/jardimdanificado/bruter
+  you might want to know how BRUTER works: https://github.com/jardimdanificado/bruter

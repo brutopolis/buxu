@@ -12,12 +12,12 @@
 #include <stddef.h>
 
 #ifndef ARDUINO
-char* readfile(char *filename);
+char* file_read(char *filename);
 bool file_exists(char* filename);
-void writefile(char *filename, char *code);
+void file_write(char *filename, char *code);
 #endif
 
-#define BUXU_VERSION "0.1.4"
+#define BUXU_VERSION "0.1.3"
 
 #define data(index) context->data[index]
 #define data_s(index) &context->data[index].u8[0]
@@ -68,5 +68,7 @@ Value parse_number(char *str);
 List* parse(void *_context, char *cmd);
 
 Int eval(List *context, char *cmd);
+
+#define function(name) Int name(List *context, List *args)
 
 #endif
