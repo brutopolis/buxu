@@ -8,7 +8,7 @@ char* str_duplicate(const char *str)
     
     if (dup == NULL)
     {
-        buxu_error("failed to allocate memory for string duplication\n");
+        printf("BRUTER_ERROR: failed to allocate memory for string duplication\n");
         exit(EXIT_FAILURE);
     }
     
@@ -22,7 +22,7 @@ char* str_nduplicate(const char *str, UInt n)
     
     if (dup == NULL)
     {
-        buxu_error("failed to allocate memory for string duplication\n");
+        printf("BRUTER_ERROR: failed to allocate memory for string duplication\n");
         exit(EXIT_FAILURE);
     }
     
@@ -162,26 +162,6 @@ List* special_space_split(char *str)
             list_push(splited, (Value){.s = tmp}, NULL);
             i = j + 1;
         }
-        else if (str[i] == '[')
-        {
-            int j = i;
-            int count = 1;
-            while (count != 0)
-            {
-                j++;
-                if (str[j] == '[' && (j == 0 || str[j-1] != '\\'))  // não conta se for escapado
-                {
-                    count++;
-                }
-                else if (str[j] == ']' && (j == 0 || str[j-1] != '\\'))  // não conta se for escapado
-                {
-                    count--;
-                }
-            }
-            char *tmp = str_nduplicate(str + i, j - i + 1);
-            list_push(splited, (Value){.s = tmp}, NULL);
-            i = j + 1;
-        }
         else if (isspace(str[i]))
         {
             i++;
@@ -199,6 +179,54 @@ List* special_space_split(char *str)
     }
     return splited;
 }
+
+
+List* special_split(char *str, char delim)
+{
+    List *splited = list_init(sizeof(void*), NULL);
+    
+    int recursion = 0;
+    int curly = 0;
+    
+    int i = 0;
+    int last_i = 0;
+
+    while (str[i] != '\0')
+    {
+        if (str[i] == '(' && (i == 0 || str[i-1] != '\\') && !curly)
+        {
+            recursion++;
+        }
+        else if (str[i] == ')' && (i == 0 || str[i-1] != '\\') && !curly)
+        {
+            recursion--;
+        }
+        else if (str[i] == '{' && (i == 0 || str[i-1] != '\\') && !recursion)
+        {
+            curly++;
+        }
+        else if (str[i] == '}' && (i == 0 || str[i-1] != '\\') && !recursion)
+        {
+            curly--;
+        }
+
+        if (str[i] == delim && !recursion && !curly)
+        {
+            char* tmp = str_nduplicate(str + last_i, i - last_i);
+            list_push(splited, (Value){.s = tmp}, NULL);
+            last_i = i + 1;
+        }
+        else if (str[i + 1] == '\0')
+        {
+            char* tmp = str_nduplicate(str + last_i, i - last_i + 1);
+            list_push(splited, (Value){.s = tmp}, NULL);
+        }
+
+        i++;
+    }
+    return splited;
+}
+
 
 // var new 
 Int new_var(List *context, char* key)
@@ -281,19 +309,12 @@ List* parse(void *_context, char *cmd)
     for (i = 0; i < splited->size; i++)
     {
         str = splited->data[i].s;        
-        if (str[0] == '(') // exec block
+        if (str[0] == '(')
         {
             char* temp = str + 1;
             temp[strlen(temp) - 1] = '\0';
             Int res = eval(context, temp);
             list_push(result, (Value){.i = res}, NULL);
-        }
-        else if (str[0] == '[') // ignore block
-        {
-            char* temp = str + 1;
-            temp[strlen(temp) - 1] = '\0';
-            list_free(parse(context, temp));
-            list_push(result, (Value){.i = -1}, NULL);
         }
         else if (str[0] == '{') // string
         {
@@ -310,18 +331,9 @@ List* parse(void *_context, char *cmd)
         }
         else if (str[0] == '@') // label
         {
-            if (str[1] == '\0') // alone label, interrupt the parsing and return as it is
+            if (result->size <= 0)
             {
-                for (; i < splited->size; i++)
-                {
-                    free(splited->data[i].s);
-                }
-                list_free(splited);
-                return result;
-            } 
-            else if (result->size <= 0)
-            {
-                buxu_error("%s HAS NO PREVIOUS VALUE", str);
+                buxu_error("%s has no previous value", str);
                 list_push(result, (Value){.i = -1}, NULL);
             }
             else 
@@ -340,7 +352,7 @@ List* parse(void *_context, char *cmd)
             }
             else 
             {
-                buxu_error("VARIABLE %s NOT FOUND", str);
+                buxu_error("variable %s not found", str);
                 list_push(result, (Value){.i = -1}, NULL);
             }
         }
@@ -354,24 +366,56 @@ List* parse(void *_context, char *cmd)
 
 Int eval(List *context, char *cmd)
 {
-    Int result = -1;
-    List *args = parse(context, cmd);
-    if (args->data[0].i >= 0)
+    List *splited = special_split(cmd, ';');
+
+    // remove empty or whitespace-only strings using isspace
+    Int last = splited->size - 1;
+    for (; last >= 0; last--)
     {
-        args->data[0].p = context->data[args->data[0].i].p;
-        result = list_call(context, args);
-    }
-    else 
-    {
-        for (Int i = 0; i < args->size; i++)
+        if (strlen(splited->data[last].s) == 0)
         {
-            if (args->data[i].i >= 0)
+            free(list_pop(splited).p);
+        }
+        else
+        {
+            Int i = 0;
+            while (splited->data[last].s[i] != '\0' && isspace(splited->data[last].s[i]))
             {
-                result = args->data[i].i;
-                break;
+                i++;
+            }
+
+            if (splited->data[last].s[i] == '\0')
+            {
+                free(splited->data[last].s);
+                list_pop(splited);
             }
         }
+        last--;
     }
-    list_free(args);
+
+    Int result = -1;
+    char* str = NULL;
+    for (Int i = 0; i < splited->size; i++)
+    {        
+        str = splited->data[i].s;
+        List *args = parse(context, str);
+
+        args->data[0].p = context->data[args->data[0].i].p;
+        result = list_call(context, args);
+        free(str);
+        list_free(args);
+
+        if (result > 0)
+        {
+            for (Int j = i + 1; j < splited->size; j++)
+            {
+                free(splited->data[j].s);
+            }
+            break;
+        }
+        
+        
+    }
+    list_free(splited);
     return result;
 }

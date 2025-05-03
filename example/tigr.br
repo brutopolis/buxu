@@ -1,0 +1,55 @@
+load "std";
+load "tigr";
+
+ignore { this will be updated soon };
+
+new "flags" tigr.auto;
+
+new "screen" (tigr.window 100 100 "Hello" flags);
+
+new "screen2" (tigr.window 320 240 "Hello2" flags);
+
+
+new "white" (tigr.rgba 255 255 255 255);
+new "pink" (tigr.rgba 255 192 203 255);
+new "_110" 110;
+new "_120" 120;
+new "_50" 50;
+new "_1" 1;
+new "false" (get 0);
+new "txt" "Hello, world.";
+
+new "mouse_x" 0;
+new "mouse_y" 0;
+new "mouse_b" 0;
+
+cast mouse_x type.any;
+cast mouse_y type.any;
+cast mouse_b type.any;
+
+new "cond" (@||
+    (tigr.key_down screen tigr.escape) 
+    (tigr.key_down screen2 tigr.escape) 
+    (tigr.closed screen) 
+    (tigr.closed screen2));
+
+new "code" "return 0;";
+ls;
+(@) (forever (@
+    tigr.mouse screen mouse_x mouse_y mouse_b;
+    
+    tigr.clear screen pink;
+    tigr.print screen tigr.font _50 _50 white txt;
+    tigr.update screen;
+
+    tigr.clear screen2 pink;
+    tigr.print screen2 tigr.font _110 _120 white txt;
+    tigr.update screen2;
+
+    if cond code;
+));
+
+tigr.free screen;
+tigr.free screen2;
+
+return 0;
