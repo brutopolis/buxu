@@ -13,3 +13,4 @@ vgcore*
 bruter
 *.brl
 valgrind-out*
+.bpm

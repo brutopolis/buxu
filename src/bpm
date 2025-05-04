@@ -5,17 +5,11 @@
 # usage function
 usage() 
 {
-    echo "[=°-°=]: usage: $0 [install|install-from|remove|build|run|setup|clean|update|help] [package]"
+    echo "[=°-°=]: usage: $0 [install|install-from|remove] [package]"
     echo "[=°~°=]: install: install a package from the repository"
     echo "[=°~°=]: install-from: install a package from a custom repository"
     echo "[=°~°=]: remove: remove a package"
-    echo "[=°~°=]: build: user-defined build step"
-    echo "[=°~°=]: run: user-defined run step"
-    echo "[=°~°=]: setup: user-defined setup step"
-    echo "[=°~°=]: clean: user-defined clean step"
-    echo "[=°~°=]: update: user-defined update step"
-    echo "[=°~°=]: help: show this help message"
-    echo "[=°~°=]: package: name of the package to install/remove"
+    echo "[=°~°=]: *: if there is a *.sh file in the current directory, it will be sourced"
 }
 
 # store current path
@@ -35,42 +29,114 @@ PACKAGE=""
 # action flags
 _INSTALL=0
 _UNINSTALL=0
-_BUILD=0
-_RUN=0
-_SETUP=0
-_CLEAN=0
-_UPDATE=0
+SKIP_FILES=0
+
+# files function
+files() 
+{
+    # if SKIP_FILES is 0
+    if [[ $SKIP_FILES -eq 1 ]]; then
+        return 0
+    fi
+
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no files specified"
+        exit 1
+    fi
+
+    FILES="$@"
+
+    for file in $FILES
+    do
+    {
+        # download the file
+        curl -sLO "$REPO/$PACKAGE/$file"
+        if [[ ! -f "$file" ]]; then
+            echo "[=°~°=]: failed to fetch $file"
+            exit 1
+        fi
+    }
+    done
+}
+
+name() 
+{
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no name specified"
+        exit 1
+    fi
+
+    NAME="$1"
+}
+
+version() 
+{
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no version specified"
+        exit 1
+    fi
+
+    VERSION="$1"
+}
+
+description() 
+{
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no description specified"
+        exit 1
+    fi
+
+    DESCRIPTION="$1"
+}
+
+setup() 
+{
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no setup command specified"
+        exit 1
+    fi
+
+    SETUP="$1"
+}
 
 # read command
 case $1 in
+# this creates the .bpm folder
 install)  { _INSTALL=1; shift; } ;;
 install-from) { _INSTALL=1; REPO=$2; shift 2; } ;;
 remove)   { _UNINSTALL=1; shift; } ;;
-build)    { _BUILD=1; shift; } ;;
-run)      { _RUN=1; shift; } ;;
-setup)    { _SETUP=1; shift; } ;;
-clean)    { _CLEAN=1; shift; } ;;
-update)   { _UPDATE=1; shift; } ;;
+# help command
 help)   { usage; exit 0; } ;;
 *) 
 {
-    echo "[=°~°=]: unknown command: $1"
-    usage
+    # verify if there is a *.sh file in the current directory
+    if [[ -f "$1.sh" ]]; then
+        SKIP_FILES=1 # will not download the files
+        source "package.sh"
+        source "$1.sh"
+        exit 0
+    
+    else
+        echo "[=°~°=]: unknown command: $1"
+        usage
+    fi
+
+    
     exit 1
 }
 ;;
 esac
 
-# create local build folder if needed
-if [[ ! -d .buxu/bpm ]]; then
-    mkdir -p .buxu/bpm
-fi
-
-cd .buxu/bpm
-
 # handle install
 if [[ $_INSTALL -eq 1 ]]; then
 {
+    # create local build folder if needed
+    if [[ ! -d .bpm ]]; then
+        mkdir -p .bpm
+    fi
+
+    cd .bpm
+
     if [[ $# -eq 0 ]]; then
         echo "[=°~°=]: no package specified"
         exit 1
@@ -90,31 +156,12 @@ if [[ $_INSTALL -eq 1 ]]; then
         # download package.sh and validate
         curl -sLO "$REPO/$PACKAGE/package.sh"
         if [[ ! -f "package.sh" ]]; then
-            echo "[=°~°=]: failed to fetch package.sh"
+            echo "[=°~°=]: failed to fetch package.sh for $PACKAGE"
             exit 1
         fi
 
         source package.sh
-
-        if [[ -z $FILES ]]; then
-            echo "[=°~°=]: no FILES variable found in package.sh"
-            exit 1
-        fi
-
-        # fetch files
-        for file in $FILES
-        do
-        {
-            curl -sO "$REPO/$PACKAGE/$file"
-        }
-        done
-
-        # run build if defined
-        if [[ -n $BUILD ]]; then
-            $BUILD
-        else
-            echo "[=°~°=]: no BUILD command found in package.sh"
-        fi
+        eval "$(echo "$SETUP" | sed 's/^\(.*\)$/\1/')"
 
         cd ..
     }
@@ -143,31 +190,3 @@ if [[ $_UNINSTALL -eq 1 ]]; then
     done
 }
 fi
-
-# utility: run a function from package.sh if it exists
-run_package_function() 
-{
-    local varname=$1
-    local label=$2
-    
-    if [[ ! -f "../../package.sh" ]]; then
-        echo "[=°~°=]: no package.sh found"
-        exit 1
-    fi
-
-    source ../../package.sh # ../../ becouse we are in .buxu/bpm/PACKAGE
-
-    if [[ -z ${!varname} ]]; then
-        echo "[=°~°=]: no $label variable found in package.sh"
-        exit 1
-    fi
-
-    ${!varname}
-}
-
-# call remaining actions if flags were set
-if [[ $_BUILD -eq 1 ]]; then { run_package_function "BUILD" "BUILD"; } fi
-if [[ $_RUN   -eq 1 ]]; then { run_package_function "RUN" "RUN"; } fi
-if [[ $_SETUP -eq 1 ]]; then { run_package_function "SETUP" "SETUP"; } fi
-if [[ $_CLEAN -eq 1 ]]; then { run_package_function "CLEAN" "CLEAN"; } fi
-if [[ $_UPDATE -eq 1 ]]; then { run_package_function "UPDATE" "UPDATE"; } fi
