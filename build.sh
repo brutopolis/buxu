@@ -120,7 +120,7 @@ mkdir -p build
 cp src/bpm build/bpm
 cp src/bucc build/bucc
 
-$CC $MAIN src/buxu.c bruter/src/bruter.c -o build/buxu -O3 -lm -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
+$CC $MAIN src/buxu.c bruter/src/bruter.c -o build/buxu -O3 -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
 
 # libbuxu also 
 if [[ $NO_SHARED -eq 0 ]]; then

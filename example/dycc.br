@@ -1,6 +1,6 @@
-load {ffi};
+load {dycc};
 
-ffi.compile {
+dycc.compile {
 
     function(abc)
     {   

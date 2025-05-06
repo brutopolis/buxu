@@ -67,6 +67,11 @@ Int new_string(List *context, char* str, char* key);
 Value parse_number(char *str);
 List* parse(void *_context, char *cmd);
 
+List* compile_code(List *context, char *code);
+Int context_call(List *context, List *args);
+List* compile_and_call(List *context, char *cmd);
+Int compiled_call(List *context, List *compiled);
+void compiled_free(List *compiled);
 Int eval(List *context, char *cmd);
 
 #define function(name) Int name(List *context, List *args)

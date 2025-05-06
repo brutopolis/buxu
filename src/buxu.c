@@ -366,8 +366,93 @@ List* parse(void *_context, char *cmd)
 
 Int context_call(List *context, List *args)
 {
-    Int(*_function)(List*,List*) = args->data[0].p;
+    Int(*_function)(List*,List*) = context->data[args->data[0].i].p;
     return _function(context, args);
+}
+
+List* compile_code(List *context, char *cmd) 
+{
+    List *splited = special_split(cmd, ';');
+    List *compiled = list_init(sizeof(void*), NULL);
+
+    // remove empty or whitespace-only strings using isspace
+    Int last = splited->size - 1;
+    for (Int i = 0; i < splited->size; i++)
+    {
+        char* str = splited->data[i].s;
+        if (str[0] == '\0' || str[0] == ' ')
+        {
+            free(str);
+            splited->size--;
+            for (Int j = i; j < last; j++)
+            {
+                splited->data[j] = splited->data[j + 1];
+            }
+            i--;
+        }
+    }
+    if (splited->size == 0)
+    {
+        list_free(splited);
+        return NULL;
+    }
+
+    char* str = NULL;
+    for (Int i = 0; i < splited->size; i++) 
+    {
+        str = splited->data[i].s;
+        List *args = parse(context, str);
+
+        list_push(compiled, (Value){.p = args}, NULL);
+        free(str);
+    }
+
+    list_free(splited);
+    return compiled;
+}
+
+Int compiled_call(List *context, List *compiled)
+{
+    Int result = -1;
+    for (Int i = 0; i < compiled->size; i++)
+    {
+        List *args = compiled->data[i].p;
+        result = context_call(context, args);
+        if (result != -1)
+        {
+            break;
+        }
+    }
+    return result;
+}
+
+List* compile_and_call(List *context, char *cmd)
+{
+    List *compiled = list_init(sizeof(void*), NULL);
+    List *splited = special_split(cmd, ';');
+    char* str = NULL;
+    Int result = -1;
+    for (Int i = 0; i < splited->size; i++) 
+    {
+        str = splited->data[i].s;
+        List *args = parse(context, str);
+        result = context_call(context, args);
+        list_push(compiled, (Value){.p = args}, NULL);
+        free(str);
+    }
+    list_free(splited);
+    
+    return compiled;
+}
+
+void compiled_free(List *compiled)
+{
+    for (Int i = 0; i < compiled->size; i++)
+    {
+        List *args = compiled->data[i].p;
+        list_free(args);
+    }
+    list_free(compiled);
 }
 
 Int eval(List *context, char *cmd)
@@ -376,27 +461,25 @@ Int eval(List *context, char *cmd)
 
     // remove empty or whitespace-only strings using isspace
     Int last = splited->size - 1;
-    for (; last >= 0; last--)
+    for (Int i = 0; i < splited->size; i++)
     {
-        if (strlen(splited->data[last].s) == 0)
+        char* str = splited->data[i].s;
+        if (str[0] == '\0' || str[0] == ' ')
         {
-            free(list_pop(splited).p);
-        }
-        else
-        {
-            Int i = 0;
-            while (splited->data[last].s[i] != '\0' && isspace(splited->data[last].s[i]))
+            free(str);
+            splited->size--;
+            for (Int j = i; j < last; j++)
             {
-                i++;
+                splited->data[j] = splited->data[j + 1];
             }
+            i--;
+        }
+    }
 
-            if (splited->data[last].s[i] == '\0')
-            {
-                free(splited->data[last].s);
-                list_pop(splited);
-            }
-        }
-        last--;
+    if (splited->size == 0)
+    {
+        list_free(splited);
+        return -1;
     }
 
     Int result = -1;
@@ -406,7 +489,6 @@ Int eval(List *context, char *cmd)
         str = splited->data[i].s;
         List *args = parse(context, str);
 
-        args->data[0].p = context->data[args->data[0].i].p;
         result = context_call(context, args);
         free(str);
         list_free(args);
