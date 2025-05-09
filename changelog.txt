@@ -2,6 +2,8 @@
 
 (09/05/2025) - version 0.1.5
 
+- InitFunction removed;
+- instead of -l name, now is -lname;
 - context_call and such has beem merged into bruter;
 - updated to meet bruter 0.8.5;
 - macro function renamed to list_function and is now part of bruter;

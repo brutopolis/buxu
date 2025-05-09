@@ -211,14 +211,14 @@ int main(int argc, char **argv)
             buxu_print(EMOTICON_DEFAULT, "usage: %s [file]", argv[0]);
             printf("  -v, --version\t\tprint version\n");
             printf("  -h, --help\t\tprint this help\n");
-            printf("  -l, --load\t\tload a library\n");
+            printf("  -l, \t\t\tload a library\n");
             printf("  -p, --path\t\tadd a path to the library search path\n");
             printf("  -e, --eval\t\teval a string\n");
             return 0;
         }
-        else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--load") == 0) // preload libs
+        else if (argv[i][0] == '-' && argv[i][1] == 'l') // load
         {
-            char *libname = str_format("load {%s}", argv[i+1]);
+            char *libname = str_format("load {%s}", argv[i] + 2);
             eval(context, libname);
             free(libname);
 
