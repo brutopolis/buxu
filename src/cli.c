@@ -66,7 +66,7 @@ void buxu_dl_open(char* libpath)
 
     // now lets get the init_name function
     char* tmp = str_format("init_%s", _libpath);
-    InitFunction _init = dlsym(handle, tmp);
+    void (*_init)(List*) = dlsym(handle, tmp);
     free(tmp);
     if (_init != NULL)
     {
