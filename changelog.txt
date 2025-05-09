@@ -1,4 +1,10 @@
-# buxu changelog https://github.com/jardimdanificado/buxu
+# buxu changelog https://github.com/brutopolis/buxu
+
+(09/05/2025) - version 0.1.5
+
+- context_call and such has beem merged into bruter;
+- updated to meet bruter 0.8.5;
+- macro function renamed to list_function and is now part of bruter;
 
 (06/05/2025) - version 0.1.4
 

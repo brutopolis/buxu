@@ -2,7 +2,7 @@ load {dycc};
 
 dycc.compile {
 
-    function(abc)
+    list_function(abc)
     {   
         printf("aooooooooooo\n");
         return (Int)-1;

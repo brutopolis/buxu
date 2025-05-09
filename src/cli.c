@@ -41,7 +41,7 @@ Int repl(List *context)
 void buxu_dl_open(char* libpath)
 {
     // check if the library is already loaded
-    Int found = list_find(libs, (Value){.p = NULL}, libpath);
+    Int found = table_find(libs, libpath);
     if (found != -1)
     {
         buxu_error("library %s already loaded", libpath);
@@ -52,7 +52,7 @@ void buxu_dl_open(char* libpath)
 
     if (handle != NULL)
     {
-        list_push(libs, (Value){.p = handle}, libpath);
+        table_push(libs, (Value){.p = handle}, libpath);
     }
     else 
     {
@@ -110,7 +110,7 @@ void buxu_dl_close(char* libpath)
     buxu_error("library %s is not loaded.", libpath);
 }
 
-function(brl_main_dl_open)
+list_function(brl_main_dl_open)
 {
     char* str = arg_s(0);
     if (strstr(str, ".brl") != NULL)
@@ -126,7 +126,7 @@ function(brl_main_dl_open)
     return -1;
 }
 
-function(brl_main_dl_close)
+list_function(brl_main_dl_close)
 {
     char* str = arg_s(0);
     if (strstr(str, ".brl") != NULL)
@@ -180,20 +180,20 @@ int main(int argc, char **argv)
     Int result = -2; // -2 because no valid buxu program will ever return -2
 
     // virtual machine startup
-    context = list_init(48, true); // starts with capacity of 48 vars, to avoid reallocations, it will grow as needed
+    context = table_init(48); // starts with capacity of 48 vars, to avoid reallocations, it will grow as needed
 
     // lib search paths
     char* backup;
 
     // arguments startup
-    args = list_init(sizeof(void*), false);
+    args = list_init(sizeof(void*));
     
     // dynamic library functions
     add_function(context, "load", brl_main_dl_open);
     add_function(context, "unload", brl_main_dl_close);
 
     // dynamic libraries lists startup
-    libs = list_init(sizeof(void*), true);
+    libs = table_init(sizeof(void*));
 
 
     // arguments parsing
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
         }
         else // push to args
         {
-            list_push(args, (Value){.s = str_duplicate(argv[i])}, NULL);
+            list_push(args, (Value){.s = str_duplicate(argv[i])});
         }
     }
 

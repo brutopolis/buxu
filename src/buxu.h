@@ -17,7 +17,7 @@ bool file_exists(char* filename);
 void file_write(char *filename, char *code);
 #endif
 
-#define BUXU_VERSION "0.1.3"
+#define BUXU_VERSION "0.1.5"
 
 #define data(index) context->data[index]
 #define data_s(index) &context->data[index].u8[0]
@@ -51,29 +51,27 @@ void file_write(char *filename, char *code);
     index; \
 })
 
-char* str_duplicate(const char *str);
-char* str_nduplicate(const char *str, UInt size);
+char*   str_duplicate(const char *str);
+char*   str_nduplicate(const char *str, UInt size);
+
+
+List*   special_space_split(char *str);
+List*   special_split(char *str, char delim);
+
+char*   str_format(const char *format, ...);
+
+Int     new_var(List *context, char* key);
+Int     new_block(List *context, Int size, char* key);
+Int     new_string(List *context, char* str, char* key);
+
+Value   parse_number(char *str);
+List*   parse(void *_context, char *cmd);
+
+List*   compile_code(List *context, char *code);
+List*   compile_and_call(List *context, char *cmd);
+Int     compiled_call(List *context, List *compiled);
+void    compiled_free(List *compiled);
+Int     eval(List *context, char *cmd);
 
 typedef void (*InitFunction)(List*);
-
-List* special_space_split(char *str);
-List* special_split(char *str, char delim);
-
-char* str_format(const char *format, ...);
-
-Int new_var(List *context, char* key);
-Int new_block(List *context, Int size, char* key);
-Int new_string(List *context, char* str, char* key);
-Value parse_number(char *str);
-List* parse(void *_context, char *cmd);
-
-List* compile_code(List *context, char *code);
-Int context_call(List *context, List *args);
-List* compile_and_call(List *context, char *cmd);
-Int compiled_call(List *context, List *compiled);
-void compiled_free(List *compiled);
-Int eval(List *context, char *cmd);
-
-#define function(name) Int name(List *context, List *args)
-
 #endif

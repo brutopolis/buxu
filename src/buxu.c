@@ -117,7 +117,7 @@ char* str_format(const char *format, ...)
 
 List* special_space_split(char *str)
 {
-    List *splited = list_init(sizeof(void*), false);
+    List *splited = list_init(sizeof(void*));
     
     int i = 0;
     while (str[i] != '\0')
@@ -129,17 +129,17 @@ List* special_space_split(char *str)
             while (count != 0)
             {
                 j++;
-                if (str[j] == '(' && (j == 0 || str[j-1] != '\\'))  // não conta se for escapado
+                if (str[j] == '(' && (j == 0 || str[j-1] != '\\'))
                 {
                     count++;
                 }
-                else if (str[j] == ')' && (j == 0 || str[j-1] != '\\'))  // não conta se for escapado
+                else if (str[j] == ')' && (j == 0 || str[j-1] != '\\'))
                 {
                     count--;
                 }
             }
             char *tmp = str_nduplicate(str + i, j - i + 1);
-            list_push(splited, (Value){.s = tmp}, NULL);
+            list_push(splited, (Value){.s = tmp});
             i = j + 1;
         }
         else if (str[i] == '{')
@@ -149,17 +149,17 @@ List* special_space_split(char *str)
             while (count != 0)
             {
                 j++;
-                if (str[j] == '{' && (j == 0 || str[j-1] != '\\'))  // não conta se for escapado
+                if (str[j] == '{' && (j == 0 || str[j-1] != '\\'))
                 {
                     count++;
                 }
-                else if (str[j] == '}' && (j == 0 || str[j-1] != '\\'))  // não conta se for escapado
+                else if (str[j] == '}' && (j == 0 || str[j-1] != '\\'))
                 {
                     count--;
                 }
             }
             char *tmp = str_nduplicate(str + i, j - i + 1);
-            list_push(splited, (Value){.s = tmp}, NULL);
+            list_push(splited, (Value){.s = tmp});
             i = j + 1;
         }
         else if (isspace(str[i]))
@@ -173,7 +173,7 @@ List* special_space_split(char *str)
             {
                 j++;
             }
-            list_push(splited, (Value) {.s = str_nduplicate(str + i, j - i)}, NULL);
+            list_push(splited, (Value) {.s = str_nduplicate(str + i, j - i)});
             i = j;
         }
     }
@@ -183,7 +183,7 @@ List* special_space_split(char *str)
 
 List* special_split(char *str, char delim)
 {
-    List *splited = list_init(sizeof(void*), NULL);
+    List *splited = list_init(sizeof(void*));
     
     int recursion = 0;
     int curly = 0;
@@ -213,13 +213,13 @@ List* special_split(char *str, char delim)
         if (str[i] == delim && !recursion && !curly)
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i);
-            list_push(splited, (Value){.s = tmp}, NULL);
+            list_push(splited, (Value){.s = tmp});
             last_i = i + 1;
         }
         else if (str[i + 1] == '\0')
         {
             char* tmp = str_nduplicate(str + last_i, i - last_i + 1);
-            list_push(splited, (Value){.s = tmp}, NULL);
+            list_push(splited, (Value){.s = tmp});
         }
 
         i++;
@@ -233,7 +233,7 @@ Int new_var(List *context, char* key)
 {
     Value value;
     value.p = NULL;
-    list_push(context, value, key);
+    table_push(context, value, key);
     return context->size-1;
 }
 
@@ -244,13 +244,13 @@ Int new_block(List *context, Int size, char* key)
         return -1;
     }
 
-    list_push(context, (Value){.i = 0}, key);
+    table_push(context, (Value){.i = 0}, key);
 
     Int index = context->size-1;
     
     for (Int i = 0; i < size-1; i++)
     {
-        list_push(context, (Value){.i = 0}, NULL);
+        list_push(context, (Value){.i = 0});
     }
     
     return index;
@@ -296,7 +296,7 @@ Value parse_number(char *str)
 List* parse(void *_context, char *cmd) 
 {
     List* context = (List*)_context;
-    List *result = list_init(sizeof(void*), NULL);
+    List *result = list_init(sizeof(void*));
     
     List *splited = special_space_split(cmd);
     char* str = NULL;
@@ -314,27 +314,27 @@ List* parse(void *_context, char *cmd)
             char* temp = str + 1;
             temp[strlen(temp) - 1] = '\0';
             Int res = eval(context, temp);
-            list_push(result, (Value){.i = res}, NULL);
+            list_push(result, (Value){.i = res});
         }
         else if (str[0] == '{') // string
         {
             Int len = strlen(str);
             str[len - 1] = '\0';
 
-            list_push(result, (Value){.i = new_string(context, str + 1, NULL)}, NULL);
+            list_push(result, (Value){.i = new_string(context, str + 1, NULL)});
         }
         else if ((str[0] >= '0' && str[0] <= '9') || str[0] == '-') // number
         {
             Int index = new_var(context, NULL);
             context->data[index] = parse_number(str);
-            list_push(result, (Value){.i = index}, NULL);
+            list_push(result, (Value){.i = index});
         }
         else if (str[0] == '@') // label
         {
             if (result->size <= 0)
             {
                 buxu_error("%s has no previous value", str);
-                list_push(result, (Value){.i = -1}, NULL);
+                list_push(result, (Value){.i = -1});
             }
             else 
             {
@@ -344,16 +344,16 @@ List* parse(void *_context, char *cmd)
         }
         else
         {
-            Int index = list_find(context, (Value){.p = NULL}, str);
+            Int index = table_find(context, str);
             
             if (index != -1)
             {
-                list_push(result, (Value){.i = index}, NULL);
+                list_push(result, (Value){.i = index});
             }
             else 
             {
                 buxu_error("variable %s not found", str);
-                list_push(result, (Value){.i = -1}, NULL);
+                list_push(result, (Value){.i = -1});
             }
         }
 
@@ -364,16 +364,10 @@ List* parse(void *_context, char *cmd)
     return result;
 }
 
-Int context_call(List *context, List *args)
-{
-    Int(*_function)(List*,List*) = context->data[args->data[0].i].p;
-    return _function(context, args);
-}
-
 List* compile_code(List *context, char *cmd) 
 {
     List *splited = special_split(cmd, ';');
-    List *compiled = list_init(sizeof(void*), NULL);
+    List *compiled = list_init(sizeof(void*));
 
     // remove empty or whitespace-only strings using isspace
     Int last = splited->size - 1;
@@ -403,7 +397,7 @@ List* compile_code(List *context, char *cmd)
         str = splited->data[i].s;
         List *args = parse(context, str);
 
-        list_push(compiled, (Value){.p = args}, NULL);
+        list_push(compiled, (Value){.p = args});
         free(str);
     }
 
@@ -417,7 +411,7 @@ Int compiled_call(List *context, List *compiled)
     for (Int i = 0; i < compiled->size; i++)
     {
         List *args = compiled->data[i].p;
-        result = context_call(context, args);
+        result = list_call(context, args).i; // .i because we are using contextual call
         if (result != -1)
         {
             break;
@@ -428,7 +422,7 @@ Int compiled_call(List *context, List *compiled)
 
 List* compile_and_call(List *context, char *cmd)
 {
-    List *compiled = list_init(sizeof(void*), NULL);
+    List *compiled = list_init(sizeof(void*));
     List *splited = special_split(cmd, ';');
     char* str = NULL;
     Int result = -1;
@@ -436,8 +430,8 @@ List* compile_and_call(List *context, char *cmd)
     {
         str = splited->data[i].s;
         List *args = parse(context, str);
-        result = context_call(context, args);
-        list_push(compiled, (Value){.p = args}, NULL);
+        result = list_call(context, args).i; // .i because we are using contextual call
+        list_push(compiled, (Value){.p = args});
         free(str);
     }
     list_free(splited);
@@ -489,7 +483,7 @@ Int eval(List *context, char *cmd)
         str = splited->data[i].s;
         List *args = parse(context, str);
 
-        result = context_call(context, args);
+        result = list_call(context, args).i; // .i because we are using contextual call
         free(str);
         list_free(args);
 
