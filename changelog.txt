@@ -1,4 +1,20 @@
-# buxu changelog https://github.com/jardimdanificado/buxu
+# buxu changelog https://github.com/brutopolis/buxu
+
+(09/05/2025) - version 0.1.5
+
+- context_call and such has beem merged into bruter;
+- updated to meet bruter 0.8.5;
+- macro function renamed to list_function and is now part of bruter;
+
+(06/05/2025) - version 0.1.4
+
+- fixed context_call;
+- added some functions to precompile and deal with compiled "bytecode";
+- not a real bytecode though, not meat to be saved to a file or something like that, 
+- bruter is not meant to be bytecoded, the language structure change so much during runtime that it would be impossible to create a bytecode that would work for all the cases;
+- be careful with precompiled code, i mean, you should be careful with EVERYTHING in buxu, its meant as a unsafe language by design;
+- but precompiled code is even more unsafe, as the indexes are not automatically updated, and, bruter/buxu doesnt really have types to check if the code is correct or not;
+- you can see how it works in the stdlib 'repeat' function, very easy, as everything in buxu;
 
 (01/05/2025) - version 0.1.3
 
@@ -9,7 +25,7 @@
 
 (24/04/2025) - version 0.1.0
 
-- from this version and on bruter and all it related stuff will be under the brutopolis organization;
+- from this version and on bruter and all it related stuff will be under the brutopolis organization on github;
 - examples updated;
 - cli updated to match bruter 0.8.3;
 

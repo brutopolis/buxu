@@ -1,8 +1,8 @@
-load {ffi};
+load {dycc};
 
-ffi.compile {
+dycc.compile {
 
-    function(abc)
+    list_function(abc)
     {   
         printf("aooooooooooo\n");
         return (Int)-1;
