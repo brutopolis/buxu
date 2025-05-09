@@ -72,6 +72,4 @@ List*   compile_and_call(List *context, char *cmd);
 Int     compiled_call(List *context, List *compiled);
 void    compiled_free(List *compiled);
 Int     eval(List *context, char *cmd);
-
-typedef void (*InitFunction)(List*);
 #endif
