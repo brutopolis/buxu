@@ -98,11 +98,11 @@ if [[ $UNINSTALL -eq 1 ]]; then
     # remove libbuxu.so from /usr/lib
     $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
 
-    # remove buxuhl.js from /usr/share
-    $SUDO rm -f $INSTALL_PATH/share/buxuhl.js
+    # remove buhl.js from /usr/share
+    $SUDO rm -f $INSTALL_PATH/share/buhl.js
 
-    # remove buxuhl from /usr/bin
-    $SUDO rm -f $INSTALL_PATH/bin/buxuhl
+    # remove buhl from /usr/bin
+    $SUDO rm -f $INSTALL_PATH/bin/buhl
 
     # remove bpm from /usr/bin
     $SUDO rm -f $INSTALL_PATH/bin/bpm
@@ -131,8 +131,8 @@ mkdir -p build
 
 cp src/bpm build/bpm
 cp src/bucc build/bucc
-cp src/buxuhl.js build/buxuhl.js
-cp src/buxuhl build/buxuhl
+cp src/buhl.js build/buhl.js
+cp src/buhl build/buhl
 
 $CC $MAIN src/buxu.c bruter/src/bruter.c -o build/buxu -O3 -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
 
@@ -201,8 +201,8 @@ if [[ $INSTALL -eq 1 ]]; then
         $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
         $SUDO rm -f $INSTALL_PATH/lib/libbruter.so
         $SUDO rm -f $INSTALL_PATH/bin/bpm
-        $SUDO rm -f $INSTALL_PATH/bin/buxuhl
-        $SUDO rm -f $INSTALL_PATH/share/buxuhl.js
+        $SUDO rm -f $INSTALL_PATH/bin/buhl
+        $SUDO rm -f $INSTALL_PATH/share/buhl.js
     fi
 
     # copy buxu
@@ -225,12 +225,12 @@ if [[ $INSTALL -eq 1 ]]; then
         $SUDO cp ./build/libbuxu.so $INSTALL_PATH/lib/
     fi
 
-    # copy the buxuhl.js to /usr/share
+    # copy the buhl.js to /usr/share
     if [[ ! -d $INSTALL_PATH/share ]]; then
         $SUDO mkdir -p $INSTALL_PATH/share
     fi
-    $SUDO cp ./build/buxuhl.js $INSTALL_PATH/share/buxuhl.js
-    $SUDO cp ./build/buxuhl $INSTALL_PATH/bin/buxuhl
+    $SUDO cp ./build/buhl.js $INSTALL_PATH/share/buhl.js
+    $SUDO cp ./build/buhl $INSTALL_PATH/bin/buhl
 
     # verify if buxu, buxu.h, and bucc are in the correct place
     if [[ ! -f $INSTALL_PATH/bin/buxu ]]; then

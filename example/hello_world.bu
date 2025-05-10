@@ -1,0 +1,5 @@
+// buhl (buxu high level) is a simple language that is transpiled to intermediate buxu representation(ibr);
+str = "hello world";
+ls();
+print.string(str);
+return 0;

@@ -1,9 +1,6 @@
 load {io};
 load {std};
-
-ignore 
-{hello world!} @str;
-
+ignore {hello world!} @str;
 ls;
 print.string str;
 return 0;

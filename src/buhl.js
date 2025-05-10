@@ -28,7 +28,6 @@ function parseCharLiteral(charLiteral) {
         default: return ch.charCodeAt(0);
     }
 }
-
 function parseExpression(expr) {
     let index = 0;
 
@@ -39,6 +38,7 @@ function parseExpression(expr) {
     function parseToken() {
         skipWhitespace();
 
+        // string literal
         if (expr[index] === '"') {
             index++;
             let str = "";
@@ -65,6 +65,7 @@ function parseExpression(expr) {
             return `{${str}}`;
         }
 
+        // char literal
         if (expr[index] === "'") {
             index++;
             let char = '';
@@ -80,21 +81,24 @@ function parseExpression(expr) {
             }
         }
 
-        // array access
+        // identifier (may include @ or .)
         let start = index;
-        while (index < expr.length && /[\w@]/.test(expr[index])) index++;
+        while (index < expr.length && /[\w@.]/.test(expr[index])) {
+            index++;
+        }
         let name = expr.slice(start, index);
         skipWhitespace();
 
+        // array access: name[index][bit]
         if (expr[index] === '[') {
-            index++; // skip first [
+            index++;
             let firstIndex = parseExpr();
             skipWhitespace();
             if (expr[index] === ']') index++;
 
             skipWhitespace();
             if (expr[index] === '[') {
-                index++; // skip second [
+                index++;
                 let secondIndex = parseExpr();
                 skipWhitespace();
                 if (expr[index] === ']') index++;
@@ -125,11 +129,13 @@ function parseExpression(expr) {
     function parseExpr() {
         skipWhitespace();
 
+        // string or char
         if (expr[index] === '"' || expr[index] === "'") {
             return parseToken();
         }
 
-        if (/[\w@]/.test(expr[index])) {
+        // function call or variable
+        if (/[\w@.]/.test(expr[index])) {
             let name = parseToken();
             skipWhitespace();
             if (expr[index] === '(') {
@@ -141,9 +147,12 @@ function parseExpression(expr) {
             }
         }
 
+        // number
         if (/\d/.test(expr[index])) {
             let start = index;
-            while (index < expr.length && /\d/.test(expr[index])) index++;
+            while (index < expr.length && /[\d]/.test(expr[index])) {
+                index++;
+            }
             return expr.slice(start, index);
         }
 
@@ -152,6 +161,7 @@ function parseExpression(expr) {
 
     return parseExpr();
 }
+
 
 function compile_declaration(line, output) 
 {
@@ -203,7 +213,7 @@ function compile_declaration(line, output)
     }
 
     // function call
-    let isFunctionCall = line.match(/^\w+\s*\(/);
+    let isFunctionCall = line.match(/^[\w.]+\s*\(/);
     if (isFunctionCall) {
         let parsed = parseExpression(line);
         output.push(`ignore ${parsed};`);
@@ -233,7 +243,9 @@ function compile_return(line, output) {
 function transpile(code) {
     const output = [
         "load {std};",
-        "load {io};"
+        "load {io};",
+        "load {bit};",
+        "load {byte};",
     ];
 
     code = clean(code);
