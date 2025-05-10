@@ -10,7 +10,7 @@
 
 # usage function
 usage() {
-    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [-cc || --compiler gcc] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static] [--no-bpm] [--update-bruter] [--branch branch]"
+    echo "[=°-°=]: usage: $0 [--debug] [--debug-file] [-cc || --compiler gcc] [-h || --help] [--extra 'extra cc tags'] [--install] [--install-at path] [--uninstall] [--uninstall-from] [--no-bucc] [--no-shared] [--no-static] [--no-bupm] [--update-bruter] [--branch branch]"
     exit 1
 }
 
@@ -104,8 +104,8 @@ if [[ $UNINSTALL -eq 1 ]]; then
     # remove buhl from /usr/bin
     $SUDO rm -f $INSTALL_PATH/bin/buhl
 
-    # remove bpm from /usr/bin
-    $SUDO rm -f $INSTALL_PATH/bin/bpm
+    # remove bupm from /usr/bin
+    $SUDO rm -f $INSTALL_PATH/bin/bupm
 
     # verify if buxu, buxu.h, and bucc are removed
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
@@ -129,7 +129,7 @@ echo "[=°-°=]: compiler: $CC"
 rm -rf build
 mkdir -p build
 
-cp src/bpm build/bpm
+cp src/bupm build/bupm
 cp src/bucc build/bucc
 cp src/buhl.js build/buhl.js
 cp src/buhl build/buhl
@@ -200,7 +200,7 @@ if [[ $INSTALL -eq 1 ]]; then
         $SUDO rm -f $INSTALL_PATH/include/bruter.h
         $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
         $SUDO rm -f $INSTALL_PATH/lib/libbruter.so
-        $SUDO rm -f $INSTALL_PATH/bin/bpm
+        $SUDO rm -f $INSTALL_PATH/bin/bupm
         $SUDO rm -f $INSTALL_PATH/bin/buhl
         $SUDO rm -f $INSTALL_PATH/share/buhl.js
     fi
@@ -217,7 +217,7 @@ if [[ $INSTALL -eq 1 ]]; then
     fi
 
     if [[ $NOBPM -eq 0 ]]; then
-        $SUDO cp ./build/bpm $INSTALL_PATH/bin/
+        $SUDO cp ./build/bupm $INSTALL_PATH/bin/
     fi
 
     if [[ $NO_SHARED -eq 0 ]]; then

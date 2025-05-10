@@ -101,7 +101,7 @@ setup()
 
 # read command
 case $1 in
-# this creates the .bpm folder
+# this creates the .bupm folder
 install)  { _INSTALL=1; shift; } ;;
 install-from) { _INSTALL=1; REPO=$2; shift 2; } ;;
 remove)   { _UNINSTALL=1; shift; } ;;
@@ -131,11 +131,11 @@ esac
 if [[ $_INSTALL -eq 1 ]]; then
 {
     # create local build folder if needed
-    if [[ ! -d .bpm ]]; then
-        mkdir -p .bpm
+    if [[ ! -d .bupm ]]; then
+        mkdir -p .bupm
     fi
 
-    cd .bpm
+    cd .bupm
 
     if [[ $# -eq 0 ]]; then
         echo "[=°~°=]: no package specified"
