@@ -1,5 +1,15 @@
 # buxu changelog https://github.com/brutopolis/buxu
 
+(10/05/2025) - version 0.1.6
+
+- buxu language is now called ibr(intermediate buxu representation);
+- now buxu has a high level language too called buxuhl;
+- the high level language is a simple language that is transpiled to intermediate buxu representation(ibr);
+- the transpiler is not perfect, extremely experimental, and written in javascript for now;
+- you'll need to install nodejs to use it;
+- buxuhl depends on std, io, byte and bit to work properly;
+- buxuhl is just abstraction over the the intermediate buxu representation(ibr);
+- new tool "buxuhl"(temp name) a script based on nodejs that will transpile buxuhl to ibr, it does not have a cli for now, as it is extremely experimental;
 (09/05/2025) - version 0.1.5
 
 - InitFunction removed;
