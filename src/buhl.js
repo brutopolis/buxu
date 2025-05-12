@@ -1,17 +1,38 @@
+// 100% ai generated code, so we can see how easy buxu is to be transpiled to
+// this is intended to be a minimalistic typeless c-like language that transpiles to buxu
+// no operators and so, almost everything is a function call
+// written in js because thats what ai is usually best at
+
+// example syntax:
+/* 
+    a = 123;
+    b = 456;
+    c = i+(i*(5, i/(b, i-(999, 99))), b);
+    i+(a, c);
+    str = "hello world";
+    str2 = "hello w\"orld2";
+    char_a = ' ';
+    print((get(0))(str));
+    i+(1, str[a]);
+    [index][byte][bit] = 0;
+    [index][byte] = 123;
+    [index] = 456;
+    a = [index];
+    a = [index][byte];
+    a = [index][byte][bit];
+    str2[0] = 105;
+    str2[a][b] = 1;
+    [index](a, b, c);
+    a = [index](a, b, c);
+    b = [index]([index2](a, b, c), d, e);
+    return a;
+*/// Manus: modified_parser_v5.js
+// Starting from modified_parser_v4.js and adding control structures.
 function clean(code) {
     return code
         .replace(/\/\/.*$/gm, "") // remove comentários
         .replace(/\s+/g, " ")     // colapsa espaços
         .trim();
-}
-
-function unescapeString(str) {
-    return str
-        .replace(/\\n/g, "\n")
-        .replace(/\\t/g, "\t")
-        .replace(/\\r/g, "\r")
-        .replace(/\\"/g, '"')
-        .replace(/\\\\/g, '\\');
 }
 
 function parseCharLiteral(charLiteral) {
@@ -23,11 +44,12 @@ function parseCharLiteral(charLiteral) {
         case 'n': return '\n'.charCodeAt(0);
         case 't': return '\t'.charCodeAt(0);
         case 'r': return '\r'.charCodeAt(0);
-        case '\'': return '\''.charCodeAt(0);
+        case "'": return "'".charCodeAt(0);
         case '\\': return '\\'.charCodeAt(0);
         default: return ch.charCodeAt(0);
     }
 }
+
 function parseExpression(expr) {
     let index = 0;
 
@@ -38,34 +60,35 @@ function parseExpression(expr) {
     function parseToken() {
         skipWhitespace();
 
-        // string literal
+        // Modified: Only support "" for strings
         if (expr[index] === '"') {
-            index++;
+            const openingChar = '"';
+            const closingChar = '"';
+            index++; // consume opening quote
             let str = "";
             while (index < expr.length) {
                 if (expr[index] === '\\') {
                     index++;
-                    if (index >= expr.length) break;
-                    let ch = expr[index++];
-                    switch (ch) {
+                    if (index >= expr.length) break; // Unterminated string
+                    let esc_ch = expr[index++];
+                    switch (esc_ch) {
                         case 'n': str += '\n'; break;
                         case 't': str += '\t'; break;
                         case 'r': str += '\r'; break;
-                        case '"': str += '"'; break;
                         case '\\': str += '\\'; break;
-                        default: str += ch; break;
+                        case '"': str += '"'; break; // Escape for double quote
+                        default: str += esc_ch; break;
                     }
-                } else if (expr[index] === '"') {
-                    index++;
+                } else if (expr[index] === closingChar) {
+                    index++; // consume closing quote
                     break;
                 } else {
                     str += expr[index++];
                 }
             }
-            return `{${str}}`;
+            return `{${str}}`; // Keep Buxu-style output for parsed string content
         }
 
-        // char literal
         if (expr[index] === "'") {
             index++;
             let char = '';
@@ -79,35 +102,55 @@ function parseExpression(expr) {
                 index++;
                 return parseCharLiteral(char).toString();
             }
+            // else: error, malformed char literal
         }
 
-        // identifier (may include @ or .)
+        if (expr[index] === '`') {
+            index++; // consume opening backtick
+            let buxuCode = "";
+            while (index < expr.length) {
+                if (expr[index] === '\\') {
+                    index++;
+                    if (index >= expr.length) break; // Unterminated Buxu inline
+                    let esc_ch = expr[index++];
+                    if (esc_ch === '`') {
+                        buxuCode += '`';
+                    } else {
+                        buxuCode += '\\' + esc_ch;
+                    }
+                } else if (expr[index] === '`') {
+                    index++; // consume closing backtick
+                    break;
+                } else {
+                    buxuCode += expr[index++];
+                }
+            }
+            return buxuCode; // Return raw Buxu code
+        }
+
         let start = index;
-        while (index < expr.length && /[\w@.]/.test(expr[index])) {
+        while (index < expr.length && /[\w@.+\-*\/%]/.test(expr[index])) {
             index++;
         }
         let name = expr.slice(start, index);
         skipWhitespace();
 
-        // array access: name[index][bit]
         if (expr[index] === '[') {
             index++;
-            let firstIndex = parseExpr();
+            let firstIndex = parseExpr(); // Recursive call, ensure it returns a string for concatenation
             skipWhitespace();
             if (expr[index] === ']') index++;
 
             skipWhitespace();
             if (expr[index] === '[') {
                 index++;
-                let secondIndex = parseExpr();
+                let secondIndex = parseExpr(); // Recursive call
                 skipWhitespace();
                 if (expr[index] === ']') index++;
                 return `(bit.get ${name} ${firstIndex} ${secondIndex})`;
             }
-
             return `(byte.get ${name} ${firstIndex})`;
         }
-
         return name;
     }
 
@@ -119,7 +162,7 @@ function parseExpression(expr) {
                 index++;
                 break;
             }
-            args.push(parseExpr());
+            args.push(parseExpr()); // Recursive call
             skipWhitespace();
             if (expr[index] === ',') index++;
         }
@@ -128,26 +171,49 @@ function parseExpression(expr) {
 
     function parseExpr() {
         skipWhitespace();
-
-        // string or char
-        if (expr[index] === '"' || expr[index] === "'") {
-            return parseToken();
+        // Tratamento adicionado para '{'
+        if (expr[index] === '{') {
+            index++;
+            while (index < expr.length && expr[index] !== '}') {
+                index++;
+            }
+            if (index < expr.length && expr[index] === '}') {
+                index++;
+            }
+            return "{}";
         }
-
-        // function call or variable
-        if (/[\w@.]/.test(expr[index])) {
-            let name = parseToken();
+        if (expr[index] === '[') {
+            index++;
+            let innerExpr = parseExpr();
             skipWhitespace();
-            if (expr[index] === '(') {
+            if (expr[index] === ']') index++;
+            let node = `(get ${innerExpr})`;
+            skipWhitespace();
+            while (expr[index] === '(') {
                 index++;
                 let args = parseArguments();
-                return `(${name} ${args.join(' ')})`;
-            } else {
-                return name;
+                node = `(${node} ${args.join(' ')})`;
+                skipWhitespace();
             }
+            return node;
         }
-
-        // number
+        if (expr[index] === '(') {
+            index++;
+            let node = parseExpr();
+            skipWhitespace();
+            if (expr[index] === ')') index++;
+            skipWhitespace();
+            while (expr[index] === '(') {
+                index++;
+                let args = parseArguments();
+                node = `(${node} ${args.join(' ')})`;
+                skipWhitespace();
+            }
+            return node;
+        }
+        if (expr[index] === '"' || expr[index] === "'" || expr[index] === '`') {
+            return parseToken();
+        }
         if (/\d/.test(expr[index])) {
             let start = index;
             while (index < expr.length && /[\d]/.test(expr[index])) {
@@ -155,78 +221,138 @@ function parseExpression(expr) {
             }
             return expr.slice(start, index);
         }
-
+        if (/[\w@.+\-*\/%]/.test(expr[index])) {
+            let node = parseToken();
+            skipWhitespace();
+            while (expr[index] === '(') {
+                index++;
+                let args = parseArguments();
+                node = `(${node} ${args.join(' ')})`;
+                skipWhitespace();
+            }
+            return node;
+        }
         return "";
     }
-
     return parseExpr();
 }
 
-
-function compile_declaration(line, output) 
-{
-    // bit set: name[index1][index2] = value
-    let bitSetMatch = line.match(/^(\w+)\[(.+?)\]\[(.+?)\]\s*=\s*(.+)$/);
+function compile_declaration(line, output) {
+    let bitSetMatch = line.match(/^([\w@.+\-*\/%]+)\[(.+?)\]\[(.+?)\]\s*=\s*(.+)$/);
     if (bitSetMatch) {
         let [, name, i1, i2, valueExpr] = bitSetMatch;
         let bit1 = parseExpression(i1);
         let bit2 = parseExpression(i2);
         let value = parseExpression(valueExpr);
-        output.push(`ignore (bit.set ${bit1} ${bit2} ${value});`);
+        output.push(`ignore (bit.set ${name} ${bit1} ${bit2} ${value});`);
         return true;
     }
-    
-    // array assignment: name[index] = value
-    let arraySetMatch = line.match(/^(\w+)\[(.+?)\]\s*=\s*(.+)$/);
+    let arraySetMatch = line.match(/^([\w@.+\-*\/%]+)\[(.+?)\]\s*=\s*(.+)$/);
     if (arraySetMatch) {
         let [, array, indexExpr, valueExpr] = arraySetMatch;
-        let index = parseExpression(indexExpr);
+        let indexVal = parseExpression(indexExpr);
         let value = parseExpression(valueExpr);
-        output.push(`ignore (byte.set ${array} ${index} ${value});`);
+        output.push(`ignore (byte.set ${array} ${indexVal} ${value});`);
         return true;
     }
-
-    // variable = something
-    let assignMatch = line.match(/^([\w@]+)\s*=\s*(.+)$/);
+    let bracketAssign = line.match(/^\[(.+?)\](?:\s*\[(.+?)\])?(?:\s*\[(.+?)\])?\s*=\s*(.+)$/);
+    if (bracketAssign) {
+        let [, i1, i2, i3, valueExpr] = bracketAssign;
+        let v1 = parseExpression(i1);
+        let value = parseExpression(valueExpr);
+        if (i2 && i3) {
+            let v2 = parseExpression(i2);
+            let v3 = parseExpression(i3);
+            output.push(`ignore (bit.set ${v1} ${v2} ${v3} ${value});`);
+        } else if (i2) {
+            let v2 = parseExpression(i2);
+            output.push(`ignore (byte.set ${v1} ${v2} ${value});`);
+        } else {
+            output.push(`ignore (set ${v1} ${value});`);
+        }
+        return true;
+    }
+    let bracketCall = line.match(/^\[(.+?)\]\s*\((.*)\)$/);
+    if (bracketCall) {
+        let [, exprIn, argsStr] = bracketCall;
+        let caller = parseExpression(exprIn);
+        let argsList = [];
+        if (argsStr.trim() !== "") {
+            let currentArg = "";
+            let depth = 0;
+            for (let i = 0; i < argsStr.length; i++) {
+                let ch = argsStr[i];
+                if (ch === '(') depth++;
+                else if (ch === ')') depth--;
+                else if (ch === ',' && depth === 0) {
+                    argsList.push(parseExpression(currentArg.trim()));
+                    currentArg = "";
+                    continue;
+                }
+                currentArg += ch;
+            }
+            if (currentArg.trim()) argsList.push(parseExpression(currentArg.trim()));
+        }
+        output.push(`ignore ((get ${caller}) ${argsList.join(' ')})`);
+        return true;
+    }
+    let assignBracketMatch = line.match(/^([\w@.+\-*\/%]+)\s*=\s*\[(.+?)\](?:\s*\[(.+?)\])?(?:\s*\[(.+?)\])?(?:\s*\((.*)\))?$/);
+    if (assignBracketMatch) {
+        let [, varname, i1, i2, i3, maybeArgsStr] = assignBracketMatch;
+        let v1 = parseExpression(i1);
+        let v2 = i2 ? parseExpression(i2) : null;
+        let v3 = i3 ? parseExpression(i3) : null;
+        if (maybeArgsStr !== undefined) {
+            let argsList = [];
+            if (maybeArgsStr.trim() !== "") {
+                let currentArg = "";
+                let depth = 0;
+                for (let i = 0; i < maybeArgsStr.length; i++) {
+                    let ch = maybeArgsStr[i];
+                    if (ch === '(') depth++;
+                    else if (ch === ')') depth--;
+                    else if (ch === ',' && depth === 0) {
+                        argsList.push(parseExpression(currentArg.trim()));
+                        currentArg = "";
+                        continue;
+                    }
+                    currentArg += ch;
+                }
+                if (currentArg.trim()) argsList.push(parseExpression(currentArg.trim()));
+            }
+            output.push(`ignore ((get ${v1}) ${argsList.join(' ')}) @${varname};`);
+            return true;
+        }
+        if (i3) {
+            output.push(`ignore (bit.get ${v1} ${v2} ${v3}) @${varname};`);
+            return true;
+        }
+        if (i2) {
+            output.push(`ignore (byte.get ${v1} ${v2}) @${varname};`);
+            return true;
+        }
+        output.push(`ignore (get ${v1}) @${varname};`);
+        return true;
+    }
+    let assignMatch = line.match(/^([\w@.+\-*\/%]+)\s*=\s*(.+)$/);
     if (assignMatch) {
         let [, varname, expr] = assignMatch;
-
-        let strLiteral = expr.match(/^"((?:\\.|[^"])*)"?$/);
-        if (strLiteral) {
-            let raw = strLiteral[1];
-            let unescaped = unescapeString(raw);
-            output.push(`ignore {${unescaped}} @${varname};`);
-            return true;
-        }
-
-        let charLiteral = expr.match(/^'(\\?.)'$/);
-        if (charLiteral) {
-            let ch = charLiteral[1];
-            let code = parseCharLiteral(ch);
-            output.push(`ignore ${code} @${varname};`);
-            return true;
-        }
-
         let parsed = parseExpression(expr);
         output.push(`ignore ${parsed} @${varname};`);
         return true;
     }
-
-    // function call
-    let isFunctionCall = line.match(/^[\w.]+\s*\(/);
+    let isFunctionCall = line.match(/^[\w@.+\-*\/%]+\s*\(/);
     if (isFunctionCall) {
         let parsed = parseExpression(line);
         output.push(`ignore ${parsed};`);
         return true;
     }
-
-    let directAssign = line.match(/^([\d]+)\s*@([\w@]+)$/);
+    let directAssign = line.match(/^([\d]+)\s*@([\w@.+\-*\/%]+)$/);
     if (directAssign) {
         let [, val, name] = directAssign;
         output.push(`${val} @${name};`);
         return true;
     }
-
     return false;
 }
 
@@ -240,38 +366,47 @@ function compile_return(line, output) {
     return false;
 }
 
-function transpile(code) {
+function transpile(code_content) {
     const output = [
         "load {std};",
         "load {io};",
         "load {bit};",
         "load {byte};",
     ];
+    let cleaned_code = clean(code_content);
+    for (let line_statement of cleaned_code.split(/;\s*/)) {
+        line_statement = line_statement.trim();
+        if (!line_statement) continue;
 
-    code = clean(code);
-    for (let line of code.split(/;\s*/)) {
-        line = line.trim();
-        if (!line) continue;
+        if (line_statement.startsWith('`') && line_statement.endsWith('`')) {
+            let buxuContent = line_statement.slice(1, -1);
+            buxuContent = buxuContent.replace(/\\`/g, '`');
+            if (buxuContent.trim().length > 0 && !buxuContent.trim().endsWith(';')) {
+                 buxuContent += ';';
+            }
+            output.push(buxuContent);
+            continue;
+        }
 
-        let ok = compile_declaration(line, output) || compile_return(line, output);
+        let ok = compile_declaration(line_statement, output) || compile_return(line_statement, output);
         if (!ok) {
-            output.push(`// não reconhecido: ${line}`);
+            output.push(`// não reconhecido: ${line_statement}`);
         }
     }
-
     return output.join("\n");
 }
 
-// execução direta
 if (require.main === module) {
     const fs = require("fs");
     const file = process.argv[2];
     if (!file) {
-        console.error("uso: node ibr.js entrada.c");
+        console.error("uso: node parser_double_quotes_only.js entrada.c_like");
         process.exit(1);
     }
-    const code = fs.readFileSync(file, "utf-8");
-    console.log(transpile(code));
+    const code_content_fs = fs.readFileSync(file, "utf-8");
+    console.log(transpile(code_content_fs));
 }
 
 module.exports = { transpile };
+
+
