@@ -2,14 +2,7 @@
 
 (10/05/2025) - version 0.1.6
 
-- buxu language is now called ibr(intermediate buxu representation);
-- now buxu has a high level language too called buhl;
-- the high level language is a simple language that is transpiled to intermediate buxu representation(ibr);
-- the transpiler is not perfect, its extremely experimental, and written in javascript for now;
-- you'll need to install nodejs to use it;
-- buhl depends on std, io, byte and bit to work properly;
-- buhl is just abstraction over the the intermediate buxu representation(ibr);
-- new tool "buhl"(temp name) a script based on nodejs that will transpile buhl to ibr, it does not have a cli for now, as it is extremely experimental;
+- buxu language is now called ibr(intermediate bruter representation);
 
 (09/05/2025) - version 0.1.5
 
