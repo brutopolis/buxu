@@ -8,7 +8,7 @@ ignore
 
 repeat 100000 @size 
 {
-    iadd _index _1;
+    i+ _index _1;
     print.int _index
 };
 

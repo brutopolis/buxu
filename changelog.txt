@@ -1,5 +1,9 @@
 # buxu changelog https://github.com/brutopolis/buxu
 
+(10/05/2025) - version 0.1.6
+
+- buxu language is now called ibr(intermediate bruter representation);
+
 (09/05/2025) - version 0.1.5
 
 - InitFunction removed;

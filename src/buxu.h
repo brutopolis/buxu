@@ -17,7 +17,7 @@ bool file_exists(char* filename);
 void file_write(char *filename, char *code);
 #endif
 
-#define BUXU_VERSION "0.1.5"
+#define BUXU_VERSION "0.1.6"
 
 #define data(index) context->data[index]
 #define data_s(index) &context->data[index].u8[0]

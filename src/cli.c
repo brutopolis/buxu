@@ -119,7 +119,7 @@ list_function(brl_main_dl_open)
     }
     else 
     {
-        char* path = str_format(".bpm/%s/%s.brl", str, str);
+        char* path = str_format(".bupm/%s/%s.brl", str, str);
         buxu_dl_open(path);
         free(path);
     }
@@ -135,7 +135,7 @@ list_function(brl_main_dl_close)
     }
     else 
     {
-        char* path = str_format("./.bpm/%s/%s.brl", str, str);
+        char* path = str_format("./.bupm/%s/%s.brl", str, str);
         buxu_dl_close(path);
         free(path);
     }
