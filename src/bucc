@@ -47,6 +47,6 @@ if [[ -z $OUTPUT_NAME ]]; then
     OUTPUT_NAME="a.out"
 fi
 
-echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lbruter -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"
-$CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lbruter -lbuxu $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib
+echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lbruter -lbr $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"
+$CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lbruter -lbr $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib
 echo "[=°-°=]: $OUTPUT_NAME" has been compiled.

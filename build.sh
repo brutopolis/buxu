@@ -63,13 +63,25 @@ while [[ $# -gt 0 ]]; do
 done
 
 # if no bruter folder is found, or if UPDATE is set to 1, clone the bruter repo
-if [[ ! -d bruter || $UPDATE_BRUTER -eq 1 || ! $BRANCH == "main" ]]; then
+if [[ ! -d bruter || ! -d br || $UPDATE_BRUTER -eq 1 || ! $BRANCH == "main" ]]; then
     rm -rf ./bruter
-    git clone https://github.com/jardimdanificado/bruter -b $BRANCH --depth 1
+    rm -rf ./br
+    git clone https://github.com/brutopolis/bruter -b $BRANCH --depth 1
+    git clone https://github.com/brutopolis/br --depth 1
 fi
 
 cd bruter
-./build.sh -cc "$CC"
+rm -rf build
+mkdir -p build
+$CC src/bruter.c -o build/libbruter.so -shared -fPIC -O3 -Iinclude $DEBUGARGS $EXTRA
+$CC src/bruter.c -o build/libbruter.a -c -O3 -Iinclude $DEBUGARGS $EXTRA
+cd ..
+
+cd br
+rm -rf build
+mkdir -p build
+$CC src/br.c -o build/libbr.so -shared -fPIC -O3 -I../bruter/src -L../bruter/build -lbruter $DEBUGARGS $EXTRA
+$CC src/br.c -o build/libbr.a -c -O3 -Iinclude -I../bruter/src -L../bruter/build -lbruter $DEBUGARGS $EXTRA
 cd ..
 
 # remove / if it is the last character
@@ -87,19 +99,19 @@ if [[ $UNINSTALL -eq 1 ]]; then
     # remove buxu, and possibly bucc from /usr/bin
     $SUDO rm -f $INSTALL_PATH/bin/buxu
     $SUDO rm -f $INSTALL_PATH/bin/bucc
+    $SUDO rm -f $INSTALL_PATH/bin/bupm
 
-    # remove buxu.h from /usr/include
-    $SUDO rm -f $INSTALL_PATH/include/buxu.h
+    # remove br.h from /usr/include
+    $SUDO rm -f $INSTALL_PATH/include/br.h
     $SUDO rm -f $INSTALL_PATH/include/bruter.h
 
     # remove libbruter.so from /usr/lib
     $SUDO rm -f $INSTALL_PATH/lib/libbruter.so
+    $SUDO rm -f $INSTALL_PATH/lib/libbruter.a
 
-    # remove libbuxu.so from /usr/lib
-    $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
-
-    # remove bupm from /usr/bin
-    $SUDO rm -f $INSTALL_PATH/bin/bupm
+    # remove libbr.so from /usr/lib
+    $SUDO rm -f $INSTALL_PATH/lib/libbr.so
+    $SUDO rm -f $INSTALL_PATH/lib/libbr.a
 
     # verify if buxu, buxu.h, and bucc are removed
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
@@ -126,19 +138,7 @@ mkdir -p build
 cp src/bupm build/bupm
 cp src/bucc build/bucc
 
-$CC $MAIN src/buxu.c bruter/src/bruter.c -o build/buxu -O3 -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
-
-# libbuxu also 
-if [[ $NO_SHARED -eq 0 ]]; then
-    $CC src/buxu.c bruter/src/bruter.c -o build/libbuxu.so -shared -fPIC -O3 -Iinclude $DEBUGARGS $EXTRA -Ibruter/src
-    cp build/libbuxu.so ./bruter/build/
-fi
-
-# need to fix it later
-# if [[ $NO_STATIC -eq 0 ]]; then
-    # $CC src/buxu.c bruter/src/bruter.c -o build/libbuxu.a $DEBUGARGS $EXTRA -Ibruter/src -static -Iinclude
-    # cp build/libbuxu.a ./bruter/build/
-# fi
+$CC $MAIN br/src/br.c bruter/src/bruter.c -o build/buxu -O3 -Iinclude $DEBUGARGS $EXTRA -Ibruter/src -Ibr/src
 
 if [ -n "$DEBUG_FILE" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./build/buxu $DEBUG_FILE
@@ -188,11 +188,15 @@ if [[ $INSTALL -eq 1 ]]; then
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
         $SUDO rm -f $INSTALL_PATH/bin/buxu
         $SUDO rm -f $INSTALL_PATH/bin/bucc
+        $SUDO rm -f $INSTALL_PATH/bin/bupm
         $SUDO rm -f $INSTALL_PATH/include/buxu.h
         $SUDO rm -f $INSTALL_PATH/include/bruter.h
-        $SUDO rm -f $INSTALL_PATH/lib/libbuxu.so
         $SUDO rm -f $INSTALL_PATH/lib/libbruter.so
-        $SUDO rm -f $INSTALL_PATH/bin/bupm
+        $SUDO rm -f $INSTALL_PATH/lib/libbruter.a
+
+        $SUDO rm -f $INSTALL_PATH/include/br.h
+        $SUDO rm -f $INSTALL_PATH/lib/libbr.so
+        $SUDO rm -f $INSTALL_PATH/lib/libbr.a
     fi
 
     # copy buxu
@@ -201,6 +205,7 @@ if [[ $INSTALL -eq 1 ]]; then
     # copy the header files to /usr/include
     $SUDO cp src/buxu.h $INSTALL_PATH/include/
     $SUDO cp bruter/src/bruter.h $INSTALL_PATH/include/
+    $SUDO cp br/src/br.h $INSTALL_PATH/include/
 
     if [[ $NOBUCC -eq 0 ]]; then
         $SUDO cp ./build/bucc $INSTALL_PATH/bin/
@@ -212,7 +217,12 @@ if [[ $INSTALL -eq 1 ]]; then
 
     if [[ $NO_SHARED -eq 0 ]]; then
         $SUDO cp ./bruter/build/libbruter.so $INSTALL_PATH/lib/
-        $SUDO cp ./build/libbuxu.so $INSTALL_PATH/lib/
+        $SUDO cp ./br/build/libbr.so $INSTALL_PATH/lib/
+    fi
+
+    if [[ $NO_STATIC -eq 0 ]]; then
+        $SUDO cp ./bruter/build/libbruter.a $INSTALL_PATH/lib/
+        $SUDO cp ./br/build/libbr.a $INSTALL_PATH/lib/
     fi
 
     # verify if buxu, buxu.h, and bucc are in the correct place
