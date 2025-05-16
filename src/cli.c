@@ -12,6 +12,72 @@ List* libs;
 List* context; // global context
 char *_code = NULL;
 
+// file stuff
+char* file_read(char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        return NULL;
+    }
+
+    char *code = (char*)malloc(1);
+    if (code == NULL)
+    {
+        printf("BRUTER_ERROR: could not allocate memory for file\n");
+        fclose(file);
+        return NULL;
+    }
+
+    code[0] = '\0';
+
+    char *line = NULL;
+    size_t len = 0;
+    while (getline(&line, &len, file) != -1)
+    {
+        size_t new_size = strlen(code) + strlen(line) + 1;
+        char *temp = realloc(code, new_size);
+        if (temp == NULL)
+        {
+            printf("BRUTER_ERROR: could not reallocate memory while reading file\n");
+            free(code);
+            free(line);
+            fclose(file);
+            return NULL;
+        }
+        code = temp;
+        strcat(code, line);
+    }
+
+    free(line);
+    fclose(file);
+    return code;
+}
+
+void file_write(char *filename, char *code)
+{
+    FILE *file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        return;
+    }
+
+    fprintf(file, "%s", code);
+    fclose(file);
+}
+
+bool file_exists(char* filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        return false;
+    }
+
+    fclose(file);
+    return true;
+}
+
 Int repl(List *context)
 {
     buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
@@ -60,8 +126,8 @@ void buxu_dl_open(char* libpath)
         return;
     }
 
-    List *splited = special_split(libpath, '/');
-    List *splited2 = special_split(splited->data[splited->size - 1].s, '.');
+    List *splited = str_split(libpath, '/');
+    List *splited2 = str_split(splited->data[splited->size - 1].s, '.');
     char *_libpath = splited2->data[0].s;
 
     // now lets get the init_name function
