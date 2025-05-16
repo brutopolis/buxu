@@ -4,8 +4,7 @@
   buxu stands for (B)RUTER (U)ni(X) (U)tils, it is a set of tools used to build, run and debug buxu scripts and libraries, specifically on unix-like systems;
 
   buxu includes, but is not limited to:
-  - its own language, syntax pretty similar to lisp, but with no features;
-  - buxu, a interpreter and repl;
+  - buxu, a interpreter and repl for bruter representation;
   - bupm, stands for Buxu Package Manager;
   - bucc, a tool to compile buxu c files into buxu-compatible shared libraries, stants for Buxu C Compiler;
   - buxu's build script, it builds buxu and bruter, can install and uninstall them, can debug etc;
@@ -107,31 +106,6 @@
     ./bupm --help
     ./bupm -h
 
-# Reserved
-
-- `()` = expression
-
-- `{}` = string delimiter
-
-- `;` = end of command separator
-
-- `@` = label operator
-
-# Language usage
-
-    command;
-    command ...;
-    command (command (command ...));
-    command variable_1 variable_2 ...;
-    command {string};
-    command @name value;
-    command 0b00000000;
-    command 0x00000000;
-    command 0o00000000;
-    command 0.000000;
-    command 0;
-    command value @label;
-
 # Dynamic libraries
 
   dynamic libraries functions are built in the cli.c file, while unload is a thing, all dynamic libs are auto-closed at exit;
@@ -141,6 +115,7 @@
   | `load`   | load a library                           | `void function(string path);`                |
   | `unload` | unload a library                         | `void function(string path);`                |
 
-  # BRUTER
+  # DEPENDENCIES
 
-  you might want to know how BRUTER works: https://github.com/jardimdanificado/bruter
+  you might want to know how BRUTER works:  https://github.com/brutopolis/bruter
+  you might also want to know how br(bruter representation) works: https://github.com/brutopolis/br
