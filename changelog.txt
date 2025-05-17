@@ -1,8 +1,9 @@
 # buxu changelog https://github.com/brutopolis/buxu
 
-(16/05/2025) - version 0.1.7
+(17/05/2025) - version 0.1.7
 
 - everything related to ibr is now in a separated repository: https://github.com/brutopolis/br
+- cli.c and buxu.h merged, and now is called buxu.c;
 
 (10/05/2025) - version 0.1.6
 
