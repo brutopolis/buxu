@@ -5,7 +5,7 @@
 # should work well on mac, though i haven't tested it
 # mingw might work with some tweaks, but i haven't tested it
 
-# the same applies to src/cli.c and bucc, both are made with linux in mind.
+# the same applies to src/buxu.c and bucc, both are made with linux in mind.
 # but they are only tools to build and interpret the language, so they are not really essential and better tools can be made for each platform.
 
 # usage function
@@ -26,7 +26,7 @@ fi
 # default values
 DEBUG=0
 CC="gcc -Wformat=0"
-MAIN="src/cli.c"
+MAIN="src/buxu.c"
 NOBUCC=0
 NOBPM=0
 EXTRA=""
@@ -90,6 +90,7 @@ if [[ ${INSTALL_PATH: -1} == "/" ]]; then
 fi
 
 if [[ $UNINSTALL -eq 1 ]]; then
+    echo "[=°-°=]: uninstalling buxu from $INSTALL_PATH"
     # verify if user has sudo
     if [[ $($SUDO -n echo 2>&1 | grep -c "requires") -eq 1 ]]; then
         echo "$SUDO required"
@@ -113,7 +114,6 @@ if [[ $UNINSTALL -eq 1 ]]; then
     $SUDO rm -f $INSTALL_PATH/lib/libbr.so
     $SUDO rm -f $INSTALL_PATH/lib/libbr.a
 
-    # verify if buxu, buxu.h, and bucc are removed
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
         echo "[=°~°=]: failed to uninstall buxu"
         exit 1
@@ -189,7 +189,6 @@ if [[ $INSTALL -eq 1 ]]; then
         $SUDO rm -f $INSTALL_PATH/bin/buxu
         $SUDO rm -f $INSTALL_PATH/bin/bucc
         $SUDO rm -f $INSTALL_PATH/bin/bupm
-        $SUDO rm -f $INSTALL_PATH/include/buxu.h
         $SUDO rm -f $INSTALL_PATH/include/bruter.h
         $SUDO rm -f $INSTALL_PATH/lib/libbruter.so
         $SUDO rm -f $INSTALL_PATH/lib/libbruter.a
@@ -203,7 +202,6 @@ if [[ $INSTALL -eq 1 ]]; then
     $SUDO cp ./build/buxu $INSTALL_PATH/bin/buxu
     
     # copy the header files to /usr/include
-    $SUDO cp src/buxu.h $INSTALL_PATH/include/
     $SUDO cp bruter/src/bruter.h $INSTALL_PATH/include/
     $SUDO cp br/src/br.h $INSTALL_PATH/include/
 
@@ -225,7 +223,6 @@ if [[ $INSTALL -eq 1 ]]; then
         $SUDO cp ./br/build/libbr.a $INSTALL_PATH/lib/
     fi
 
-    # verify if buxu, buxu.h, and bucc are in the correct place
     if [[ ! -f $INSTALL_PATH/bin/buxu ]]; then
         echo "[=°x°=]: failed to install buxu, buxu not found in $INSTALL_PATH/bin"
         exit 1

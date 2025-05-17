@@ -118,5 +118,4 @@
   # DEPENDENCIES
 
   you might want to know how BRUTER works:  https://github.com/brutopolis/bruter
-  
   you might also want to know how br(bruter representation) works: https://github.com/brutopolis/br
