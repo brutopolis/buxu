@@ -3,6 +3,7 @@
 CC="gcc"
 EXTRA=""
 DEBUG=0
+STATIC=0
 
 usage() {
     echo "[=°-°=]: usage: $0 [--compiler || -cc gcc] [--extra \"extra cc tags\"] [--debug] [-o output] [--help | -h] file1.c file2.c ..."
@@ -27,6 +28,7 @@ while [[ $# -gt 0 ]]; do
         -v) buxu -v; exit 0 ;;
         --help) usage ;;
         -h) usage ;;
+        --static) STATIC=1; shift ;;
         *) FILES="$FILES $1"
         shift ;;
     esac
@@ -47,6 +49,13 @@ if [[ -z $OUTPUT_NAME ]]; then
     OUTPUT_NAME="a.out"
 fi
 
-echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lbruter -lbr $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"
-$CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lbruter -lbr $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib
+if [[ $STATIC -eq 1 ]]; then
+    echo "[=°-°=]: static mode enabled"
+    echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -c -O3 -lbruter -lbr $EXTRA $DEBUGARGS"
+    $CC $FILES -o $OUTPUT_NAME -c -O3 -lbruter -lbr $EXTRA $DEBUGARGS
+else
+    echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lbruter -lbr $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"
+    $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lbruter -lbr $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib
+fi
+
 echo "[=°-°=]: $OUTPUT_NAME" has been compiled.
