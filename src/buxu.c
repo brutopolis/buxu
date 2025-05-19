@@ -8,7 +8,7 @@
 // dynamic library loading
 #include <dlfcn.h> 
 
-#define BUXU_VERSION "0.1.7"
+#define BUXU_VERSION "0.1.8"
 
 // emoticons
 #define EMOTICON_DEFAULT "[=°-°=]"
