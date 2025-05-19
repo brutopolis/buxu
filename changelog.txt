@@ -1,5 +1,9 @@
 # buxu changelog https://github.com/brutopolis/buxu
 
+(19/05/2025) - version 0.1.8
+
+- all macros are now uppercase;
+
 (17/05/2025) - version 0.1.7
 
 - everything related to ibr is now in a separated repository: https://github.com/brutopolis/br

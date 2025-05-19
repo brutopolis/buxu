@@ -8,7 +8,7 @@
 // dynamic library loading
 #include <dlfcn.h> 
 
-#define BUXU_VERSION "0.1.7"
+#define BUXU_VERSION "0.1.8"
 
 // emoticons
 #define EMOTICON_DEFAULT "[=°-°=]"
@@ -114,7 +114,7 @@ Int repl(List *context)
 
     printf("%s: ", EMOTICON_DEFAULT);
 
-    printf("%ld", data(result).i);
+    printf("%ld", DATA(result).i);
     
     printf("\n");
     return result;
@@ -123,7 +123,7 @@ Int repl(List *context)
 void buxu_dl_open(char* libpath)
 {
     // check if the library is already loaded
-    Int found = table_find(libs, libpath);
+    Int found = list_find(libs, VALUE(p, NULL), libpath);
     if (found != -1)
     {
         buxu_error("library %s already loaded", libpath);
@@ -134,7 +134,7 @@ void buxu_dl_open(char* libpath)
 
     if (handle != NULL)
     {
-        table_push(libs, (Value){.p = handle}, libpath);
+        list_push(libs, (Value){.p = handle}, libpath);
     }
     else 
     {
@@ -184,7 +184,7 @@ void buxu_dl_close(char* libpath)
     {
         if (strcmp(libpath, libs->keys[i]) == 0)
         {
-            dlclose(data(libs->data[i].i).p);
+            dlclose(DATA(libs->data[i].i).p);
             list_fast_remove(libs, i);
             return;
         }
@@ -192,9 +192,9 @@ void buxu_dl_close(char* libpath)
     buxu_error("library %s is not loaded.", libpath);
 }
 
-list_function(brl_main_dl_open)
+LIST_FUNCTION(brl_main_dl_open)
 {
-    char* str = arg_s(0);
+    char* str = ARG_S(0);
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -208,9 +208,9 @@ list_function(brl_main_dl_open)
     return -1;
 }
 
-list_function(brl_main_dl_close)
+LIST_FUNCTION(brl_main_dl_close)
 {
-    char* str = arg_s(0);
+    char* str = ARG_S(0);
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -262,20 +262,20 @@ int main(int argc, char **argv)
     Int result = -2; // -2 because no valid buxu program will ever return -2
 
     // virtual machine startup
-    context = table_init(48); // starts with capacity of 48 vars, to avoid reallocations, it will grow as needed
+    context = list_init(48, true); // starts with capacity of 48 vars, to avoid reallocations, it will grow as needed
 
     // lib search paths
     char* backup;
 
     // arguments startup
-    args = list_init(sizeof(void*));
+    args = list_init(sizeof(void*), false);
     
     // dynamic library functions
-    add_function(context, "load", brl_main_dl_open);
-    add_function(context, "unload", brl_main_dl_close);
+    ADD_FUNCTION(context, "load", brl_main_dl_open);
+    ADD_FUNCTION(context, "unload", brl_main_dl_close);
 
     // dynamic libraries lists startup
-    libs = table_init(sizeof(void*));
+    libs = list_init(sizeof(void*), true);
 
 
     // arguments parsing
@@ -313,7 +313,7 @@ int main(int argc, char **argv)
         }
         else // push to args
         {
-            list_push(args, (Value){.s = str_duplicate(argv[i])});
+            list_push(args, (Value){.s = str_duplicate(argv[i])}, NULL);
         }
     }
 
