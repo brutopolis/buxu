@@ -6,7 +6,7 @@ DEBUG=0
 STATIC=0
 
 usage() {
-    echo "[=°-°=]: usage: $0 [--compiler || -cc gcc] [--extra \"extra cc tags\"] [--debug] [-o output] [--help | -h] file1.c file2.c ..."
+    echo "[=°-°=]: usage: $0 [--compiler || -cc gcc] [--extra \"extra cc tags\"] [--static] [--debug] [-o output] [--help | -h] file1.c file2.c ..."
     exit 1
 }
 
