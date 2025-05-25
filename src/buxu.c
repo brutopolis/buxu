@@ -194,7 +194,7 @@ void buxu_dl_close(char* libpath)
 
 LIST_FUNCTION(brl_main_dl_open)
 {
-    char* str = ARG_S(0);
+    char* str = ARG_P(0);
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -210,7 +210,7 @@ LIST_FUNCTION(brl_main_dl_open)
 
 LIST_FUNCTION(brl_main_dl_close)
 {
-    char* str = ARG_S(0);
+    char* str = ARG_P(0);
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -259,10 +259,10 @@ int main(int argc, char **argv)
     }
 
     // result
-    Int result = -2; // -2 because no valid buxu program will ever return -2
+    Int result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
 
     // virtual machine startup
-    context = list_init(48, true); // starts with capacity of 48 vars, to avoid reallocations, it will grow as needed
+    context = list_init(16, true); // starts with capacity of 16 vars, to avoid reallocations, it will grow as needed
 
     // lib search paths
     char* backup;
@@ -271,8 +271,8 @@ int main(int argc, char **argv)
     args = list_init(sizeof(void*), false);
     
     // dynamic library functions
-    ADD_FUNCTION(context, "load", brl_main_dl_open);
-    ADD_FUNCTION(context, "unload", brl_main_dl_close);
+    add_function(context, "load", brl_main_dl_open);
+    add_function(context, "unload", brl_main_dl_close);
 
     // dynamic libraries lists startup
     libs = list_init(sizeof(void*), true);
