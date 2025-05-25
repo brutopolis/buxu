@@ -8,7 +8,7 @@
 // dynamic library loading
 #include <dlfcn.h> 
 
-#define BUXU_VERSION "0.1.8"
+#define BUXU_VERSION "0.1.9"
 
 // emoticons
 #define EMOTICON_DEFAULT "[=°-°=]"
@@ -194,7 +194,7 @@ void buxu_dl_close(char* libpath)
 
 LIST_FUNCTION(brl_main_dl_open)
 {
-    char* str = ARG_P(0);
+    char* str = ARG(0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -210,7 +210,7 @@ LIST_FUNCTION(brl_main_dl_open)
 
 LIST_FUNCTION(brl_main_dl_close)
 {
-    char* str = ARG_P(0);
+    char* str = ARG(0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -230,7 +230,19 @@ void _free_at_exit()
     Int parser_index = list_find(context, VALUE(p, NULL), "parser");
     if (parser_index != -1) 
     {
-        list_free(context->data[parser_index].p);
+        list_free(DATA(parser_index).p);
+    }
+
+    // lets check if there is a allocs variable in the program
+    Int allocs_index = list_find(context, VALUE(p, NULL), "allocs");
+    if (allocs_index != -1) 
+    {
+        while (((List*)DATA(allocs_index).p)->size > 0)
+        {
+            free(list_pop((List*)DATA(allocs_index).p).p);
+        }
+        list_free(DATA(allocs_index).p);
+        context->data[allocs_index].p = NULL;
     }
 
     if (libs->size > 0)
