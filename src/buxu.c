@@ -94,7 +94,7 @@ bool file_exists(char* filename)
     return true;
 }
 
-Int repl(List *context)
+Int repl(List *context, List* parser)
 {
     buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
     buxu_print(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
@@ -109,7 +109,7 @@ Int repl(List *context)
         {
             break;
         }
-        result = eval(context, cmd);
+        result = eval(context, parser, cmd);
     }
 
     printf("%s: ", EMOTICON_DEFAULT);
@@ -226,6 +226,13 @@ LIST_FUNCTION(brl_main_dl_close)
 
 void _free_at_exit()
 {
+    // lets check if there is a parser variable in the program
+    Int parser_index = list_find(context, VALUE(p, NULL), "parser");
+    if (parser_index != -1) 
+    {
+        list_free(context->data[parser_index].p);
+    }
+
     if (libs->size > 0)
     {
         while (libs->size > 0)
@@ -260,7 +267,7 @@ int main(int argc, char **argv)
 
     // result
     Int result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
-
+    List *parser = basic_parser(); // parser
     // virtual machine startup
     context = list_init(16, true); // starts with capacity of 16 vars, to avoid reallocations, it will grow as needed
 
@@ -273,6 +280,10 @@ int main(int argc, char **argv)
     // dynamic library functions
     add_function(context, "load", brl_main_dl_open);
     add_function(context, "unload", brl_main_dl_close);
+
+    // lets push the parser to the context
+    Int parser_index = new_var(context, "parser");
+    context->data[parser_index].p = parser;
 
     // dynamic libraries lists startup
     libs = list_init(sizeof(void*), true);
@@ -301,14 +312,14 @@ int main(int argc, char **argv)
         else if (argv[i][0] == '-' && argv[i][1] == 'l') // load
         {
             char *libname = str_format("load {%s}", argv[i] + 2);
-            eval(context, libname);
+            eval(context, parser, libname);
             free(libname);
 
             i+=1; // skip to the next argument
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
-            result = eval(context, argv[i+1]);
+            result = eval(context, parser, argv[i+1]);
             i+=1;// skip to the next argument
         }
         else // push to args
@@ -319,7 +330,7 @@ int main(int argc, char **argv)
 
     if (args->size == 0 && result == -2) // repl, only if no arguments and no eval rant
     {
-        repl(context);
+        repl(context, parser);
     }
     else if (args->size > 0) // run files
     {
@@ -333,7 +344,7 @@ int main(int argc, char **argv)
             return 1;
         }
     
-        result = eval(context, _code);
+        result = eval(context, parser, _code);
         free(___file);
     }
     return result;
