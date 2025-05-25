@@ -8,7 +8,7 @@
 // dynamic library loading
 #include <dlfcn.h> 
 
-#define BUXU_VERSION "0.1.8"
+#define BUXU_VERSION "0.1.9"
 
 // emoticons
 #define EMOTICON_DEFAULT "[=°-°=]"
@@ -94,7 +94,7 @@ bool file_exists(char* filename)
     return true;
 }
 
-Int repl(List *context)
+Int repl(List *context, List* parser)
 {
     buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
     buxu_print(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
@@ -109,7 +109,7 @@ Int repl(List *context)
         {
             break;
         }
-        result = eval(context, cmd);
+        result = eval(context, parser, cmd);
     }
 
     printf("%s: ", EMOTICON_DEFAULT);
@@ -194,7 +194,7 @@ void buxu_dl_close(char* libpath)
 
 LIST_FUNCTION(brl_main_dl_open)
 {
-    char* str = ARG_S(0);
+    char* str = ARG(0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -210,7 +210,7 @@ LIST_FUNCTION(brl_main_dl_open)
 
 LIST_FUNCTION(brl_main_dl_close)
 {
-    char* str = ARG_S(0);
+    char* str = ARG(0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -226,6 +226,25 @@ LIST_FUNCTION(brl_main_dl_close)
 
 void _free_at_exit()
 {
+    // lets check if there is a parser variable in the program
+    Int parser_index = list_find(context, VALUE(p, NULL), "parser");
+    if (parser_index != -1) 
+    {
+        list_free(DATA(parser_index).p);
+    }
+
+    // lets check if there is a allocs variable in the program
+    Int allocs_index = list_find(context, VALUE(p, NULL), "allocs");
+    if (allocs_index != -1) 
+    {
+        while (((List*)DATA(allocs_index).p)->size > 0)
+        {
+            free(list_pop((List*)DATA(allocs_index).p).p);
+        }
+        list_free(DATA(allocs_index).p);
+        context->data[allocs_index].p = NULL;
+    }
+
     if (libs->size > 0)
     {
         while (libs->size > 0)
@@ -259,10 +278,10 @@ int main(int argc, char **argv)
     }
 
     // result
-    Int result = -2; // -2 because no valid buxu program will ever return -2
-
+    Int result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
+    List *parser = basic_parser(); // parser
     // virtual machine startup
-    context = list_init(48, true); // starts with capacity of 48 vars, to avoid reallocations, it will grow as needed
+    context = list_init(16, true); // starts with capacity of 16 vars, to avoid reallocations, it will grow as needed
 
     // lib search paths
     char* backup;
@@ -271,8 +290,12 @@ int main(int argc, char **argv)
     args = list_init(sizeof(void*), false);
     
     // dynamic library functions
-    ADD_FUNCTION(context, "load", brl_main_dl_open);
-    ADD_FUNCTION(context, "unload", brl_main_dl_close);
+    add_function(context, "load", brl_main_dl_open);
+    add_function(context, "unload", brl_main_dl_close);
+
+    // lets push the parser to the context
+    Int parser_index = new_var(context, "parser");
+    context->data[parser_index].p = parser;
 
     // dynamic libraries lists startup
     libs = list_init(sizeof(void*), true);
@@ -301,14 +324,14 @@ int main(int argc, char **argv)
         else if (argv[i][0] == '-' && argv[i][1] == 'l') // load
         {
             char *libname = str_format("load {%s}", argv[i] + 2);
-            eval(context, libname);
+            eval(context, parser, libname);
             free(libname);
 
             i+=1; // skip to the next argument
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
-            result = eval(context, argv[i+1]);
+            result = eval(context, parser, argv[i+1]);
             i+=1;// skip to the next argument
         }
         else // push to args
@@ -319,7 +342,7 @@ int main(int argc, char **argv)
 
     if (args->size == 0 && result == -2) // repl, only if no arguments and no eval rant
     {
-        repl(context);
+        repl(context, parser);
     }
     else if (args->size > 0) // run files
     {
@@ -333,7 +356,7 @@ int main(int argc, char **argv)
             return 1;
         }
     
-        result = eval(context, _code);
+        result = eval(context, parser, _code);
         free(___file);
     }
     return result;
