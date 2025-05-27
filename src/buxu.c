@@ -273,13 +273,30 @@ int main(int argc, char **argv)
     // dynamic library functions
     br_add_function(context, "load", brl_main_dl_open);
     br_add_function(context, "unload", brl_main_dl_close);
+    
+    // dynamic libraries lists startup
+    libs = bruter_init(sizeof(void*), true);
 
+
+
+    
+    // those could be done automatically when needed, but would print a warning
     // lets push the parser to the context
     BruterInt parser_index = br_new_var(context, "parser");
     context->data[parser_index].p = parser;
+    
+    // those could be done automatically when needed, but would print a warning
+    // lets push the args to the context
+    BruterInt allocs_index = br_new_var(context, "allocs");
+    context->data[allocs_index].p = bruter_init(sizeof(BruterValue), false); // allocs list
+    
+    // those could be done automatically when needed, but would print a warning
+    // lets push the unused list to the context
+    BruterInt unused_index = br_new_var(context, "unused");
+    context->data[unused_index].p = bruter_init(sizeof(BruterValue), false); // unused list
 
-    // dynamic libraries lists startup
-    libs = bruter_init(sizeof(void*), true);
+    
+    
 
 
     // arguments parsing
@@ -307,8 +324,6 @@ int main(int argc, char **argv)
             char *libname = br_str_format("load {%s}", argv[i] + 2);
             br_eval(context, parser, libname);
             free(libname);
-
-            i+=1; // skip to the next argument
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
