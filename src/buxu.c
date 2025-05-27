@@ -114,7 +114,7 @@ BruterInt repl(BruterList *context, BruterList* parser)
 
     printf("%s: ", EMOTICON_DEFAULT);
 
-    printf("%ld", BR_DATA(result).i);
+    printf("%ld", bruter_get(context, result).i);
     
     printf("\n");
     return result;
@@ -184,7 +184,7 @@ void buxu_dl_close(char* libpath)
     {
         if (strcmp(libpath, libs->keys[i]) == 0)
         {
-            dlclose(BR_DATA(libs->data[i].i).p);
+            dlclose(bruter_get(context, libs->data[i].i).p);
             bruter_fast_remove(libs, i);
             return;
         }
