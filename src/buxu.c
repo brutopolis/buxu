@@ -109,12 +109,12 @@ Int repl(List *context, List* parser)
         {
             break;
         }
-        result = eval(context, parser, cmd);
+        result = br_eval(context, parser, cmd);
     }
 
     printf("%s: ", EMOTICON_DEFAULT);
 
-    printf("%ld", DATA(result).i);
+    printf("%ld", BR_DATA(result).i);
     
     printf("\n");
     return result;
@@ -184,7 +184,7 @@ void buxu_dl_close(char* libpath)
     {
         if (strcmp(libpath, libs->keys[i]) == 0)
         {
-            dlclose(DATA(libs->data[i].i).p);
+            dlclose(BR_DATA(libs->data[i].i).p);
             list_fast_remove(libs, i);
             return;
         }
@@ -194,7 +194,7 @@ void buxu_dl_close(char* libpath)
 
 LIST_FUNCTION(brl_main_dl_open)
 {
-    char* str = ARG(0).s;
+    char* str = BR_ARG(0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -210,7 +210,7 @@ LIST_FUNCTION(brl_main_dl_open)
 
 LIST_FUNCTION(brl_main_dl_close)
 {
-    char* str = ARG(0).s;
+    char* str = BR_ARG(0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -226,24 +226,7 @@ LIST_FUNCTION(brl_main_dl_close)
 
 void _free_at_exit()
 {
-    // lets check if there is a parser variable in the program
-    Int parser_index = list_find(context, VALUE(p, NULL), "parser");
-    if (parser_index != -1) 
-    {
-        list_free(DATA(parser_index).p);
-    }
-
-    // lets check if there is a allocs variable in the program
-    Int allocs_index = list_find(context, VALUE(p, NULL), "allocs");
-    if (allocs_index != -1) 
-    {
-        while (((List*)DATA(allocs_index).p)->size > 0)
-        {
-            free(list_pop((List*)DATA(allocs_index).p).p);
-        }
-        list_free(DATA(allocs_index).p);
-        context->data[allocs_index].p = NULL;
-    }
+    br_free_context(context);
 
     if (libs->size > 0)
     {
@@ -259,8 +242,6 @@ void _free_at_exit()
         free(args->data[i].s);
     }
     list_free(args);
-
-    list_free(context);
 
     if (_code != NULL)
     {
@@ -290,11 +271,11 @@ int main(int argc, char **argv)
     args = list_init(sizeof(void*), false);
     
     // dynamic library functions
-    add_function(context, "load", brl_main_dl_open);
-    add_function(context, "unload", brl_main_dl_close);
+    br_add_function(context, "load", brl_main_dl_open);
+    br_add_function(context, "unload", brl_main_dl_close);
 
     // lets push the parser to the context
-    Int parser_index = new_var(context, "parser");
+    Int parser_index = br_new_var(context, "parser");
     context->data[parser_index].p = parser;
 
     // dynamic libraries lists startup
@@ -324,14 +305,14 @@ int main(int argc, char **argv)
         else if (argv[i][0] == '-' && argv[i][1] == 'l') // load
         {
             char *libname = str_format("load {%s}", argv[i] + 2);
-            eval(context, parser, libname);
+            br_eval(context, parser, libname);
             free(libname);
 
             i+=1; // skip to the next argument
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
-            result = eval(context, parser, argv[i+1]);
+            result = br_eval(context, parser, argv[i+1]);
             i+=1;// skip to the next argument
         }
         else // push to args
@@ -356,7 +337,7 @@ int main(int argc, char **argv)
             return 1;
         }
     
-        result = eval(context, parser, _code);
+        result = br_eval(context, parser, _code);
         free(___file);
     }
     return result;
