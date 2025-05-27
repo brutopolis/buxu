@@ -70,20 +70,6 @@ if [[ ! -d bruter || ! -d br || $UPDATE_BRUTER -eq 1 || ! $BRANCH == "main" ]]; 
     git clone https://github.com/brutopolis/br --depth 1
 fi
 
-cd bruter
-rm -rf build
-mkdir -p build
-$CC src/bruter.c -o build/libbruter.so -shared -fPIC -O3 -Iinclude $DEBUGARGS $EXTRA
-$CC src/bruter.c -o build/libbruter.a -c -O3 -Iinclude $DEBUGARGS $EXTRA
-cd ..
-
-cd br
-rm -rf build
-mkdir -p build
-$CC src/br.c -o build/libbr.so -shared -fPIC -O3 -I../bruter/src -L../bruter/build -lbruter $DEBUGARGS $EXTRA
-$CC src/br.c -o build/libbr.a -c -O3 -Iinclude -I../bruter/src -L../bruter/build -lbruter $DEBUGARGS $EXTRA
-cd ..
-
 # remove / if it is the last character
 if [[ ${INSTALL_PATH: -1} == "/" ]]; then
     INSTALL_PATH=${INSTALL_PATH::-1}
@@ -105,14 +91,6 @@ if [[ $UNINSTALL -eq 1 ]]; then
     # remove br.h from /usr/include
     $SUDO rm -f $INSTALL_PATH/include/br.h
     $SUDO rm -f $INSTALL_PATH/include/bruter.h
-
-    # remove libbruter.so from /usr/lib
-    $SUDO rm -f $INSTALL_PATH/lib/libbruter.so
-    $SUDO rm -f $INSTALL_PATH/lib/libbruter.a
-
-    # remove libbr.so from /usr/lib
-    $SUDO rm -f $INSTALL_PATH/lib/libbr.so
-    $SUDO rm -f $INSTALL_PATH/lib/libbr.a
 
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
         echo "[=°~°=]: failed to uninstall buxu"
@@ -138,7 +116,7 @@ mkdir -p build
 cp src/bupm build/bupm
 cp src/bucc build/bucc
 
-$CC $MAIN br/src/br.c bruter/src/bruter.c -o build/buxu -O3 -Iinclude $DEBUGARGS $EXTRA -Ibruter/src -Ibr/src
+$CC $MAIN -o build/buxu -O3 -Iinclude $DEBUGARGS $EXTRA -Ibruter -Ibr
 
 if [ -n "$DEBUG_FILE" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./build/buxu $DEBUG_FILE
@@ -202,8 +180,8 @@ if [[ $INSTALL -eq 1 ]]; then
     $SUDO cp ./build/buxu $INSTALL_PATH/bin/buxu
     
     # copy the header files to /usr/include
-    $SUDO cp bruter/src/bruter.h $INSTALL_PATH/include/
-    $SUDO cp br/src/br.h $INSTALL_PATH/include/
+    $SUDO cp bruter/bruter.h $INSTALL_PATH/include/
+    $SUDO cp br/br.h $INSTALL_PATH/include/
 
     if [[ $NOBUCC -eq 0 ]]; then
         $SUDO cp ./build/bucc $INSTALL_PATH/bin/
@@ -211,16 +189,6 @@ if [[ $INSTALL -eq 1 ]]; then
 
     if [[ $NOBPM -eq 0 ]]; then
         $SUDO cp ./build/bupm $INSTALL_PATH/bin/
-    fi
-
-    if [[ $NO_SHARED -eq 0 ]]; then
-        $SUDO cp ./bruter/build/libbruter.so $INSTALL_PATH/lib/
-        $SUDO cp ./br/build/libbr.so $INSTALL_PATH/lib/
-    fi
-
-    if [[ $NO_STATIC -eq 0 ]]; then
-        $SUDO cp ./bruter/build/libbruter.a $INSTALL_PATH/lib/
-        $SUDO cp ./br/build/libbr.a $INSTALL_PATH/lib/
     fi
 
     if [[ ! -f $INSTALL_PATH/bin/buxu ]]; then

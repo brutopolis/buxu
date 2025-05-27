@@ -40,7 +40,7 @@ char* file_read(char *filename)
     char *code = (char*)malloc(1);
     if (code == NULL)
     {
-        printf("BRUTER_ERROR: could not allocate memory for file\n");
+        printf("BUXU_ERROR: could not allocate memory for file\n");
         fclose(file);
         return NULL;
     }
@@ -55,7 +55,7 @@ char* file_read(char *filename)
         char *temp = realloc(code, new_size);
         if (temp == NULL)
         {
-            printf("BRUTER_ERROR: could not reallocate memory while reading file\n");
+            printf("BUXU_ERROR: could not reallocate memory while reading file\n");
             free(code);
             free(line);
             fclose(file);
@@ -142,12 +142,12 @@ void buxu_dl_open(char* libpath)
         return;
     }
 
-    BruterList *splited = str_split(libpath, '/');
-    BruterList *splited2 = str_split(splited->data[splited->size - 1].s, '.');
+    BruterList *splited = br_str_split(libpath, '/');
+    BruterList *splited2 = br_str_split(splited->data[splited->size - 1].s, '.');
     char *_libpath = splited2->data[0].s;
 
     // now lets get the init_name function
-    char* tmp = str_format("init_%s", _libpath);
+    char* tmp = br_str_format("init_%s", _libpath);
     void (*_init)(BruterList*) = dlsym(handle, tmp);
     free(tmp);
     if (_init != NULL)
@@ -201,7 +201,7 @@ BRUTER_FUNCTION(brl_main_dl_open)
     }
     else 
     {
-        char* path = str_format(".bupm/%s/%s.brl", str, str);
+        char* path = br_str_format(".bupm/%s/%s.brl", str, str);
         buxu_dl_open(path);
         free(path);
     }
@@ -217,7 +217,7 @@ BRUTER_FUNCTION(brl_main_dl_close)
     }
     else 
     {
-        char* path = str_format("./.bupm/%s/%s.brl", str, str);
+        char* path = br_str_format("./.bupm/%s/%s.brl", str, str);
         buxu_dl_close(path);
         free(path);
     }
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
 
     // result
     BruterInt result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
-    BruterList *parser = basic_parser(); // parser
+    BruterList *parser = br_simple_parser(); // parser
     // virtual machine startup
     context = bruter_init(16, true); // starts with capacity of 16 vars, to avoid reallocations, it will grow as needed
 
@@ -304,7 +304,7 @@ int main(int argc, char **argv)
         }
         else if (argv[i][0] == '-' && argv[i][1] == 'l') // load
         {
-            char *libname = str_format("load {%s}", argv[i] + 2);
+            char *libname = br_str_format("load {%s}", argv[i] + 2);
             br_eval(context, parser, libname);
             free(libname);
 
@@ -317,7 +317,7 @@ int main(int argc, char **argv)
         }
         else // push to args
         {
-            bruter_push(args, (BruterValue){.s = str_duplicate(argv[i])}, NULL);
+            bruter_push(args, (BruterValue){.s = br_str_duplicate(argv[i])}, NULL);
         }
     }
 

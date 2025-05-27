@@ -45,17 +45,18 @@ if [[ $DEBUG -eq 1 ]]; then
 else
     DEBUGARGS=""
 fi
+
 if [[ -z $OUTPUT_NAME ]]; then
     OUTPUT_NAME="a.out"
 fi
 
 if [[ $STATIC -eq 1 ]]; then
     echo "[=°-°=]: static mode enabled"
-    echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -c -O3 -lbruter -lbr $EXTRA $DEBUGARGS"
-    $CC $FILES -o $OUTPUT_NAME -c -O3 -lbruter -lbr $EXTRA $DEBUGARGS
+    echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -c -O3 $EXTRA $DEBUGARGS"
+    $CC $FILES -o $OUTPUT_NAME -c -O3 $EXTRA $DEBUGARGS
 else
-    echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lbruter -lbr $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"
-    $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 -lbruter -lbr $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib
+    echo "[=°-°=]: $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib"
+    $CC $FILES -o $OUTPUT_NAME -shared -fPIC -O3 $EXTRA $DEBUGARGS -Wl,-rpath=$INSTALL_PATH/lib
 fi
 
 echo "[=°-°=]: $OUTPUT_NAME" has been compiled.
