@@ -23,9 +23,9 @@
 #define buxu_error(...) printf(EMOTICON_ERROR ": error: "); printf(__VA_ARGS__); printf("\n")
 #define buxu_info(...) printf(EMOTICON_DEFAULT ": info: "); printf(__VA_ARGS__); printf("\n")
 
-List *args;
-List* libs;
-List* context; // global context
+BruterList *args;
+BruterList* libs;
+BruterList* context; // global context
 char *_code = NULL;
 
 // file stuff
@@ -94,12 +94,12 @@ bool file_exists(char* filename)
     return true;
 }
 
-Int repl(List *context, List* parser)
+BruterInt repl(BruterList *context, BruterList* parser)
 {
     buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
     buxu_print(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
     char cmd[1024];
-    Int result = -1;
+    BruterInt result = -1;
     int junk = 0;
     while (result == -1)
     {
@@ -109,12 +109,12 @@ Int repl(List *context, List* parser)
         {
             break;
         }
-        result = eval(context, parser, cmd);
+        result = br_eval(context, parser, cmd);
     }
 
     printf("%s: ", EMOTICON_DEFAULT);
 
-    printf("%ld", DATA(result).i);
+    printf("%ld", BR_DATA(result).i);
     
     printf("\n");
     return result;
@@ -123,7 +123,7 @@ Int repl(List *context, List* parser)
 void buxu_dl_open(char* libpath)
 {
     // check if the library is already loaded
-    Int found = list_find(libs, VALUE(p, NULL), libpath);
+    BruterInt found = bruter_find(libs, BRUTER_VALUE(p, NULL), libpath);
     if (found != -1)
     {
         buxu_error("library %s already loaded", libpath);
@@ -134,7 +134,7 @@ void buxu_dl_open(char* libpath)
 
     if (handle != NULL)
     {
-        list_push(libs, (Value){.p = handle}, libpath);
+        bruter_push(libs, (BruterValue){.p = handle}, libpath);
     }
     else 
     {
@@ -142,13 +142,13 @@ void buxu_dl_open(char* libpath)
         return;
     }
 
-    List *splited = str_split(libpath, '/');
-    List *splited2 = str_split(splited->data[splited->size - 1].s, '.');
+    BruterList *splited = str_split(libpath, '/');
+    BruterList *splited2 = str_split(splited->data[splited->size - 1].s, '.');
     char *_libpath = splited2->data[0].s;
 
     // now lets get the init_name function
     char* tmp = str_format("init_%s", _libpath);
-    void (*_init)(List*) = dlsym(handle, tmp);
+    void (*_init)(BruterList*) = dlsym(handle, tmp);
     free(tmp);
     if (_init != NULL)
     {
@@ -160,41 +160,41 @@ void buxu_dl_open(char* libpath)
         buxu_error("init_%s not found", _libpath);
         // then lets close the library
         dlclose(handle);
-        list_pop(libs);
+        bruter_pop(libs);
         return;
     }
 
-    for (Int i = 0; i < splited->size; i++)
+    for (BruterInt i = 0; i < splited->size; i++)
     {
         free(splited->data[i].s);
     }
 
-    for (Int i = 0; i < splited2->size; i++)
+    for (BruterInt i = 0; i < splited2->size; i++)
     {
         free(splited2->data[i].s);
     }
 
-    list_free(splited);
-    list_free(splited2);
+    bruter_free(splited);
+    bruter_free(splited2);
 }
 
 void buxu_dl_close(char* libpath)
 {
-    for (Int i = 0; i < libs->size; i++)
+    for (BruterInt i = 0; i < libs->size; i++)
     {
         if (strcmp(libpath, libs->keys[i]) == 0)
         {
-            dlclose(DATA(libs->data[i].i).p);
-            list_fast_remove(libs, i);
+            dlclose(BR_DATA(libs->data[i].i).p);
+            bruter_fast_remove(libs, i);
             return;
         }
     }
     buxu_error("library %s is not loaded.", libpath);
 }
 
-LIST_FUNCTION(brl_main_dl_open)
+BRUTER_FUNCTION(brl_main_dl_open)
 {
-    char* str = ARG(0).s;
+    char* str = BR_ARG(0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -208,9 +208,9 @@ LIST_FUNCTION(brl_main_dl_open)
     return -1;
 }
 
-LIST_FUNCTION(brl_main_dl_close)
+BRUTER_FUNCTION(brl_main_dl_close)
 {
-    char* str = ARG(0).s;
+    char* str = BR_ARG(0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -226,41 +226,22 @@ LIST_FUNCTION(brl_main_dl_close)
 
 void _free_at_exit()
 {
-    // lets check if there is a parser variable in the program
-    Int parser_index = list_find(context, VALUE(p, NULL), "parser");
-    if (parser_index != -1) 
-    {
-        list_free(DATA(parser_index).p);
-    }
-
-    // lets check if there is a allocs variable in the program
-    Int allocs_index = list_find(context, VALUE(p, NULL), "allocs");
-    if (allocs_index != -1) 
-    {
-        while (((List*)DATA(allocs_index).p)->size > 0)
-        {
-            free(list_pop((List*)DATA(allocs_index).p).p);
-        }
-        list_free(DATA(allocs_index).p);
-        context->data[allocs_index].p = NULL;
-    }
+    br_free_context(context);
 
     if (libs->size > 0)
     {
         while (libs->size > 0)
         {
-            dlclose(list_pop(libs).p);
+            dlclose(bruter_pop(libs).p);
         }
     }
-    list_free(libs);
+    bruter_free(libs);
 
-    for (Int i = 0; i < args->size; i++)
+    for (BruterInt i = 0; i < args->size; i++)
     {
         free(args->data[i].s);
     }
-    list_free(args);
-
-    list_free(context);
+    bruter_free(args);
 
     if (_code != NULL)
     {
@@ -278,27 +259,27 @@ int main(int argc, char **argv)
     }
 
     // result
-    Int result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
-    List *parser = basic_parser(); // parser
+    BruterInt result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
+    BruterList *parser = basic_parser(); // parser
     // virtual machine startup
-    context = list_init(16, true); // starts with capacity of 16 vars, to avoid reallocations, it will grow as needed
+    context = bruter_init(16, true); // starts with capacity of 16 vars, to avoid reallocations, it will grow as needed
 
     // lib search paths
     char* backup;
 
     // arguments startup
-    args = list_init(sizeof(void*), false);
+    args = bruter_init(sizeof(void*), false);
     
     // dynamic library functions
-    add_function(context, "load", brl_main_dl_open);
-    add_function(context, "unload", brl_main_dl_close);
+    br_add_function(context, "load", brl_main_dl_open);
+    br_add_function(context, "unload", brl_main_dl_close);
 
     // lets push the parser to the context
-    Int parser_index = new_var(context, "parser");
+    BruterInt parser_index = br_new_var(context, "parser");
     context->data[parser_index].p = parser;
 
     // dynamic libraries lists startup
-    libs = list_init(sizeof(void*), true);
+    libs = bruter_init(sizeof(void*), true);
 
 
     // arguments parsing
@@ -324,19 +305,19 @@ int main(int argc, char **argv)
         else if (argv[i][0] == '-' && argv[i][1] == 'l') // load
         {
             char *libname = str_format("load {%s}", argv[i] + 2);
-            eval(context, parser, libname);
+            br_eval(context, parser, libname);
             free(libname);
 
             i+=1; // skip to the next argument
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
-            result = eval(context, parser, argv[i+1]);
+            result = br_eval(context, parser, argv[i+1]);
             i+=1;// skip to the next argument
         }
         else // push to args
         {
-            list_push(args, (Value){.s = str_duplicate(argv[i])}, NULL);
+            bruter_push(args, (BruterValue){.s = str_duplicate(argv[i])}, NULL);
         }
     }
 
@@ -346,7 +327,7 @@ int main(int argc, char **argv)
     }
     else if (args->size > 0) // run files
     {
-        char* ___file = list_shift(args).s;
+        char* ___file = bruter_shift(args).s;
     
         _code = file_read(___file);
 
@@ -356,7 +337,7 @@ int main(int argc, char **argv)
             return 1;
         }
     
-        result = eval(context, parser, _code);
+        result = br_eval(context, parser, _code);
         free(___file);
     }
     return result;
