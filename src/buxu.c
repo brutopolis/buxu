@@ -18,10 +18,10 @@
 #define EMOTICON_CONFUSED "[=º?°=]"
 
 // define a macro to printf but it always starts with [=°-°=] and ends with a newline
-#define buxu_print(emoticon, ...) printf(emoticon ": "); printf(__VA_ARGS__); printf("\n")
-#define buxu_warn(...) printf(EMOTICON_WARNING ": warning: "); printf(__VA_ARGS__); printf("\n")
-#define buxu_error(...) printf(EMOTICON_ERROR ": error: "); printf(__VA_ARGS__); printf("\n")
-#define buxu_info(...) printf(EMOTICON_DEFAULT ": info: "); printf(__VA_ARGS__); printf("\n")
+#define BUXU_PRINT(emoticon, ...) printf(emoticon ": "); printf(__VA_ARGS__); printf("\n")
+#define BUXU_WARN(...) printf(EMOTICON_WARNING ": warning: "); printf(__VA_ARGS__); printf("\n")
+#define BUXU_ERROR(...) printf(EMOTICON_ERROR ": error: "); printf(__VA_ARGS__); printf("\n")
+#define BUXU_INFO(...) printf(EMOTICON_DEFAULT ": info: "); printf(__VA_ARGS__); printf("\n")
 
 BruterList *args;
 BruterList* libs;
@@ -96,8 +96,8 @@ bool file_exists(char* filename)
 
 BruterInt repl(BruterList *context, BruterList* parser)
 {
-    buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
-    buxu_print(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
+    BUXU_PRINT(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
+    BUXU_PRINT(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
     char cmd[1024];
     BruterInt result = -1;
     int junk = 0;
@@ -123,10 +123,10 @@ BruterInt repl(BruterList *context, BruterList* parser)
 void buxu_dl_open(char* libpath)
 {
     // check if the library is already loaded
-    BruterInt found = bruter_find(libs, BRUTER_VALUE(p, NULL), libpath);
+    BruterInt found = bruter_find(libs, bruter_value_p(NULL), libpath);
     if (found != -1)
     {
-        buxu_error("library %s already loaded", libpath);
+        BUXU_ERROR("library %s already loaded", libpath);
         return;
     }
 
@@ -138,7 +138,7 @@ void buxu_dl_open(char* libpath)
     }
     else 
     {
-        buxu_error("%s", dlerror());
+        BUXU_ERROR("%s", dlerror());
         return;
     }
 
@@ -156,8 +156,8 @@ void buxu_dl_open(char* libpath)
     }
     else 
     {
-        buxu_error("%s", dlerror());
-        buxu_error("init_%s not found", _libpath);
+        BUXU_ERROR("%s", dlerror());
+        BUXU_ERROR("init_%s not found", _libpath);
         // then lets close the library
         dlclose(handle);
         bruter_pop(libs);
@@ -189,12 +189,12 @@ void buxu_dl_close(char* libpath)
             return;
         }
     }
-    buxu_error("library %s is not loaded.", libpath);
+    BUXU_ERROR("library %s is not loaded.", libpath);
 }
 
-BRUTER_FUNCTION(brl_main_dl_open)
+BR_FUNCTION(brl_main_dl_open)
 {
-    char* str = BR_ARG(0).s;
+    char* str = br_arg(context, args, 0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -208,9 +208,9 @@ BRUTER_FUNCTION(brl_main_dl_open)
     return -1;
 }
 
-BRUTER_FUNCTION(brl_main_dl_close)
+BR_FUNCTION(brl_main_dl_close)
 {
-    char* str = BR_ARG(0).s;
+    char* str = br_arg(context, args, 0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -254,7 +254,7 @@ int main(int argc, char **argv)
     // free all at exit
     if (atexit(_free_at_exit) != 0)
     {
-        buxu_error("could not register the atexit function");
+        BUXU_ERROR("could not register the atexit function");
         return 1;
     }
 
@@ -269,17 +269,12 @@ int main(int argc, char **argv)
 
     // arguments startup
     args = bruter_init(sizeof(void*), false);
-    
-    // dynamic library functions
-    br_add_function(context, "load", brl_main_dl_open);
-    br_add_function(context, "unload", brl_main_dl_close);
-    
-    // dynamic libraries lists startup
-    libs = bruter_init(sizeof(void*), true);
 
+    // those could be done automatically when needed, but would print a warning
+    // lets push the unused list to the context
+    // we do this manually because br_new_var would automatically create the unused list if it does not exist
+    bruter_push(context, bruter_value_p(bruter_init(sizeof(BruterValue), false)), "unused");
 
-
-    
     // those could be done automatically when needed, but would print a warning
     // lets push the parser to the context
     BruterInt parser_index = br_new_var(context, "parser");
@@ -290,28 +285,26 @@ int main(int argc, char **argv)
     BruterInt allocs_index = br_new_var(context, "allocs");
     context->data[allocs_index].p = bruter_init(sizeof(BruterValue), false); // allocs list
     
-    // those could be done automatically when needed, but would print a warning
-    // lets push the unused list to the context
-    BruterInt unused_index = br_new_var(context, "unused");
-    context->data[unused_index].p = bruter_init(sizeof(BruterValue), false); // unused list
-
+    // dynamic library functions
+    br_add_function(context, "load", brl_main_dl_open);
+    br_add_function(context, "unload", brl_main_dl_close);
     
-    
-
+    // dynamic libraries lists startup
+    libs = bruter_init(sizeof(void*), true);
 
     // arguments parsing
     for (int i = 1; i < argc; i++)
     {
         if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) // version
         {
-            buxu_print(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
-            buxu_print(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
+            BUXU_PRINT(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
+            BUXU_PRINT(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
             return 0;
         }
         else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) // help
         {
-            buxu_print(EMOTICON_DEFAULT, "v%s", VERSION);
-            buxu_print(EMOTICON_DEFAULT, "usage: %s [file]", argv[0]);
+            BUXU_PRINT(EMOTICON_DEFAULT, "v%s", VERSION);
+            BUXU_PRINT(EMOTICON_DEFAULT, "usage: %s [file]", argv[0]);
             printf("  -v, --version\t\tprint version\n");
             printf("  -h, --help\t\tprint this help\n");
             printf("  -l, \t\t\tload a library\n");
@@ -348,7 +341,7 @@ int main(int argc, char **argv)
 
         if (_code == NULL)
         {
-            buxu_error("file %s not found", ___file);
+            BUXU_ERROR("file %s not found", ___file);
             return 1;
         }
     
