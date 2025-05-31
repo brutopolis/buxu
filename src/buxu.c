@@ -3,7 +3,7 @@
 // there are some tweaks that try be compatible with mac and windows, totally untested;
 
 // buxu header
-#include "br.h"
+#include "bruter-representation.h"
 
 // dynamic library loading
 #include <dlfcn.h> 

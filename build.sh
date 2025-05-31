@@ -88,8 +88,8 @@ if [[ $UNINSTALL -eq 1 ]]; then
     $SUDO rm -f $INSTALL_PATH/bin/bucc
     $SUDO rm -f $INSTALL_PATH/bin/bupm
 
-    # remove br.h from /usr/include
-    $SUDO rm -f $INSTALL_PATH/include/br.h
+    # remove bruter-representation.h from /usr/include
+    $SUDO rm -f $INSTALL_PATH/include/bruter-representation.h
     $SUDO rm -f $INSTALL_PATH/include/bruter.h
 
     if [[ -f $INSTALL_PATH/bin/buxu ]]; then
@@ -171,7 +171,7 @@ if [[ $INSTALL -eq 1 ]]; then
         $SUDO rm -f $INSTALL_PATH/lib/libbruter.so
         $SUDO rm -f $INSTALL_PATH/lib/libbruter.a
 
-        $SUDO rm -f $INSTALL_PATH/include/br.h
+        $SUDO rm -f $INSTALL_PATH/include/bruter-representation.h
         $SUDO rm -f $INSTALL_PATH/lib/libbr.so
         $SUDO rm -f $INSTALL_PATH/lib/libbr.a
     fi
@@ -181,7 +181,7 @@ if [[ $INSTALL -eq 1 ]]; then
     
     # copy the header files to /usr/include
     $SUDO cp bruter/bruter.h $INSTALL_PATH/include/
-    $SUDO cp br/br.h $INSTALL_PATH/include/
+    $SUDO cp br/bruter-representation.h $INSTALL_PATH/include/
 
     if [[ $NOBUCC -eq 0 ]]; then
         $SUDO cp ./build/bucc $INSTALL_PATH/bin/
