@@ -277,13 +277,16 @@ int main(int argc, char **argv)
 
     // those could be done automatically when needed, but would print a warning
     // lets push the parser to the context
-    BruterInt parser_index = br_new_var(context, "parser");
-    context->data[parser_index].p = parser;
+    BruterInt parser_index = br_new_var(context, bruter_value_p(parser), "parser");
+    if (parser_index == -1)
+    {
+        BUXU_ERROR("failed to create parser variable");
+        return 1;
+    }
     
     // those could be done automatically when needed, but would print a warning
     // lets push the args to the context
-    BruterInt allocs_index = br_new_var(context, "allocs");
-    context->data[allocs_index].p = bruter_init(sizeof(BruterValue), false); // allocs list
+    BruterInt allocs_index = br_new_var(context, bruter_value_p(bruter_init(sizeof(BruterValue), false)), "allocs");
     
     // dynamic library functions
     br_add_function(context, "load", brl_main_dl_open);
