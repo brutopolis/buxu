@@ -97,6 +97,7 @@ bool file_exists(char* filename)
 BruterInt repl(BruterList *context, BruterList* parser)
 {
     BUXU_PRINT(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
+    BUXU_PRINT(EMOTICON_DEFAULT, "bruter-representation v%s", BR_VERSION);
     BUXU_PRINT(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
     char cmd[1024];
     BruterInt result = -1;
@@ -260,9 +261,10 @@ int main(int argc, char **argv)
 
     // result
     BruterInt result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
-    BruterList *parser = br_simple_parser(); // parser
     // virtual machine startup
-    context = bruter_init(16, true); // starts with capacity of 16 vars, to avoid reallocations, it will grow as needed
+    context = br_new_context(16); // global context
+    
+    BruterList *parser = br_get_parser(context); // get the parser from the context
 
     // lib search paths
     char* backup;
@@ -270,23 +272,7 @@ int main(int argc, char **argv)
     // arguments startup
     args = bruter_init(sizeof(void*), false);
 
-    // those could be done automatically when needed, but would print a warning
-    // lets push the unused list to the context
-    // we do this manually because br_new_var would automatically create the unused list if it does not exist
-    bruter_push(context, bruter_value_p(bruter_init(sizeof(BruterValue), false)), "unused");
-
-    // those could be done automatically when needed, but would print a warning
-    // lets push the parser to the context
-    BruterInt parser_index = br_new_var(context, bruter_value_p(parser), "parser");
-    if (parser_index == -1)
-    {
-        BUXU_ERROR("failed to create parser variable");
-        return 1;
-    }
     
-    // those could be done automatically when needed, but would print a warning
-    // lets push the args to the context
-    BruterInt allocs_index = br_new_var(context, bruter_value_p(bruter_init(sizeof(BruterValue), false)), "allocs");
     
     // dynamic library functions
     br_add_function(context, "load", brl_main_dl_open);
@@ -301,6 +287,7 @@ int main(int argc, char **argv)
         if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) // version
         {
             BUXU_PRINT(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
+            BUXU_PRINT(EMOTICON_DEFAULT, "bruter-representation v%s", BR_VERSION);
             BUXU_PRINT(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
             return 0;
         }
@@ -347,6 +334,8 @@ int main(int argc, char **argv)
             BUXU_ERROR("file %s not found", ___file);
             return 1;
         }
+
+        br_new_var(context, bruter_value_p(args), "args");
     
         result = br_eval(context, parser, _code);
         free(___file);

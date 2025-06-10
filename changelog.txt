@@ -1,5 +1,9 @@
 # buxu changelog https://github.com/brutopolis/buxu
 
+(10/06/2025) - version 0.1.8a
+
+- now you can access args using the list args inside bruter;
+
 (27/05/2025) - version 0.1.8
 
 - updated to use br and bruter properly, as now they use their own prefixes and are header-only libraries;
