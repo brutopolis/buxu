@@ -65,9 +65,9 @@ done
 # if no bruter folder is found, or if UPDATE is set to 1, clone the bruter repo
 if [[ ! -d bruter || ! -d br || $UPDATE_BRUTER -eq 1 || ! $BRANCH == "main" ]]; then
     rm -rf ./bruter
-    rm -rf ./br
+    rm -rf ./bruter-representation
     git clone https://github.com/brutopolis/bruter -b $BRANCH --depth 1
-    git clone https://github.com/brutopolis/br --depth 1
+    git clone https://github.com/brutopolis/bruter-representation --depth 1
 fi
 
 # remove / if it is the last character
@@ -116,7 +116,7 @@ mkdir -p build
 cp src/bupm build/bupm
 cp src/bucc build/bucc
 
-$CC $MAIN -o build/buxu -O3 -Iinclude $DEBUGARGS $EXTRA -Ibruter -Ibr
+$CC $MAIN -o build/buxu -O3 -Iinclude $DEBUGARGS $EXTRA -Ibruter -Ibruter-representation
 
 if [ -n "$DEBUG_FILE" ]; then
     valgrind --tool=massif --stacks=yes --detailed-freq=1 --verbose  ./build/buxu $DEBUG_FILE
@@ -168,12 +168,8 @@ if [[ $INSTALL -eq 1 ]]; then
         $SUDO rm -f $INSTALL_PATH/bin/bucc
         $SUDO rm -f $INSTALL_PATH/bin/bupm
         $SUDO rm -f $INSTALL_PATH/include/bruter.h
-        $SUDO rm -f $INSTALL_PATH/lib/libbruter.so
-        $SUDO rm -f $INSTALL_PATH/lib/libbruter.a
 
         $SUDO rm -f $INSTALL_PATH/include/bruter-representation.h
-        $SUDO rm -f $INSTALL_PATH/lib/libbr.so
-        $SUDO rm -f $INSTALL_PATH/lib/libbr.a
     fi
 
     # copy buxu
@@ -181,7 +177,7 @@ if [[ $INSTALL -eq 1 ]]; then
     
     # copy the header files to /usr/include
     $SUDO cp bruter/bruter.h $INSTALL_PATH/include/
-    $SUDO cp br/bruter-representation.h $INSTALL_PATH/include/
+    $SUDO cp bruter-representation/bruter-representation.h $INSTALL_PATH/include/
 
     if [[ $NOBUCC -eq 0 ]]; then
         $SUDO cp ./build/bucc $INSTALL_PATH/bin/
