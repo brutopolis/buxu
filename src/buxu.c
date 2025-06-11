@@ -261,6 +261,7 @@ int main(int argc, char **argv)
 
     // result
     BruterInt result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
+    
     // virtual machine startup
     context = br_new_context(16); // global context
     
@@ -270,16 +271,14 @@ int main(int argc, char **argv)
     char* backup;
 
     // arguments startup
-    args = bruter_init(sizeof(void*), false);
+    args = bruter_init(sizeof(void*), false, false);
 
-    
-    
     // dynamic library functions
     br_add_function(context, "load", brl_main_dl_open);
     br_add_function(context, "unload", brl_main_dl_close);
     
     // dynamic libraries lists startup
-    libs = bruter_init(sizeof(void*), true);
+    libs = bruter_init(sizeof(void*), true, false);
 
     // arguments parsing
     for (int i = 1; i < argc; i++)
