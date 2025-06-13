@@ -7,31 +7,15 @@
   - buxu, a interpreter and repl for bruter representation;
   - bupm, stands for Buxu Package Manager;
   - bucc, a tool to compile buxu c files into buxu-compatible shared libraries, stants for Buxu C Compiler;
-  - buxu's build script, it builds buxu and bruter, can install and uninstall them, can debug etc;
-  - some examples;
 
 *`UNDER HEAVY DEVELOPMENT`*
 
 # Building instructions
 
-  buxu include its own build script;
-
-    # clean build for the current system;
-    
-    ./build.sh
-
-    # debug build;
-    
-    ./build.sh --debug
-
-    # you can also debug a specific file;
-
-    ./build.sh --debug-file path/to/buxu_file.br
-
-    # cc option:
-    # you can also define the path to a compiler;
-
-    ./build.sh -cc path/to/compiler
+  ```c
+    gcc -o buxu buxu.c -ldl 
+  ```
+  does the trick;
 
 # Usage
   

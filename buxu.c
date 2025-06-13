@@ -135,7 +135,7 @@ void buxu_dl_open(char* libpath)
 
     if (handle != NULL)
     {
-        bruter_push(libs, (BruterValue){.p = handle}, libpath);
+        bruter_push(libs, (BruterValue){.p = handle}, libpath, 0);
     }
     else 
     {
@@ -314,7 +314,7 @@ int main(int argc, char **argv)
         }
         else // push to args
         {
-            bruter_push(args, (BruterValue){.s = br_str_duplicate(argv[i])}, NULL);
+            bruter_push(args, (BruterValue){.s = br_str_duplicate(argv[i])}, NULL, 0);
         }
     }
 
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        br_new_var(context, bruter_value_p(args), "args");
+        br_new_var(context, bruter_value_p(args), "args", BR_TYPE_LIST);
     
         result = br_eval(context, parser, _code);
         free(___file);
