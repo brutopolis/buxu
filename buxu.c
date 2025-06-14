@@ -195,7 +195,7 @@ void buxu_dl_close(char* libpath)
 
 BR_FUNCTION(brl_main_dl_open)
 {
-    char* str = br_arg(context, args, 0).s;
+    char* str = br_arg_get(context, args, 0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -211,7 +211,7 @@ BR_FUNCTION(brl_main_dl_open)
 
 BR_FUNCTION(brl_main_dl_close)
 {
-    char* str = br_arg(context, args, 0).s;
+    char* str = br_arg_get(context, args, 0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -227,8 +227,6 @@ BR_FUNCTION(brl_main_dl_close)
 
 void _free_at_exit()
 {
-    br_free_context(context);
-
     if (libs->size > 0)
     {
         while (libs->size > 0)
@@ -242,12 +240,13 @@ void _free_at_exit()
     {
         free(args->data[i].s);
     }
-    bruter_free(args);
 
     if (_code != NULL)
     {
         free(_code);
     }
+
+    br_free_context(context);
 }
 
 int main(int argc, char **argv)
@@ -266,9 +265,6 @@ int main(int argc, char **argv)
     context = br_new_context(16); // global context
     
     BruterList *parser = br_get_parser(context); // get the parser from the context
-
-    // lib search paths
-    char* backup;
 
     // arguments startup
     args = bruter_init(sizeof(void*), false, false);
