@@ -1,5 +1,10 @@
 # buxu changelog https://github.com/brutopolis/buxu
 
+(12/06/2025) - version 0.1.9
+
+- it is now so easy that we removed the build.sh script, a simple gcc -o buxu buxu.c -ldl is enough to build it, the rest is just copy and paste where you need;
+- some updates to match bruter 0.8.8;
+
 (10/06/2025) - version 0.1.8a
 
 - now you can access args using the list args inside bruter;

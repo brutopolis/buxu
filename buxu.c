@@ -135,7 +135,7 @@ void buxu_dl_open(char* libpath)
 
     if (handle != NULL)
     {
-        bruter_push(libs, (BruterValue){.p = handle}, libpath);
+        bruter_push(libs, (BruterValue){.p = handle}, libpath, 0);
     }
     else 
     {
@@ -195,7 +195,7 @@ void buxu_dl_close(char* libpath)
 
 BR_FUNCTION(brl_main_dl_open)
 {
-    char* str = br_arg(context, args, 0).s;
+    char* str = br_arg_get(context, args, 0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -211,7 +211,7 @@ BR_FUNCTION(brl_main_dl_open)
 
 BR_FUNCTION(brl_main_dl_close)
 {
-    char* str = br_arg(context, args, 0).s;
+    char* str = br_arg_get(context, args, 0).s;
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -227,8 +227,6 @@ BR_FUNCTION(brl_main_dl_close)
 
 void _free_at_exit()
 {
-    br_free_context(context);
-
     if (libs->size > 0)
     {
         while (libs->size > 0)
@@ -242,12 +240,13 @@ void _free_at_exit()
     {
         free(args->data[i].s);
     }
-    bruter_free(args);
 
     if (_code != NULL)
     {
         free(_code);
     }
+
+    br_free_context(context);
 }
 
 int main(int argc, char **argv)
@@ -261,25 +260,21 @@ int main(int argc, char **argv)
 
     // result
     BruterInt result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
+    
     // virtual machine startup
     context = br_new_context(16); // global context
     
     BruterList *parser = br_get_parser(context); // get the parser from the context
 
-    // lib search paths
-    char* backup;
-
     // arguments startup
-    args = bruter_init(sizeof(void*), false);
+    args = bruter_init(sizeof(void*), false, false);
 
-    
-    
     // dynamic library functions
     br_add_function(context, "load", brl_main_dl_open);
     br_add_function(context, "unload", brl_main_dl_close);
     
     // dynamic libraries lists startup
-    libs = bruter_init(sizeof(void*), true);
+    libs = bruter_init(sizeof(void*), true, false);
 
     // arguments parsing
     for (int i = 1; i < argc; i++)
@@ -315,7 +310,7 @@ int main(int argc, char **argv)
         }
         else // push to args
         {
-            bruter_push(args, (BruterValue){.s = br_str_duplicate(argv[i])}, NULL);
+            bruter_push(args, (BruterValue){.s = br_str_duplicate(argv[i])}, NULL, 0);
         }
     }
 
@@ -335,7 +330,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        br_new_var(context, bruter_value_p(args), "args");
+        br_new_var(context, bruter_value_p(args), "args", BR_TYPE_LIST);
     
         result = br_eval(context, parser, _code);
         free(___file);
