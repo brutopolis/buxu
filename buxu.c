@@ -267,14 +267,14 @@ int main(int argc, char **argv)
     BruterList *parser = br_get_parser(context); // get the parser from the context
 
     // arguments startup
-    args = bruter_init(sizeof(void*), false, false);
+    args = bruter_new(sizeof(void*), false, false);
 
     // dynamic library functions
     br_add_function(context, "load", brl_main_dl_open);
     br_add_function(context, "unload", brl_main_dl_close);
     
     // dynamic libraries lists startup
-    libs = bruter_init(sizeof(void*), true, false);
+    libs = bruter_new(sizeof(void*), true, false);
 
     // arguments parsing
     for (int i = 1; i < argc; i++)
