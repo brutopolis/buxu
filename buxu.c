@@ -124,7 +124,7 @@ BruterInt repl(BruterList *context, BruterList* parser)
 void buxu_dl_open(char* libpath)
 {
     // check if the library is already loaded
-    BruterInt found = bruter_find(libs, bruter_value_p(NULL), libpath);
+    BruterInt found = bruter_find_key(libs, libpath);
     if (found != -1)
     {
         BUXU_ERROR("library %s already loaded", libpath);
