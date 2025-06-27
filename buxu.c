@@ -10,128 +10,84 @@
 
 #define BUXU_VERSION "0.1.9"
 
-// emoticons
-#define EMOTICON_DEFAULT "[=°-°=]"
-#define EMOTICON_IDLE "[=° °=]"
-#define EMOTICON_WARNING "[=°~°=]"
-#define EMOTICON_ERROR "[=°x°=]"
-#define EMOTICON_CONFUSED "[=º?°=]"
+#define BUXU_EMOTICON "[=º-º=]"
 
-// define a macro to printf but it always starts with [=°-°=] and ends with a newline
-#define BUXU_PRINT(emoticon, ...) printf(emoticon ": "); printf(__VA_ARGS__); printf("\n")
-#define BUXU_WARN(...) printf(EMOTICON_WARNING ": warning: "); printf(__VA_ARGS__); printf("\n")
-#define BUXU_ERROR(...) printf(EMOTICON_ERROR ": error: "); printf(__VA_ARGS__); printf("\n")
-#define BUXU_INFO(...) printf(EMOTICON_DEFAULT ": info: "); printf(__VA_ARGS__); printf("\n")
-
-BruterList *args;
-BruterList* libs;
-BruterList* context; // global context
-char *_code = NULL;
+static BruterList* args = NULL;
+static BruterList* libs = NULL;
+static BruterList* context = NULL; // global context
+static char *buxu_run_code = NULL;
 
 // file stuff
-char* file_read(char *filename)
+static char* file_read(char *filename)
 {
+    long length = 0;
+    char *buffer = NULL;
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
+        printf("%s: could not open file %s\n", BUXU_EMOTICON, filename);
         return NULL;
     }
-
-    char *code = (char*)malloc(1);
-    if (code == NULL)
+    fseek(file, 0, SEEK_END);
+    length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    buffer = (char*)calloc(1, (size_t)length + 1);
+    if (buffer == NULL)
     {
-        printf("BUXU_ERROR: could not allocate memory for file\n");
+        printf("%s: could not allocate memory for file %s\n", BUXU_EMOTICON, filename);
         fclose(file);
         return NULL;
     }
-
-    code[0] = '\0';
-
-    char *line = NULL;
-    size_t len = 0;
-    while (getline(&line, &len, file) != -1)
-    {
-        size_t new_size = strlen(code) + strlen(line) + 1;
-        char *temp = realloc(code, new_size);
-        if (temp == NULL)
-        {
-            printf("BUXU_ERROR: could not reallocate memory while reading file\n");
-            free(code);
-            free(line);
-            fclose(file);
-            return NULL;
-        }
-        code = temp;
-        strcat(code, line);
-    }
-
-    free(line);
+    fread(buffer, 1, (size_t)length, file);
     fclose(file);
-    return code;
+    return buffer;
 }
 
-void file_write(char *filename, char *code)
+static BruterInt repl(BruterList *received_context, BruterList* parser)
 {
-    FILE *file = fopen(filename, "w");
-    if (file == NULL)
-    {
-        return;
-    }
-
-    fprintf(file, "%s", code);
-    fclose(file);
-}
-
-bool file_exists(char* filename)
-{
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
-    {
-        return false;
-    }
-
-    fclose(file);
-    return true;
-}
-
-BruterInt repl(BruterList *context, BruterList* parser)
-{
-    BUXU_PRINT(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
-    BUXU_PRINT(EMOTICON_DEFAULT, "bruter-representation v%s", BR_VERSION);
-    BUXU_PRINT(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
     char cmd[1024];
-    BruterInt result = -1;
     int junk = 0;
+    BruterInt result = -1;
+    printf("bruter v%s\n", BRUTER_VERSION);
+    printf("bruter-representation v%s\n", BR_VERSION);
+    printf("buxu v%s\n", BUXU_VERSION);
     while (result == -1)
     {
-        printf(EMOTICON_IDLE ": ");
+        printf("%s: ", BUXU_EMOTICON);
         junk = scanf("%[^\n]%*c", cmd);
         if (junk == 0)
         {
             break;
         }
-        result = br_eval(context, parser, cmd);
+        result = br_eval(received_context, parser, cmd);
     }
 
-    printf("%s: ", EMOTICON_DEFAULT);
+    printf("%s: ", BUXU_EMOTICON);
 
-    printf("%ld", bruter_get(context, result).i);
+    printf("%ld", bruter_get_int(received_context, result));
     
     printf("\n");
     return result;
 }
 
-void buxu_dl_open(char* libpath)
+static void buxu_dl_open(char* libpath)
 {
     // check if the library is already loaded
-    BruterInt found = bruter_find(libs, bruter_value_p(NULL), libpath);
+    char *libpath_local = NULL;
+    void *tmp_func = NULL;
+    char *tmp = NULL;
+    void (*init_func)(BruterList*) = NULL;
+
+    BruterList *splited = NULL;
+    BruterList *splited2 = NULL;
+    BruterInt found = bruter_find_key(libs, libpath);
+    void *handle = dlopen(libpath, RTLD_LAZY | RTLD_GLOBAL);
     if (found != -1)
     {
-        BUXU_ERROR("library %s already loaded", libpath);
+        printf("%s: library %s is already loaded.\n", BUXU_EMOTICON, libpath);
         return;
     }
 
-    void *handle = dlopen(libpath, RTLD_LAZY | RTLD_GLOBAL);
 
     if (handle != NULL)
     {
@@ -139,63 +95,66 @@ void buxu_dl_open(char* libpath)
     }
     else 
     {
-        BUXU_ERROR("%s", dlerror());
+        printf("%s: %s\n", BUXU_EMOTICON, dlerror());
+        printf("%s: could not open library %s\n", BUXU_EMOTICON, libpath);
         return;
     }
 
-    BruterList *splited = br_str_split(libpath, '/');
-    BruterList *splited2 = br_str_split(splited->data[splited->size - 1].s, '.');
-    char *_libpath = splited2->data[0].s;
+    splited = br_str_split(libpath, '/');
+    splited2 = br_str_split((char*)splited->data[splited->size - 1].p, '.');
+    libpath_local = (char*)splited2->data[0].p;
 
     // now lets get the init_name function
-    char* tmp = br_str_format("init_%s", _libpath);
-    void (*_init)(BruterList*) = dlsym(handle, tmp);
+    tmp = br_str_format("init_%s", libpath_local);
+    tmp_func = dlsym(handle, tmp);
     free(tmp);
-    if (_init != NULL)
+    if (tmp_func != NULL)
     {
-        _init(context);
+        init_func = NULL;
+        memcpy(&init_func, &tmp_func, sizeof(void*));
+        init_func(context);
     }
     else 
     {
-        BUXU_ERROR("%s", dlerror());
-        BUXU_ERROR("init_%s not found", _libpath);
+        printf("%s: %s\n", BUXU_EMOTICON, dlerror());
+        printf("%s: init_%s not found in %s\n", BUXU_EMOTICON, libpath_local, libpath);
         // then lets close the library
         dlclose(handle);
-        bruter_pop(libs);
+        bruter_pop_int(libs);
         return;
     }
 
     for (BruterInt i = 0; i < splited->size; i++)
     {
-        free(splited->data[i].s);
+        free(splited->data[i].p);
     }
 
     for (BruterInt i = 0; i < splited2->size; i++)
     {
-        free(splited2->data[i].s);
+        free(splited2->data[i].p);
     }
 
     bruter_free(splited);
     bruter_free(splited2);
 }
 
-void buxu_dl_close(char* libpath)
+static void buxu_dl_close(char* libpath)
 {
     for (BruterInt i = 0; i < libs->size; i++)
     {
         if (strcmp(libpath, libs->keys[i]) == 0)
         {
-            dlclose(bruter_get(context, libs->data[i].i).p);
-            bruter_fast_remove(libs, i);
+            dlclose(bruter_get_pointer(context, libs->data[i].i));
+            bruter_fast_remove_int(libs, i);
             return;
         }
     }
-    BUXU_ERROR("library %s is not loaded.", libpath);
+    printf("%s: library %s is not loaded.\n", BUXU_EMOTICON, libpath);
 }
 
-BR_FUNCTION(brl_main_dl_open)
+static BR_FUNCTION(brl_main_dl_open)
 {
-    char* str = br_arg_get(context, args, 0).s;
+    char* str = (char*)br_arg_get_pointer(context, args, 0);
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -209,9 +168,9 @@ BR_FUNCTION(brl_main_dl_open)
     return -1;
 }
 
-BR_FUNCTION(brl_main_dl_close)
+static BR_FUNCTION(brl_main_dl_close)
 {
-    char* str = br_arg_get(context, args, 0).s;
+    char* str = (char*)br_arg_get_pointer(context, args, 0);
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -225,25 +184,26 @@ BR_FUNCTION(brl_main_dl_close)
     return -1;
 }
 
-void _free_at_exit()
+
+static void free_at_exit(void)
 {
     if (libs->size > 0)
     {
         while (libs->size > 0)
         {
-            dlclose(bruter_pop(libs).p);
+            dlclose(bruter_pop_pointer(libs));
         }
     }
     bruter_free(libs);
 
     for (BruterInt i = 0; i < args->size; i++)
     {
-        free(args->data[i].s);
+        free(args->data[i].p);
     }
 
-    if (_code != NULL)
+    if (buxu_run_code != NULL)
     {
-        free(_code);
+        free(buxu_run_code);
     }
 
     br_free_context(context);
@@ -251,20 +211,21 @@ void _free_at_exit()
 
 int main(int argc, char **argv)
 {
+    // result
+    BruterInt result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
+    BruterList *parser = NULL;
+
     // free all at exit
-    if (atexit(_free_at_exit) != 0)
+    if (atexit(free_at_exit) != 0)
     {
-        BUXU_ERROR("could not register the atexit function");
+        printf("%s: could not register the atexit function\n", BUXU_EMOTICON);
         return 1;
     }
 
-    // result
-    BruterInt result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
-    
     // virtual machine startup
     context = br_new_context(16); // global context
     
-    BruterList *parser = br_get_parser(context); // get the parser from the context
+    parser = br_get_parser(context); // get the parser from the context
 
     // arguments startup
     args = bruter_new(sizeof(void*), false, false);
@@ -281,15 +242,15 @@ int main(int argc, char **argv)
     {
         if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) // version
         {
-            BUXU_PRINT(EMOTICON_DEFAULT, "BRUTER v%s", VERSION);
-            BUXU_PRINT(EMOTICON_DEFAULT, "bruter-representation v%s", BR_VERSION);
-            BUXU_PRINT(EMOTICON_DEFAULT, "buxu v%s", BUXU_VERSION);
+            printf("buxu v%s\n", BUXU_VERSION);
+            printf("bruter-representation v%s\n", BR_VERSION);
+            printf("bruter v%s\n", BRUTER_VERSION);
             return 0;
         }
         else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) // help
         {
-            BUXU_PRINT(EMOTICON_DEFAULT, "v%s", VERSION);
-            BUXU_PRINT(EMOTICON_DEFAULT, "usage: %s [file]", argv[0]);
+            printf("buxu v%s\n", BUXU_VERSION);
+            printf("%s: usage: %s [file]", BUXU_EMOTICON, argv[0]);
             printf("  -v, --version\t\tprint version\n");
             printf("  -h, --help\t\tprint this help\n");
             printf("  -l, \t\t\tload a library\n");
@@ -310,7 +271,7 @@ int main(int argc, char **argv)
         }
         else // push to args
         {
-            bruter_push(args, (BruterValue){.s = br_str_duplicate(argv[i])}, NULL, 0);
+            bruter_push(args, (BruterValue){.p = br_str_duplicate(argv[i])}, NULL, 0);
         }
     }
 
@@ -320,20 +281,20 @@ int main(int argc, char **argv)
     }
     else if (args->size > 0) // run files
     {
-        char* ___file = bruter_shift(args).s;
+        char* file_pointer = (char*)bruter_shift_pointer(args);
     
-        _code = file_read(___file);
+        buxu_run_code = file_read(file_pointer);
 
-        if (_code == NULL)
+        if (buxu_run_code == NULL)
         {
-            BUXU_ERROR("file %s not found", ___file);
+            printf("%s: could not read file %s\n", BUXU_EMOTICON, file_pointer);
             return 1;
         }
-
-        br_new_var(context, bruter_value_p(args), "args", BR_TYPE_LIST);
+        
+        br_new_var(context, (BruterValue){.p = args}, "args", BR_TYPE_LIST);
     
-        result = br_eval(context, parser, _code);
-        free(___file);
+        result = br_eval(context, parser, buxu_run_code);
+        free(file_pointer);
     }
-    return result;
+    return (int)result;
 }

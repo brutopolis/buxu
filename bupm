@@ -22,7 +22,10 @@ if ! command -v sudo >/dev/null; then
 fi
 
 # default values
-CC="gcc"
+if [[ -z "$CC" ]]; then
+    CC="gcc -O3"
+fi
+
 REPO="https://brutopolis.github.io/packages"
 PACKAGE=""
 
