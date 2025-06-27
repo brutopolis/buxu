@@ -64,7 +64,7 @@ static BruterInt repl(BruterList *received_context, BruterList* parser)
 
     printf("%s: ", BUXU_EMOTICON);
 
-    printf("%ld", bruter_get(received_context, result).i);
+    printf("%ld", bruter_get_int(received_context, result));
     
     printf("\n");
     return result;
@@ -101,8 +101,8 @@ static void buxu_dl_open(char* libpath)
     }
 
     splited = br_str_split(libpath, '/');
-    splited2 = br_str_split(splited->data[splited->size - 1].p, '.');
-    libpath_local = splited2->data[0].p;
+    splited2 = br_str_split((char*)splited->data[splited->size - 1].p, '.');
+    libpath_local = (char*)splited2->data[0].p;
 
     // now lets get the init_name function
     tmp = br_str_format("init_%s", libpath_local);
@@ -120,7 +120,7 @@ static void buxu_dl_open(char* libpath)
         printf("%s: init_%s not found in %s\n", BUXU_EMOTICON, libpath_local, libpath);
         // then lets close the library
         dlclose(handle);
-        bruter_pop(libs);
+        bruter_pop_int(libs);
         return;
     }
 
@@ -144,8 +144,8 @@ static void buxu_dl_close(char* libpath)
     {
         if (strcmp(libpath, libs->keys[i]) == 0)
         {
-            dlclose(bruter_get(context, libs->data[i].i).p);
-            bruter_fast_remove(libs, i);
+            dlclose(bruter_get_pointer(context, libs->data[i].i));
+            bruter_fast_remove_int(libs, i);
             return;
         }
     }
@@ -154,7 +154,7 @@ static void buxu_dl_close(char* libpath)
 
 static BR_FUNCTION(brl_main_dl_open)
 {
-    char* str = br_arg_get(context, args, 0).p;
+    char* str = (char*)br_arg_get_pointer(context, args, 0);
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_open(str);
@@ -170,7 +170,7 @@ static BR_FUNCTION(brl_main_dl_open)
 
 static BR_FUNCTION(brl_main_dl_close)
 {
-    char* str = br_arg_get(context, args, 0).p;
+    char* str = (char*)br_arg_get_pointer(context, args, 0);
     if (strstr(str, ".brl") != NULL)
     {
         buxu_dl_close(str);
@@ -191,7 +191,7 @@ static void free_at_exit(void)
     {
         while (libs->size > 0)
         {
-            dlclose(bruter_pop(libs).p);
+            dlclose(bruter_pop_pointer(libs));
         }
     }
     bruter_free(libs);
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
     }
     else if (args->size > 0) // run files
     {
-        char* file_pointer = bruter_shift(args).p;
+        char* file_pointer = (char*)bruter_shift_pointer(args);
     
         buxu_run_code = file_read(file_pointer);
 
@@ -290,8 +290,8 @@ int main(int argc, char **argv)
             printf("%s: could not read file %s\n", BUXU_EMOTICON, file_pointer);
             return 1;
         }
-
-        br_new_var(context, bruter_value_pointer(args), "args", BR_TYPE_LIST);
+        
+        br_new_var(context, (BruterValue){.p = args}, "args", BR_TYPE_LIST);
     
         result = br_eval(context, parser, buxu_run_code);
         free(file_pointer);
