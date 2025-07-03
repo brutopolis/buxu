@@ -214,6 +214,7 @@ int main(int argc, char **argv)
     // result
     BruterInt result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
     BruterList *parser = NULL;
+    BruterList *langloadargs = bruter_new(2, false, false); // create a new list for the language loading arguments
 
     // free all at exit
     if (atexit(free_at_exit) != 0)
@@ -224,7 +225,6 @@ int main(int argc, char **argv)
 
     // virtual machine startup
     context = br_new_context(16); // global context
-    
     parser = br_get_parser(context); // get the parser from the context
 
     // arguments startup
@@ -260,9 +260,10 @@ int main(int argc, char **argv)
         }
         else if (argv[i][0] == '-' && argv[i][1] == 'l') // load
         {
-            char *libname = br_str_format("load {%s}", argv[i] + 2);
-            br_eval(context, parser, libname);
-            free(libname);
+            langloadargs->size = 0; // clear the language loading arguments list
+            bruter_push_int(langloadargs, bruter_find_key(context, "load"), NULL, 0); // add the load function to the args
+            bruter_push_int(langloadargs, br_new_var(context, (BruterValue){.p = argv[i]+2}, NULL, 0), NULL, 0); // add the bruterlang library to the args
+            bruter_call(context, langloadargs); // call the load function to load the bruterlang library
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
@@ -275,7 +276,14 @@ int main(int argc, char **argv)
         }
     }
 
-    if (args->size == 0 && result == -2) // repl, only if no arguments and no eval rant
+    bruter_free(langloadargs); // free the language loading arguments list
+
+    if(parser->size == 0) // if the parser is empty
+    {
+        printf("%s: no parser step found, please load a language first\n", BUXU_EMOTICON);
+        return 1;
+    }
+    else if (args->size == 0 && result == -2) // repl, only if no arguments and no eval rant
     {
         repl(context, parser);
     }
