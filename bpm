@@ -1,15 +1,11 @@
 #!/bin/bash
 
-# this buxu building front-end is a non-essential script meant for linux
-
 # usage function
 usage() 
 {
     echo "[=°-°=]: usage: $0 [install|install-from|remove] [package]"
     echo "[=°~°=]: install: install a package from the repository"
     echo "[=°~°=]: install-from: install a package from a custom repository"
-    echo "[=°~°=]: remove: remove a package"
-    echo "[=°~°=]: *: if there is a *.sh file in the current directory, it will be sourced"
 }
 
 # store current path
@@ -31,7 +27,6 @@ PACKAGE=""
 
 # action flags
 _INSTALL=0
-_UNINSTALL=0
 SKIP_FILES=0
 
 # files function
@@ -104,27 +99,24 @@ setup()
 
 # read command
 case $1 in
-# this creates the .bupm folder
+
+# this creates the .bpm folder
 install)  { _INSTALL=1; shift; } ;;
 install-from) { _INSTALL=1; REPO=$2; shift 2; } ;;
-remove)   { _UNINSTALL=1; shift; } ;;
 # help command
 help)   { usage; exit 0; } ;;
 *) 
 {
-    # verify if there is a *.sh file in the current directory
-    if [[ -f "$1.sh" ]]; then
-        SKIP_FILES=1 # will not download the files
-        source "package.sh"
-        source "$1.sh"
-        exit 0
-    
-    else
-        echo "[=°~°=]: unknown command: $1"
+    source package.sh
+    # verify if the first argument is a valid command
+    if [[ -z "$1" ]]; then
+        echo "[=°~°=]: command not found"
         usage
+    else 
+        # we assume the first argument is a function name
+        "$1" "$@"
     fi
-
-    
+        
     exit 1
 }
 ;;
@@ -134,11 +126,11 @@ esac
 if [[ $_INSTALL -eq 1 ]]; then
 {
     # create local build folder if needed
-    if [[ ! -d .bupm ]]; then
-        mkdir -p .bupm
+    if [[ ! -d .bpm ]]; then
+        mkdir -p .bpm
     fi
 
-    cd .bupm
+    cd .bpm
 
     if [[ $# -eq 0 ]]; then
         echo "[=°~°=]: no package specified"
@@ -164,31 +156,9 @@ if [[ $_INSTALL -eq 1 ]]; then
         fi
 
         source package.sh
-        eval "$(echo "$SETUP" | sed 's/^\(.*\)$/\1/')"
+        setup
 
         cd ..
-    }
-    done
-}
-fi
-
-# handle remove
-if [[ $_UNINSTALL -eq 1 ]]; then
-{
-    if [[ $# -eq 0 ]]; then
-        echo "[=°~°=]: no package specified"
-        exit 1
-    fi
-
-    for PACKAGE in "$@"
-    do
-    {
-        if [[ -d "$PACKAGE" ]]; then
-            rm -rf "$PACKAGE"
-            echo "[=°~°=]: removed package $PACKAGE"
-        else
-            echo "[=°~°=]: package $PACKAGE not found"
-        fi
     }
     done
 }

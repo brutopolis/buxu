@@ -8,7 +8,7 @@
 // dynamic library loading
 #include <dlfcn.h> 
 
-#define BUXU_VERSION "0.1.9"
+#define BUXU_VERSION "0.2.0"
 
 #define BUXU_EMOTICON "[=º-º=]"
 
@@ -161,7 +161,7 @@ static BR_FUNCTION(brl_main_dl_open)
     }
     else 
     {
-        char* path = br_str_format(".bupm/%s/%s.brl", str, str);
+        char* path = br_str_format(".bpm/%s/%s.brl", str, str);
         buxu_dl_open(path);
         free(path);
     }
@@ -177,7 +177,7 @@ static BR_FUNCTION(brl_main_dl_close)
     }
     else 
     {
-        char* path = br_str_format("./.bupm/%s/%s.brl", str, str);
+        char* path = br_str_format("./.bpm/%s/%s.brl", str, str);
         buxu_dl_close(path);
         free(path);
     }
