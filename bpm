@@ -106,7 +106,7 @@ if [[ "$1" == "compile" || "$1" == "transpile" ]]; then
     # executable name is the source file name without extension
     EXECUTABLE_NAME="${SRC_FILE%.*}"
 
-    COMPILE_COMMAND="$CC -o $EXECUTABLE_NAME $EXECUTABLE_NAME.brl  "
+    COMPILE_COMMAND="$CC -o $EXECUTABLE_NAME $EXECUTABLE_NAME.c  "
 
     # Process lib names
     LIB_HEADERS=""
@@ -115,7 +115,7 @@ if [[ "$1" == "compile" || "$1" == "transpile" ]]; then
         LIB_NAME="${1:2}"
         LIB_HEADERS+="extern BR_INIT($LIB_NAME);"
         LIB_INITS+="    init_$LIB_NAME(context);"
-        COMPILE_COMMAND+=" ./.bpm/$LIB_NAME/$LIB_NAME.c "
+        COMPILE_COMMAND+=" ./.bpm/$LIB_NAME/$LIB_NAME.brl "
         shift
     done
 
@@ -131,10 +131,24 @@ if [[ "$1" == "compile" || "$1" == "transpile" ]]; then
 //<headers_replacement>
 $LIB_HEADERS
 
+BR_FUNCTION(fake_load)
+{
+    return -1;
+}
+
+BR_FUNCTION(fake_unload)
+{
+    return -1;
+}
+
 int main(int argc, char **argv)
 {
     BruterList *context = br_new_context(sizeof(void*));
     BruterList *program_args = bruter_new(sizeof(void*), false, false);
+
+    bruter_push_function(context, fake_load, "load", BR_TYPE_FUNCTION);
+    bruter_push_function(context, fake_unload, "unload", BR_TYPE_FUNCTION);
+
     for (int i = 1; i < argc; i++)
     {
         bruter_push_pointer(context, br_str_duplicate(argv[i]), NULL, BR_TYPE_BUFFER);
@@ -149,7 +163,7 @@ $LIB_INITS
 
     //<code_initialization>
     const char *embedded_code =
-$ESCAPED_CONTENT
+    $ESCAPED_CONTENT
     ;
     BruterInt result = br_eval(context, embedded_code);
     bruter_free(context);
@@ -164,7 +178,10 @@ EOF
             exit 1
         fi
         rm -f "$OUTPUT_FILE"
-        echo "[=°~°=]: compilation successful, output: $EXECUTABLE_NAME"
+        mv "$EXECUTABLE_NAME" .
+        echo "[=°~°=]: compilation successful."
+    elif [[ $BPM_COMMAND == "transpile" ]]; then
+        mv "$OUTPUT_FILE" .
     fi
     
     exit 0

@@ -4,6 +4,9 @@
 
 - bucc no more exists;
 - bupm is bpm once again;
+- bpm now use shell functions and dont need separated files anymore, package.sh can include eveything;
+- bpm can now compile(embedded script);
+- bpm remove has been removed, you should just delete the .bpm folder yourself;
 
 (12/06/2025) - version 0.1.9
 
