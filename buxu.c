@@ -254,7 +254,6 @@ int main(int argc, char **argv)
             printf("  -v, --version\t\tprint version\n");
             printf("  -h, --help\t\tprint this help\n");
             printf("  -l, \t\t\tload a library\n");
-            printf("  -p, --path\t\tadd a path to the library search path\n");
             printf("  -e, --eval\t\teval a string\n");
             return 0;
         }
