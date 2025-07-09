@@ -39,7 +39,7 @@ static char* file_read(char *filename)
     return buffer;
 }
 
-static BruterInt repl(BruterList *received_context, BruterList* parser)
+static BruterInt repl(BruterList *received_context)
 {
     char cmd[1024];
     int junk = 0;
@@ -55,7 +55,7 @@ static BruterInt repl(BruterList *received_context, BruterList* parser)
         {
             break;
         }
-        result = br_eval(received_context, parser, cmd);
+        result = br_eval(received_context, cmd);
     }
 
     printf("%s: ", BWIN_EMOTICON);
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
-            result = br_eval(context, parser, argv[i+1]);
+            result = br_eval(context, argv[i+1]);
             i+=1;// skip to the next argument
         }
         else // push to args
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 
     if (args->size == 0 && result == -2) // repl, only if no arguments and no eval rant
     {
-        repl(context, parser);
+        repl(context);
     }
     else if (args->size > 0) // run files
     {
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
         
         br_new_var(context, (BruterValue){.p = args}, "args", BR_TYPE_LIST);
     
-        result = br_eval(context, parser, bwin_run_code);
+        result = br_eval(context, bwin_run_code);
         free(file_pointer);
     }
     return (int)result;

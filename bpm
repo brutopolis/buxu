@@ -3,29 +3,18 @@
 # usage function
 usage() 
 {
-    echo "[=°-°=]: usage: $0 [install|install-from|remove] [package]"
+    echo "[=°-°=]: usage: $0 [install|install-from|compile|transpile|run] [args...]"
     echo "[=°~°=]: install: install a package from the repository"
     echo "[=°~°=]: install-from: install a package from a custom repository"
+    echo "[=°~°=]: compile <source_file> [-lname ...]: compile file with lib init embedding"
+    echo "[=°~°=]: transpile <source_file> [-lname ...]: transpile file with lib init embedding"
+    echo "[=°~°=]: run <source_file> [-lname ...]: run file with lib init embedding"
 }
 
-# store current path
 ORIGIN=$(pwd)
-
-# check if sudo is available
-SUDO=sudo
-if ! command -v sudo >/dev/null; then
-    SUDO=""
-fi
-
-# default values
-if [[ -z "$CC" ]]; then
-    CC="gcc -O3"
-fi
-
+SUDO=$(command -v sudo >/dev/null && echo "sudo" || echo "")
+CC=${CC:-"gcc -O3"}
 REPO="https://brutopolis.github.io/packages"
-PACKAGE=""
-
-# action flags
 _INSTALL=0
 SKIP_FILES=0
 
@@ -97,29 +86,105 @@ setup()
     SETUP="$1"
 }
 
+# handle custom compile command
+if [[ "$1" == "compile" || "$1" == "transpile" ]]; then
+    BPM_COMMAND="$1"
+    shift
+    if [[ $# -lt 1 ]]; then
+        echo "[=°~°=]: usage: compile <source_file> [-lnome ...]"
+        exit 1
+    fi
+
+    SRC_FILE="$1"
+    shift
+
+    if [[ ! -f "$SRC_FILE" ]]; then
+        echo "[=°~°=]: source file not found: $SRC_FILE"
+        exit 1
+    fi
+
+    # executable name is the source file name without extension
+    EXECUTABLE_NAME="${SRC_FILE%.*}"
+
+    COMPILE_COMMAND="$CC -o $EXECUTABLE_NAME $EXECUTABLE_NAME.brl  "
+
+    # Process lib names
+    LIB_HEADERS=""
+    LIB_INITS=""
+    while [[ "$1" == -l* ]]; do
+        LIB_NAME="${1:2}"
+        LIB_HEADERS+="extern BR_INIT($LIB_NAME);"
+        LIB_INITS+="    init_$LIB_NAME(context);"
+        COMPILE_COMMAND+=" ./.bpm/$LIB_NAME/$LIB_NAME.c "
+        shift
+    done
+
+    # Read and escape source
+    ESCAPED_CONTENT=$(sed 's/\\/\\\\/g; s/"/\\"/g; s/^/"/; s/$/\\n"/' "$SRC_FILE")
+
+    # Output c file
+    OUTPUT_FILE="$EXECUTABLE_NAME.c"
+
+    cat <<EOF > "$OUTPUT_FILE"
+#include "bruter-representation.h"
+
+//<headers_replacement>
+$LIB_HEADERS
+
+int main(int argc, char **argv)
+{
+    BruterList *context = br_new_context(sizeof(void*));
+    BruterList *program_args = bruter_new(sizeof(void*), false, false);
+    for (int i = 1; i < argc; i++)
+    {
+        bruter_push_pointer(context, br_str_duplicate(argv[i]), NULL, BR_TYPE_BUFFER);
+        bruter_push_int(program_args, context->size - 1, NULL, 0);
+    }
+
+    bruter_push_pointer(context, program_args, "args", BR_TYPE_LIST);
+    bruter_push_pointer(context, br_str_duplicate(BRUTER_VERSION), "version", BR_TYPE_BUFFER);
+
+    //<libs_initialization>
+$LIB_INITS
+
+    //<code_initialization>
+    const char *embedded_code =
+$ESCAPED_CONTENT
+    ;
+    BruterInt result = br_eval(context, embedded_code);
+    bruter_free(context);
+    return 0;
+}
+EOF
+
+    if [[ $BPM_COMMAND == "compile" ]]; then
+        $COMPILE_COMMAND
+        if [[ $? -ne 0 ]]; then
+            echo "[=°~°=]: compilation failed"
+            exit 1
+        fi
+        rm -f "$OUTPUT_FILE"
+        echo "[=°~°=]: compilation successful, output: $EXECUTABLE_NAME"
+    fi
+    
+    exit 0
+fi
+
 # read command
 case $1 in
-
-# this creates the .bpm folder
-install)  { _INSTALL=1; shift; } ;;
-install-from) { _INSTALL=1; REPO=$2; shift 2; } ;;
-# help command
-help)   { usage; exit 0; } ;;
-*) 
-{
-    source package.sh
-    # verify if the first argument is a valid command
-    if [[ -z "$1" ]]; then
-        echo "[=°~°=]: command not found"
-        usage
-    else 
-        # we assume the first argument is a function name
-        "$1" "$@"
-    fi
-        
-    exit 1
-}
-;;
+    install)        _INSTALL=1; shift ;;
+    install-from)   _INSTALL=1; REPO=$2; shift 2 ;;
+    help)           usage; exit 0 ;;
+    *) 
+        if [[ -z "$1" ]]; then
+            echo "[=°~°=]: command not found"
+            usage
+        else
+            source package.sh
+            "$@"
+        fi
+        exit 1
+        ;;
 esac
 
 # handle install
@@ -156,6 +221,7 @@ if [[ $_INSTALL -eq 1 ]]; then
         fi
 
         source package.sh
+        echo "[=°~°=]: installing $NAME $VERSION"
         setup
 
         cd ..
@@ -163,3 +229,5 @@ if [[ $_INSTALL -eq 1 ]]; then
     done
 }
 fi
+
+exit 0 
