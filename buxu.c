@@ -231,8 +231,9 @@ int main(int argc, char **argv)
     args = bruter_new(sizeof(void*), false, false);
 
     // dynamic library functions
-    br_add_function(context, "load", brl_main_dl_open);
-    br_add_function(context, "unload", brl_main_dl_close);
+    bruter_push_function(context, brl_main_dl_open, "load", BR_TYPE_FUNCTION);
+    bruter_push_function(context, brl_main_dl_close, "unload", BR_TYPE_FUNCTION);
+
     
     // dynamic libraries lists startup
     libs = bruter_new(sizeof(void*), true, false);
