@@ -5,8 +5,7 @@
 
   buxu includes, but is not limited to:
   - buxu, a interpreter and repl for bruter representation;
-  - bupm, stands for Buxu Package Manager;
-  - bucc, a tool to compile buxu c files into buxu-compatible shared libraries, stants for Buxu C Compiler;
+  - bpm, stands for Buxu Package Manager;
 
 *`UNDER HEAVY DEVELOPMENT`*
 
@@ -39,56 +38,24 @@
     ./buxu --load path/to/library.so
     ./buxu -l path/to/library.so
 
-    # add a path to the search path;
-    ./buxu --path path/to/libraries
-    ./buxu -p path/to/libraries
-
     # eval a string;
     ./buxu --eval "print 'hello world'"
     ./buxu -e "print 'hello world'"
 
-  "bucc" executable is the compiler script, its basically a wrapper for the system compiler(default is gcc) with some extra flags;
-
-    # compile a c file;
-    ./bucc path/to/file.c
-
-    # compile a c bruter file with a specific output name;
-    ./bucc path/to/file.c -o path/to/output.so
-
-    # compile a c bruter file using a specific compiler;
-    ./bucc path/to/file.c -cc path/to/compiler
-
-    # compile a c bruter file with debug symbols;
-    ./bucc path/to/file.c --debug
-
-    # print help message;
-    ./bucc --help
-    ./bucc -h
-
-    # print version;
-    ./bucc --version
-    ./bucc -v
-
-  "bupm" executable is the package manager, it deals with a simple repository system, it can list, install and uninstall packages, and have some user-defined commands like build, clear, update, etc;
+  "bpm" executable is the package manager, it stands for Bruter Package Manager, and is expected to work only under unix-like system;
 
     # install a package;
-    ./bupm install package_name
+    ./bpm install package_name
 
     # uninstall a package;
-    ./bupm uninstall package_name
+    ./bpm uninstall package_name
 
-    # update a package;
-    ./bupm update
-
-    # build a package;
-    ./bupm build
-
-    # clear a package;
-    ./bupm clear
+    # compile a program;
+    ./bpm compile 
 
     # print help message;
-    ./bupm --help
-    ./bupm -h
+    ./bpm --help
+    ./bpm -h
 
 # Dynamic libraries
 
@@ -96,8 +63,8 @@
 
   | Function    | Description                              | Function Signature                           |
   |-------------|------------------------------------------|----------------------------------------------|
-  | `load`   | load a library                           | `void function(string path);`                |
-  | `unload` | unload a library                         | `void function(string path);`                |
+  | `load`      | load a library                           | `void function(string path);`                |
+  | `unload`    | unload a library                         | `void function(string path);`                |
 
   # DEPENDENCIES
 

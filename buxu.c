@@ -8,7 +8,7 @@
 // dynamic library loading
 #include <dlfcn.h> 
 
-#define BUXU_VERSION "0.1.9"
+#define BUXU_VERSION "0.2.0"
 
 #define BUXU_EMOTICON "[=º-º=]"
 
@@ -43,7 +43,7 @@ static char* file_read(char *filename)
     return buffer;
 }
 
-static BruterInt repl(BruterList *received_context, BruterList* parser)
+static BruterInt repl(BruterList *received_context)
 {
     char cmd[1024];
     int junk = 0;
@@ -59,7 +59,7 @@ static BruterInt repl(BruterList *received_context, BruterList* parser)
         {
             break;
         }
-        result = br_eval(received_context, parser, cmd);
+        result = br_eval(received_context, cmd);
     }
 
     printf("%s: ", BUXU_EMOTICON);
@@ -161,7 +161,7 @@ static BR_FUNCTION(brl_main_dl_open)
     }
     else 
     {
-        char* path = br_str_format(".bupm/%s/%s.brl", str, str);
+        char* path = br_str_format(".bpm/%s/%s.brl", str, str);
         buxu_dl_open(path);
         free(path);
     }
@@ -177,7 +177,7 @@ static BR_FUNCTION(brl_main_dl_close)
     }
     else 
     {
-        char* path = br_str_format("./.bupm/%s/%s.brl", str, str);
+        char* path = br_str_format("./.bpm/%s/%s.brl", str, str);
         buxu_dl_close(path);
         free(path);
     }
@@ -214,6 +214,7 @@ int main(int argc, char **argv)
     // result
     BruterInt result = -2; // -2 because no valid buxu program will ever return -2, this is used to detect if eval was called, if so do not start repl
     BruterList *parser = NULL;
+    BruterList *langloadargs = bruter_new(2, false, false); // create a new list for the language loading arguments
 
     // free all at exit
     if (atexit(free_at_exit) != 0)
@@ -224,15 +225,15 @@ int main(int argc, char **argv)
 
     // virtual machine startup
     context = br_new_context(16); // global context
-    
     parser = br_get_parser(context); // get the parser from the context
 
     // arguments startup
     args = bruter_new(sizeof(void*), false, false);
 
     // dynamic library functions
-    br_add_function(context, "load", brl_main_dl_open);
-    br_add_function(context, "unload", brl_main_dl_close);
+    bruter_push_function(context, brl_main_dl_open, "load", BR_TYPE_FUNCTION);
+    bruter_push_function(context, brl_main_dl_close, "unload", BR_TYPE_FUNCTION);
+
     
     // dynamic libraries lists startup
     libs = bruter_new(sizeof(void*), true, false);
@@ -254,19 +255,19 @@ int main(int argc, char **argv)
             printf("  -v, --version\t\tprint version\n");
             printf("  -h, --help\t\tprint this help\n");
             printf("  -l, \t\t\tload a library\n");
-            printf("  -p, --path\t\tadd a path to the library search path\n");
             printf("  -e, --eval\t\teval a string\n");
             return 0;
         }
         else if (argv[i][0] == '-' && argv[i][1] == 'l') // load
         {
-            char *libname = br_str_format("load {%s}", argv[i] + 2);
-            br_eval(context, parser, libname);
-            free(libname);
+            langloadargs->size = 0; // clear the language loading arguments list
+            bruter_push_int(langloadargs, bruter_find_key(context, "load"), NULL, 0); // add the load function to the args
+            bruter_push_int(langloadargs, br_new_var(context, (BruterValue){.p = argv[i]+2}, NULL, 0), NULL, 0); // add the bruterlang library to the args
+            bruter_call(context, langloadargs); // call the load function to load the bruterlang library
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
-            result = br_eval(context, parser, argv[i+1]);
+            result = br_eval(context, argv[i+1]);
             i+=1;// skip to the next argument
         }
         else // push to args
@@ -275,9 +276,16 @@ int main(int argc, char **argv)
         }
     }
 
-    if (args->size == 0 && result == -2) // repl, only if no arguments and no eval rant
+    bruter_free(langloadargs); // free the language loading arguments list
+
+    if(parser->size == 0) // if the parser is empty
     {
-        repl(context, parser);
+        printf("%s: no parser step found, please load a language first\n", BUXU_EMOTICON);
+        return 1;
+    }
+    else if (args->size == 0 && result == -2) // repl, only if no arguments and no eval rant
+    {
+        repl(context);
     }
     else if (args->size > 0) // run files
     {
@@ -293,7 +301,7 @@ int main(int argc, char **argv)
         
         br_new_var(context, (BruterValue){.p = args}, "args", BR_TYPE_LIST);
     
-        result = br_eval(context, parser, buxu_run_code);
+        result = br_eval(context, buxu_run_code);
         free(file_pointer);
     }
     return (int)result;

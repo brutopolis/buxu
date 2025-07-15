@@ -1,0 +1,250 @@
+#!/bin/bash
+
+# usage function
+usage() 
+{
+    echo "[=°-°=]: usage: $0 [install|install-from|compile|transpile|run] [args...]"
+    echo "[=°~°=]: install: install a package from the repository"
+    echo "[=°~°=]: install-from: install a package from a custom repository"
+    echo "[=°~°=]: compile <source_file> [-lname ...]: compile file with lib init embedding"
+    echo "[=°~°=]: transpile <source_file> [-lname ...]: transpile file with lib init embedding"
+    echo "[=°~°=]: run <source_file> [-lname ...]: run file with lib init embedding"
+}
+
+ORIGIN=$(pwd)
+SUDO=$(command -v sudo >/dev/null && echo "sudo" || echo "")
+CC=${CC:-"gcc -O3"}
+REPO="https://brutopolis.github.io/packages"
+_INSTALL=0
+SKIP_FILES=0
+
+# files function
+files() 
+{
+    # if SKIP_FILES is 0
+    if [[ $SKIP_FILES -eq 1 ]]; then
+        return 0
+    fi
+
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no files specified"
+        exit 1
+    fi
+
+    FILES="$@"
+
+    for file in $FILES
+    do
+    {
+        # download the file
+        curl -sLO "$REPO/$PACKAGE/$file"
+        if [[ ! -f "$file" ]]; then
+            echo "[=°~°=]: failed to fetch $file"
+            exit 1
+        fi
+    }
+    done
+}
+
+name() 
+{
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no name specified"
+        exit 1
+    fi
+
+    NAME="$1"
+}
+
+version() 
+{
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no version specified"
+        exit 1
+    fi
+
+    VERSION="$1"
+}
+
+description() 
+{
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no description specified"
+        exit 1
+    fi
+
+    DESCRIPTION="$1"
+}
+
+setup() 
+{
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no setup command specified"
+        exit 1
+    fi
+
+    SETUP="$1"
+}
+
+# handle custom compile command
+if [[ "$1" == "compile" || "$1" == "transpile" ]]; then
+    BPM_COMMAND="$1"
+    shift
+    if [[ $# -lt 1 ]]; then
+        echo "[=°~°=]: usage: compile <source_file> [-lnome ...]"
+        exit 1
+    fi
+
+    SRC_FILE="$1"
+    shift
+
+    if [[ ! -f "$SRC_FILE" ]]; then
+        echo "[=°~°=]: source file not found: $SRC_FILE"
+        exit 1
+    fi
+
+    # executable name is the source file name without extension
+    EXECUTABLE_NAME="${SRC_FILE%.*}"
+
+    COMPILE_COMMAND="$CC -o $EXECUTABLE_NAME $EXECUTABLE_NAME.c  "
+
+    # Process lib names
+    LIB_HEADERS=""
+    LIB_INITS=""
+    while [[ "$1" == -l* ]]; do
+        LIB_NAME="${1:2}"
+        LIB_HEADERS+="extern BR_INIT($LIB_NAME);"
+        LIB_INITS+="    init_$LIB_NAME(context);"
+        COMPILE_COMMAND+=" ./.bpm/$LIB_NAME/$LIB_NAME.brl "
+        shift
+    done
+
+    # Read and escape source
+    ESCAPED_CONTENT=$(sed 's/\\/\\\\/g; s/"/\\"/g; s/^/"/; s/$/\\n"/' "$SRC_FILE")
+
+    # Output c file
+    OUTPUT_FILE="$EXECUTABLE_NAME.c"
+
+    cat <<EOF > "$OUTPUT_FILE"
+#include "bruter-representation.h"
+
+//<headers_replacement>
+$LIB_HEADERS
+
+BR_FUNCTION(fake_load)
+{
+    return -1;
+}
+
+BR_FUNCTION(fake_unload)
+{
+    return -1;
+}
+
+int main(int argc, char **argv)
+{
+    BruterList *context = br_new_context(sizeof(void*));
+    BruterList *program_args = bruter_new(sizeof(void*), false, false);
+
+    bruter_push_function(context, fake_load, "load", BR_TYPE_FUNCTION);
+    bruter_push_function(context, fake_unload, "unload", BR_TYPE_FUNCTION);
+
+    for (int i = 1; i < argc; i++)
+    {
+        bruter_push_pointer(context, br_str_duplicate(argv[i]), NULL, BR_TYPE_BUFFER);
+        bruter_push_int(program_args, context->size - 1, NULL, 0);
+    }
+
+    bruter_push_pointer(context, program_args, "args", BR_TYPE_LIST);
+    bruter_push_pointer(context, br_str_duplicate(BRUTER_VERSION), "version", BR_TYPE_BUFFER);
+
+    //<libs_initialization>
+$LIB_INITS
+
+    //<code_initialization>
+    const char *embedded_code =
+    $ESCAPED_CONTENT
+    ;
+    BruterInt result = br_eval(context, embedded_code);
+    bruter_free(context);
+    return 0;
+}
+EOF
+
+    if [[ $BPM_COMMAND == "compile" ]]; then
+        $COMPILE_COMMAND
+        if [[ $? -ne 0 ]]; then
+            echo "[=°~°=]: compilation failed"
+            exit 1
+        fi
+        rm -f "$OUTPUT_FILE"
+        mv "$EXECUTABLE_NAME" .
+        echo "[=°~°=]: compilation successful."
+    elif [[ $BPM_COMMAND == "transpile" ]]; then
+        mv "$OUTPUT_FILE" .
+    fi
+    
+    exit 0
+fi
+
+# read command
+case $1 in
+    install)        _INSTALL=1; shift ;;
+    install-from)   _INSTALL=1; REPO=$2; shift 2 ;;
+    help)           usage; exit 0 ;;
+    *) 
+        if [[ -z "$1" ]]; then
+            echo "[=°~°=]: command not found"
+            usage
+        else
+            source package.sh
+            "$@"
+        fi
+        exit 1
+        ;;
+esac
+
+# handle install
+if [[ $_INSTALL -eq 1 ]]; then
+{
+    # create local build folder if needed
+    if [[ ! -d .bpm ]]; then
+        mkdir -p .bpm
+    fi
+
+    cd .bpm
+
+    if [[ $# -eq 0 ]]; then
+        echo "[=°~°=]: no package specified"
+        exit 1
+    fi
+
+    for PACKAGE in "$@"
+    do
+    {
+        # remove existing package folder if exists
+        if [[ -d "$PACKAGE" ]]; then
+            rm -rf "$PACKAGE"
+        fi
+
+        mkdir "$PACKAGE"
+        cd "$PACKAGE"
+
+        # download package.sh and validate
+        curl -sLO "$REPO/$PACKAGE/package.sh"
+        if [[ ! -f "package.sh" ]]; then
+            echo "[=°~°=]: failed to fetch package.sh for $PACKAGE"
+            exit 1
+        fi
+
+        source package.sh
+        echo "[=°~°=]: installing $NAME $VERSION"
+        setup
+
+        cd ..
+    }
+    done
+}
+fi
+
+exit 0 
