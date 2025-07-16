@@ -8,7 +8,7 @@
 // dynamic library loading
 #include <dlfcn.h> 
 
-#define BUXU_VERSION "0.2.0"
+#define BUXU_VERSION "0.2.0a"
 
 #define BUXU_EMOTICON "[=º-º=]"
 
@@ -231,8 +231,8 @@ int main(int argc, char **argv)
     args = bruter_new(sizeof(void*), false, false);
 
     // dynamic library functions
-    bruter_push_function(context, brl_main_dl_open, "load", BR_TYPE_FUNCTION);
-    bruter_push_function(context, brl_main_dl_close, "unload", BR_TYPE_FUNCTION);
+    bruter_push_pointer(context, brl_main_dl_open, "load", BR_TYPE_FUNCTION);
+    bruter_push_pointer(context, brl_main_dl_close, "unload", BR_TYPE_FUNCTION);
 
     
     // dynamic libraries lists startup
