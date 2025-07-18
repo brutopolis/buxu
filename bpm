@@ -146,8 +146,8 @@ int main(int argc, char **argv)
     BruterList *context = br_new_context(sizeof(void*));
     BruterList *program_args = bruter_new(sizeof(void*), false, false);
 
-    bruter_push_function(context, fake_load, "load", BR_TYPE_FUNCTION);
-    bruter_push_function(context, fake_unload, "unload", BR_TYPE_FUNCTION);
+    bruter_push_pointer(context, fake_load, "load", BR_TYPE_FUNCTION);
+    bruter_push_pointer(context, fake_unload, "unload", BR_TYPE_FUNCTION);
 
     for (int i = 1; i < argc; i++)
     {
