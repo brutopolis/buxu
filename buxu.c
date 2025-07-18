@@ -263,7 +263,7 @@ int main(int argc, char **argv)
             langloadargs->size = 0; // clear the language loading arguments list
             bruter_push_int(langloadargs, bruter_find_key(context, "load"), NULL, 0); // add the load function to the args
             bruter_push_int(langloadargs, br_new_var(context, (BruterValue){.p = argv[i]+2}, NULL, 0), NULL, 0); // add the bruterlang library to the args
-            bruter_call(context, langloadargs); // call the load function to load the bruterlang library
+            br_call(context, langloadargs); // call the load function to load the bruterlang library
         }
         else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--eval") == 0) // eval
         {
