@@ -1,5 +1,7 @@
 # buxu changelog https://github.com/brutopolis/buxu
 
+(26/07/2025) - discontinued
+
 (08/07/2025) - version 0.2.0
 
 - bucc no more exists;
